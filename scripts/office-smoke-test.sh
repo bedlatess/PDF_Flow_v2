@@ -219,7 +219,7 @@ register_or_reuse_user() {
 login_user() {
   local login_json
 
-  log "Logging in"
+  log "Logging in" >&2
   post_form_urlencoded \
     "${BASE_URL%/}/api/v1/auth/login" \
     --data-urlencode "grant_type=password" \

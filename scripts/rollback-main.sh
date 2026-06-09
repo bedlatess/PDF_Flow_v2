@@ -4,4 +4,4 @@ set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-DEPLOY_BRANCH="${DEPLOY_BRANCH:-main}" "$SCRIPT_DIR/rollback-staging.sh" "$@"
+DEPLOY_BRANCH="${DEPLOY_BRANCH:-main}" bash "$SCRIPT_DIR/rollback-staging.sh" "$@"

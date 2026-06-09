@@ -181,6 +181,7 @@ backend/app/
 - [x] **本地自动化补稳（第一轮）**：已补齐 `backend/tests/conftest.py` 的关键第三方 stub（含 `stripe`、`google.generativeai`、`sentry_sdk`、`posthog` 等），并把 GitHub Actions 收敛到当前 `main/staging` 的最小可用门禁：后端核心 pytest、前端 unit test、前端 build；暂不把现有大规模历史 lint 债务设为强制阻塞
 - [ ] **前端 lint 债务分批清理**：第一轮已清掉 `src/` / `tests/` 中会导致 ESLint 失败的硬错误（未使用变量、无效 try/catch、模板语法错误等），当前已收敛到“仅剩 warning、不再有 error”；下一步继续按目录分批处理格式类 warning 与 `any` 类型，再评估把 lint 以非阻塞或分目录方式接回 CI
 - [ ] **`main` 真实上线测试收口**：以服务器 `main` 分支为准执行 `deploy-main.sh` + 四条 smoke 脚本 + 人工页面验证，记录首轮线上问题清单，并把结论同步回本文档作为下一次恢复点
+- [x] **`main` 上线脚本权限兼容修复**：`deploy-main.sh` / `rollback-main.sh` 首轮在服务器上调用下层脚本时暴露 `Permission denied`，根因是包装脚本直接执行 `deploy-staging.sh` / `rollback-staging.sh`，仍依赖下层文件的可执行位。现已改为显式 `bash ...` 调用，避免因脚本权限不同步而中断 `main` 分支上线流程
 - [x] **文件下载端点**：`GET /files/download/{job_id}` 已实现（单文件直传 / 多文件 zip / OCR txt；425 未完成、422 失败、404 不存在），前端 `fileAPI.downloadResult` + `pollJobUntilDone` 已配套
 - [x] **后端单元测试**：新增 `tests/`（conftest + security/auth/files），35 用例通过，覆盖密码哈希、JWT、API Key、魔术数字、注册/登录/鉴权流程、下载分支
 - [x] **前端 OAuth 按钮**：加 "Soon" 角标 + tooltip，诚实标记未实现（后端 OAuth 属 P2）

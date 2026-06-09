@@ -3,13 +3,14 @@ Celery Worker Configuration
 异步任务处理器，用于处理耗时的 PDF 操作
 """
 from celery import Celery
+from kombu import Queue
 from app.core.config import settings
 
 # 创建 Celery 实例
 celery_app = Celery(
     "pdf_flow_worker",
-    broker=settings.REDIS_URL,
-    backend=settings.REDIS_URL,
+    broker=settings.CELERY_BROKER_URL,
+    backend=settings.CELERY_RESULT_BACKEND,
     include=[
         "app.tasks.pdf_tasks",
         "app.tasks.ocr_tasks",
@@ -31,6 +32,15 @@ celery_app.conf.update(
     # 时区设置
     timezone="UTC",
     enable_utc=True,
+
+    # 显式声明 worker 需要消费的队列，避免任务被路由到自定义队列后无人消费
+    task_default_queue="pdf_processing",
+    task_queues=(
+        Queue("pdf_processing"),
+        Queue("ocr_processing"),
+        Queue("office_processing"),
+        Queue("email"),
+    ),
 
     # 任务路由
     task_routes={

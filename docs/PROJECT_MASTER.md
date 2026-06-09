@@ -182,6 +182,7 @@ backend/app/
 - [ ] **前端 lint 债务分批清理**：第一轮已清掉 `src/` / `tests/` 中会导致 ESLint 失败的硬错误（未使用变量、无效 try/catch、模板语法错误等），当前已收敛到“仅剩 warning、不再有 error”；下一步继续按目录分批处理格式类 warning 与 `any` 类型，再评估把 lint 以非阻塞或分目录方式接回 CI
 - [x] **`main` 真实上线测试收口（第一轮脚本验收）**：截至 2026-06-09，服务器 `main` 分支已完成 `deploy-main.sh` 重新部署，并连续通过 `smoke-test.sh`、`business-smoke-test.sh`、`ocr-smoke-test.sh`、`office-smoke-test.sh` 四条真实链路；下一步进入人工页面验收与线上问题清单沉淀阶段
 - [x] **`main` 上线脚本权限兼容修复**：`deploy-main.sh` / `rollback-main.sh` 首轮在服务器上调用下层脚本时暴露 `Permission denied`，根因是包装脚本直接执行 `deploy-staging.sh` / `rollback-staging.sh`，仍依赖下层文件的可执行位。现已改为显式 `bash ...` 调用，避免因脚本权限不同步而中断 `main` 分支上线流程
+- [x] **域名 + IP 双入口部署方案落地（仓库侧）**：已将前端部署模式从开发态 `npm run dev` 收口为静态 `nginx` 站点，前端默认通过同源 `/api`、`/health`、WebSocket 路径访问后端；当前目标访问结构为 `NPM -> pdf.pawn.eu.org -> :5173`，同时保留 `http://服务器IP:5173` 直连兜底和 `http://服务器IP:8000/api/docs` 调试入口
 - [x] **文件下载端点**：`GET /files/download/{job_id}` 已实现（单文件直传 / 多文件 zip / OCR txt；425 未完成、422 失败、404 不存在），前端 `fileAPI.downloadResult` + `pollJobUntilDone` 已配套
 - [x] **后端单元测试**：新增 `tests/`（conftest + security/auth/files），35 用例通过，覆盖密码哈希、JWT、API Key、魔术数字、注册/登录/鉴权流程、下载分支
 - [x] **前端 OAuth 按钮**：加 "Soon" 角标 + tooltip，诚实标记未实现（后端 OAuth 属 P2）

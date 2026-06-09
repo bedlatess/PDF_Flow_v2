@@ -261,14 +261,51 @@ OFFICE_SMOKE_EMAIL="office-$(date +%s)@example.com" bash scripts/office-smoke-te
 - `smoke-test.sh`、`business-smoke-test.sh`、`ocr-smoke-test.sh`、`office-smoke-test.sh` 已在 `main` 上连续通过
 - 下一步不再是补脚本，而是做人工线上验收并记录问题清单
 
-推荐人工线上验收最小清单：
+### 4.5 域名 + IP 双入口方案
+
+当前推荐的正式访问结构：
+
+1. `https://pdf.pawn.eu.org`
+   由 Nginx Proxy Manager 反代到服务器 `5173`
+2. `http://服务器IP:5173`
+   作为域名未就绪或 NPM 异常时的直连兜底
+3. `http://服务器IP:8000/api/docs`
+   保留给接口调试与联调用
+
+当前仓库已按这套结构调整：
+
+- `frontend` 容器改为静态 `nginx` 站点，不再运行 `npm run dev`
+- 前端默认通过同源相对路径访问后端，例如 `/api`、`/health`
+- 前端 `nginx` 统一把 `/api`、`/health`、WebSocket 路径转发到 `backend:8000`
+- 因此无论从域名还是 `IP:5173` 打开页面，前后端访问路径都一致
+
+### 4.6 Nginx Proxy Manager 配置
+
+在 Nginx Proxy Manager 中新增 Proxy Host：
+
+- Domain Names: `pdf.pawn.eu.org`
+- Scheme: `http`
+- Forward Hostname / IP: 你的服务器 IP
+- Forward Port: `5173`
+
+建议勾选：
+
+- Websockets Support
+- Block Common Exploits
+
+建议顺序：
+
+1. 先用 HTTP 验证 `pdf.pawn.eu.org` 是否可打开
+2. 确认功能正常后再申请 SSL
+3. SSL 正常后再开启 Force SSL
+### 4.7 推荐人工线上验收最小清单
 
 1. 注册新用户并登录，确认注册、登录、退出都正常
 2. 以普通用户上传 2 个 PDF 做一次合并，确认结果可下载
 3. 验证 OCR 页面与 Office 转 PDF 页面能正常提交、查看结果、下载结果
 4. 检查 Pro/Enterprise 限制是否按预期提示，而不是无响应或 500
 5. 人工触发 1 次异常输入，确认前端错误提示和后端返回信息可理解
-### 4.6 通过后合并到 `main`
+### 4.8 通过后合并到 `main`
 
 当前已在真实服务器验证通过的最小发布门禁：
 

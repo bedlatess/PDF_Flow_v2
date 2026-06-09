@@ -50,7 +50,9 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/1
-      - ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
+      - ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000,http://pdf.pawn.eu.org,https://pdf.pawn.eu.org
+      - FRONTEND_URL=https://pdf.pawn.eu.org
+      - OAUTH_REDIRECT_URL=https://pdf.pawn.eu.org
       # Optional: Add your API keys here
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
       - SENTRY_DSN=${SENTRY_DSN:-}
@@ -106,13 +108,7 @@ services:
       dockerfile: Dockerfile.frontend
     container_name: pdf-flow-frontend
     ports:
-      - "5173:5173"
-    environment:
-      - VITE_API_URL=http://localhost:8000
-    volumes:
-      - ./src:/app/src
-      - ./public:/app/public
-    command: npm run dev -- --host 0.0.0.0
+      - "5173:80"
 
 volumes:
   postgres_data:

@@ -44,8 +44,9 @@ export function useWebSocket() {
 
     // 获取 token
     const token = localStorage.getItem('access_token')
-    const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8000'
-    const url = `${wsUrl}/api/v1/ws/jobs/${taskJobId}${token ? `?token=${token}` : ''}`
+    const envWsUrl = import.meta.env.VITE_WS_URL
+    const wsBaseUrl = envWsUrl || `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}`
+    const url = `${wsBaseUrl}/api/v1/ws/jobs/${taskJobId}${token ? `?token=${token}` : ''}`
 
     try {
       ws.value = new WebSocket(url)

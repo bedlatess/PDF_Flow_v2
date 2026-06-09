@@ -175,8 +175,8 @@ backend/app/
 
 ### 🔴 P0 — 完成真实业务链路验收（本周）
 
-- [ ] **后端真实环境端到端联调**：单服务器 Docker 环境已跑通启动、迁移、`/health`、`/api/docs`、基础 smoke test；当前剩余 上传→任务执行→下载、OCR、Office、认证业务链路验收
-- [ ] **上线前脚本化业务验收**：已落地 `business-smoke-test.sh`（上传/合并/下载），并补充 `ocr-smoke-test.sh`、`office-smoke-test.sh`；下一步是在真实服务器逐条跑通 OCR 与 Office 转 PDF
+- [x] **后端真实环境端到端联调**：截至 2026-06-09，单服务器 Docker 环境已跑通启动、迁移、`/health`、`/api/docs`、PDF 合并上传下载、OCR、Office 转 PDF 四条真实链路，当前进入“是否发布到 `main`”决策阶段
+- [x] **上线前脚本化业务验收**：`smoke-test.sh`、`business-smoke-test.sh`、`ocr-smoke-test.sh`、`office-smoke-test.sh` 已在真实服务器连续通过，当前可作为 `staging -> main` 的发布门禁
 - [ ] **OCR / Office 真实服务器验收收尾**：已补强 `ocr-smoke-test.sh` / `office-smoke-test.sh` 的样本生成与错误输出；下一步是在服务器复跑两条脚本，确认 OCR 上传与 Office 转 PDF 全链路通过
 - [x] **文件下载端点**：`GET /files/download/{job_id}` 已实现（单文件直传 / 多文件 zip / OCR txt；425 未完成、422 失败、404 不存在），前端 `fileAPI.downloadResult` + `pollJobUntilDone` 已配套
 - [x] **后端单元测试**：新增 `tests/`（conftest + security/auth/files），35 用例通过，覆盖密码哈希、JWT、API Key、魔术数字、注册/登录/鉴权流程、下载分支
@@ -586,6 +586,7 @@ python -m pytest tests/ -q      # 35 通过
 - **2026-06-09 OCR / Office 验收脚本加固 + OOXML 上传兼容补强**：针对真实服务器上 OCR 上传与 Office 转换首轮 `HTTP 400` 难定位的问题，现已把 `ocr-smoke-test.sh` / `office-smoke-test.sh` 改为“在 backend 容器内生成样本文件，再 `docker cp` 回宿主机上传”，避免二进制内容经过终端管道输出时被污染；同时脚本在上传或提交失败时会直接打印后端响应体，减少盲查成本。后端 `FileValidator` 也补充了 OOXML 兼容逻辑：当 `python-magic` 将 `.docx/.xlsx/.pptx` 识别为 `application/zip` 或 `application/octet-stream` 时，只要文件头是标准 ZIP/OOXML 签名仍允许通过，并新增回归测试覆盖“OOXML 允许、普通 zip 拒绝”两条分支。
 - **2026-06-09 OCR / Office smoke 登录头污染修复**：真实服务器复跑时，OCR 与 Office 脚本都在上传前收到 `Invalid HTTP request received.`。根因不是业务接口，而是脚本里的 `token="$(login_user)"` 会捕获 `login_user()` 的标准输出；此前该函数先 `log "Logging in"` 再输出 token，导致 `Authorization` 头混入日志文本和换行，Uvicorn 直接把请求判为非法 HTTP。现已将这两条脚本中的登录日志改写到 stderr，保证 stdout 只返回纯 access token。
 - **2026-06-09 Office 转换任务状态接线修复**：真实服务器上 `office-smoke-test.sh` 创建 Office 转 PDF 任务后，脚本在查询 `/api/v1/files/jobs/{job_id}` 时收到 `404`。根因是 `/files/office-to-pdf` 端点直接 `delay()` 派发 Celery，使用了 Celery 默认 task id，但没有像 merge/OCR 一样先把同一个 `job_id` 写入 Redis，也没有显式把 task id 固定为统一 job id，导致状态查询链路断开。现已将 Office 转 PDF 接入 `file_processing_service.office_to_pdf()`，统一生成 `job_id`、保存初始状态并通过 `apply_async(task_id=job_id)` 派发任务，使 Office 链路与其它文件任务保持一致。
+- **2026-06-09 staging 全链路验收通过**：在真实服务器 `/root/data/docker_data/PDF/pdf-flow` 上连续执行 `bash scripts/smoke-test.sh`、`BUSINESS_SMOKE_EMAIL=... bash scripts/business-smoke-test.sh`、`OCR_SMOKE_EMAIL=... bash scripts/ocr-smoke-test.sh`、`OFFICE_SMOKE_EMAIL=... bash scripts/office-smoke-test.sh`，四条脚本全部通过，说明当前 `staging` 已具备一轮发布到 `main` 前的基础验收信心。
 - **2026-06-09 后端**：FastAPI 架构、JWT 认证、文件处理 API、Celery 任务、Redis 限流、STRIDE 安全。
 - **2026-06-08 MVP**：6 工具 + 20 组件 + 108 单测 + 三语，前端生产就绪。
 

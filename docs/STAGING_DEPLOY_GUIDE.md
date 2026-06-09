@@ -223,6 +223,15 @@ OFFICE_SMOKE_EMAIL="office-$(date +%s)@example.com" bash scripts/office-smoke-te
 
 ### 4.5 通过后合并到 `main`
 
+当前已在真实服务器验证通过的最小发布门禁：
+
+```bash
+bash scripts/smoke-test.sh
+BUSINESS_SMOKE_EMAIL="smoke-$(date +%s)@example.com" bash scripts/business-smoke-test.sh
+OCR_SMOKE_EMAIL="ocr-$(date +%s)@example.com" bash scripts/ocr-smoke-test.sh
+OFFICE_SMOKE_EMAIL="office-$(date +%s)@example.com" bash scripts/office-smoke-test.sh
+```
+
 本地执行：
 
 ```bash

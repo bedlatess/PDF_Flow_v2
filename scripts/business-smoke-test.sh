@@ -49,14 +49,22 @@ extract_json_value() {
 post_json() {
   local url="$1"
   local payload="$2"
+  local auth_token="${3:-}"
   local body_file
+  local -a curl_args
   body_file="$(mktemp)"
-  HTTP_STATUS="$(curl --silent --show-error \
-    -o "$body_file" \
-    -w "%{http_code}" \
-    -H "Content-Type: application/json" \
-    -d "$payload" \
-    "$url")"
+  curl_args=(
+    --silent
+    --show-error
+    -o "$body_file"
+    -w "%{http_code}"
+    -H "Content-Type: application/json"
+    -d "$payload"
+  )
+  if [[ -n "$auth_token" ]]; then
+    curl_args+=(-H "Authorization: Bearer $auth_token")
+  fi
+  HTTP_STATUS="$(curl "${curl_args[@]}" "$url")"
   HTTP_BODY="$(cat "$body_file")"
   rm -f "$body_file"
 }
@@ -172,15 +180,17 @@ main() {
   log "Submitting merge job"
   post_json \
     "${BASE_URL%/}/api/v1/files/merge" \
-    "{\"file_ids\":[\"$file1_id\",\"$file2_id\"],\"output_filename\":\"business-smoke-merged.pdf\"}"
+    "{\"file_ids\":[\"$file1_id\",\"$file2_id\"],\"output_filename\":\"business-smoke-merged.pdf\"}" \
+    "$token"
   if [[ "$HTTP_STATUS" != "200" ]]; then
     log "Merge submission failed (HTTP $HTTP_STATUS): $HTTP_BODY"
     exit 1
   fi
   merge_json="$HTTP_BODY"
   job_id="$(extract_json_value "$merge_json" "job_id")"
+  log "Merge job created: $job_id"
 
-  poll_job_completed "$job_id" "$token" >/dev/null
+  poll_job_completed "$job_id" "$token"
 
   log "Downloading merged result"
   curl --fail --silent --show-error \

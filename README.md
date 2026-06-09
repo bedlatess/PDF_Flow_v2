@@ -9,7 +9,7 @@
 
 **PDF-Flow** 是一个现代化的在线 PDF 工具集，所有处理完全在浏览器本地进行，确保您的文件隐私和安全。
 
-[🚀 在线演示](https://pdf-flow.vercel.app) | [📖 文档](./docs) | [🐛 问题反馈](https://github.com/your-repo/issues)
+[🚀 在线演示](https://pdf-flow.vercel.app) | [📖 文档](./docs) | [🐛 问题反馈](https://github.com/bedlatess/PDF_Flow/issues)
 
 ---
 
@@ -286,9 +286,9 @@ MIT License - 详见 [LICENSE](./LICENSE) 文件
 
 ## 📞 联系方式
 
-- **项目主页**: [GitHub Repository](https://github.com/your-repo)
-- **问题反馈**: [Issues](https://github.com/your-repo/issues)
-- **功能建议**: [Discussions](https://github.com/your-repo/discussions)
+- **项目主页**: [GitHub Repository](https://github.com/bedlatess/PDF_Flow)
+- **问题反馈**: [Issues](https://github.com/bedlatess/PDF_Flow/issues)
+- **功能建议**: [Discussions](https://github.com/bedlatess/PDF_Flow/discussions)
 
 ---
 
@@ -300,9 +300,9 @@ MIT License - 详见 [LICENSE](./LICENSE) 文件
 
 ## 📈 统计数据
 
-![GitHub stars](https://img.shields.io/github/stars/your-repo?style=social)
-![GitHub forks](https://img.shields.io/github/forks/your-repo?style=social)
-![GitHub watchers](https://img.shields.io/github/watchers/your-repo?style=social)
+![GitHub stars](https://img.shields.io/github/stars/bedlatess/PDF_Flow?style=social)
+![GitHub forks](https://img.shields.io/github/forks/bedlatess/PDF_Flow?style=social)
+![GitHub watchers](https://img.shields.io/github/watchers/bedlatess/PDF_Flow?style=social)
 
 ---
 

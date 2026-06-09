@@ -12,14 +12,19 @@ from unittest.mock import MagicMock
 
 import pytest
 
+BACKEND_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if BACKEND_ROOT not in sys.path:
+    sys.path.insert(0, BACKEND_ROOT)
+
 # ---------------------------------------------------------------------------
 # 1. 必须在导入 app 之前设置环境变量（config.py 用 pydantic-settings 强校验）
 # ---------------------------------------------------------------------------
-os.environ.setdefault("SECRET_KEY", "test-secret-key-for-pytest-only")
-os.environ.setdefault("DATABASE_URL", "sqlite:///./test_pdfflow.db")
-os.environ.setdefault("REDIS_URL", "redis://localhost:6379/0")
-os.environ.setdefault("ENVIRONMENT", "development")
-os.environ.setdefault("DEBUG", "false")
+os.environ["SECRET_KEY"] = "test-secret-key-for-pytest-only"
+os.environ["DATABASE_URL"] = "sqlite:///./test_pdfflow.db"
+os.environ["REDIS_URL"] = "redis://localhost:6379/0"
+os.environ["ENVIRONMENT"] = "development"
+os.environ["DEBUG"] = "false"
+os.environ["UPLOAD_DIR"] = os.path.join(os.getcwd(), ".tmp", "uploads")
 
 
 # ---------------------------------------------------------------------------
@@ -163,6 +168,67 @@ def _install_stubs():
     sys.modules["authlib"] = authlib_mod
     sys.modules["authlib.integrations"] = integrations_mod
     sys.modules["authlib.integrations.starlette_client"] = starlette_client_mod
+
+    # stripe
+    stripe_mod = types.ModuleType("stripe")
+    stripe_mod.api_key = None
+    stripe_mod.error = types.SimpleNamespace(StripeError=Exception)
+
+    def _stripe_create(*a, **k):
+        return types.SimpleNamespace(
+            id="stripe_test_id",
+            url="https://example.com/checkout",
+        )
+
+    stripe_mod.Customer = types.SimpleNamespace(create=_stripe_create)
+    stripe_mod.checkout = types.SimpleNamespace(
+        Session=types.SimpleNamespace(create=_stripe_create)
+    )
+    sys.modules["stripe"] = stripe_mod
+
+    # google generative ai
+    google_mod = types.ModuleType("google")
+    generativeai_mod = types.ModuleType("google.generativeai")
+
+    class _FakeGenerativeModel:
+        def __init__(self, *a, **k):
+            pass
+
+        def generate_content(self, *a, **k):
+            return types.SimpleNamespace(
+                text='{"summary":"stub","key_points":[],"word_count":0,"topics":[]}'
+            )
+
+    generativeai_mod.configure = MagicMock()
+    generativeai_mod.GenerativeModel = _FakeGenerativeModel
+    sys.modules["google"] = google_mod
+    sys.modules["google.generativeai"] = generativeai_mod
+
+    # sentry
+    sentry_sdk_mod = types.ModuleType("sentry_sdk")
+    sentry_sdk_mod.init = MagicMock()
+    sentry_sdk_mod.set_user = MagicMock()
+    sentry_sdk_mod.set_context = MagicMock()
+    sentry_sdk_mod.capture_exception = MagicMock()
+    sys.modules["sentry_sdk"] = sentry_sdk_mod
+
+    sentry_fastapi_mod = types.ModuleType("sentry_sdk.integrations.fastapi")
+    sentry_fastapi_mod.FastApiIntegration = type("FastApiIntegration", (), {})
+    sys.modules["sentry_sdk.integrations.fastapi"] = sentry_fastapi_mod
+
+    sentry_sqlalchemy_mod = types.ModuleType("sentry_sdk.integrations.sqlalchemy")
+    sentry_sqlalchemy_mod.SqlalchemyIntegration = type("SqlalchemyIntegration", (), {})
+    sys.modules["sentry_sdk.integrations.sqlalchemy"] = sentry_sqlalchemy_mod
+
+    # posthog
+    posthog_mod = types.ModuleType("posthog")
+
+    class _FakePosthog:
+        def __init__(self, *a, **k):
+            pass
+
+    posthog_mod.Posthog = _FakePosthog
+    sys.modules["posthog"] = posthog_mod
 
     # PIL + PIL.Image
     pil_mod = types.ModuleType("PIL")

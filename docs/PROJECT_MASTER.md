@@ -177,7 +177,9 @@ backend/app/
 
 - [x] **后端真实环境端到端联调**：截至 2026-06-09，单服务器 Docker 环境已跑通启动、迁移、`/health`、`/api/docs`、PDF 合并上传下载、OCR、Office 转 PDF 四条真实链路，当前进入“是否发布到 `main`”决策阶段
 - [x] **上线前脚本化业务验收**：`smoke-test.sh`、`business-smoke-test.sh`、`ocr-smoke-test.sh`、`office-smoke-test.sh` 已在真实服务器连续通过，当前可作为 `staging -> main` 的发布门禁
-- [ ] **OCR / Office 真实服务器验收收尾**：已补强 `ocr-smoke-test.sh` / `office-smoke-test.sh` 的样本生成与错误输出；下一步是在服务器复跑两条脚本，确认 OCR 上传与 Office 转 PDF 全链路通过
+- [x] **OCR / Office 真实服务器验收收尾**：OCR 上传与 Office 转 PDF 已在真实服务器复跑通过，相关 smoke 脚本、任务状态链路和上传兼容性修复已闭环
+- [x] **本地自动化补稳（第一轮）**：已补齐 `backend/tests/conftest.py` 的关键第三方 stub（含 `stripe`、`google.generativeai`、`sentry_sdk`、`posthog` 等），并把 GitHub Actions 收敛到当前 `main/staging` 的最小可用门禁：后端核心 pytest、前端 unit test、前端 build；暂不把现有大规模历史 lint 债务设为强制阻塞
+- [ ] **前端 lint 债务分批清理**：当前 ESLint 仍存在较多历史问题，且一部分来自生成物目录；现阶段先通过 `.gitignore` 排除 `.tmp/`、`playwright-report/`、`test-results/` 等噪音，后续再按目录分批清理真实源码告警并恢复 lint 门禁
 - [x] **文件下载端点**：`GET /files/download/{job_id}` 已实现（单文件直传 / 多文件 zip / OCR txt；425 未完成、422 失败、404 不存在），前端 `fileAPI.downloadResult` + `pollJobUntilDone` 已配套
 - [x] **后端单元测试**：新增 `tests/`（conftest + security/auth/files），35 用例通过，覆盖密码哈希、JWT、API Key、魔术数字、注册/登录/鉴权流程、下载分支
 - [x] **前端 OAuth 按钮**：加 "Soon" 角标 + tooltip，诚实标记未实现（后端 OAuth 属 P2）
@@ -587,6 +589,8 @@ python -m pytest tests/ -q      # 35 通过
 - **2026-06-09 OCR / Office smoke 登录头污染修复**：真实服务器复跑时，OCR 与 Office 脚本都在上传前收到 `Invalid HTTP request received.`。根因不是业务接口，而是脚本里的 `token="$(login_user)"` 会捕获 `login_user()` 的标准输出；此前该函数先 `log "Logging in"` 再输出 token，导致 `Authorization` 头混入日志文本和换行，Uvicorn 直接把请求判为非法 HTTP。现已将这两条脚本中的登录日志改写到 stderr，保证 stdout 只返回纯 access token。
 - **2026-06-09 Office 转换任务状态接线修复**：真实服务器上 `office-smoke-test.sh` 创建 Office 转 PDF 任务后，脚本在查询 `/api/v1/files/jobs/{job_id}` 时收到 `404`。根因是 `/files/office-to-pdf` 端点直接 `delay()` 派发 Celery，使用了 Celery 默认 task id，但没有像 merge/OCR 一样先把同一个 `job_id` 写入 Redis，也没有显式把 task id 固定为统一 job id，导致状态查询链路断开。现已将 Office 转 PDF 接入 `file_processing_service.office_to_pdf()`，统一生成 `job_id`、保存初始状态并通过 `apply_async(task_id=job_id)` 派发任务，使 Office 链路与其它文件任务保持一致。
 - **2026-06-09 staging 全链路验收通过**：在真实服务器 `/root/data/docker_data/PDF/pdf-flow` 上连续执行 `bash scripts/smoke-test.sh`、`BUSINESS_SMOKE_EMAIL=... bash scripts/business-smoke-test.sh`、`OCR_SMOKE_EMAIL=... bash scripts/ocr-smoke-test.sh`、`OFFICE_SMOKE_EMAIL=... bash scripts/office-smoke-test.sh`，四条脚本全部通过，说明当前 `staging` 已具备一轮发布到 `main` 前的基础验收信心。
+- **2026-06-09 本地自动化补稳（第 1 轮）**：为 `backend/tests/conftest.py` 补齐本地/CI 所需的第三方 stub，并将 `UPLOAD_DIR` 固定到仓库内 `.tmp/uploads`，避免 Windows 本地因默认临时目录权限或路径差异导致 pytest 失败。当前后端核心测试 `backend/tests/test_security.py`、`test_auth.py`、`test_files.py` 已可在本地直接跑通。
+- **2026-06-09 CI 门禁收敛**：`.github/workflows/ci-cd.yml` 已收敛为当前真实可维护的最小 CI，只对 `main/staging` 执行前端 unit test + build，以及后端核心 pytest。前端 lint 暂不作为强制阻塞项，避免被历史存量问题和生成物目录噪音卡住发布；`.gitignore` 同步补充 `.tmp/`、`playwright-report/`、`test-results/`、`test_pdfflow.db` 忽略规则。
 - **2026-06-09 后端**：FastAPI 架构、JWT 认证、文件处理 API、Celery 任务、Redis 限流、STRIDE 安全。
 - **2026-06-08 MVP**：6 工具 + 20 组件 + 108 单测 + 三语，前端生产就绪。
 

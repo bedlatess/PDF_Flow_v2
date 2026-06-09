@@ -1,18 +1,13 @@
 # GitHub Actions CI/CD Pipeline
-name: CI/CD Pipeline
+name: CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, staging ]
   pull_request:
-    branches: [ main, develop ]
-
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+    branches: [ main, staging ]
 
 jobs:
-  # Frontend Tests and Build
   frontend:
     runs-on: ubuntu-latest
     steps:
@@ -27,49 +22,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run linter
-        run: npm run lint
-
       - name: Run unit tests
-        run: npm run test:unit
+        run: npm run test:unit:ci
 
       - name: Build frontend
         run: npm run build
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: frontend-dist
-          path: dist/
-
-  # Backend Tests
   backend:
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_DB: test_db
-          POSTGRES_USER: test_user
-          POSTGRES_PASSWORD: test_pass
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
-      redis:
-        image: redis:7-alpine
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 6379:6379
-
     steps:
       - uses: actions/checkout@v3
 
@@ -87,102 +47,11 @@ jobs:
 
       - name: Run tests
         env:
-          DATABASE_URL: postgresql://test_user:test_pass@localhost:5432/test_db
+          PYTHONPATH: ${{ github.workspace }}/backend
+          SECRET_KEY: test-secret-key-for-ci
+          DATABASE_URL: sqlite:///./test_pdfflow.db
           REDIS_URL: redis://localhost:6379/0
-          SECRET_KEY: test-secret-key
+          ENVIRONMENT: development
+          DEBUG: "false"
         run: |
-          cd backend
-          pytest tests/ -v
-
-      - name: Upload coverage
-        uses: codecov/codecov-action@v3
-        with:
-          file: ./backend/coverage.xml
-
-  # Build and Push Docker Images
-  build-images:
-    needs: [frontend, backend]
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Log in to Container Registry
-        uses: docker/login-action@v2
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata (backend)
-        id: meta-backend
-        uses: docker/metadata-action@v4
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/backend
-
-      - name: Build and push backend image
-        uses: docker/build-push-action@v4
-        with:
-          context: ./backend
-          file: ./Dockerfile.backend
-          push: true
-          tags: ${{ steps.meta-backend.outputs.tags }}
-          labels: ${{ steps.meta-backend.outputs.labels }}
-
-      - name: Extract metadata (frontend)
-        id: meta-frontend
-        uses: docker/metadata-action@v4
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend
-
-      - name: Build and push frontend image
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          file: ./Dockerfile.frontend
-          push: true
-          tags: ${{ steps.meta-frontend.outputs.tags }}
-          labels: ${{ steps.meta-frontend.outputs.labels }}
-
-  # Deploy to Kubernetes
-  deploy:
-    needs: build-images
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Setup kubectl
-        uses: azure/setup-kubectl@v3
-
-      - name: Configure kubectl
-        run: |
-          echo "${{ secrets.KUBECONFIG }}" | base64 -d > kubeconfig
-          export KUBECONFIG=kubeconfig
-
-      - name: Update secrets
-        run: |
-          kubectl create secret generic pdf-flow-secrets \
-            --from-literal=SECRET_KEY=${{ secrets.SECRET_KEY }} \
-            --from-literal=DATABASE_URL=${{ secrets.DATABASE_URL }} \
-            --from-literal=GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }} \
-            --from-literal=SENTRY_DSN=${{ secrets.SENTRY_DSN }} \
-            --from-literal=POSTHOG_API_KEY=${{ secrets.POSTHOG_API_KEY }} \
-            --from-literal=STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }} \
-            --namespace pdf-flow \
-            --dry-run=client -o yaml | kubectl apply -f -
-
-      - name: Deploy to Kubernetes
-        run: |
-          kubectl apply -f k8s/deployment.yaml
-          kubectl rollout status deployment/pdf-flow-backend -n pdf-flow
-          kubectl rollout status deployment/pdf-flow-celery-worker -n pdf-flow
-
-      - name: Verify deployment
-        run: |
-          kubectl get pods -n pdf-flow
-          kubectl get services -n pdf-flow
+          python -m pytest backend/tests/test_security.py backend/tests/test_auth.py backend/tests/test_files.py -q

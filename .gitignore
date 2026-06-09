@@ -24,6 +24,10 @@ dist-ssr
 *.sw?
 __pycache__/
 *.py[cod]
+.tmp/
+playwright-report/
+test-results/
+test_pdfflow.db
 
 # Test coverage
 coverage

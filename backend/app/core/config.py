@@ -3,9 +3,9 @@ Core configuration settings for PDF-Flow backend
 Based on v4.0 specification: Enterprise-grade architecture with STRIDE security model
 """
 import json
-from typing import Annotated, List, Optional
-from pydantic import Field, field_validator
-from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
+from typing import List, Optional
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -32,13 +32,13 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     # CORS
-    ALLOWED_ORIGINS: Annotated[List[str], NoDecode] = Field(
-        default=["http://localhost:5173", "http://localhost:3000"],
-        env="ALLOWED_ORIGINS"
+    ALLOWED_ORIGINS_RAW: str = Field(
+        default="http://localhost:5173,http://localhost:3000",
+        alias="ALLOWED_ORIGINS"
     )
-    ALLOWED_HOSTS: Annotated[List[str], NoDecode] = Field(
-        default=["localhost", "127.0.0.1"],
-        env="ALLOWED_HOSTS"
+    ALLOWED_HOSTS_RAW: str = Field(
+        default="localhost,127.0.0.1",
+        alias="ALLOWED_HOSTS"
     )
 
     # Database (Supabase PostgreSQL)
@@ -104,29 +104,22 @@ class Settings(BaseSettings):
     # D (Denial of Service): Cloudflare + Redis rate limiting
     # E (Elevation of Privilege): Non-root containers, minimum permissions
 
-    @field_validator("ALLOWED_ORIGINS", mode="before")
-    @classmethod
-    def parse_origins(cls, v):
-        if isinstance(v, str):
-            value = v.strip()
-            if not value:
-                return []
-            if value.startswith("["):
-                return json.loads(value)
-            return [origin.strip() for origin in value.split(",") if origin.strip()]
-        return v
+    @staticmethod
+    def _parse_list_setting(value: str) -> List[str]:
+        value = (value or "").strip()
+        if not value:
+            return []
+        if value.startswith("["):
+            return [item.strip() for item in json.loads(value) if str(item).strip()]
+        return [item.strip() for item in value.split(",") if item.strip()]
 
-    @field_validator("ALLOWED_HOSTS", mode="before")
-    @classmethod
-    def parse_hosts(cls, v):
-        if isinstance(v, str):
-            value = v.strip()
-            if not value:
-                return []
-            if value.startswith("["):
-                return json.loads(value)
-            return [host.strip() for host in value.split(",") if host.strip()]
-        return v
+    @property
+    def ALLOWED_ORIGINS(self) -> List[str]:
+        return self._parse_list_setting(self.ALLOWED_ORIGINS_RAW)
+
+    @property
+    def ALLOWED_HOSTS(self) -> List[str]:
+        return self._parse_list_setting(self.ALLOWED_HOSTS_RAW)
 
 
 # Create settings instance

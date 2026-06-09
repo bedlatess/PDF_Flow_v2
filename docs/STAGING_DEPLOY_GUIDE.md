@@ -1,10 +1,10 @@
-# PDF-Flow 单服务器 Staging 部署指南
+# PDF-Flow 单服务器部署指南
 
 > 适用场景：
 > - 本地不安装 Docker
 > - 只有 1 台服务器
 > - 服务器用于真实环境测试
-> - 使用 `staging` 做测试，`main` 保持正式稳定
+> - 代码先在 `staging` 验收，再按需切到 `main` 做上线测试
 
 ---
 
@@ -13,7 +13,7 @@
 这套流程解决 4 个问题：
 
 1. 本地改完代码后，如何稳定推到服务器测试
-2. 服务器如何只部署 `staging`，避免把测试代码和正式代码混在一起
+2. 服务器如何在 `staging` 与 `main` 之间安全切换，而不丢失回滚能力
 3. 部署失败后如何快速回滚
 4. 每次改完流程后，如何保证文档同步，避免重复踩坑
 
@@ -34,6 +34,12 @@
 1. 日常开发先合入 `staging`
 2. 服务器只拉取并部署 `staging`
 3. 服务器测试通过后，再把 `staging` 合并到 `main`
+
+### 当前建议
+
+- `staging`：继续作为开发完成后的首轮真实验收分支
+- `main`：现在已经可以承接真实上线测试
+- 如果这次目标是“直接按正式分支做线上验证”，优先在服务器执行 `main` 包装脚本，而不是手工拼 `DEPLOY_BRANCH=main`
 
 ---
 
@@ -102,6 +108,8 @@ cp backend/.env.example backend/.env
 ```bash
 chmod +x scripts/deploy-staging.sh
 chmod +x scripts/rollback-staging.sh
+chmod +x scripts/deploy-main.sh
+chmod +x scripts/rollback-main.sh
 chmod +x scripts/smoke-test.sh
 chmod +x scripts/business-smoke-test.sh
 chmod +x scripts/ocr-smoke-test.sh
@@ -159,6 +167,13 @@ git push origin staging
 ```bash
 cd /path/to/pdf-flow
 bash scripts/deploy-staging.sh
+```
+
+如果当前服务器已经切到 `main` 做真实上线测试，改用：
+
+```bash
+cd /path/to/pdf-flow
+bash scripts/deploy-main.sh
 ```
 
 ### 4.4 冒烟测试
@@ -221,7 +236,25 @@ OFFICE_SMOKE_EMAIL="office-$(date +%s)@example.com" bash scripts/office-smoke-te
 - Resend
 - Gemini
 
-### 4.5 通过后合并到 `main`
+### 4.5 `main` 上线测试基线
+
+截至 2026-06-09，以下四条脚本已经在真实服务器 Docker 环境连续通过，可作为本轮 `main` 上线测试的最小发布门禁：
+
+```bash
+bash scripts/smoke-test.sh
+BUSINESS_SMOKE_EMAIL="smoke-$(date +%s)@example.com" bash scripts/business-smoke-test.sh
+OCR_SMOKE_EMAIL="ocr-$(date +%s)@example.com" bash scripts/ocr-smoke-test.sh
+OFFICE_SMOKE_EMAIL="office-$(date +%s)@example.com" bash scripts/office-smoke-test.sh
+```
+
+推荐真实上线测试顺序：
+
+1. `git push origin main`
+2. 服务器执行 `git pull --ff-only origin main`
+3. 服务器执行 `bash scripts/deploy-main.sh`
+4. 依次跑 4 条 smoke 脚本
+5. 再做人工页面验证：登录、上传、下载、套餐拦截、异常提示
+### 4.6 通过后合并到 `main`
 
 当前已在真实服务器验证通过的最小发布门禁：
 
@@ -264,6 +297,12 @@ git push -u origin staging
 
 ```bash
 bash scripts/rollback-staging.sh
+```
+
+如果当前部署的是 `main`，改用：
+
+```bash
+bash scripts/rollback-main.sh
 ```
 
 这个脚本会：
@@ -312,10 +351,24 @@ cd /path/to/pdf-flow
 bash scripts/deploy-staging.sh
 ```
 
+### 服务器 `main` 上线测试
+
+```bash
+git checkout main
+git pull --ff-only origin main
+bash scripts/deploy-main.sh
+```
+
 ### 服务器回滚
 
 ```bash
 bash scripts/rollback-staging.sh
+```
+
+### 服务器 `main` 回滚
+
+```bash
+bash scripts/rollback-main.sh
 ```
 
 ### 测试通过后进正式分支
@@ -352,6 +405,6 @@ git push origin main
 
 一句话版：
 
-**本地开发 -> 推 `staging` -> 服务器跑脚本 -> 真实测试 -> 通过后合并 `main`**
+**本地开发 -> 推 `staging` -> 服务器验收 -> 合并 `main` -> 服务器跑 `deploy-main.sh` 做真实上线测试**
 
 这是当前“只有 1 台服务器、但又要有容错和回滚”的最稳妥方案。

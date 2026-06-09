@@ -10,6 +10,7 @@ from typing import Optional, List
 from pathlib import Path
 from fastapi import UploadFile, HTTPException, status
 import logging
+from app.core.config import settings
 
 # Import PDF text extraction
 try:
@@ -118,7 +119,9 @@ class FileManager:
             self.base_dir = Path(base_dir)
             self.base_dir.mkdir(parents=True, exist_ok=True)
         else:
-            self.base_dir = Path(tempfile.gettempdir()) / "pdf_flow"
+            # Use the configured upload directory so backend and worker share files
+            # through the mounted Docker volume (`/tmp/pdf-flow/...`).
+            self.base_dir = Path(settings.UPLOAD_DIR)
             self.base_dir.mkdir(parents=True, exist_ok=True)
 
         logger.info(f"FileManager initialized with base_dir: {self.base_dir}")

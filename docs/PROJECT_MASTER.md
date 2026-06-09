@@ -579,6 +579,7 @@ python -m pytest tests/ -q      # 35 通过
 - **2026-06-09 业务验收脚本可观测性修复**：`scripts/business-smoke-test.sh` 在合并任务提交后会进入轮询，但此前将 `poll_job_completed` 的标准输出整体重定向到了 `/dev/null`，导致脚本一旦在轮询阶段失败，终端只会停在 “Submitting merge job”，几乎没有可用线索。现已补充 `job_id` 输出、保留轮询日志，并让 JSON 请求支持统一携带 Bearer Token，便于直接看见任务状态、失败响应和下载阶段位置。
 - **2026-06-09 服务器部署兼容性修复（第 9 轮）**：真实服务器业务验收中，合并任务可成功提交并生成 `job_id`，但 `GET /files/jobs/{job_id}` 持续返回 `pending`，30 次轮询均无进展。根因定位到 Celery worker：任务已被路由到 `pdf_processing / ocr_processing / office_processing / email` 自定义队列，但 worker 启动命令未显式声明消费这些队列，导致任务留在 broker 中无人执行。现已在 `backend/app/celery_worker.py` 中显式声明 `task_default_queue` 与 `task_queues`，并统一改用 `CELERY_BROKER_URL` / `CELERY_RESULT_BACKEND` 作为 broker/backend 配置来源，避免与 `REDIS_URL` 混用。
 - **2026-06-09 业务验收脚本就绪等待补强**：在 `docker compose up -d --build backend celery-worker` 后立即执行业务脚本时，注册请求可能撞上 Uvicorn reload/容器启动窗口，表现为 `curl: (56) Recv failure: Connection reset by peer`。现已让 `scripts/business-smoke-test.sh` 在执行注册前自动等待 `/health` 与 `/api/docs` 就绪，并为核心 `curl` 请求补充轻量连接重试，减少“服务刚拉起时的假失败”。
+- **2026-06-09 服务器部署兼容性修复（第 10 轮）**：Celery worker 开始消费合并任务后，任务状态从 `pending` 进入 `processing`，但长时间不结束。进一步排查发现，上传文件默认被保存到容器内 `tempfile.gettempdir()/pdf_flow`，即 `/tmp/pdf_flow/...`；而 Docker 共享卷挂载的是 `/tmp/pdf-flow/...`。两端路径只差下划线/短横线，导致 backend 与 worker 不一定看到同一份文件。现已将 `FileManager` 默认根目录统一改为 `settings.UPLOAD_DIR`（`/tmp/pdf-flow/uploads`），并补充回归测试，确保异步任务读取的是共享卷中的真实文件。
 - **2026-06-09 后端**：FastAPI 架构、JWT 认证、文件处理 API、Celery 任务、Redis 限流、STRIDE 安全。
 - **2026-06-08 MVP**：6 工具 + 20 组件 + 108 单测 + 三语，前端生产就绪。
 

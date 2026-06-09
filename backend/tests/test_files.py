@@ -98,6 +98,15 @@ class TestFileValidator:
         assert "application/pdf" in FileValidator.ALLOWED_MIME_TYPES
 
 
+class TestFileManager:
+    def test_default_base_dir_uses_configured_upload_dir(self):
+        from app.core.config import settings
+        from app.utils.file_utils import FileManager
+
+        manager = FileManager()
+        assert str(manager.base_dir) == settings.UPLOAD_DIR
+
+
 class TestUploadEndpoint:
     def test_upload_allows_anonymous_user(self, client):
         files = {"file": ("sample.pdf", b"%PDF-1.4\n%test\n", "application/pdf")}

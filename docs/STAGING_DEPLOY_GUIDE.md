@@ -254,6 +254,20 @@ OFFICE_SMOKE_EMAIL="office-$(date +%s)@example.com" bash scripts/office-smoke-te
 3. 服务器执行 `bash scripts/deploy-main.sh`
 4. 依次跑 4 条 smoke 脚本
 5. 再做人工页面验证：登录、上传、下载、套餐拦截、异常提示
+
+当前状态：
+
+- 截至 2026-06-09，`main` 分支已在真实服务器完成一轮重新部署
+- `smoke-test.sh`、`business-smoke-test.sh`、`ocr-smoke-test.sh`、`office-smoke-test.sh` 已在 `main` 上连续通过
+- 下一步不再是补脚本，而是做人工线上验收并记录问题清单
+
+推荐人工线上验收最小清单：
+
+1. 注册新用户并登录，确认注册、登录、退出都正常
+2. 以普通用户上传 2 个 PDF 做一次合并，确认结果可下载
+3. 验证 OCR 页面与 Office 转 PDF 页面能正常提交、查看结果、下载结果
+4. 检查 Pro/Enterprise 限制是否按预期提示，而不是无响应或 500
+5. 人工触发 1 次异常输入，确认前端错误提示和后端返回信息可理解
 ### 4.6 通过后合并到 `main`
 
 当前已在真实服务器验证通过的最小发布门禁：

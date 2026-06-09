@@ -473,6 +473,37 @@ class FileProcessingService:
             "message": "OCR job queued"
         }
 
+    async def office_to_pdf(self, file: UploadFile) -> Dict:
+        """Office to PDF conversion"""
+        from app.utils.file_utils import save_upload_file
+        from app.tasks.office_tasks import office_to_pdf_task
+
+        input_path = await save_upload_file(file)
+        output_filename = os.path.splitext(file.filename)[0] + ".pdf"
+        output_path = os.path.join(os.path.dirname(input_path), output_filename)
+
+        job_id = self._generate_job_id()
+
+        self._save_job_status(job_id, {
+            "job_id": job_id,
+            "status": "pending",
+            "created_at": time.time(),
+            "updated_at": time.time()
+        })
+
+        office_to_pdf_task.apply_async(
+            args=[input_path, output_path],
+            task_id=job_id
+        )
+
+        logger.info(f"Office to PDF job created: {job_id}")
+
+        return {
+            "job_id": job_id,
+            "status": "pending",
+            "message": "Office to PDF job queued"
+        }
+
 
 # 全局服务实例
 file_processing_service = FileProcessingService()

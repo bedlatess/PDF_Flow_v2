@@ -7,6 +7,7 @@ import os
 import time
 import asyncio
 from io import BytesIO
+from unittest.mock import MagicMock
 
 import pytest
 from fastapi import HTTPException
@@ -166,3 +167,42 @@ class TestUploadEndpoint:
         )
         assert r.status_code == 201
         assert r.json()["file_id"].startswith("file_")
+
+
+class TestOfficeToPdfFlow:
+    def test_office_service_saves_job_state(self, monkeypatch):
+        from app.services import file_service as file_service_module
+
+        saved_jobs = {}
+
+        async def fake_save_upload_file(_file):
+            return "/tmp/pdf-flow/uploads/office_test/sample.docx"
+
+        class FakeTask:
+            def apply_async(self, args, task_id):
+                return MagicMock(id=task_id)
+
+        monkeypatch.setattr(file_service_module.file_processing_service, "_generate_job_id", lambda: "job_office_test")
+        monkeypatch.setattr(
+            file_service_module.file_processing_service,
+            "_save_job_status",
+            lambda job_id, status_data: saved_jobs.setdefault(job_id, status_data),
+        )
+
+        import sys
+        fake_task_module = type(sys)("app.tasks.office_tasks")
+        fake_task_module.office_to_pdf_task = FakeTask()
+        sys.modules["app.tasks.office_tasks"] = fake_task_module
+
+        monkeypatch.setattr(
+            sys.modules["app.utils.file_utils"],
+            "save_upload_file",
+            fake_save_upload_file,
+        )
+
+        upload = UploadFile(filename="sample.docx", file=BytesIO(b"PK\x03\x04docx-content"))
+        result = asyncio.run(file_service_module.file_processing_service.office_to_pdf(upload))
+
+        assert result["job_id"] == "job_office_test"
+        assert result["status"] == "pending"
+        assert saved_jobs["job_office_test"]["status"] == "pending"

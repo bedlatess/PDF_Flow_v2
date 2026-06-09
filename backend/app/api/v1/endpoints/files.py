@@ -390,30 +390,8 @@ async def office_to_pdf(
                 detail=f"Unsupported file type. Allowed: {', '.join(allowed_extensions)}"
             )
 
-        # 保存上传文件
-        from app.utils.file_utils import save_upload_file
-        input_path = await save_upload_file(file)
-
-        # 确定输出路径
-        output_filename = os.path.splitext(file.filename)[0] + ".pdf"
-        output_path = os.path.join(os.path.dirname(input_path), output_filename)
-
-        # 提交 Celery 任务
-        from app.tasks.office_tasks import office_to_pdf_task
-        task = office_to_pdf_task.delay(input_path, output_path)
-
-        # 记录任务信息
-        job_data = {
-            "job_id": task.id,
-            "job_type": "office_to_pdf",
-            "status": "pending",
-            "input_filename": file.filename,
-            "output_filename": output_filename
-        }
-
-        logger.info(f"Office to PDF task submitted: {task.id}")
-
-        return ProcessingJobResponse(**job_data)
+        result = await file_processing_service.office_to_pdf(file)
+        return result
 
     except HTTPException:
         raise

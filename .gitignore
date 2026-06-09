@@ -33,6 +33,7 @@ coverage
 
 # Extracted PDF content (temporary)
 *.txt
+!backend/requirements.txt
 extract.log
 pdf_content.txt
 

@@ -14,6 +14,7 @@ from app.core.security import create_access_token, create_refresh_token, get_pas
 from app.core.config import settings
 from app.models.user import User, UserRole
 from app.schemas.user import Token
+from app.api.v1.endpoints.auth import get_current_user
 
 router = APIRouter()
 
@@ -307,7 +308,3 @@ async def link_oauth_callback(
         print(f"OAuth link error: {str(e)}")
         frontend_url = settings.ALLOWED_ORIGINS[0]
         return RedirectResponse(url=f"{frontend_url}/profile?oauth_linked=error")
-
-
-# Import after router definition to avoid circular import
-from app.api.v1.endpoints.auth import get_current_user

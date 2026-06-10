@@ -156,6 +156,28 @@ const router = createRouter({
   ],
 })
 
+const dynamicImportErrorPattern = /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|Loading chunk [\d\w-]+ failed/i
+
+router.onError((error, to) => {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  const message = error instanceof Error ? error.message : String(error)
+  if (!dynamicImportErrorPattern.test(message)) {
+    return
+  }
+
+  const reloadKey = `pdf-flow:reload:${to.fullPath}`
+  if (sessionStorage.getItem(reloadKey) === '1') {
+    sessionStorage.removeItem(reloadKey)
+    return
+  }
+
+  sessionStorage.setItem(reloadKey, '1')
+  window.location.assign(to.fullPath)
+})
+
 // 全局前置守卫 - 设置页面标题
 router.beforeEach((to, _from, next) => {
   const title = to.meta.title as string
@@ -165,6 +187,14 @@ router.beforeEach((to, _from, next) => {
     document.title = 'PDF-Flow - Privacy-First PDF Tools'
   }
   next()
+})
+
+router.afterEach((to) => {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  sessionStorage.removeItem(`pdf-flow:reload:${to.fullPath}`)
 })
 
 export default router

@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import * as pdfjsLib from 'pdfjs-dist'
 import Button from '@/components/common/Button.vue'
+import { configurePdfJsWorker } from '@/utils/pdf/configurePdfJs'
 
 interface PDFViewerProps {
   file: File
@@ -31,7 +32,7 @@ const errorMessage = ref('')
 const isFullscreen = ref(false)
 
 // 配置 PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = '/wasm/pdfjs.worker.js'
+configurePdfJsWorker()
 
 // 缩放选项
 const scaleOptions = [

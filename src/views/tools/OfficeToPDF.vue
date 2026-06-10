@@ -1,254 +1,376 @@
-<template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-12 px-4">
-    <div class="max-w-4xl mx-auto">
-      <!-- Header -->
-      <div class="text-center mb-8">
-        <div class="inline-block p-3 bg-blue-100 rounded-full mb-4">
-          <FileText class="h-8 w-8 text-blue-600" />
-        </div>
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ $t('tools.officeToPdf.title') }}</h1>
-        <p class="text-gray-600">{{ $t('tools.officeToPdf.desc') }}</p>
-      </div>
-
-      <!-- Main Card -->
-      <div class="bg-white rounded-2xl shadow-xl p-8">
-        <!-- Upload Zone -->
-        <div v-if="!uploadedFile">
-          <DragDropZone
-            :accept="acceptedFileTypes"
-            @files-dropped="handleFileDrop"
-            :max-files="1"
-          >
-            <template #icon>
-              <FileText class="h-16 w-16 text-blue-500 mb-4" />
-            </template>
-            <template #title>
-              {{ $t('tools.officeToPdf.dropFile') }}
-            </template>
-            <template #subtitle>
-              {{ $t('tools.officeToPdf.supportedFormats') }}
-            </template>
-          </DragDropZone>
-
-          <!-- Supported Formats -->
-          <div class="mt-6 grid grid-cols-3 gap-4">
-            <div class="flex items-center justify-center p-4 bg-blue-50 rounded-lg">
-              <FileText class="h-5 w-5 text-blue-600 mr-2" />
-              <span class="text-sm font-medium text-gray-700">Word (.docx)</span>
-            </div>
-            <div class="flex items-center justify-center p-4 bg-green-50 rounded-lg">
-              <FileText class="h-5 w-5 text-green-600 mr-2" />
-              <span class="text-sm font-medium text-gray-700">Excel (.xlsx)</span>
-            </div>
-            <div class="flex items-center justify-center p-4 bg-orange-50 rounded-lg">
-              <FileText class="h-5 w-5 text-orange-600 mr-2" />
-              <span class="text-sm font-medium text-gray-700">PowerPoint (.pptx)</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- File Preview -->
-        <div v-else class="space-y-6">
-          <FilePreview
-            :file="uploadedFile"
-            @remove="removeFile"
-          />
-
-          <!-- Cloud Processing Toggle (Pro/Enterprise only) -->
-          <CloudToggle
-            v-if="userStore.isAuthenticated"
-            v-model="useCloudProcessing"
-            :disabled="!userStore.isProOrEnterprise"
-          />
-
-          <!-- Convert Button -->
-          <button
-            @click="convertFile"
-            :disabled="converting"
-            class="w-full flex items-center justify-center px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-medium hover:from-blue-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
-          >
-            <Loader2 v-if="converting" class="animate-spin -ml-1 mr-2 h-5 w-5" />
-            <ArrowRight v-else class="mr-2 h-5 w-5" />
-            {{ converting ? $t('common.processing') : $t('tools.officeToPdf.convert') }}
-          </button>
-
-          <!-- Progress Bar -->
-          <ProgressBar
-            v-if="converting"
-            :progress="progress"
-            :status="status"
-          />
-
-          <!-- Error Message -->
-          <div v-if="errorMessage" class="rounded-lg bg-red-50 p-4">
-            <div class="flex">
-              <AlertCircle class="h-5 w-5 text-red-400" />
-              <div class="ml-3">
-                <p class="text-sm text-red-800">{{ errorMessage }}</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Result -->
-          <div v-if="resultUrl" class="rounded-lg bg-green-50 p-6">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center">
-                <CheckCircle2 class="h-6 w-6 text-green-500 mr-3" />
-                <div>
-                  <h3 class="text-lg font-semibold text-gray-900">{{ $t('tools.officeToPdf.success') }}</h3>
-                  <p class="text-sm text-gray-600">{{ $t('tools.officeToPdf.downloadReady') }}</p>
-                </div>
-              </div>
-              <button
-                @click="downloadResult"
-                class="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-              >
-                <Download class="h-5 w-5 mr-2" />
-                {{ $t('common.download') }}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Info Section -->
-      <div class="mt-8 bg-blue-50 rounded-xl p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-3">{{ $t('tools.officeToPdf.howItWorks') }}</h3>
-        <ul class="space-y-2 text-gray-700">
-          <li class="flex items-start">
-            <span class="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full bg-blue-100 text-blue-600 text-sm font-medium mr-3">1</span>
-            <span>{{ $t('tools.officeToPdf.step1') }}</span>
-          </li>
-          <li class="flex items-start">
-            <span class="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full bg-blue-100 text-blue-600 text-sm font-medium mr-3">2</span>
-            <span>{{ $t('tools.officeToPdf.step2') }}</span>
-          </li>
-          <li class="flex items-start">
-            <span class="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full bg-blue-100 text-blue-600 text-sm font-medium mr-3">3</span>
-            <span>{{ $t('tools.officeToPdf.step3') }}</span>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
-import { ref } from 'vue'
-import { FileText, ArrowRight, Loader2, AlertCircle, CheckCircle2, Download } from 'lucide-vue-next'
-import DragDropZone from '@/components/pdf/DragDropZone.vue'
-import FilePreview from '@/components/pdf/FilePreview.vue'
+import { computed, onUnmounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
+import {
+  ArrowRight,
+  CheckCircle2,
+  Download,
+  FileText,
+  LogIn,
+  Sparkles,
+} from 'lucide-vue-next'
+import Button from '@/components/common/Button.vue'
+import Card from '@/components/common/Card.vue'
 import ProgressBar from '@/components/common/ProgressBar.vue'
-import CloudToggle from '@/components/common/CloudToggle.vue'
-import { useUserStore } from '@/stores/user'
+import DiagnosticAlert from '@/components/common/DiagnosticAlert.vue'
+import FilePreview from '@/components/pdf/FilePreview.vue'
+import DragDropZone from '@/components/pdf/DragDropZone.vue'
+import ToolHeader from '@/components/tools/ToolHeader.vue'
+import ToolNoticeBar from '@/components/tools/ToolNoticeBar.vue'
 import { fileAPI } from '@/services/api'
+import { useUserStore } from '@/stores/user'
+import { formatUserFacingError, type FormattedUserError } from '@/utils/error-messages'
+import { redirectForFeatureAccess } from '@/utils/feature-access'
 
+const { t } = useI18n()
+const router = useRouter()
+const route = useRoute()
 const userStore = useUserStore()
 
 const acceptedFileTypes = '.docx,.doc,.xlsx,.xls,.pptx,.ppt'
 const uploadedFile = ref<File | null>(null)
-const useCloudProcessing = ref(false)
 const converting = ref(false)
 const progress = ref(0)
 const status = ref('')
-const errorMessage = ref('')
+const errorState = ref<FormattedUserError | null>(null)
 const resultUrl = ref('')
 
-const handleFileDrop = (files: File[]) => {
-  if (files.length > 0) {
-    const file = files[0]
-    const extension = file.name.split('.').pop()?.toLowerCase()
-    const allowedExtensions = ['docx', 'doc', 'xlsx', 'xls', 'pptx', 'ppt']
+const supportedFormats = [
+  { label: 'Word', ext: '.doc, .docx', tone: 'bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-200' },
+  { label: 'Excel', ext: '.xls, .xlsx', tone: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-200' },
+  { label: 'PowerPoint', ext: '.ppt, .pptx', tone: 'bg-orange-50 text-orange-700 dark:bg-orange-950/30 dark:text-orange-200' },
+]
 
-    if (!extension || !allowedExtensions.includes(extension)) {
-      errorMessage.value = 'Please upload a valid Office file (Word, Excel, or PowerPoint)'
-      return
-    }
+const isReadyToConvert = computed(() => !!uploadedFile.value && userStore.isAuthenticated)
 
-    uploadedFile.value = file
-    errorMessage.value = ''
+const revokeResultUrl = () => {
+  if (resultUrl.value) {
+    URL.revokeObjectURL(resultUrl.value)
     resultUrl.value = ''
   }
 }
 
+const ensureLogin = () => redirectForFeatureAccess({
+  router,
+  route,
+  isAuthenticated: userStore.isAuthenticated,
+})
+
+const handleFilesSelected = (files: File[]) => {
+  if (files.length === 0) {
+    return
+  }
+
+  const [file] = files
+  const extension = file.name.split('.').pop()?.toLowerCase()
+  const allowedExtensions = ['docx', 'doc', 'xlsx', 'xls', 'pptx', 'ppt']
+
+  if (!extension || !allowedExtensions.includes(extension)) {
+    errorState.value = formatUserFacingError(new Error('unsupported file type'), {
+      area: 'OFFICE',
+      fallbackMessage: 'Please upload a Word, Excel, or PowerPoint file.',
+    })
+    return
+  }
+
+  uploadedFile.value = file
+  errorState.value = null
+  revokeResultUrl()
+  progress.value = 0
+  status.value = ''
+}
+
 const removeFile = () => {
   uploadedFile.value = null
-  errorMessage.value = ''
-  resultUrl.value = ''
+  errorState.value = null
   progress.value = 0
+  status.value = ''
+  revokeResultUrl()
 }
 
 const convertFile = async () => {
-  if (!uploadedFile.value) return
+  if (!uploadedFile.value) {
+    return
+  }
 
-  // Check authentication for cloud processing
-  if (useCloudProcessing.value && !userStore.isAuthenticated) {
-    errorMessage.value = 'Please login to use cloud processing'
+  if (!ensureLogin()) {
     return
   }
 
   converting.value = true
-  errorMessage.value = ''
-  progress.value = 0
-  status.value = 'Converting...'
+  errorState.value = null
+  revokeResultUrl()
+  progress.value = 15
+  status.value = 'Uploading file...'
 
   try {
-    if (useCloudProcessing.value) {
-      // Cloud processing
-      await convertWithCloud()
-    } else {
-      // Local processing not supported for Office files
-      errorMessage.value = 'Office conversion requires cloud processing. Please login and enable cloud mode.'
-      converting.value = false
+    const formData = new FormData()
+    formData.append('file', uploadedFile.value)
+
+    const response = await fileAPI.officeToPDF(formData)
+    progress.value = 45
+    status.value = 'Queued for conversion...'
+
+    const finalStatus = await fileAPI.pollJobUntilDone(response.job_id, (jobStatus) => {
+      if (jobStatus.status === 'processing') {
+        status.value = 'Converting on the server...'
+      } else if (jobStatus.status === 'pending') {
+        status.value = 'Queued for conversion...'
+      }
+
+      if (typeof jobStatus.progress === 'number') {
+        progress.value = Math.max(45, Math.min(92, jobStatus.progress))
+      }
+    })
+
+    if (finalStatus.status === 'failed') {
+      throw new Error(finalStatus.error || 'Conversion failed.')
     }
-  } catch (error: any) {
-    console.error('Conversion error:', error)
-    errorMessage.value = error.message || 'Conversion failed. Please try again.'
+
+    status.value = 'Preparing PDF download...'
+    progress.value = 96
+
+    const blob = await fileAPI.downloadResult(response.job_id)
+    resultUrl.value = URL.createObjectURL(blob)
+    progress.value = 100
+    status.value = 'Your PDF is ready.'
+  } catch (error) {
+    errorState.value = formatUserFacingError(error, {
+      area: 'OFFICE',
+      fallbackMessage: 'Conversion failed. Please try again.',
+    })
+  } finally {
     converting.value = false
   }
 }
 
-const convertWithCloud = async () => {
-  if (!uploadedFile.value) return
-
-  // Upload file and get job
-  progress.value = 20
-  status.value = 'Uploading to server...'
-
-  const formData = new FormData()
-  formData.append('file', uploadedFile.value)
-
-  const response = await fileAPI.officeToPDF(formData)
-  const jobId = response.job_id
-
-  // Poll for completion
-  progress.value = 50
-  status.value = 'Converting on server...'
-
-  await fileAPI.pollJobUntilDone(jobId, (p) => {
-    progress.value = 50 + (p * 0.4) // 50-90%
-  })
-
-  // Download result
-  progress.value = 90
-  status.value = 'Preparing download...'
-
-  const blob = await fileAPI.downloadResult(jobId)
-  resultUrl.value = URL.createObjectURL(blob)
-
-  progress.value = 100
-  status.value = 'Completed!'
-  converting.value = false
-}
-
 const downloadResult = () => {
-  if (!resultUrl.value || !uploadedFile.value) return
+  if (!resultUrl.value || !uploadedFile.value) {
+    return
+  }
 
   const link = document.createElement('a')
   link.href = resultUrl.value
-  const originalName = uploadedFile.value.name
-  const pdfName = originalName.replace(/\.(docx|doc|xlsx|xls|pptx|ppt)$/i, '.pdf')
-  link.download = pdfName
+  link.download = uploadedFile.value.name.replace(/\.(docx|doc|xlsx|xls|pptx|ppt)$/i, '.pdf')
   link.click()
 }
+
+onUnmounted(() => {
+  revokeResultUrl()
+})
 </script>
+
+<template>
+  <div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 dark:from-slate-950 dark:via-slate-950 dark:to-blue-950/30">
+    <ToolHeader
+      :title="t('tools.officeToPdf.title')"
+      :subtitle="t('tools.officeToPdf.desc')"
+      badge="Cloud conversion"
+      accent="blue"
+    >
+      <template #badgeIcon>
+        <Sparkles class="h-4 w-4" />
+      </template>
+
+      <template #extra>
+        <div class="flex flex-wrap items-center justify-center gap-2">
+          <span
+            v-for="format in supportedFormats"
+            :key="format.label"
+            :class="['rounded-full px-3 py-1 text-xs font-semibold', format.tone]"
+          >
+            {{ format.label }} {{ format.ext }}
+          </span>
+        </div>
+      </template>
+    </ToolHeader>
+
+    <section class="relative z-10 mx-auto max-w-5xl px-4 pb-16 pt-6">
+      <ToolNoticeBar variant="blue">
+        <template #icon>
+          <FileText class="h-5 w-5" />
+        </template>
+        Office to PDF requires login first because conversion runs in the cloud. Upgrade prompts are reserved for features that truly need Pro access.
+      </ToolNoticeBar>
+
+      <DiagnosticAlert
+        v-if="errorState"
+        class="mt-6"
+        :title="errorState.title"
+        :message="errorState.message"
+        :diagnostic-code="errorState.diagnosticCode"
+        :support-hint="errorState.supportHint"
+      />
+
+      <div class="mt-6 grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+        <Card class="rounded-[28px] border border-white/70 bg-white/90 shadow-xl shadow-blue-100/60 dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
+          <div class="space-y-6">
+            <div class="space-y-2">
+              <p class="text-xs font-semibold uppercase tracking-[0.22em] text-blue-500">
+                Upload
+              </p>
+              <h2 class="text-2xl font-semibold text-slate-900 dark:text-white">
+                {{ uploadedFile ? 'Review the selected Office file' : 'Upload an Office document' }}
+              </h2>
+              <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
+                {{ uploadedFile ? 'We keep the original filename and return a matching PDF when the cloud job finishes.' : 'Supports Word, Excel, and PowerPoint files in one shared conversion flow.' }}
+              </p>
+            </div>
+
+            <DragDropZone
+              v-if="!uploadedFile"
+              :accept="acceptedFileTypes"
+              :multiple="false"
+              :max-files="1"
+              @files-selected="handleFilesSelected"
+            >
+              <template #icon>
+                <FileText class="h-12 w-12" />
+              </template>
+              <template #title>
+                {{ t('tools.officeToPdf.dropFile') }}
+              </template>
+              <template #subtitle>
+                Sign in first, then upload Word, Excel, or PowerPoint files for server-side conversion.
+              </template>
+            </DragDropZone>
+
+            <div
+              v-else
+              class="space-y-5"
+            >
+              <FilePreview
+                :file="uploadedFile"
+                @remove="removeFile"
+              />
+
+              <div class="grid gap-4 rounded-[24px] border border-slate-200 bg-slate-50/80 p-5 dark:border-slate-800 dark:bg-slate-950/50 sm:grid-cols-3">
+                <div
+                  v-for="format in supportedFormats"
+                  :key="format.label"
+                  :class="['rounded-2xl px-4 py-4 text-sm', format.tone]"
+                >
+                  <p class="font-semibold">
+                    {{ format.label }}
+                  </p>
+                  <p class="mt-1 text-xs opacity-80">
+                    {{ format.ext }}
+                  </p>
+                </div>
+              </div>
+
+              <ProgressBar
+                v-if="converting || resultUrl"
+                :progress="progress"
+                :label="status"
+                variant="primary"
+                size="md"
+              />
+
+              <div class="flex flex-col gap-3 sm:flex-row">
+                <Button
+                  v-if="!userStore.isAuthenticated"
+                  variant="primary"
+                  size="lg"
+                  full-width
+                  @click="ensureLogin()"
+                >
+                  <LogIn class="mr-2 h-4 w-4" />
+                  Sign in to convert
+                </Button>
+
+                <Button
+                  v-else
+                  variant="primary"
+                  size="lg"
+                  :loading="converting"
+                  :disabled="!isReadyToConvert"
+                  full-width
+                  @click="convertFile"
+                >
+                  <ArrowRight class="mr-2 h-4 w-4" />
+                  {{ converting ? 'Converting...' : t('tools.officeToPdf.convert') }}
+                </Button>
+
+                <Button
+                  v-if="resultUrl"
+                  variant="outline"
+                  size="lg"
+                  full-width
+                  @click="downloadResult"
+                >
+                  <Download class="mr-2 h-4 w-4" />
+                  {{ t('common.download') }}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        <div class="space-y-6">
+          <Card class="rounded-[28px] border border-white/70 bg-white/90 shadow-xl shadow-blue-100/60 dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
+            <div class="space-y-5">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-blue-500">
+                  Flow
+                </p>
+                <h3 class="mt-2 text-xl font-semibold text-slate-900 dark:text-white">
+                  {{ t('tools.officeToPdf.howItWorks') }}
+                </h3>
+              </div>
+
+              <div class="space-y-4">
+                <div class="flex items-start gap-3 rounded-2xl bg-slate-50 px-4 py-4 dark:bg-slate-950/50">
+                  <span class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-sm font-semibold text-white">1</span>
+                  <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
+                    {{ t('tools.officeToPdf.step1') }}
+                  </p>
+                </div>
+                <div class="flex items-start gap-3 rounded-2xl bg-slate-50 px-4 py-4 dark:bg-slate-950/50">
+                  <span class="flex h-8 w-8 items-center justify-center rounded-full bg-cyan-500 text-sm font-semibold text-white">2</span>
+                  <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
+                    {{ t('tools.officeToPdf.step2') }}
+                  </p>
+                </div>
+                <div class="flex items-start gap-3 rounded-2xl bg-slate-50 px-4 py-4 dark:bg-slate-950/50">
+                  <span class="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500 text-sm font-semibold text-white">3</span>
+                  <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
+                    {{ t('tools.officeToPdf.step3') }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          <Card
+            v-if="resultUrl"
+            class="rounded-[28px] border border-emerald-200 bg-emerald-50/90 shadow-xl shadow-emerald-100/70 dark:border-emerald-900/40 dark:bg-emerald-950/20 dark:shadow-none"
+          >
+            <div class="flex items-start gap-4">
+              <CheckCircle2 class="mt-0.5 h-6 w-6 flex-shrink-0 text-emerald-500" />
+              <div class="space-y-3">
+                <div>
+                  <h3 class="text-lg font-semibold text-slate-900 dark:text-white">
+                    {{ t('tools.officeToPdf.success') }}
+                  </h3>
+                  <p class="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                    {{ t('tools.officeToPdf.downloadReady') }}
+                  </p>
+                </div>
+
+                <Button
+                  variant="primary"
+                  @click="downloadResult"
+                >
+                  <Download class="mr-2 h-4 w-4" />
+                  {{ t('common.download') }}
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </div>
+    </section>
+  </div>
+</template>

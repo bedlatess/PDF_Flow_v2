@@ -602,3 +602,17 @@ python -m pytest tests/ -q      # 35 通过
 ---
 
 > **维护提醒**：每次开发完成，更新 §0 状态、§2 矩阵、§4 勾选、§11 Changelog。**不要新建文档。**
+
+### 2026-06-10 Frontend UI Alignment / 上线前页面收口
+
+- Unified `src/views/tools/OCRPDF.vue`, `FillFormPDF.vue`, `AnnotatePDF.vue`, and `OfficeToPDF.vue` around the same hero / notice / upload / action shell used by the AI analyzer direction.
+- Added shared page primitives: `src/components/tools/ToolHeader.vue` and `src/components/tools/ToolNoticeBar.vue`.
+- Rebuilt `src/components/pdf/DragDropZone.vue` to support named slots, generic file accept patterns, and consistent upload events across tool pages.
+- Removed duplicated upload copy from `FillFormPDF.vue` and `AnnotatePDF.vue`, and simplified `OfficeToPDF.vue` into a single sign-in then convert flow.
+- Verification on 2026-06-10: `npm run build` passed locally.
+- Residual repo debt: `npm run build:check` still fails because of pre-existing TypeScript issues in enterprise, history, API, and PDF utility modules. Those errors were already present before this UI refactor.
+- Recommended manual QA after deploy: OCR access gating, form field rendering, annotation coordinate inputs, Office sign-in flow, and mobile spacing at 375px.
+- **2026-06-10 Main smoke suite**: added `scripts/main-smoke-suite.sh` to run health, business, OCR, and Office smoke tests in one command after `deploy-main.sh`, with isolated auto-generated smoke emails for each run.
+- **2026-06-10 Frontend runtime + tool-page hardening**: fixed the blank `/auth/login` page by removing `vue-i18n` linked-format crashes from login email placeholders and added router recovery for stale lazy-load chunks after deploys; fixed Merge PDF thumbnail rendering by switching all `pdf.js` consumers to a bundled worker URL instead of the missing `/wasm/pdfjs.worker.js`; refreshed `OCRPDF.vue`, `FillFormPDF.vue`, `AnnotatePDF.vue`, and `OfficeToPDF.vue` to a consistent AI-analyzer-style hero/notice/upload layout, removed repeated upload messaging, and corrected first-screen spacing so notice bars are no longer clipped under the hero. Local verification on 2026-06-10: `npm run build` passed, Playwright browser checks confirmed login renders, merge thumbnails load, and the four tool pages display correctly.
+- **2026-06-10 Auth + gated-tool behavior unification**: rebuilt `src/views/auth/Login.vue` and `src/views/auth/Register.vue` from plain template forms into polished full-page entry screens; added shared `src/components/common/DiagnosticAlert.vue`, `src/utils/error-messages.ts`, and `src/utils/feature-access.ts`; standardized premium tool access so guests are redirected to sign in first and only see Pro upgrade prompts after authentication; updated `OCRPDF.vue`, `AIPDFAnalyzer.vue`, `FillFormPDF.vue`, `AnnotatePDF.vue`, and `OfficeToPDF.vue` to use safer diagnostic error prompts with `PF-*` codes instead of exposing raw backend details.
+- **2026-06-10 Auth copy sanitization**: removed developer-facing/process-explaining copy from `src/views/auth/Login.vue` and `src/views/auth/Register.vue`, simplified the auth hero/support blocks to user-facing language only, and cleared auth placeholder examples from `src/locales/en.json`, `src/locales/zh.json`, and `src/locales/es.json` so the entry screens no longer imply prebaked login or registration details.

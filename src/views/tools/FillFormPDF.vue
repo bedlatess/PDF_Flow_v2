@@ -1,293 +1,130 @@
-<template>
-  <div class="container mx-auto px-4 py-8 max-w-5xl">
-    <!-- Header -->
-    <div class="mb-8">
-      <h1 class="text-3xl font-bold text-gray-900 mb-2">
-        {{ t('tools.fillForm.title') }}
-      </h1>
-      <p class="text-gray-600">
-        {{ t('tools.fillForm.description') }}
-      </p>
-      <div class="mt-4 flex items-center gap-2 text-sm text-amber-600 bg-amber-50 px-4 py-2 rounded-lg">
-        <Crown class="w-4 h-4" />
-        <span>{{ t('tools.fillForm.proOnly') }}</span>
-      </div>
-    </div>
-
-    <!-- Step 1: Upload PDF -->
-    <Card v-if="step === 1" class="mb-6">
-      <template #header>
-        <h2 class="text-xl font-semibold">{{ t('tools.fillForm.step1') }}</h2>
-      </template>
-
-      <DragDropZone
-        :accept="['application/pdf']"
-        :max-files="1"
-        @files-added="handleFileUpload"
-      >
-        <template #default>
-          <Upload class="w-12 h-12 text-gray-400 mb-4" />
-          <p class="text-lg font-medium text-gray-700 mb-2">
-            {{ t('common.dragDrop') }}
-          </p>
-          <p class="text-sm text-gray-500">
-            {{ t('common.or') }} <span class="text-blue-600">{{ t('common.browse') }}</span>
-          </p>
-        </template>
-      </DragDropZone>
-
-      <div v-if="uploadedFile" class="mt-4">
-        <FilePreview
-          :file="uploadedFile"
-          @remove="handleRemoveFile"
-        />
-      </div>
-    </Card>
-
-    <!-- Step 2: Analyze Form Fields -->
-    <Card v-if="step === 2" class="mb-6">
-      <template #header>
-        <h2 class="text-xl font-semibold">{{ t('tools.fillForm.step2') }}</h2>
-      </template>
-
-      <div v-if="loading" class="text-center py-8">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p class="text-gray-600">{{ t('tools.fillForm.analyzing') }}</p>
-      </div>
-
-      <div v-else-if="formFields.length > 0">
-        <p class="text-sm text-gray-600 mb-4">
-          {{ t('tools.fillForm.foundFields', { count: formFields.length }) }}
-        </p>
-
-        <div class="space-y-4">
-          <div
-            v-for="(field, index) in formFields"
-            :key="index"
-            class="p-4 border border-gray-200 rounded-lg"
-          >
-            <div class="flex items-start justify-between mb-2">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">
-                  {{ field.name }}
-                  <span v-if="field.required" class="text-red-500">*</span>
-                </label>
-                <p class="text-xs text-gray-500">
-                  {{ t(`tools.fillForm.fieldTypes.${field.type}`) }}
-                </p>
-              </div>
-              <span
-                class="px-2 py-1 text-xs font-medium rounded"
-                :class="field.required ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'"
-              >
-                {{ field.required ? t('common.required') : t('common.optional') }}
-              </span>
-            </div>
-
-            <!-- Text Input -->
-            <input
-              v-if="field.type === 'text'"
-              v-model="field.value"
-              type="text"
-              :placeholder="field.default_value || t('tools.fillForm.enterValue')"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-
-            <!-- Checkbox -->
-            <label v-else-if="field.type === 'checkbox'" class="flex items-center">
-              <input
-                v-model="field.value"
-                type="checkbox"
-                class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <span class="ml-2 text-sm text-gray-700">
-                {{ field.default_value || t('tools.fillForm.checkThis') }}
-              </span>
-            </label>
-
-            <!-- Radio Buttons -->
-            <div v-else-if="field.type === 'radio'" class="space-y-2">
-              <label
-                v-for="(option, optIndex) in field.options || []"
-                :key="optIndex"
-                class="flex items-center"
-              >
-                <input
-                  v-model="field.value"
-                  type="radio"
-                  :value="option"
-                  class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                />
-                <span class="ml-2 text-sm text-gray-700">{{ option }}</span>
-              </label>
-            </div>
-
-            <!-- Dropdown -->
-            <select
-              v-else-if="field.type === 'dropdown'"
-              v-model="field.value"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="">{{ t('tools.fillForm.selectOption') }}</option>
-              <option
-                v-for="(option, optIndex) in field.options || []"
-                :key="optIndex"
-                :value="option"
-              >
-                {{ option }}
-              </option>
-            </select>
-          </div>
-        </div>
-
-        <div class="mt-6 flex gap-4">
-          <Button @click="step = 1" variant="outline">
-            <ArrowLeft class="w-4 h-4 mr-2" />
-            {{ t('common.back') }}
-          </Button>
-          <Button @click="handleFillForm" :disabled="!canSubmit">
-            <FileCheck class="w-4 h-4 mr-2" />
-            {{ t('tools.fillForm.fillForm') }}
-          </Button>
-        </div>
-      </div>
-
-      <div v-else class="text-center py-8 text-gray-500">
-        <AlertCircle class="w-12 h-12 mx-auto mb-4 text-gray-400" />
-        <p>{{ t('tools.fillForm.noFields') }}</p>
-        <Button @click="step = 1" variant="outline" class="mt-4">
-          {{ t('common.back') }}
-        </Button>
-      </div>
-    </Card>
-
-    <!-- Step 3: Processing -->
-    <Card v-if="step === 3" class="mb-6">
-      <template #header>
-        <h2 class="text-xl font-semibold">{{ t('tools.fillForm.step3') }}</h2>
-      </template>
-
-      <div class="text-center py-8">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p class="text-gray-600 mb-2">{{ t('tools.fillForm.filling') }}</p>
-        <ProgressBar :progress="progress" class="mt-4" />
-      </div>
-    </Card>
-
-    <!-- Step 4: Success -->
-    <Card v-if="step === 4" class="mb-6">
-      <template #header>
-        <h2 class="text-xl font-semibold text-green-600">
-          <CheckCircle class="w-6 h-6 inline mr-2" />
-          {{ t('tools.fillForm.success') }}
-        </h2>
-      </template>
-
-      <div class="text-center py-8">
-        <CheckCircle class="w-16 h-16 text-green-500 mx-auto mb-4" />
-        <p class="text-lg text-gray-700 mb-2">{{ t('tools.fillForm.successMessage') }}</p>
-        <p class="text-sm text-gray-500 mb-6">
-          {{ t('tools.fillForm.filledFields', { count: formFields.length }) }}
-        </p>
-
-        <div class="flex gap-4 justify-center">
-          <Button @click="handleDownload">
-            <Download class="w-4 h-4 mr-2" />
-            {{ t('common.download') }}
-          </Button>
-          <Button @click="handleReset" variant="outline">
-            <RotateCcw class="w-4 h-4 mr-2" />
-            {{ t('common.fillAnother') }}
-          </Button>
-        </div>
-      </div>
-    </Card>
-
-    <!-- Error State -->
-    <Card v-if="error" class="mb-6 border-red-200">
-      <div class="flex items-start gap-3 text-red-700">
-        <AlertCircle class="w-5 h-5 flex-shrink-0 mt-0.5" />
-        <div>
-          <p class="font-medium">{{ t('common.error') }}</p>
-          <p class="text-sm mt-1">{{ error }}</p>
-        </div>
-      </div>
-    </Card>
-  </div>
-</template>
-
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Crown,
+  Download,
+  FileCheck,
+  FileText,
+  LockKeyhole,
+  RotateCcw,
+  Sparkles,
+} from 'lucide-vue-next'
 import { advancedAPI } from '@/services/api'
-import Card from '@/components/common/Card.vue'
 import Button from '@/components/common/Button.vue'
+import Card from '@/components/common/Card.vue'
+import ProgressBar from '@/components/common/ProgressBar.vue'
+import DiagnosticAlert from '@/components/common/DiagnosticAlert.vue'
 import DragDropZone from '@/components/pdf/DragDropZone.vue'
 import FilePreview from '@/components/pdf/FilePreview.vue'
-import ProgressBar from '@/components/common/ProgressBar.vue'
-import {
-  Upload,
-  Crown,
-  ArrowLeft,
-  FileCheck,
-  CheckCircle,
-  Download,
-  RotateCcw,
-  AlertCircle
-} from 'lucide-vue-next'
+import ToolHeader from '@/components/tools/ToolHeader.vue'
+import ToolNoticeBar from '@/components/tools/ToolNoticeBar.vue'
+import { useUserStore } from '@/stores/user'
+import { formatUserFacingError, type FormattedUserError } from '@/utils/error-messages'
+import { redirectForFeatureAccess } from '@/utils/feature-access'
 
 const { t } = useI18n()
-// State
+const router = useRouter()
+const route = useRoute()
+const userStore = useUserStore()
+
 const step = ref(1)
 const uploadedFile = ref<File | null>(null)
 const formFields = ref<any[]>([])
 const loading = ref(false)
 const progress = ref(0)
-const error = ref('')
+const errorState = ref<FormattedUserError | null>(null)
 const resultJobId = ref('')
 
-// Computed
-const canSubmit = computed(() => {
-  return formFields.value.every(field => {
+const fieldTypeClasses: Record<string, string> = {
+  text: 'bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-200',
+  checkbox: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-200',
+  radio: 'bg-purple-50 text-purple-700 dark:bg-purple-950/30 dark:text-purple-200',
+  dropdown: 'bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-200',
+}
+
+const canUseTool = computed(() => userStore.isAuthenticated && userStore.canUseCloudFeatures)
+
+const primaryActionLabel = computed(() => {
+  if (!userStore.isAuthenticated) {
+    return 'Sign in to use Fill Form'
+  }
+
+  if (!userStore.canUseCloudFeatures) {
+    return 'Upgrade to Pro to use Fill Form'
+  }
+
+  return t('tools.fillForm.fillForm')
+})
+
+const canSubmit = computed(() =>
+  formFields.value.every((field) => {
     if (field.required) {
       return field.value !== '' && field.value !== null && field.value !== undefined
     }
+
     return true
-  })
+  }),
+)
+
+const ensureAccess = () => redirectForFeatureAccess({
+  router,
+  route,
+  isAuthenticated: userStore.isAuthenticated,
+  canUseCloudFeatures: userStore.canUseCloudFeatures,
+  requiresPro: true,
+  pricingFeature: 'fill-form',
 })
 
-// Handlers
 const handleFileUpload = async (files: File[]) => {
-  if (files.length === 0) return
+  if (files.length === 0) {
+    return
+  }
 
   uploadedFile.value = files[0]
-  error.value = ''
-
-  // Auto-advance to step 2 and analyze
+  errorState.value = null
   step.value = 2
+
+  if (!ensureAccess()) {
+    return
+  }
+
   await analyzeFormFields()
 }
 
 const handleRemoveFile = () => {
   uploadedFile.value = null
   formFields.value = []
+  errorState.value = null
   step.value = 1
 }
 
 const analyzeFormFields = async () => {
-  if (!uploadedFile.value) return
+  if (!uploadedFile.value) {
+    return
+  }
+
+  if (!ensureAccess()) {
+    return
+  }
 
   loading.value = true
-  error.value = ''
+  errorState.value = null
 
   try {
     const result = await advancedAPI.getFormFields(uploadedFile.value)
-    formFields.value = result.fields.map(field => ({
+    formFields.value = result.fields.map((field: any) => ({
       ...field,
-      value: field.default_value || (field.type === 'checkbox' ? false : '')
+      value: field.default_value || (field.type === 'checkbox' ? false : ''),
     }))
-  } catch (err: any) {
-    error.value = err.response?.data?.detail || t('tools.fillForm.analyzeError')
+  } catch (error) {
+    errorState.value = formatUserFacingError(error, {
+      area: 'FORM',
+      fallbackMessage: t('tools.fillForm.analyzeError'),
+    })
     step.value = 1
   } finally {
     loading.value = false
@@ -295,46 +132,61 @@ const analyzeFormFields = async () => {
 }
 
 const handleFillForm = async () => {
-  if (!uploadedFile.value || !canSubmit.value) return
+  if (!uploadedFile.value || !canSubmit.value) {
+    return
+  }
+
+  if (!ensureAccess()) {
+    return
+  }
 
   step.value = 3
   progress.value = 0
-  error.value = ''
+  errorState.value = null
 
-  // Prepare form data
-  const formData = formFields.value.reduce((acc, field) => {
+  const payload = formFields.value.reduce((acc, field) => {
     acc[field.name] = field.value
     return acc
   }, {} as Record<string, any>)
 
+  let progressInterval: ReturnType<typeof setInterval> | null = null
+
   try {
-    // Simulate progress
-    const progressInterval = setInterval(() => {
+    progressInterval = setInterval(() => {
       if (progress.value < 90) {
         progress.value += 10
       }
     }, 300)
 
-    const result = await advancedAPI.fillForm(uploadedFile.value, formData)
-
-    clearInterval(progressInterval)
+    const result = await advancedAPI.fillForm(uploadedFile.value, payload)
     progress.value = 100
-
     resultJobId.value = result.job_id
     step.value = 4
-  } catch (err: any) {
-    error.value = err.response?.data?.detail || t('tools.fillForm.fillError')
+  } catch (error) {
+    errorState.value = formatUserFacingError(error, {
+      area: 'FORM',
+      fallbackMessage: t('tools.fillForm.fillError'),
+    })
     step.value = 2
+  } finally {
+    if (progressInterval) {
+      clearInterval(progressInterval)
+    }
   }
 }
 
 const handleDownload = async () => {
-  if (!resultJobId.value) return
+  if (!resultJobId.value) {
+    return
+  }
 
   try {
     await advancedAPI.downloadResult(resultJobId.value, 'filled-form.pdf')
-  } catch (err: any) {
-    error.value = t('common.downloadError')
+  } catch (error) {
+    errorState.value = formatUserFacingError(error, {
+      area: 'FORM',
+      fallbackMessage: t('common.downloadError'),
+    })
   }
 }
 
@@ -343,7 +195,386 @@ const handleReset = () => {
   formFields.value = []
   resultJobId.value = ''
   progress.value = 0
-  error.value = ''
+  errorState.value = null
   step.value = 1
 }
 </script>
+
+<template>
+  <div class="min-h-screen bg-gradient-to-br from-amber-50 via-white to-orange-50 dark:from-slate-950 dark:via-slate-950 dark:to-amber-950/20">
+    <ToolHeader
+      :title="t('tools.fillForm.title')"
+      :subtitle="t('tools.fillForm.description')"
+      :badge="t('tools.fillForm.proOnly')"
+      accent="amber"
+    >
+      <template #badgeIcon>
+        <Crown class="h-4 w-4" />
+      </template>
+
+      <template #extra>
+        <p class="mx-auto max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
+          Upload one structured PDF, review detected fields, then generate a completed version in a single cloud flow.
+        </p>
+      </template>
+    </ToolHeader>
+
+    <section class="relative z-10 mx-auto max-w-5xl px-4 pb-16 pt-6">
+      <ToolNoticeBar variant="amber">
+        <template #icon>
+          <Sparkles class="h-5 w-5" />
+        </template>
+        Guests are asked to sign in first. Pro access is checked only after login, matching the OCR experience and avoiding premature paywalls.
+      </ToolNoticeBar>
+
+      <DiagnosticAlert
+        v-if="errorState"
+        class="mt-6"
+        :title="errorState.title"
+        :message="errorState.message"
+        :diagnostic-code="errorState.diagnosticCode"
+        :support-hint="errorState.supportHint"
+      />
+
+      <div
+        v-if="step === 1 && !canUseTool"
+        class="mt-6"
+      >
+        <Card class="rounded-[28px] border border-white/70 bg-white/90 shadow-xl shadow-amber-100/60 dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
+          <div class="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+            <div class="space-y-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.22em] text-amber-500">
+                Access
+              </p>
+              <h2 class="text-2xl font-semibold text-slate-900 dark:text-white">
+                {{ userStore.isAuthenticated ? 'Upgrade required after login' : 'Sign in before using this tool' }}
+              </h2>
+              <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
+                {{ userStore.isAuthenticated
+                  ? 'Your account is signed in, but form filling is a Pro cloud capability. Upgrade only when you are ready to run this flow.'
+                  : 'Fill Form uses cloud processing. Please sign in first so the app can check your account access and route you correctly.' }}
+              </p>
+
+              <div class="flex flex-col gap-3 sm:flex-row">
+                <Button
+                  size="lg"
+                  @click="ensureAccess()"
+                >
+                  <LockKeyhole class="mr-2 h-4 w-4" />
+                  {{ userStore.isAuthenticated ? 'Go to upgrade' : 'Go to sign in' }}
+                </Button>
+              </div>
+            </div>
+
+            <div class="rounded-[24px] border border-slate-200 bg-slate-50/80 p-5 dark:border-slate-800 dark:bg-slate-950/50">
+              <div class="space-y-4 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                <div class="rounded-2xl bg-white px-4 py-4 dark:bg-slate-900">
+                  1. Sign in first
+                </div>
+                <div class="rounded-2xl bg-white px-4 py-4 dark:bg-slate-900">
+                  2. Check if your account includes Pro cloud features
+                </div>
+                <div class="rounded-2xl bg-white px-4 py-4 dark:bg-slate-900">
+                  3. Upload a fillable PDF and complete fields
+                </div>
+              </div>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      <div class="mt-6 space-y-6">
+        <Card
+          v-if="step === 1"
+          class="rounded-[28px] border border-white/70 bg-white/90 shadow-xl shadow-amber-100/60 dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none"
+        >
+          <div class="space-y-6">
+            <div class="space-y-2">
+              <p class="text-xs font-semibold uppercase tracking-[0.22em] text-amber-500">
+                Step 1
+              </p>
+              <h2 class="text-2xl font-semibold text-slate-900 dark:text-white">
+                Upload a fillable PDF form
+              </h2>
+              <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
+                We will detect editable fields first, then let you complete them in one focused panel.
+              </p>
+            </div>
+
+            <DragDropZone
+              accept="application/pdf,.pdf"
+              :multiple="false"
+              :max-files="1"
+              @files-selected="handleFileUpload"
+            >
+              <template #icon>
+                <FileText class="h-12 w-12" />
+              </template>
+              <template #title>
+                Upload a structured PDF form
+              </template>
+              <template #subtitle>
+                Sign in first, then this tool will guide you through field detection and completion.
+              </template>
+            </DragDropZone>
+
+            <div class="grid gap-4 rounded-[24px] border border-slate-200 bg-slate-50/80 p-5 dark:border-slate-800 dark:bg-slate-950/50 sm:grid-cols-4">
+              <div
+                v-for="fieldType in ['text', 'checkbox', 'radio', 'dropdown']"
+                :key="fieldType"
+                :class="['rounded-2xl px-4 py-4 text-sm font-medium', fieldTypeClasses[fieldType]]"
+              >
+                {{ t(`tools.fillForm.fieldTypes.${fieldType}`) }}
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        <Card
+          v-if="step === 2"
+          class="rounded-[28px] border border-white/70 bg-white/90 shadow-xl shadow-amber-100/60 dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none"
+        >
+          <div
+            v-if="loading"
+            class="space-y-6 py-6 text-center"
+          >
+            <div class="mx-auto h-14 w-14 animate-spin rounded-full border-4 border-amber-100 border-t-amber-500 dark:border-amber-950 dark:border-t-amber-400" />
+            <div class="space-y-2">
+              <p class="text-xs font-semibold uppercase tracking-[0.22em] text-amber-500">
+                Step 2
+              </p>
+              <h2 class="text-2xl font-semibold text-slate-900 dark:text-white">
+                Detecting form fields
+              </h2>
+              <p class="text-sm text-slate-600 dark:text-slate-300">
+                {{ t('tools.fillForm.analyzing') }}
+              </p>
+            </div>
+          </div>
+
+          <div
+            v-else-if="formFields.length > 0"
+            class="space-y-6"
+          >
+            <div class="space-y-2">
+              <p class="text-xs font-semibold uppercase tracking-[0.22em] text-amber-500">
+                Step 2
+              </p>
+              <h2 class="text-2xl font-semibold text-slate-900 dark:text-white">
+                Review and complete fields
+              </h2>
+              <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
+                {{ t('tools.fillForm.foundFields', { count: formFields.length }) }}
+              </p>
+            </div>
+
+            <FilePreview
+              v-if="uploadedFile"
+              :file="uploadedFile"
+              @remove="handleRemoveFile"
+            />
+
+            <div class="space-y-4">
+              <div
+                v-for="(field, index) in formFields"
+                :key="`${field.name}-${index}`"
+                class="rounded-[24px] border border-slate-200 bg-slate-50/70 p-5 dark:border-slate-800 dark:bg-slate-950/50"
+              >
+                <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <label class="block text-sm font-semibold text-slate-900 dark:text-white">
+                      {{ field.name }}
+                      <span
+                        v-if="field.required"
+                        class="ml-1 text-red-500"
+                      >*</span>
+                    </label>
+                    <p class="mt-1 text-xs uppercase tracking-[0.14em] text-slate-400">
+                      {{ t(`tools.fillForm.fieldTypes.${field.type}`) }}
+                    </p>
+                  </div>
+
+                  <span
+                    :class="[
+                      'rounded-full px-3 py-1 text-xs font-semibold',
+                      field.required
+                        ? 'bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-200'
+                        : 'bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
+                    ]"
+                  >
+                    {{ field.required ? t('common.required') : t('common.optional') }}
+                  </span>
+                </div>
+
+                <input
+                  v-if="field.type === 'text'"
+                  v-model="field.value"
+                  type="text"
+                  :placeholder="field.default_value || t('tools.fillForm.enterValue')"
+                  class="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-400 focus:ring-4 focus:ring-amber-100 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:focus:border-amber-400 dark:focus:ring-amber-500/20"
+                >
+
+                <label
+                  v-else-if="field.type === 'checkbox'"
+                  class="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                >
+                  <input
+                    v-model="field.value"
+                    type="checkbox"
+                    class="h-4 w-4 rounded border-slate-300 text-amber-500 focus:ring-amber-500"
+                  >
+                  <span>{{ field.default_value || t('tools.fillForm.checkThis') }}</span>
+                </label>
+
+                <div
+                  v-else-if="field.type === 'radio'"
+                  class="grid gap-3 sm:grid-cols-2"
+                >
+                  <label
+                    v-for="(option, optionIndex) in field.options || []"
+                    :key="optionIndex"
+                    class="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                  >
+                    <input
+                      v-model="field.value"
+                      type="radio"
+                      :value="option"
+                      class="h-4 w-4 border-slate-300 text-amber-500 focus:ring-amber-500"
+                    >
+                    <span>{{ option }}</span>
+                  </label>
+                </div>
+
+                <select
+                  v-else-if="field.type === 'dropdown'"
+                  v-model="field.value"
+                  class="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-400 focus:ring-4 focus:ring-amber-100 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:focus:border-amber-400 dark:focus:ring-amber-500/20"
+                >
+                  <option value="">
+                    {{ t('tools.fillForm.selectOption') }}
+                  </option>
+                  <option
+                    v-for="(option, optionIndex) in field.options || []"
+                    :key="optionIndex"
+                    :value="option"
+                  >
+                    {{ option }}
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <div class="flex flex-col gap-3 sm:flex-row">
+              <Button
+                variant="outline"
+                size="lg"
+                @click="step = 1"
+              >
+                <ArrowLeft class="mr-2 h-4 w-4" />
+                {{ t('common.back') }}
+              </Button>
+              <Button
+                size="lg"
+                :disabled="!canSubmit"
+                full-width
+                @click="handleFillForm"
+              >
+                <FileCheck class="mr-2 h-4 w-4" />
+                {{ primaryActionLabel }}
+              </Button>
+            </div>
+          </div>
+
+          <div
+            v-else
+            class="space-y-6 py-6 text-center"
+          >
+            <div class="space-y-2">
+              <h2 class="text-2xl font-semibold text-slate-900 dark:text-white">
+                {{ t('tools.fillForm.noFields') }}
+              </h2>
+              <p class="text-sm text-slate-600 dark:text-slate-300">
+                Try another PDF that contains real editable form fields.
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="lg"
+              @click="step = 1"
+            >
+              {{ t('common.back') }}
+            </Button>
+          </div>
+        </Card>
+
+        <Card
+          v-if="step === 3"
+          class="rounded-[28px] border border-white/70 bg-white/90 shadow-xl shadow-amber-100/60 dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none"
+        >
+          <div class="space-y-6 py-6 text-center">
+            <div class="mx-auto h-14 w-14 animate-spin rounded-full border-4 border-amber-100 border-t-amber-500 dark:border-amber-950 dark:border-t-amber-400" />
+            <div class="space-y-2">
+              <p class="text-xs font-semibold uppercase tracking-[0.22em] text-amber-500">
+                Step 3
+              </p>
+              <h2 class="text-2xl font-semibold text-slate-900 dark:text-white">
+                Generating the completed PDF
+              </h2>
+              <p class="text-sm text-slate-600 dark:text-slate-300">
+                {{ t('tools.fillForm.filling') }}
+              </p>
+            </div>
+
+            <ProgressBar
+              :progress="progress"
+              label="Preparing your completed PDF..."
+              variant="primary"
+              size="md"
+            />
+          </div>
+        </Card>
+
+        <Card
+          v-if="step === 4"
+          class="rounded-[28px] border border-emerald-200 bg-emerald-50/90 shadow-xl shadow-emerald-100/70 dark:border-emerald-900/40 dark:bg-emerald-950/20 dark:shadow-none"
+        >
+          <div class="space-y-6 py-4 text-center">
+            <CheckCircle2 class="mx-auto h-16 w-16 text-emerald-500" />
+            <div class="space-y-2">
+              <p class="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-500">
+                Ready
+              </p>
+              <h2 class="text-2xl font-semibold text-slate-900 dark:text-white">
+                {{ t('tools.fillForm.success') }}
+              </h2>
+              <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
+                {{ t('tools.fillForm.successMessage') }}
+              </p>
+              <p class="text-sm font-medium text-emerald-700 dark:text-emerald-200">
+                {{ t('tools.fillForm.filledFields', { count: formFields.length }) }}
+              </p>
+            </div>
+
+            <div class="flex flex-col gap-3 sm:flex-row sm:justify-center">
+              <Button
+                size="lg"
+                @click="handleDownload"
+              >
+                <Download class="mr-2 h-4 w-4" />
+                {{ t('common.download') }}
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                @click="handleReset"
+              >
+                <RotateCcw class="mr-2 h-4 w-4" />
+                {{ t('common.fillAnother') }}
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </div>
+    </section>
+  </div>
+</template>

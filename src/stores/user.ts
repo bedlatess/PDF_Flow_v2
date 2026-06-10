@@ -5,6 +5,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { authAPI, userAPI, type User, type UserStats, type LoginData, type RegisterData } from '@/services/api'
+import { toUserStoreErrorMessage } from '@/utils/error-messages'
 
 export const useUserStore = defineStore('user', () => {
   // State
@@ -45,7 +46,11 @@ export const useUserStore = defineStore('user', () => {
       console.log('User registered:', newUser)
       return newUser
     } catch (err: any) {
-      error.value = err.response?.data?.detail || 'Registration failed'
+      error.value = toUserStoreErrorMessage(err, {
+        area: 'AUTH',
+        fallbackTitle: 'Registration failed',
+        fallbackMessage: 'Please try again.',
+      })
       throw err
     } finally {
       loading.value = false
@@ -78,7 +83,11 @@ export const useUserStore = defineStore('user', () => {
       console.log('User logged in:', currentUser)
       return currentUser
     } catch (err: any) {
-      error.value = err.response?.data?.detail || 'Login failed'
+      error.value = toUserStoreErrorMessage(err, {
+        area: 'AUTH',
+        fallbackTitle: 'Sign-in failed',
+        fallbackMessage: 'Please check your details and try again.',
+      })
       throw err
     } finally {
       loading.value = false
@@ -162,7 +171,11 @@ export const useUserStore = defineStore('user', () => {
       user.value = updatedUser
       return updatedUser
     } catch (err: any) {
-      error.value = err.response?.data?.detail || 'Update failed'
+      error.value = toUserStoreErrorMessage(err, {
+        area: 'AUTH',
+        fallbackTitle: 'Profile update failed',
+        fallbackMessage: 'Please review your changes and try again.',
+      })
       throw err
     } finally {
       loading.value = false
@@ -180,7 +193,11 @@ export const useUserStore = defineStore('user', () => {
       await userAPI.deleteAccount()
       await logout()
     } catch (err: any) {
-      error.value = err.response?.data?.detail || 'Delete account failed'
+      error.value = toUserStoreErrorMessage(err, {
+        area: 'AUTH',
+        fallbackTitle: 'Account deletion failed',
+        fallbackMessage: 'Please try again or contact the administrator if the issue continues.',
+      })
       throw err
     } finally {
       loading.value = false

@@ -5,9 +5,10 @@
 
 import jsPDF from 'jspdf'
 import * as pdfjsLib from 'pdfjs-dist'
+import { configurePdfJsWorker } from './configurePdfJs'
 
 // 配置 pdf.js worker（需要在 public/wasm/ 目录下放置 worker 文件）
-pdfjsLib.GlobalWorkerOptions.workerSrc = '/wasm/pdfjs.worker.js'
+configurePdfJsWorker()
 
 /**
  * 图片转 PDF

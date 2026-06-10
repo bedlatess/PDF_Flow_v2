@@ -1,19 +1,21 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed, ref, useSlots } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { validatePDF, validateImage } from '@/utils/file-validator'
+import { validateImage, validatePDF } from '@/utils/file-validator'
+
+type AcceptValue = 'pdf' | 'image' | 'all' | string | string[]
 
 interface DragDropZoneProps {
-  accept?: 'pdf' | 'image' | 'all'
+  accept?: AcceptValue
   multiple?: boolean
-  maxSize?: number // MB
+  maxSize?: number
   maxFiles?: number
 }
 
 const props = withDefaults(defineProps<DragDropZoneProps>(), {
   accept: 'pdf',
   multiple: true,
-  maxSize: 100, // 100MB
+  maxSize: 100,
   maxFiles: 10,
 })
 
@@ -22,51 +24,160 @@ const emit = defineEmits<{
   error: [message: string]
 }>()
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
+const slots = useSlots()
+
 const isDragging = ref(false)
 const fileInputRef = ref<HTMLInputElement>()
 
-const acceptedTypes = computed(() => {
+const acceptTokens = computed(() => {
+  if (Array.isArray(props.accept)) {
+    return props.accept.map((token) => token.trim()).filter(Boolean)
+  }
+
   switch (props.accept) {
     case 'pdf':
-      return 'application/pdf'
+      return ['application/pdf', '.pdf']
     case 'image':
-      return 'image/*'
+      return ['image/*', '.png', '.jpg', '.jpeg', '.webp']
     case 'all':
-      return 'application/pdf,image/*'
+      return ['application/pdf', '.pdf', 'image/*', '.png', '.jpg', '.jpeg', '.webp']
     default:
-      return 'application/pdf'
+      return String(props.accept)
+        .split(',')
+        .map((token) => token.trim())
+        .filter(Boolean)
   }
 })
 
-const handleDragEnter = (e: DragEvent) => {
-  e.preventDefault()
+const acceptedTypes = computed(() => acceptTokens.value.join(','))
+
+const acceptsPDF = computed(() =>
+  acceptTokens.value.some((token) => token === 'application/pdf' || token === '.pdf')
+)
+
+const acceptsImage = computed(() =>
+  acceptTokens.value.some((token) => token === 'image/*' || token.startsWith('image/') || token.match(/^\.(png|jpg|jpeg|webp|gif|bmp|svg)$/i))
+)
+
+const helperText = computed(() => {
+  const extensionTokens = acceptTokens.value
+    .filter((token) => token.startsWith('.'))
+    .map((token) => token.slice(1).toUpperCase())
+  const language = locale.value.toLowerCase()
+  const isZh = language.startsWith('zh')
+  const isEs = language.startsWith('es')
+
+  const formatList = (text: string) => {
+    if (isZh) {
+      return `${text}，最大 ${props.maxSize}MB`
+    }
+
+    if (isEs) {
+      return `${text} hasta ${props.maxSize}MB`
+    }
+
+    return `${text} up to ${props.maxSize}MB`
+  }
+
+  if (props.accept === 'pdf') {
+    return formatList('PDF')
+  }
+
+  if (props.accept === 'image') {
+    return formatList('PNG, JPG, WEBP')
+  }
+
+  if (props.accept === 'all') {
+    return isZh
+      ? `PDF 和图片文件，最大 ${props.maxSize}MB`
+      : isEs
+        ? `Archivos PDF e imagen hasta ${props.maxSize}MB`
+        : `PDF and image files up to ${props.maxSize}MB`
+  }
+
+  if (extensionTokens.length > 0) {
+    return formatList(extensionTokens.join(', '))
+  }
+
+  return isZh
+    ? `文件最大 ${props.maxSize}MB`
+    : isEs
+      ? `Archivos hasta ${props.maxSize}MB`
+      : `Files up to ${props.maxSize}MB`
+})
+
+const matchesAccept = (file: File) => {
+  if (acceptTokens.value.length === 0) {
+    return true
+  }
+
+  const extension = file.name.includes('.')
+    ? `.${file.name.split('.').pop()?.toLowerCase()}`
+    : ''
+
+  return acceptTokens.value.some((token) => {
+    const normalized = token.toLowerCase()
+
+    if (normalized === '*/*') {
+      return true
+    }
+
+    if (normalized.startsWith('.')) {
+      return extension === normalized
+    }
+
+    if (normalized.endsWith('/*')) {
+      const family = normalized.slice(0, -2)
+      return file.type.toLowerCase().startsWith(`${family}/`)
+    }
+
+    return file.type.toLowerCase() === normalized
+  })
+}
+
+const validateFile = async (file: File) => {
+  if (!matchesAccept(file)) {
+    return false
+  }
+
+  if (acceptsPDF.value && file.type === 'application/pdf') {
+    return validatePDF(file)
+  }
+
+  if (acceptsImage.value && file.type.startsWith('image/')) {
+    return validateImage(file)
+  }
+
+  return true
+}
+
+const handleDragEnter = (event: DragEvent) => {
+  event.preventDefault()
   isDragging.value = true
 }
 
-const handleDragLeave = (e: DragEvent) => {
-  e.preventDefault()
+const handleDragLeave = (event: DragEvent) => {
+  event.preventDefault()
   isDragging.value = false
 }
 
-const handleDragOver = (e: DragEvent) => {
-  e.preventDefault()
+const handleDragOver = (event: DragEvent) => {
+  event.preventDefault()
 }
 
-const handleDrop = async (e: DragEvent) => {
-  e.preventDefault()
+const handleDrop = async (event: DragEvent) => {
+  event.preventDefault()
   isDragging.value = false
 
-  const files = Array.from(e.dataTransfer?.files || [])
+  const files = Array.from(event.dataTransfer?.files || [])
   await processFiles(files)
 }
 
-const handleFileSelect = async (e: Event) => {
-  const input = e.target as HTMLInputElement
+const handleFileSelect = async (event: Event) => {
+  const input = event.target as HTMLInputElement
   const files = Array.from(input.files || [])
   await processFiles(files)
-
-  // 重置 input，允许选择同一文件
   input.value = ''
 }
 
@@ -75,36 +186,23 @@ const processFiles = async (files: File[]) => {
     return
   }
 
-  // 检查文件数量
   if (files.length > props.maxFiles) {
-    emit('error', `最多只能上传 ${props.maxFiles} 个文件`)
+    emit('error', `You can upload up to ${props.maxFiles} files at a time.`)
     return
   }
 
-  // 验证文件
   const validFiles: File[] = []
 
   for (const file of files) {
-    // 检查文件大小
     const fileSizeMB = file.size / (1024 * 1024)
     if (fileSizeMB > props.maxSize) {
-      emit('error', `文件 "${file.name}" 超过最大限制 ${props.maxSize}MB`)
+      emit('error', `${file.name} is larger than ${props.maxSize}MB.`)
       continue
     }
 
-    // 验证文件类型
-    let isValid = false
-
-    if (props.accept === 'pdf' || props.accept === 'all') {
-      isValid = await validatePDF(file)
-    }
-
-    if (!isValid && (props.accept === 'image' || props.accept === 'all')) {
-      isValid = await validateImage(file)
-    }
-
+    const isValid = await validateFile(file)
     if (!isValid) {
-      emit('error', `文件 "${file.name}" 格式无效`)
+      emit('error', `${file.name} is not a supported file type.`)
       continue
     }
 
@@ -125,12 +223,11 @@ const openFileDialog = () => {
   <div
     data-testid="drag-drop-zone"
     :class="[
-      'drag-ripple relative flex min-h-[400px] flex-col items-center justify-center',
-      'rounded-xl border-2 border-dashed transition-all duration-300',
-      'cursor-pointer hover:border-primary hover:bg-primary/5',
+      'group relative flex min-h-[320px] flex-col items-center justify-center overflow-hidden rounded-[28px] border border-dashed px-6 py-10 text-center transition-all duration-300',
+      'cursor-pointer border-slate-300 bg-white/80 shadow-sm backdrop-blur-sm hover:border-primary hover:shadow-lg hover:shadow-primary/10',
+      'dark:border-slate-700 dark:bg-slate-900/70',
       {
-        'drag-active border-primary bg-primary/10': isDragging,
-        'border-gray-300 dark:border-gray-600': !isDragging,
+        'border-primary bg-primary/5 shadow-lg shadow-primary/10': isDragging,
       },
     ]"
     @dragenter="handleDragEnter"
@@ -139,63 +236,65 @@ const openFileDialog = () => {
     @drop="handleDrop"
     @click="openFileDialog"
   >
-    <!-- Icon -->
+    <div class="absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent dark:via-slate-600/40" />
+
     <div
       :class="[
-        'mb-4 rounded-full p-4 transition-all duration-300',
+        'mb-5 rounded-full p-4 transition-all duration-300',
         isDragging
-          ? 'bg-primary/20 text-primary scale-110'
-          : 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500',
+          ? 'scale-105 bg-primary/15 text-primary'
+          : 'bg-slate-100 text-slate-500 group-hover:bg-primary/10 group-hover:text-primary dark:bg-slate-800 dark:text-slate-400',
       ]"
     >
-      <svg
-        class="h-12 w-12"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+      <slot name="icon">
+        <svg
+          class="h-12 w-12"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+          />
+        </svg>
+      </slot>
+    </div>
+
+    <div class="max-w-xl">
+      <p class="text-lg font-semibold text-slate-900 dark:text-white">
+        <slot
+          v-if="slots.title"
+          name="title"
         />
-      </svg>
-    </div>
-
-    <!-- Text -->
-    <div class="text-center">
-      <p class="mb-2 text-lg font-medium text-gray-900 dark:text-white">
-        {{ t('common.dragDrop') }}
-      </p>
-      <p class="mb-1 text-sm text-gray-500 dark:text-gray-400">
-        或点击选择文件
-      </p>
-      <p class="text-xs text-gray-400 dark:text-gray-500">
-        支持
-        <template v-if="accept === 'pdf'">
-          PDF
-        </template>
-        <template v-else-if="accept === 'image'">
-          图片
-        </template>
+        <slot
+          v-else-if="slots.text"
+          name="text"
+        />
         <template v-else>
-          PDF 和图片
+          {{ t('common.dragDrop') }}
         </template>
-        文件，最大 {{ maxSize }}MB
+      </p>
+
+      <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
+        <slot name="subtitle">
+          {{ t('common.or') }} {{ t('common.browse') }}
+        </slot>
+      </p>
+
+      <p class="mt-3 text-xs font-medium uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
+        {{ helperText }}
       </p>
     </div>
 
-    <!-- Privacy Badge -->
     <div class="mt-6">
-      <span
-        class="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
-      >
+      <span class="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
         {{ t('common.privacyBadge') }}
       </span>
     </div>
 
-    <!-- Hidden file input -->
     <input
       ref="fileInputRef"
       type="file"
@@ -205,10 +304,9 @@ const openFileDialog = () => {
       @change="handleFileSelect"
     >
 
-    <!-- Slot for additional content -->
     <div
       v-if="$slots.default"
-      class="mt-4"
+      class="mt-6 w-full max-w-2xl"
     >
       <slot />
     </div>

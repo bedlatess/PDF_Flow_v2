@@ -4,9 +4,10 @@
  */
 
 import * as pdfjsLib from 'pdfjs-dist'
+import { configurePdfJsWorker } from './configurePdfJs'
 
 // 配置 pdf.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = '/wasm/pdfjs.worker.js'
+configurePdfJsWorker()
 
 export interface ThumbnailOptions {
   scale?: number // 缩放比例，默认 0.5

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useSettingsStore } from '@/stores/settings'
@@ -13,6 +13,12 @@ const userStore = useUserStore()
 
 const mobileMenuOpen = ref(false)
 const userMenuOpen = ref(false)
+
+const localeOptions = [
+  { value: 'en', label: 'English' },
+  { value: 'zh', label: '简体中文' },
+  { value: 'es', label: 'Español' },
+] as const
 
 const userInitial = computed(() => {
   const name = userStore.user?.full_name || userStore.user?.email || '?'
@@ -98,14 +104,12 @@ onMounted(() => {
             class="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
             @change="changeLocale(($event.target as HTMLSelectElement).value as 'en' | 'zh' | 'es')"
           >
-            <option value="en">
-              English
-            </option>
-            <option value="zh">
-              简体中文
-            </option>
-            <option value="es">
-              Español
+            <option
+              v-for="option in localeOptions"
+              :key="option.value"
+              :value="option.value"
+            >
+              {{ option.label }}
             </option>
           </select>
 
@@ -248,14 +252,12 @@ onMounted(() => {
             class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
             @change="changeLocale(($event.target as HTMLSelectElement).value as 'en' | 'zh' | 'es')"
           >
-            <option value="en">
-              English
-            </option>
-            <option value="zh">
-              简体中文
-            </option>
-            <option value="es">
-              Español
+            <option
+              v-for="option in localeOptions"
+              :key="option.value"
+              :value="option.value"
+            >
+              {{ option.label }}
             </option>
           </select>
           <Button

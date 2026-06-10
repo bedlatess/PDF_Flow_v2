@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
+const activeLocale = computed(() => locale.value)
 
 const currentYear = new Date().getFullYear()
 
@@ -12,7 +14,10 @@ const socialLinks = [
 </script>
 
 <template>
-  <footer class="border-t border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
+  <footer
+    class="border-t border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900"
+    :data-locale="activeLocale"
+  >
     <div class="container mx-auto px-4 py-8">
       <div class="grid gap-8 md:grid-cols-3">
         <div>
@@ -109,13 +114,13 @@ const socialLinks = [
       <div
         class="mt-8 border-t border-gray-200 pt-8 text-center text-sm text-gray-600 dark:border-gray-700 dark:text-gray-400"
       >
-        <p>© {{ currentYear }} {{ t('app.title') }}. {{ t('footer.madeWith') }}</p>
+        <p>&copy; {{ currentYear }} {{ t('app.title') }}. {{ t('footer.madeWith') }}</p>
         <p class="mt-2">
           <a
             href="#"
             class="hover:text-primary"
           >{{ t('footer.privacyPolicy') }}</a>
-          <span class="mx-2">·</span>
+          <span class="mx-2">&middot;</span>
           <a
             href="#"
             class="hover:text-primary"

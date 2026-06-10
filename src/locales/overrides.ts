@@ -42,6 +42,242 @@ export const localeOverrides = {
       privacyPolicy: '隐私政策',
       termsOfService: '服务条款',
     },
+    home: {
+      badges: {
+        fast: '极速处理',
+        languages: '支持 3 种语言',
+      },
+      toolsTitle: '选择工具开始使用',
+      whyTitle: '为什么选择 PDF-Flow？',
+      highlights: {
+        privacy: {
+          title: '绝对隐私',
+          description: '所有处理都在您的浏览器中进行，文件不会上传到服务器。',
+        },
+        speed: {
+          title: '极速处理',
+          description: '基于 WebAssembly 与现代前端能力，日常处理响应更快。',
+        },
+        free: {
+          title: '核心功能可直接使用',
+          description: '基础 PDF 工具开箱即用，高级云端能力会在登录后按需开放。',
+        },
+      },
+      toolDescriptions: {
+        ocr: '从 PDF 或图片中提取文字',
+        aiAnalyzer: '智能摘要、问答与结构化提取',
+      },
+    },
+    marketing: {
+      featuresPage: {
+        heroTitle: '功能特性',
+        heroDescription: '隐私优先、处理高效、工具完整的现代 PDF 工作台。',
+        startButton: '开始使用',
+        pricingButton: '查看定价',
+        coreTitle: '核心特性',
+        coreDescription: '我们为什么这样设计 PDF-Flow。',
+        technicalTitle: '技术能力',
+        technicalDescription: '现代前端体验与可靠后端能力一起交付。',
+        comparisonTitle: '对比视角',
+        comparisonDescription: '把真正影响体验的点摊开看，更容易理解产品差异。',
+        comparisonHeaders: {
+          feature: '能力项',
+          product: 'PDF-Flow',
+          competitorA: '同类 A',
+          competitorB: '同类 B',
+        },
+        comparisonRows: {
+          privacy: '本地处理与隐私保护',
+          free: '基础功能可直接使用',
+          progress: '实时进度反馈',
+          ocr: 'OCR 文字识别',
+          open: '公开透明的实现方向',
+          api: '企业 API 接入',
+          partial: '部分支持',
+          paid: '需额外付费',
+          expensive: '高成本',
+        },
+        ctaTitle: '准备开始实际测试了吗？',
+        ctaDescription: '先从基础工具开始，登录后再根据需要开启云端高级能力。',
+        ctaRegister: '免费注册',
+        ctaPricing: '查看定价',
+        coreFeatures: {
+          privacy: {
+            title: '100% 隐私优先',
+            description: '基础处理优先在浏览器本地完成，文件不轻易离开设备。',
+            details: [
+              '常用 PDF 工具直接在本地运行',
+              '减少把敏感文件上传到服务器的必要',
+              '处理完成后自动清理临时数据',
+              '更容易满足隐私与合规预期',
+            ],
+          },
+          speed: {
+            title: '处理过程更顺滑',
+            description: '把前端即时处理和后端异步任务拆开，减少卡顿感。',
+            details: [
+              'UI 操作与文件处理尽量解耦',
+              '支持实时进度与状态反馈',
+              '长任务可接入 WebSocket / 轮询更新',
+              '减少大文件场景下的等待焦虑',
+            ],
+          },
+          cloud: {
+            title: '按需使用云端能力',
+            description: 'OCR、Office 转换、表单与标注这类流程在登录后按需开放。',
+            details: [
+              'OCR 文字识别',
+              'Office 转 PDF',
+              '结构化表单填写',
+              '云端标注与其他高级处理',
+            ],
+          },
+          design: {
+            title: '统一的工作区体验',
+            description: '让上传、权限、进度、结果这些环节保持同一套节奏。',
+            details: [
+              '桌面与移动端都能正常使用',
+              '支持浅色 / 深色主题切换',
+              '减少重复卡片与重复引导',
+              '把关键动作集中在一个工作区内',
+            ],
+          },
+          languages: {
+            title: '多语言切换',
+            description: '界面支持多语言，并尽量保证切换后即时刷新。',
+            details: [
+              '支持简体中文、英文、西班牙语',
+              '关键页面文案统一走翻译层',
+              '高级工具页面保持一致的提示口径',
+              '减少中英混杂与编码残留',
+            ],
+          },
+          tools: {
+            title: '覆盖常见 PDF 场景',
+            description: '从基础处理到高级能力，逐步扩展，而不是一开始就堆满复杂入口。',
+            details: [
+              '合并、拆分、旋转、压缩',
+              '图片转 PDF、PDF 转图片',
+              'OCR、AI 分析、表单填写',
+              '标注、水印、Office 转 PDF',
+            ],
+          },
+        },
+        technicalFeatures: {
+          stack: {
+            title: '技术栈',
+            items: ['Vue 3 + TypeScript', 'FastAPI + PostgreSQL', 'Redis + Celery', '按场景选择实时通信'],
+          },
+          security: {
+            title: '安全控制',
+            items: ['JWT 认证', '访问权限分层', '速率限制与诊断提示', '更克制的报错暴露'],
+          },
+          performance: {
+            title: '性能策略',
+            items: ['按需加载', '静态资源缓存', '本地优先处理', '大任务异步化'],
+          },
+          quality: {
+            title: '质量保障',
+            items: ['构建验证', '烟雾测试脚本', '本地回归检查', '持续修复真实部署问题'],
+          },
+        },
+      },
+      pricingPage: {
+        title: '定价方案',
+        description: '先把核心工具做好，再把云端能力做成按需升级，而不是强行一开始就收费。',
+        badges: {
+          refund: '支持退款保障',
+          cancel: '可随时取消订阅',
+          security: '重视数据安全',
+        },
+        popular: '更常用',
+        currentPlan: '当前套餐',
+        featuresLabel: '包含内容',
+        limitationsLabel: '使用说明',
+        tiers: {
+          free: {
+            name: '免费版',
+            description: '适合日常轻量 PDF 处理',
+            priceDetail: '永久免费',
+            features: [
+              '本地基础 PDF 工具',
+              '合并、拆分、旋转、压缩',
+              '图片转 PDF 与 PDF 转图片',
+              '无需登录即可先体验',
+            ],
+            limitations: [
+              '高级云端能力需要登录后再判断权限',
+              '更适合基础与中小文件场景',
+            ],
+            ctaDefault: '开始使用',
+          },
+          pro: {
+            name: 'Pro',
+            description: '适合经常处理文档、需要云端能力的个人或小团队',
+            priceDetail: '按月或按年订阅',
+            features: [
+              '包含免费版全部功能',
+              'OCR 文字识别',
+              'Office 转 PDF',
+              'PDF 表单填写与云端标注',
+              '更完整的高级工作流',
+            ],
+            limitations: [
+              '需登录并开通订阅',
+            ],
+            ctaDefault: '升级到 Pro',
+          },
+          enterprise: {
+            name: '企业版',
+            description: '适合需要流程接入、团队协作和更高稳定性的企业场景',
+            priceDetail: '按需求沟通',
+            features: [
+              '包含 Pro 全部能力',
+              '企业 API 与集成能力',
+              '更灵活的额度和流程支持',
+              '更适合正式业务接入',
+            ],
+            limitations: [
+              '通常需要先沟通接入方式',
+            ],
+            ctaDefault: '联系销售',
+          },
+        },
+        faqTitle: '常见问题',
+        faq: {
+          upgrade: {
+            q: '怎么升级到 Pro？',
+            a: '登录后从定价页或受限工具页进入升级流程即可。只有在你真的开始使用高级能力时，系统才会继续引导订阅。',
+          },
+          cancel: {
+            q: '可以取消订阅吗？',
+            a: '可以。取消后通常会保留到当前计费周期结束，再回到对应的基础权限。',
+          },
+          security: {
+            q: '数据安全怎么处理？',
+            a: '基础工具尽量本地处理；云端流程会给出更克制的提示与权限控制，减少不必要的数据暴露。',
+          },
+          enterprise: {
+            q: '企业版适合什么场景？',
+            a: '当你需要把 PDF 流程接入正式业务系统，或者希望获得更稳定的团队级支持时，再考虑企业版更合适。',
+          },
+        },
+        trust: {
+          title: '先稳定，再扩展',
+          description: '现在的重点不是把功能名字堆得更多，而是让真实上传、转换、识别、下载链路更稳定。',
+          metrics: {
+            availability: '可用性目标',
+            feedback: '问题反馈闭环',
+            processing: '常见任务响应',
+          },
+        },
+        bottomPrompt: '还没有账号？',
+        bottomAction: '注册后继续测试',
+        alerts: {
+          paymentStartFailed: '暂时无法发起支付，请稍后重试或联系管理员。',
+        },
+      },
+    },
     common: {
       upload: '上传文件',
       download: '下载',
@@ -324,7 +560,7 @@ export const localeOverrides = {
           coordsHelp: '请按照 PDF 原始坐标空间填写矩形区域。',
         },
         pageExtra: '上传一次文件，在同一套界面中配置文字注释或高亮区域，再导出带标注的 PDF。',
-        notice: '标注流程使用云端处理。游客先登录，只有登录后的用户才会继续看到 Pro 升级路径。',
+        notice: 'PDF 标注属于云端处理工具。游客会先被引导登录，只有登录后仍需更高权限时才会继续看到升级提示。',
         accessLabel: '访问权限',
         accessGuestTitle: '登录后再标注 PDF',
         accessMemberTitle: '登录成功，当前仍需升级',
@@ -436,6 +672,11 @@ export const localeOverrides = {
     app: {
       title: 'PDF-Flow',
     },
+    tools: {
+      ocr: {
+        title: 'OCR Text Recognition',
+      },
+    },
     nav: {
       features: 'Features',
       themeToDark: 'Switch to dark mode',
@@ -447,6 +688,242 @@ export const localeOverrides = {
       madeWith: 'Crafted by the PDF-Flow team',
       privacyPolicy: 'Privacy Policy',
       termsOfService: 'Terms of Service',
+    },
+    home: {
+      badges: {
+        fast: 'Fast processing',
+        languages: '3 languages supported',
+      },
+      toolsTitle: 'Choose a tool to get started',
+      whyTitle: 'Why choose PDF-Flow?',
+      highlights: {
+        privacy: {
+          title: 'Private by default',
+          description: 'Core processing stays in your browser, so files do not need to leave your device.',
+        },
+        speed: {
+          title: 'Built for speed',
+          description: 'WebAssembly and modern frontend processing keep everyday workflows responsive.',
+        },
+        free: {
+          title: 'Core tools are ready to use',
+          description: 'Essential PDF tools are available right away, while advanced cloud features unlock after sign-in when needed.',
+        },
+      },
+      toolDescriptions: {
+        ocr: 'Extract text from PDF files or images',
+        aiAnalyzer: 'Generate summaries, ask questions, and extract structured data',
+      },
+    },
+    marketing: {
+      featuresPage: {
+        heroTitle: 'Features',
+        heroDescription: 'A modern PDF workspace built around privacy, clarity, and practical document flows.',
+        startButton: 'Start now',
+        pricingButton: 'View pricing',
+        coreTitle: 'Core strengths',
+        coreDescription: 'Why PDF-Flow is structured the way it is.',
+        technicalTitle: 'Technical approach',
+        technicalDescription: 'Modern frontend delivery paired with reliable backend processing where needed.',
+        comparisonTitle: 'What actually differs',
+        comparisonDescription: 'Looking at the real experience makes it easier to see where the product stands apart.',
+        comparisonHeaders: {
+          feature: 'Capability',
+          product: 'PDF-Flow',
+          competitorA: 'Peer A',
+          competitorB: 'Peer B',
+        },
+        comparisonRows: {
+          privacy: 'Local-first privacy handling',
+          free: 'Core tools available immediately',
+          progress: 'Live progress feedback',
+          ocr: 'OCR text recognition',
+          open: 'Transparent product direction',
+          api: 'Enterprise API access',
+          partial: 'Partial',
+          paid: 'Paid add-on',
+          expensive: 'Higher cost',
+        },
+        ctaTitle: 'Ready to test the real workflow?',
+        ctaDescription: 'Start with the core tools first, then unlock advanced cloud capabilities only when they are actually needed.',
+        ctaRegister: 'Create account',
+        ctaPricing: 'See pricing',
+        coreFeatures: {
+          privacy: {
+            title: 'Privacy first',
+            description: 'Core PDF work stays local whenever possible instead of defaulting to upload-heavy flows.',
+            details: [
+              'Common PDF actions run in the browser',
+              'Less need to send sensitive files to a server',
+              'Temporary data is cleaned up after processing',
+              'A safer starting point for privacy-conscious users',
+            ],
+          },
+          speed: {
+            title: 'Smoother processing',
+            description: 'Interactive UI work and heavier processing are split so the app feels less blocked.',
+            details: [
+              'UI actions stay decoupled from long-running tasks',
+              'Progress and state feedback remain visible',
+              'Long tasks can use WebSocket or polling updates',
+              'Large-file waiting feels more understandable',
+            ],
+          },
+          cloud: {
+            title: 'Cloud features when needed',
+            description: 'OCR, Office conversion, form filling, and annotation are unlocked after sign-in and only when relevant.',
+            details: [
+              'OCR text recognition',
+              'Office to PDF conversion',
+              'Structured form filling',
+              'Cloud annotation and advanced workflows',
+            ],
+          },
+          design: {
+            title: 'Consistent workspace flow',
+            description: 'Upload, access state, progress, and results follow one rhythm instead of scattering across unrelated cards.',
+            details: [
+              'Works across desktop and mobile',
+              'Light and dark themes supported',
+              'Less duplicated UI and repeated instructions',
+              'Key actions stay inside one workspace',
+            ],
+          },
+          languages: {
+            title: 'Multi-language support',
+            description: 'The UI supports multiple languages and key surfaces are being aligned to switch cleanly.',
+            details: [
+              'Simplified Chinese, English, and Spanish',
+              'Critical copy goes through the translation layer',
+              'Advanced tools share one access-message style',
+              'Mixed-language leftovers are being removed',
+            ],
+          },
+          tools: {
+            title: 'Coverage across common PDF tasks',
+            description: 'The product grows from everyday essentials into advanced workflows without overwhelming the first entry point.',
+            details: [
+              'Merge, split, rotate, and compress',
+              'Image to PDF and PDF to image',
+              'OCR, AI analysis, and form filling',
+              'Annotation, watermarking, and Office conversion',
+            ],
+          },
+        },
+        technicalFeatures: {
+          stack: {
+            title: 'Stack',
+            items: ['Vue 3 + TypeScript', 'FastAPI + PostgreSQL', 'Redis + Celery', 'Realtime communication where it fits'],
+          },
+          security: {
+            title: 'Security',
+            items: ['JWT authentication', 'Layered access control', 'Rate limiting and diagnostic prompts', 'More restrained error exposure'],
+          },
+          performance: {
+            title: 'Performance',
+            items: ['Lazy loading', 'Static asset caching', 'Local-first processing', 'Async handling for heavy jobs'],
+          },
+          quality: {
+            title: 'Quality',
+            items: ['Build verification', 'Smoke test scripts', 'Local regression checks', 'Real deploy issue fixes'],
+          },
+        },
+      },
+      pricingPage: {
+        title: 'Pricing',
+        description: 'The goal is to keep the core tools broadly usable and make cloud features an intentional upgrade instead of the default gate.',
+        badges: {
+          refund: 'Refund-friendly',
+          cancel: 'Cancel anytime',
+          security: 'Security-aware',
+        },
+        popular: 'Popular choice',
+        currentPlan: 'Current plan',
+        featuresLabel: 'Included',
+        limitationsLabel: 'Notes',
+        tiers: {
+          free: {
+            name: 'Free',
+            description: 'Good for lightweight everyday PDF work',
+            priceDetail: 'Always free',
+            features: [
+              'Core local PDF tools',
+              'Merge, split, rotate, and compress',
+              'Image to PDF and PDF to image',
+              'Can be tried before sign-in',
+            ],
+            limitations: [
+              'Advanced cloud flows require sign-in before access is evaluated',
+              'Best for basic and mid-sized tasks',
+            ],
+            ctaDefault: 'Start now',
+          },
+          pro: {
+            name: 'Pro',
+            description: 'For frequent document work and cloud-assisted workflows',
+            priceDetail: 'Monthly or yearly subscription',
+            features: [
+              'Everything in Free',
+              'OCR text recognition',
+              'Office to PDF conversion',
+              'PDF form filling and cloud annotation',
+              'More complete advanced workflows',
+            ],
+            limitations: [
+              'Requires sign-in and an active subscription',
+            ],
+            ctaDefault: 'Upgrade to Pro',
+          },
+          enterprise: {
+            name: 'Enterprise',
+            description: 'For teams that need integrations, stability, and business-ready workflows',
+            priceDetail: 'Contact us',
+            features: [
+              'Everything in Pro',
+              'Enterprise API and integration support',
+              'More flexible quota and process support',
+              'Better fit for formal business adoption',
+            ],
+            limitations: [
+              'Usually starts with an implementation discussion',
+            ],
+            ctaDefault: 'Contact sales',
+          },
+        },
+        faqTitle: 'FAQ',
+        faq: {
+          upgrade: {
+            q: 'How do I upgrade to Pro?',
+            a: 'Once signed in, you can start the upgrade flow from the pricing page or from a restricted tool page when you actually need the advanced capability.',
+          },
+          cancel: {
+            q: 'Can I cancel a subscription?',
+            a: 'Yes. Access usually remains until the current billing period ends, then falls back to the corresponding base level.',
+          },
+          security: {
+            q: 'How is data handled securely?',
+            a: 'Core tools stay local whenever possible, while cloud workflows use more controlled access prompts and reduced exposure of internal details.',
+          },
+          enterprise: {
+            q: 'When does Enterprise make sense?',
+            a: 'It becomes the better fit when PDF flows need to plug into formal business systems or require steadier team-level support.',
+          },
+        },
+        trust: {
+          title: 'Stability before expansion',
+          description: 'The focus is not just adding more feature names, but making real upload, conversion, OCR, and download flows behave reliably.',
+          metrics: {
+            availability: 'availability target',
+            feedback: 'feedback loop',
+            processing: 'common task response',
+          },
+        },
+        bottomPrompt: 'No account yet?',
+        bottomAction: 'Sign up and keep testing',
+        alerts: {
+          paymentStartFailed: 'Unable to start checkout right now. Please try again later or contact an administrator.',
+        },
+      },
     },
     common: {
       close: 'Close',
@@ -469,6 +946,19 @@ export const localeOverrides = {
     app: {
       title: 'PDF-Flow',
     },
+    tools: {
+      ocr: {
+        title: 'Reconocimiento OCR',
+      },
+      fillForm: {
+        title: 'Rellenar Formulario PDF',
+        description: 'Rellena formularios PDF automáticamente con tus datos',
+      },
+      annotate: {
+        title: 'Anotar PDF',
+        description: 'Añade notas de texto y resaltados a tu PDF',
+      },
+    },
     nav: {
       features: 'Funciones',
       themeToDark: 'Cambiar a modo oscuro',
@@ -480,6 +970,245 @@ export const localeOverrides = {
       madeWith: 'Creado por el equipo de PDF-Flow',
       privacyPolicy: 'Política de privacidad',
       termsOfService: 'Términos del servicio',
+    },
+    home: {
+      badges: {
+        fast: 'Procesamiento rápido',
+        languages: 'Compatible con 3 idiomas',
+      },
+      toolsTitle: 'Elige una herramienta para empezar',
+      whyTitle: '¿Por qué elegir PDF-Flow?',
+      highlights: {
+        privacy: {
+          title: 'Privacidad ante todo',
+          description: 'El procesamiento principal ocurre en tu navegador y los archivos no necesitan salir de tu dispositivo.',
+        },
+        speed: {
+          title: 'Hecho para ir rápido',
+          description: 'WebAssembly y el procesamiento moderno mantienen ágiles los flujos de trabajo cotidianos.',
+        },
+        free: {
+          title: 'Las herramientas básicas están listas',
+          description: 'Las utilidades esenciales de PDF están disponibles desde el inicio y las funciones avanzadas en la nube se desbloquean tras iniciar sesión cuando haga falta.',
+        },
+      },
+      toolDescriptions: {
+        ocr: 'Extrae texto de archivos PDF o imágenes',
+        aiAnalyzer: 'Genera resúmenes, responde preguntas y extrae datos estructurados',
+      },
+    },
+    ai: {
+      title: 'Analizador PDF con IA',
+    },
+    marketing: {
+      featuresPage: {
+        heroTitle: 'Funciones',
+        heroDescription: 'Un espacio PDF moderno construido alrededor de la privacidad, la claridad y los flujos de trabajo reales.',
+        startButton: 'Empezar',
+        pricingButton: 'Ver precios',
+        coreTitle: 'Fortalezas principales',
+        coreDescription: 'Por qué PDF-Flow está estructurado de esta manera.',
+        technicalTitle: 'Enfoque técnico',
+        technicalDescription: 'Entrega moderna en frontend junto con procesamiento fiable en backend cuando hace falta.',
+        comparisonTitle: 'Lo que realmente cambia',
+        comparisonDescription: 'Mirar la experiencia real ayuda a entender mejor dónde se diferencia el producto.',
+        comparisonHeaders: {
+          feature: 'Capacidad',
+          product: 'PDF-Flow',
+          competitorA: 'Alternativa A',
+          competitorB: 'Alternativa B',
+        },
+        comparisonRows: {
+          privacy: 'Privacidad con enfoque local',
+          free: 'Herramientas básicas disponibles al instante',
+          progress: 'Progreso en tiempo real',
+          ocr: 'Reconocimiento OCR',
+          open: 'Dirección del producto más transparente',
+          api: 'Acceso API empresarial',
+          partial: 'Parcial',
+          paid: 'De pago',
+          expensive: 'Más costoso',
+        },
+        ctaTitle: '¿Listo para probar el flujo real?',
+        ctaDescription: 'Empieza con las herramientas básicas y activa funciones avanzadas en la nube solo cuando de verdad las necesites.',
+        ctaRegister: 'Crear cuenta',
+        ctaPricing: 'Ver precios',
+        coreFeatures: {
+          privacy: {
+            title: 'Privacidad primero',
+            description: 'El trabajo PDF principal permanece local siempre que sea posible.',
+            details: [
+              'Las acciones PDF más comunes corren en el navegador',
+              'Menos necesidad de enviar archivos sensibles al servidor',
+              'Los datos temporales se limpian tras el proceso',
+              'Un mejor punto de partida para usuarios sensibles a la privacidad',
+            ],
+          },
+          speed: {
+            title: 'Procesamiento más fluido',
+            description: 'La interfaz interactiva y las tareas pesadas se separan para reducir bloqueos visibles.',
+            details: [
+              'La UI permanece más desacoplada de tareas largas',
+              'El progreso y el estado siguen siendo visibles',
+              'Las tareas largas pueden usar WebSocket o sondeo',
+              'La espera con archivos grandes se entiende mejor',
+            ],
+          },
+          cloud: {
+            title: 'Nube solo cuando hace falta',
+            description: 'OCR, conversión Office, formularios y anotaciones se habilitan tras iniciar sesión y solo cuando toca.',
+            details: [
+              'Reconocimiento OCR',
+              'Conversión de Office a PDF',
+              'Relleno estructurado de formularios',
+              'Anotación en la nube y flujos avanzados',
+            ],
+          },
+          design: {
+            title: 'Flujo de trabajo consistente',
+            description: 'Subida, acceso, progreso y resultados siguen un mismo ritmo.',
+            details: [
+              'Funciona en escritorio y móvil',
+              'Soporte para modo claro y oscuro',
+              'Menos duplicación visual y de instrucciones',
+              'Las acciones clave viven en un mismo espacio',
+            ],
+          },
+          languages: {
+            title: 'Soporte multilingüe',
+            description: 'La interfaz admite varios idiomas y las vistas clave se están alineando para cambiar mejor.',
+            details: [
+              'Chino simplificado, inglés y español',
+              'Los textos críticos pasan por la capa de traducción',
+              'Las herramientas avanzadas comparten el mismo estilo de acceso',
+              'Se están eliminando restos mezclados de idiomas',
+            ],
+          },
+          tools: {
+            title: 'Cobertura de tareas PDF comunes',
+            description: 'El producto crece desde lo esencial hasta flujos avanzados sin saturar la entrada inicial.',
+            details: [
+              'Combinar, dividir, rotar y comprimir',
+              'Imagen a PDF y PDF a imagen',
+              'OCR, análisis con IA y formularios',
+              'Anotación, marcas de agua y conversión Office',
+            ],
+          },
+        },
+        technicalFeatures: {
+          stack: {
+            title: 'Stack',
+            items: ['Vue 3 + TypeScript', 'FastAPI + PostgreSQL', 'Redis + Celery', 'Comunicación en tiempo real según el caso'],
+          },
+          security: {
+            title: 'Seguridad',
+            items: ['Autenticación JWT', 'Control de acceso por niveles', 'Límites y diagnósticos', 'Errores expuestos con más prudencia'],
+          },
+          performance: {
+            title: 'Rendimiento',
+            items: ['Carga diferida', 'Caché estática', 'Procesamiento local primero', 'Tareas pesadas asíncronas'],
+          },
+          quality: {
+            title: 'Calidad',
+            items: ['Verificación de build', 'Scripts smoke test', 'Comprobaciones locales', 'Corrección de problemas reales de despliegue'],
+          },
+        },
+      },
+      pricingPage: {
+        title: 'Precios',
+        description: 'La idea es mantener útiles las herramientas básicas y dejar la nube como una mejora intencional, no como una barrera desde el inicio.',
+        badges: {
+          refund: 'Con opción de reembolso',
+          cancel: 'Cancela cuando quieras',
+          security: 'Enfoque en seguridad',
+        },
+        popular: 'Más elegido',
+        currentPlan: 'Plan actual',
+        featuresLabel: 'Incluye',
+        limitationsLabel: 'Notas',
+        tiers: {
+          free: {
+            name: 'Gratis',
+            description: 'Adecuado para tareas PDF cotidianas y ligeras',
+            priceDetail: 'Siempre gratis',
+            features: [
+              'Herramientas PDF locales básicas',
+              'Combinar, dividir, rotar y comprimir',
+              'Imagen a PDF y PDF a imagen',
+              'Se puede probar antes de iniciar sesión',
+            ],
+            limitations: [
+              'Los flujos avanzados en la nube requieren iniciar sesión antes de evaluar el acceso',
+              'Mejor para tareas básicas y archivos medianos',
+            ],
+            ctaDefault: 'Empezar',
+          },
+          pro: {
+            name: 'Pro',
+            description: 'Para trabajo documental frecuente y flujos asistidos por la nube',
+            priceDetail: 'Suscripción mensual o anual',
+            features: [
+              'Todo lo de Gratis',
+              'OCR',
+              'Conversión de Office a PDF',
+              'Relleno de formularios PDF y anotación en la nube',
+              'Flujos avanzados más completos',
+            ],
+            limitations: [
+              'Requiere sesión iniciada y suscripción activa',
+            ],
+            ctaDefault: 'Subir a Pro',
+          },
+          enterprise: {
+            name: 'Empresarial',
+            description: 'Para equipos que necesitan integraciones, estabilidad y flujos listos para negocio',
+            priceDetail: 'Contáctanos',
+            features: [
+              'Todo lo de Pro',
+              'API empresarial y soporte de integración',
+              'Cuotas y procesos más flexibles',
+              'Mejor encaje para adopción formal',
+            ],
+            limitations: [
+              'Normalmente empieza con una conversación de implementación',
+            ],
+            ctaDefault: 'Contactar ventas',
+          },
+        },
+        faqTitle: 'Preguntas frecuentes',
+        faq: {
+          upgrade: {
+            q: '¿Cómo subo a Pro?',
+            a: 'Tras iniciar sesión puedes empezar el proceso desde la página de precios o desde una herramienta restringida cuando realmente necesites esa capacidad.',
+          },
+          cancel: {
+            q: '¿Puedo cancelar la suscripción?',
+            a: 'Sí. El acceso suele mantenerse hasta el final del periodo actual y luego vuelve al nivel base correspondiente.',
+          },
+          security: {
+            q: '¿Cómo se maneja la seguridad de los datos?',
+            a: 'Las herramientas básicas permanecen locales siempre que se puede y los flujos en la nube usan mensajes de acceso más controlados y menos exposición de detalles internos.',
+          },
+          enterprise: {
+            q: '¿Cuándo conviene la versión empresarial?',
+            a: 'Tiene más sentido cuando los flujos PDF deben integrarse en sistemas formales de negocio o necesitan un soporte más estable para equipos.',
+          },
+        },
+        trust: {
+          title: 'Primero estabilidad, luego expansión',
+          description: 'La prioridad no es solo sumar nombres de funciones, sino hacer fiables los flujos reales de subida, conversión, OCR y descarga.',
+          metrics: {
+            availability: 'objetivo de disponibilidad',
+            feedback: 'bucle de feedback',
+            processing: 'respuesta de tareas comunes',
+          },
+        },
+        bottomPrompt: '¿Todavía sin cuenta?',
+        bottomAction: 'Regístrate y sigue probando',
+        alerts: {
+          paymentStartFailed: 'No se puede iniciar el pago ahora mismo. Inténtalo más tarde o contacta con un administrador.',
+        },
+      },
     },
     common: {
       close: 'Cerrar',

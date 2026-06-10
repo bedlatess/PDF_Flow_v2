@@ -1,4 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { watch } from 'vue'
+import i18n from '@/i18n'
 import { guestGuard, authGuard, enterpriseGuard } from './guards'
 
 const router = createRouter({
@@ -13,13 +15,13 @@ const router = createRouter({
       path: '/features',
       name: 'features',
       component: () => import('@/views/Features.vue'),
-      meta: { title: '功能特性' }
+      meta: { titleKey: 'nav.features' }
     },
     {
       path: '/pricing',
       name: 'pricing',
       component: () => import('@/views/Pricing.vue'),
-      meta: { title: '定价方案' }
+      meta: { titleKey: 'nav.pricing' }
     },
     {
       path: '/auth',
@@ -29,27 +31,27 @@ const router = createRouter({
           name: 'login',
           component: () => import('@/views/auth/Login.vue'),
           beforeEnter: guestGuard,
-          meta: { title: '登录' }
+          meta: { titleKey: 'auth.login' }
         },
         {
           path: 'register',
           name: 'register',
           component: () => import('@/views/auth/Register.vue'),
           beforeEnter: guestGuard,
-          meta: { title: '注册' }
+          meta: { titleKey: 'auth.register' }
         },
         {
           path: 'oauth-callback',
           name: 'oauth-callback',
           component: () => import('@/views/auth/OAuthCallback.vue'),
-          meta: { title: '正在登录' }
+          meta: { titleKey: 'auth.processingLogin' }
         },
         {
           path: 'profile',
           name: 'profile',
           component: () => import('@/views/auth/Profile.vue'),
           beforeEnter: authGuard,
-          meta: { title: '我的账号' }
+          meta: { titleKey: 'account.myAccount' }
         }
       ]
     },
@@ -60,13 +62,13 @@ const router = createRouter({
           path: 'success',
           name: 'payment-success',
           component: () => import('@/views/payment/PaymentSuccess.vue'),
-          meta: { title: '支付成功' }
+          meta: { titleKey: 'payment.success.title' }
         },
         {
           path: 'cancel',
           name: 'payment-cancel',
           component: () => import('@/views/payment/PaymentCancel.vue'),
-          meta: { title: '支付已取消' }
+          meta: { titleKey: 'payment.cancel.title' }
         }
       ]
     },
@@ -78,7 +80,7 @@ const router = createRouter({
           name: 'enterprise-dashboard',
           component: () => import('@/views/enterprise/Dashboard.vue'),
           beforeEnter: enterpriseGuard,
-          meta: { title: '企业控制台' }
+          meta: { titleKey: 'enterprise.dashboard.title' }
         }
       ]
     },
@@ -119,37 +121,37 @@ const router = createRouter({
           path: 'ocr',
           name: 'ocr-pdf',
           component: () => import('@/views/tools/OCRPDF.vue'),
-          meta: { title: 'OCR 文字识别' }
+          meta: { titleKey: 'tools.ocr.title' }
         },
         {
           path: 'office-to-pdf',
           name: 'office-to-pdf',
           component: () => import('@/views/tools/OfficeToPDF.vue'),
-          meta: { title: 'Office 转 PDF' }
+          meta: { titleKey: 'tools.officeToPdf.title' }
         },
         {
           path: 'ai-analyzer',
           name: 'ai-analyzer',
           component: () => import('@/views/tools/AIPDFAnalyzer.vue'),
-          meta: { title: 'AI PDF 分析器' }
+          meta: { titleKey: 'ai.title' }
         },
         {
           path: 'watermark',
           name: 'watermark-pdf',
           component: () => import('@/views/tools/WatermarkPDF.vue'),
-          meta: { title: '添加水印' }
+          meta: { titleKey: 'tools.watermark.title' }
         },
         {
           path: 'fill-form',
           name: 'fill-form-pdf',
           component: () => import('@/views/tools/FillFormPDF.vue'),
-          meta: { title: '填写 PDF 表单', requiresPro: true }
+          meta: { titleKey: 'tools.fillForm.title', requiresPro: true }
         },
         {
           path: 'annotate',
           name: 'annotate-pdf',
           component: () => import('@/views/tools/AnnotatePDF.vue'),
-          meta: { title: 'PDF 标注', requiresPro: true }
+          meta: { titleKey: 'tools.annotate.title', requiresPro: true }
         },
       ],
     },
@@ -178,16 +180,29 @@ router.onError((error, to) => {
   window.location.assign(to.fullPath)
 })
 
-// 全局前置守卫 - 设置页面标题
-router.beforeEach((to, _from, next) => {
-  const title = to.meta.title as string
+const resolveDocumentTitle = (route = router.currentRoute.value) => {
+  const titleKey = route.meta.titleKey as string | undefined
+  const fallbackTitle = route.meta.title as string | undefined
+  const title = titleKey ? i18n.global.t(titleKey) : fallbackTitle
   if (title) {
     document.title = `${title} - PDF-Flow`
   } else {
-    document.title = 'PDF-Flow - 隐私优先的 PDF 工具'
+    document.title = `PDF-Flow - ${i18n.global.t('app.tagline')}`
   }
+}
+
+// 全局前置守卫 - 设置页面标题
+router.beforeEach((to, _from, next) => {
+  resolveDocumentTitle(to)
   next()
 })
+
+watch(
+  () => i18n.global.locale.value,
+  () => {
+    resolveDocumentTitle()
+  },
+)
 
 router.afterEach((to) => {
   if (typeof window === 'undefined') {

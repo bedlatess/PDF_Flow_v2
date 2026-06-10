@@ -23,7 +23,7 @@ import { useUserStore } from '@/stores/user'
 import { formatUserFacingError, type FormattedUserError } from '@/utils/error-messages'
 import { redirectForFeatureAccess } from '@/utils/feature-access'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
@@ -36,11 +36,44 @@ const status = ref('')
 const errorState = ref<FormattedUserError | null>(null)
 const resultUrl = ref('')
 
-const supportedFormats = [
-  { label: 'Word', ext: '.doc, .docx', tone: 'bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-200' },
-  { label: 'Excel', ext: '.xls, .xlsx', tone: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-200' },
-  { label: 'PowerPoint', ext: '.ppt, .pptx', tone: 'bg-orange-50 text-orange-700 dark:bg-orange-950/30 dark:text-orange-200' },
-]
+const localizedOfficeText = computed(() => {
+  if (locale.value === 'zh') {
+    return {
+      word: 'Word 文档',
+      excel: 'Excel 表格',
+      powerpoint: 'PowerPoint 演示稿',
+      unsupported: '请上传 Word、Excel 或 PowerPoint 文件。',
+      conversionFailed: '转换失败，请稍后重试。',
+      conversionFailedShort: '转换失败。',
+    }
+  }
+
+  if (locale.value === 'es') {
+    return {
+      word: 'Documento Word',
+      excel: 'Hoja de Excel',
+      powerpoint: 'Presentación PowerPoint',
+      unsupported: 'Sube un archivo de Word, Excel o PowerPoint.',
+      conversionFailed: 'La conversión falló. Inténtalo de nuevo en un momento.',
+      conversionFailedShort: 'La conversión falló.',
+    }
+  }
+
+  return {
+    word: 'Word document',
+    excel: 'Excel spreadsheet',
+    powerpoint: 'PowerPoint presentation',
+    unsupported: 'Please upload a Word, Excel, or PowerPoint file.',
+    conversionFailed: 'Conversion failed. Please try again in a moment.',
+    conversionFailedShort: 'Conversion failed.',
+  }
+})
+
+const supportedFormats = computed(() => [
+  { label: localizedOfficeText.value.word, ext: '.doc, .docx', tone: 'bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-200' },
+  { label: localizedOfficeText.value.excel, ext: '.xls, .xlsx', tone: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-200' },
+  { label: localizedOfficeText.value.powerpoint, ext: '.ppt, .pptx', tone: 'bg-orange-50 text-orange-700 dark:bg-orange-950/30 dark:text-orange-200' },
+])
 
 const isReadyToConvert = computed(() => !!uploadedFile.value && userStore.isAuthenticated)
 
@@ -69,7 +102,7 @@ const handleFilesSelected = (files: File[]) => {
   if (!extension || !allowedExtensions.includes(extension)) {
     errorState.value = formatUserFacingError(new Error('unsupported file type'), {
       area: 'OFFICE',
-      fallbackMessage: 'Please upload a Word, Excel, or PowerPoint file.',
+      fallbackMessage: localizedOfficeText.value.unsupported,
     })
     return
   }
@@ -125,7 +158,7 @@ const convertFile = async () => {
     })
 
     if (finalStatus.status === 'failed') {
-      throw new Error(finalStatus.error || 'Conversion failed.')
+      throw new Error(finalStatus.error || localizedOfficeText.value.conversionFailedShort)
     }
 
     status.value = t('tools.officeToPdf.preparingDownload')
@@ -138,7 +171,7 @@ const convertFile = async () => {
   } catch (error) {
     errorState.value = formatUserFacingError(error, {
       area: 'OFFICE',
-      fallbackMessage: 'Conversion failed. Please try again.',
+      fallbackMessage: localizedOfficeText.value.conversionFailed,
     })
   } finally {
     converting.value = false

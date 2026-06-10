@@ -37,43 +37,32 @@ const status = ref('')
 const errorState = ref<FormattedUserError | null>(null)
 const resultUrl = ref('')
 
-const localizedOfficeText = computed(() => {
-  if (locale.value === 'zh') {
-    return {
-      word: 'Word 文档',
-      excel: 'Excel 表格',
-      powerpoint: 'PowerPoint 演示稿',
+const copy = computed(() => locale.value.toLowerCase().startsWith('zh')
+  ? {
+      formats: {
+        word: 'Word 文档',
+        excel: 'Excel 表格',
+        powerpoint: 'PowerPoint 演示文稿',
+      },
       unsupported: '请上传 Word、Excel 或 PowerPoint 文件。',
-      conversionFailed: '转换失败，请稍后重试。',
+      conversionFailed: '转换失败，请稍后再试。',
       conversionFailedShort: '转换失败。',
     }
-  }
-
-  if (locale.value === 'es') {
-    return {
-      word: 'Documento Word',
-      excel: 'Hoja de Excel',
-      powerpoint: 'Presentación PowerPoint',
-      unsupported: 'Sube un archivo de Word, Excel o PowerPoint.',
-      conversionFailed: 'La conversión falló. Inténtalo de nuevo en un momento.',
-      conversionFailedShort: 'La conversión falló.',
-    }
-  }
-
-  return {
-    word: 'Word document',
-    excel: 'Excel spreadsheet',
-    powerpoint: 'PowerPoint presentation',
-    unsupported: 'Please upload a Word, Excel, or PowerPoint file.',
-    conversionFailed: 'Conversion failed. Please try again in a moment.',
-    conversionFailedShort: 'Conversion failed.',
-  }
-})
+  : {
+      formats: {
+        word: 'Word document',
+        excel: 'Excel spreadsheet',
+        powerpoint: 'PowerPoint presentation',
+      },
+      unsupported: 'Please upload a Word, Excel, or PowerPoint file.',
+      conversionFailed: 'Conversion failed. Please try again in a moment.',
+      conversionFailedShort: 'Conversion failed.',
+    })
 
 const supportedFormats = computed(() => [
-  { label: localizedOfficeText.value.word, ext: '.doc, .docx', tone: 'bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-200' },
-  { label: localizedOfficeText.value.excel, ext: '.xls, .xlsx', tone: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-200' },
-  { label: localizedOfficeText.value.powerpoint, ext: '.ppt, .pptx', tone: 'bg-orange-50 text-orange-700 dark:bg-orange-950/30 dark:text-orange-200' },
+  { label: copy.value.formats.word, ext: '.doc, .docx', tone: 'bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-200' },
+  { label: copy.value.formats.excel, ext: '.xls, .xlsx', tone: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-200' },
+  { label: copy.value.formats.powerpoint, ext: '.ppt, .pptx', tone: 'bg-orange-50 text-orange-700 dark:bg-orange-950/30 dark:text-orange-200' },
 ])
 
 const isReadyToConvert = computed(() => !!uploadedFile.value && userStore.isAuthenticated)
@@ -103,7 +92,7 @@ const handleFilesSelected = (files: File[]) => {
   if (!extension || !allowedExtensions.includes(extension)) {
     errorState.value = formatUserFacingError(new Error('unsupported file type'), {
       area: 'OFFICE',
-      fallbackMessage: localizedOfficeText.value.unsupported,
+      fallbackMessage: copy.value.unsupported,
     })
     return
   }
@@ -159,7 +148,7 @@ const convertFile = async () => {
     })
 
     if (finalStatus.status === 'failed') {
-      throw new Error(finalStatus.error || localizedOfficeText.value.conversionFailedShort)
+      throw new Error(finalStatus.error || copy.value.conversionFailedShort)
     }
 
     status.value = t('tools.officeToPdf.preparingDownload')
@@ -172,7 +161,7 @@ const convertFile = async () => {
   } catch (error) {
     errorState.value = formatUserFacingError(error, {
       area: 'OFFICE',
-      fallbackMessage: localizedOfficeText.value.conversionFailed,
+      fallbackMessage: copy.value.conversionFailed,
     })
   } finally {
     converting.value = false
@@ -324,18 +313,7 @@ onUnmounted(() => {
 
               <div class="flex flex-col gap-3 sm:flex-row">
                 <Button
-                  v-if="!userStore.isAuthenticated"
-                  variant="primary"
-                  size="lg"
-                  full-width
-                  @click="ensureLogin()"
-                >
-                  <LogIn class="mr-2 h-4 w-4" />
-                  {{ t('tools.officeToPdf.signInToConvert') }}
-                </Button>
-
-                <Button
-                  v-else
+                  v-if="userStore.isAuthenticated"
                   variant="primary"
                   size="lg"
                   :loading="converting"
@@ -392,17 +370,6 @@ onUnmounted(() => {
                   {{ userStore.isAuthenticated ? t('tools.officeToPdf.accountReadyDescription') : t('tools.officeToPdf.accountGuestDescription') }}
                 </p>
               </div>
-
-              <Button
-                v-if="!userStore.isAuthenticated"
-                variant="outline"
-                size="lg"
-                full-width
-                @click="ensureLogin()"
-              >
-                <LogIn class="mr-2 h-4 w-4" />
-                {{ t('tools.officeToPdf.goToSignIn') }}
-              </Button>
 
               <div class="rounded-[24px] border border-slate-200 bg-slate-50/70 p-5 dark:border-slate-800 dark:bg-slate-950/50">
                 <p class="text-sm font-semibold text-slate-900 dark:text-white">

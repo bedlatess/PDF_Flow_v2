@@ -459,3 +459,55 @@ git push origin main
 **本地开发 -> 推 `staging` -> 服务器验收 -> 合并 `main` -> 服务器跑 `deploy-main.sh` 做真实上线测试**
 
 这是当前“只有 1 台服务器、但又要有容错和回滚”的最稳妥方案。
+
+---
+
+## 11. Main Release Quick Path
+
+If `main` has already been pushed and the server is meant to validate the production branch directly, use this exact order:
+
+```bash
+cd /path/to/pdf-flow
+git fetch origin
+git checkout main
+git pull --ff-only origin main
+bash scripts/deploy-main.sh
+bash scripts/main-smoke-suite.sh
+```
+
+What `main-smoke-suite.sh` does:
+
+1. Runs `scripts/smoke-test.sh`
+2. Runs `scripts/business-smoke-test.sh`
+3. Runs `scripts/ocr-smoke-test.sh`
+4. Runs `scripts/office-smoke-test.sh`
+
+It auto-generates isolated smoke-test emails, so you do not need to hand-write them each time.
+
+### Manual UAT After The Smoke Suite
+
+After the script passes, validate these five browser checks in order:
+
+1. Home page and tool navigation load correctly from `https://pdf.pawn.eu.org`
+2. Register, login, logout, and Pro gating messaging behave correctly
+3. Merge upload / process / download succeeds from the UI
+4. OCR, Fill Form, Annotate, and Office pages render correctly on desktop and mobile widths
+5. Error prompts are understandable when uploading the wrong file type or using a gated feature
+6. `登录` no longer opens a blank page, and Merge PDF page thumbnails render instead of showing `加载失败`
+
+### Rollback If Main Validation Fails
+
+```bash
+cd /path/to/pdf-flow
+bash scripts/rollback-main.sh
+```
+
+### 12. Frontend Access And Error Checks
+
+When validating the current frontend on `main`, confirm these newer behavior rules as part of manual UAT:
+
+1. Guest users who open `OCR`, `AI Analyzer`, `Fill Form`, or `Annotate` are sent to sign in first.
+2. Free signed-in users only see the upgrade path after authentication, not before.
+3. `OfficeToPDF` requires login first but should not incorrectly show a Pro-only wall.
+4. Error prompts should be readable by end users and include a short `PF-*` diagnostic code for screenshots.
+5. Frontend messages must not expose raw SQL traces, Python exceptions, or backend stack details directly.

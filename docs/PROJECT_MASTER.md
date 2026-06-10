@@ -623,3 +623,18 @@ python -m pytest tests/ -q      # 35 通过
 - **2026-06-10 Office 转 PDF 登录入口收口**：移除 `src/views/tools/OfficeToPDF.vue` 工作区里重复的登录提示，只保留认证前单一的游客访问面板；主转换按钮仅在已登录状态下显示，避免同一页面出现两个登录入口。
 - **2026-06-10 公共营销页与法律页重构**：重做 `src/components/layout/Header.vue`、`Footer.vue`、`src/views/Features.vue`、`Pricing.vue`，把右上角 `功能特性 / 查看定价` 从普通按钮升级为图标化胶囊导航，并让 `Features`、`Pricing` 改为与首页/登录同设计家族但不同节奏的产品简报页；页脚同步重排为品牌说明、工具入口、产品入口、法律与支持四区结构。新增 `src/views/legal/PrivacyPolicy.vue` 与 `TermsOfService.vue`、对应路由 `/privacy` 与 `/terms`，补齐可上线测试使用的隐私政策与服务条款页面；`src/locales/overrides.ts` 追加中英西的法律页、页脚和定价扩展文案。2026-06-10 本地验证：`npm run build` 通过。
 - 2026-06-10 frontend dedupe and customer-facing auth cleanup: redesigned the left-side login/register marketing blocks as user-facing value cards, removed duplicate gated-state helper cards/chips from OCR, Office, Fill Form, and Annotate pages, fixed remaining Office/step/color text cleanup, and replaced internal-sounding fallback copy in footer/i18n overrides. Verification target: rerun `npm run build` before deploy.
+
+### 2026-06-10 Legal Pages And Hidden Admin Backlog / 法律页与隐藏后台计划
+
+- 已将 `src/views/legal/PrivacyPolicy.vue` 和 `src/views/legal/TermsOfService.vue` 从占位式摘要升级为面向用户的真实内容，覆盖账户信息、文件处理、云端任务、保留删除、用户权利、订阅限制、禁止行为、免责声明和联系方式。
+- 法律页采用页面内中英文内容映射，默认中文；英文环境显示英文版，避免继续依赖历史 locale 文件中受污染或不完整的法律文案。
+- 下一阶段新增隐藏后台，定位为“管理员运营控制台”，不在普通用户导航、页脚或公开营销入口展示，但不能依赖隐藏路径作为安全措施，必须由后端 `ADMIN` 角色鉴权保护。
+- 后台 MVP 建议范围：
+  - 管理员登录后访问隐藏路由，例如 `/control-room` 或 `/ops-console`。
+  - 后端新增 `/api/v1/admin/*` 路由，所有接口强制 `UserRole.ADMIN`。
+  - 新增站点配置模型：站点名称、公告、联系邮箱、页脚内容、首页 CTA、维护模式。
+  - 新增功能开关模型：每个工具可配置 `enabled`、`requires_login`、`requires_pro`、`maintenance_message`。
+  - 新增内容块模型：隐私政策、服务条款、首页文案、定价说明等可由后台编辑。
+  - 新增审计日志：记录管理员、动作、对象、时间、结果和必要诊断信息。
+- 后台第一阶段不做公开注册入口、不做复杂多管理员权限矩阵、不做拖拽页面搭建器，先解决“能安全地开关功能、修改全站基础内容、维护法律页和公告”的真实运营需求。
+- 安全要求：后台路由不出现在导航；前端隐藏只是体验层，真实权限必须由后端判断；所有配置更新需要输入校验；敏感错误只返回诊断码；管理员操作写入审计日志。

@@ -284,51 +284,103 @@ const handleReset = () => {
       </div>
 
       <div class="mt-6 space-y-6">
-        <Card
+        <div
           v-if="step === 1"
-          class="rounded-[28px] border border-white/70 bg-white/90 shadow-xl shadow-amber-100/60 dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none"
+          class="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]"
         >
-          <div class="space-y-6">
-            <div class="space-y-2">
-              <p class="text-xs font-semibold uppercase tracking-[0.22em] text-amber-500">
-                Step 1
-              </p>
-              <h2 class="text-2xl font-semibold text-slate-900 dark:text-white">
-                Upload a fillable PDF form
-              </h2>
-              <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
-                We will detect editable fields first, then let you complete them in one focused panel.
-              </p>
-            </div>
+          <Card class="rounded-[28px] border border-white/70 bg-white/90 shadow-xl shadow-amber-100/60 dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
+            <div class="space-y-6">
+              <div class="space-y-2">
+                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-amber-500">
+                  Upload
+                </p>
+                <h2 class="text-2xl font-semibold text-slate-900 dark:text-white">
+                  Upload a fillable PDF form
+                </h2>
+                <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
+                  Detect editable fields first, then complete them from a single workspace that mirrors the AI analyzer layout.
+                </p>
+              </div>
 
-            <DragDropZone
-              accept="application/pdf,.pdf"
-              :multiple="false"
-              :max-files="1"
-              @files-selected="handleFileUpload"
-            >
-              <template #icon>
-                <FileText class="h-12 w-12" />
-              </template>
-              <template #title>
-                Upload a structured PDF form
-              </template>
-              <template #subtitle>
-                Sign in first, then this tool will guide you through field detection and completion.
-              </template>
-            </DragDropZone>
-
-            <div class="grid gap-4 rounded-[24px] border border-slate-200 bg-slate-50/80 p-5 dark:border-slate-800 dark:bg-slate-950/50 sm:grid-cols-4">
-              <div
-                v-for="fieldType in ['text', 'checkbox', 'radio', 'dropdown']"
-                :key="fieldType"
-                :class="['rounded-2xl px-4 py-4 text-sm font-medium', fieldTypeClasses[fieldType]]"
+              <DragDropZone
+                accept="application/pdf,.pdf"
+                :multiple="false"
+                :max-files="1"
+                @files-selected="handleFileUpload"
               >
-                {{ t(`tools.fillForm.fieldTypes.${fieldType}`) }}
+                <template #icon>
+                  <FileText class="h-12 w-12" />
+                </template>
+                <template #title>
+                  Upload a structured PDF form
+                </template>
+                <template #subtitle>
+                  Sign in first, then this tool will guide you through field detection and completion.
+                </template>
+              </DragDropZone>
+            </div>
+          </Card>
+
+          <Card class="rounded-[28px] border border-white/70 bg-white/90 shadow-xl shadow-amber-100/60 dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
+            <div class="space-y-6">
+              <div class="flex flex-wrap gap-2">
+                <span
+                  v-for="fieldType in ['text', 'checkbox', 'radio', 'dropdown']"
+                  :key="fieldType"
+                  :class="['inline-flex rounded-full px-3 py-1 text-xs font-semibold', fieldTypeClasses[fieldType]]"
+                >
+                  {{ t(`tools.fillForm.fieldTypes.${fieldType}`) }}
+                </span>
+              </div>
+
+              <div>
+                <h3 class="text-xl font-semibold text-slate-900 dark:text-white">
+                  Form workspace
+                </h3>
+                <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                  Keep access status, supported field types, and the fillable workflow summary inside one aligned panel instead of a separate step-only screen.
+                </p>
+              </div>
+
+              <div class="rounded-[24px] border border-slate-200 bg-slate-50/70 px-4 py-4 dark:border-slate-800 dark:bg-slate-950/50">
+                <p class="text-sm font-semibold text-slate-900 dark:text-white">
+                  {{ userStore.isAuthenticated ? 'Signed-in account detected' : 'Not signed in yet' }}
+                </p>
+                <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                  {{ userStore.isAuthenticated
+                    ? 'This account can continue to Pro-only field detection and filling once access is confirmed.'
+                    : 'Please sign in first, then the app will decide whether an upgrade is actually needed.' }}
+                </p>
+              </div>
+
+              <div class="rounded-[24px] border border-slate-200 bg-slate-50/70 p-5 dark:border-slate-800 dark:bg-slate-950/50">
+                <p class="text-sm font-semibold text-slate-900 dark:text-white">
+                  Fill flow
+                </p>
+                <div class="mt-4 space-y-3">
+                  <div class="flex items-start gap-3 rounded-2xl bg-white px-4 py-4 dark:bg-slate-900">
+                    <span class="flex h-8 w-8 items-center justify-center rounded-full bg-amber-500 text-sm font-semibold text-white">1</span>
+                    <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
+                      Sign in first and upload one fillable PDF.
+                    </p>
+                  </div>
+                  <div class="flex items-start gap-3 rounded-2xl bg-white px-4 py-4 dark:bg-slate-900">
+                    <span class="flex h-8 w-8 items-center justify-center rounded-full bg-orange-500 text-sm font-semibold text-white">2</span>
+                    <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
+                      Detect fields, review required inputs, and complete values in one pass.
+                    </p>
+                  </div>
+                  <div class="flex items-start gap-3 rounded-2xl bg-white px-4 py-4 dark:bg-slate-900">
+                    <span class="flex h-8 w-8 items-center justify-center rounded-full bg-yellow-500 text-sm font-semibold text-white">3</span>
+                    <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
+                      Generate the completed PDF and download the result.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </Card>
+          </Card>
+        </div>
 
         <Card
           v-if="step === 2"

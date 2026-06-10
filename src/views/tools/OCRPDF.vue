@@ -238,7 +238,52 @@ const closeResultModal = () => {
         :support-hint="errorState.supportHint"
       />
 
-      <div class="mt-6 grid gap-6 lg:grid-cols-[1.02fr_0.98fr]">
+      <div
+        v-if="!canUseOCR"
+        class="mt-6"
+      >
+        <Card class="rounded-[28px] border border-white/70 bg-white/90 shadow-xl shadow-purple-100/60 dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
+          <div class="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+            <div class="space-y-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.22em] text-purple-500">
+                Access
+              </p>
+              <h2 class="text-2xl font-semibold text-slate-900 dark:text-white">
+                {{ userStore.isAuthenticated ? 'Upgrade required after login' : 'Sign in before text recognition' }}
+              </h2>
+              <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
+                {{ userStore.isAuthenticated
+                  ? 'Your account is active, but OCR runs as a Pro cloud workflow. Upgrade only when you need cloud text extraction.'
+                  : 'Please sign in first so the app can verify your account before deciding whether an upgrade is actually required.' }}
+              </p>
+
+              <Button
+                size="lg"
+                @click="ensureAccess()"
+              >
+                <Crown class="mr-2 h-4 w-4" />
+                {{ userStore.isAuthenticated ? 'Go to upgrade' : 'Go to sign in' }}
+              </Button>
+            </div>
+
+            <div class="rounded-[24px] border border-slate-200 bg-slate-50/80 p-5 dark:border-slate-800 dark:bg-slate-950/50">
+              <div class="space-y-4 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                <div class="rounded-2xl bg-white px-4 py-4 dark:bg-slate-900">
+                  1. Sign in first
+                </div>
+                <div class="rounded-2xl bg-white px-4 py-4 dark:bg-slate-900">
+                  2. Upload one PDF or image source
+                </div>
+                <div class="rounded-2xl bg-white px-4 py-4 dark:bg-slate-900">
+                  3. Run OCR and export plain text
+                </div>
+              </div>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      <div class="mt-6 grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
         <Card class="rounded-[28px] border border-white/70 bg-white/90 shadow-xl shadow-purple-100/60 dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
           <div class="space-y-6">
             <div class="space-y-2">
@@ -272,14 +317,58 @@ const closeResultModal = () => {
               </template>
             </DragDropZone>
 
-            <div
-              v-else
-              class="space-y-5"
-            >
+            <div v-else class="space-y-5">
               <FilePreview
                 :file="selectedFile"
                 @remove="clearAll"
               />
+
+              <ProgressBar
+                v-if="isProcessing"
+                :progress="processingProgress"
+                :label="processingStatus"
+                variant="primary"
+                size="md"
+              />
+
+              <Button
+                size="lg"
+                full-width
+                :loading="isProcessing"
+                @click="performOCR"
+              >
+                {{ primaryActionLabel }}
+              </Button>
+            </div>
+          </div>
+        </Card>
+
+        <Card class="rounded-[28px] border border-white/70 bg-white/90 shadow-xl shadow-purple-100/60 dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
+          <div class="space-y-6">
+            <div class="flex flex-wrap gap-2">
+              <span class="inline-flex items-center gap-2 rounded-full border border-purple-200 bg-purple-50 px-4 py-2 text-sm font-medium text-purple-700 dark:border-purple-800 dark:bg-purple-950/30 dark:text-purple-200">
+                <Languages class="h-4 w-4" />
+                Language
+              </span>
+              <span class="inline-flex items-center gap-2 rounded-full border border-fuchsia-200 bg-fuchsia-50 px-4 py-2 text-sm font-medium text-fuchsia-700 dark:border-fuchsia-800 dark:bg-fuchsia-950/30 dark:text-fuchsia-200">
+                <Sparkles class="h-4 w-4" />
+                Cloud OCR
+              </span>
+              <span class="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-medium text-indigo-700 dark:border-indigo-800 dark:bg-indigo-950/30 dark:text-indigo-200">
+                <Download class="h-4 w-4" />
+                TXT export
+              </span>
+            </div>
+
+            <div class="space-y-5">
+              <div>
+                <h3 class="text-xl font-semibold text-slate-900 dark:text-white">
+                  OCR workspace
+                </h3>
+                <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                  Keep recognition language, account state, and export actions in one aligned workspace instead of splitting them into unrelated cards.
+                </p>
+              </div>
 
               <div class="rounded-[24px] border border-slate-200 bg-slate-50/70 p-5 dark:border-slate-800 dark:bg-slate-950/50">
                 <div class="flex items-center gap-2">
@@ -289,7 +378,7 @@ const closeResultModal = () => {
                   </label>
                 </div>
 
-                <div class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <div class="mt-4 grid gap-3 sm:grid-cols-2">
                   <button
                     v-for="lang in languageOptions"
                     :key="lang.value"
@@ -315,72 +404,6 @@ const closeResultModal = () => {
                 </div>
               </div>
 
-              <ProgressBar
-                v-if="isProcessing"
-                :progress="processingProgress"
-                :label="processingStatus"
-                variant="primary"
-                size="md"
-              />
-
-              <Button
-                size="lg"
-                full-width
-                :loading="isProcessing"
-                @click="performOCR"
-              >
-                {{ primaryActionLabel }}
-              </Button>
-            </div>
-          </div>
-        </Card>
-
-        <div class="space-y-6">
-          <Card class="rounded-[28px] border border-white/70 bg-white/90 shadow-xl shadow-purple-100/60 dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
-            <div class="space-y-5">
-              <div>
-                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-purple-500">
-                  Flow
-                </p>
-                <h3 class="mt-2 text-xl font-semibold text-slate-900 dark:text-white">
-                  Recognition flow
-                </h3>
-              </div>
-
-              <div class="space-y-4">
-                <div class="flex items-start gap-3 rounded-2xl bg-slate-50 px-4 py-4 dark:bg-slate-950/50">
-                  <span class="flex h-8 w-8 items-center justify-center rounded-full bg-purple-500 text-sm font-semibold text-white">1</span>
-                  <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
-                    Upload a PDF or image and confirm the source file looks correct.
-                  </p>
-                </div>
-                <div class="flex items-start gap-3 rounded-2xl bg-slate-50 px-4 py-4 dark:bg-slate-950/50">
-                  <span class="flex h-8 w-8 items-center justify-center rounded-full bg-fuchsia-500 text-sm font-semibold text-white">2</span>
-                  <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
-                    Choose the nearest language to improve recognition quality.
-                  </p>
-                </div>
-                <div class="flex items-start gap-3 rounded-2xl bg-slate-50 px-4 py-4 dark:bg-slate-950/50">
-                  <span class="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500 text-sm font-semibold text-white">3</span>
-                  <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
-                    Copy the extracted text or download it as a plain text file.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </Card>
-
-          <Card class="rounded-[28px] border border-white/70 bg-white/90 shadow-xl shadow-purple-100/60 dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
-            <div class="space-y-4">
-              <div>
-                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-purple-500">
-                  Access
-                </p>
-                <h3 class="mt-2 text-xl font-semibold text-slate-900 dark:text-white">
-                  Current access state
-                </h3>
-              </div>
-
               <div class="rounded-[24px] border border-slate-200 bg-slate-50/70 px-4 py-4 dark:border-slate-800 dark:bg-slate-950/50">
                 <p class="text-sm font-semibold text-slate-900 dark:text-white">
                   {{ userStore.isAuthenticated ? 'Signed-in account detected' : 'Not signed in yet' }}
@@ -399,9 +422,35 @@ const closeResultModal = () => {
               >
                 {{ userStore.isAuthenticated ? 'Go to upgrade' : 'Go to sign in' }}
               </Button>
+
+              <div class="rounded-[24px] border border-slate-200 bg-slate-50/70 p-5 dark:border-slate-800 dark:bg-slate-950/50">
+                <p class="text-sm font-semibold text-slate-900 dark:text-white">
+                  Recognition flow
+                </p>
+                <div class="mt-4 space-y-3">
+                  <div class="flex items-start gap-3 rounded-2xl bg-white px-4 py-4 dark:bg-slate-900">
+                    <span class="flex h-8 w-8 items-center justify-center rounded-full bg-purple-500 text-sm font-semibold text-white">1</span>
+                    <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
+                      Upload a PDF or image and confirm the source file looks correct.
+                    </p>
+                  </div>
+                  <div class="flex items-start gap-3 rounded-2xl bg-white px-4 py-4 dark:bg-slate-900">
+                    <span class="flex h-8 w-8 items-center justify-center rounded-full bg-fuchsia-500 text-sm font-semibold text-white">2</span>
+                    <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
+                      Choose the nearest language to improve recognition quality.
+                    </p>
+                  </div>
+                  <div class="flex items-start gap-3 rounded-2xl bg-white px-4 py-4 dark:bg-slate-900">
+                    <span class="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500 text-sm font-semibold text-white">3</span>
+                    <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
+                      Copy the extracted text or download it as a plain text file.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
-          </Card>
-        </div>
+          </div>
+        </Card>
       </div>
 
       <Modal

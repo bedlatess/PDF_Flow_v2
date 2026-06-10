@@ -296,41 +296,108 @@ const handleReset = () => {
       </div>
 
       <div class="mt-6 space-y-6">
-        <Card
+        <div
           v-if="step === 1"
-          class="rounded-[28px] border border-white/70 bg-white/90 shadow-xl shadow-purple-100/60 dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none"
+          class="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]"
         >
-          <div class="space-y-6">
-            <div class="space-y-2">
-              <p class="text-xs font-semibold uppercase tracking-[0.22em] text-purple-500">
-                Step 1
-              </p>
-              <h2 class="text-2xl font-semibold text-slate-900 dark:text-white">
-                Upload a PDF to annotate
-              </h2>
-              <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
-                Start with one PDF, then configure text notes or highlight regions inside the same workspace.
-              </p>
-            </div>
+          <Card class="rounded-[28px] border border-white/70 bg-white/90 shadow-xl shadow-purple-100/60 dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
+            <div class="space-y-6">
+              <div class="space-y-2">
+                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-purple-500">
+                  Upload
+                </p>
+                <h2 class="text-2xl font-semibold text-slate-900 dark:text-white">
+                  Upload a PDF to annotate
+                </h2>
+                <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
+                  Start with one PDF, then configure text notes or highlight regions inside the same workspace style used by the AI analyzer.
+                </p>
+              </div>
 
-            <DragDropZone
-              accept="application/pdf,.pdf"
-              :multiple="false"
-              :max-files="1"
-              @files-selected="handleFileUpload"
-            >
-              <template #icon>
-                <FileText class="h-12 w-12" />
-              </template>
-              <template #title>
-                Upload the PDF you want to annotate
-              </template>
-              <template #subtitle>
-                Sign in first, then continue with text notes or highlight regions.
-              </template>
-            </DragDropZone>
-          </div>
-        </Card>
+              <DragDropZone
+                accept="application/pdf,.pdf"
+                :multiple="false"
+                :max-files="1"
+                @files-selected="handleFileUpload"
+              >
+                <template #icon>
+                  <FileText class="h-12 w-12" />
+                </template>
+                <template #title>
+                  Upload the PDF you want to annotate
+                </template>
+                <template #subtitle>
+                  Sign in first, then continue with text notes or highlight regions.
+                </template>
+              </DragDropZone>
+            </div>
+          </Card>
+
+          <Card class="rounded-[28px] border border-white/70 bg-white/90 shadow-xl shadow-purple-100/60 dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
+            <div class="space-y-6">
+              <div class="flex flex-wrap gap-2">
+                <span class="inline-flex items-center gap-2 rounded-full border border-purple-200 bg-purple-50 px-4 py-2 text-sm font-medium text-purple-700 dark:border-purple-800 dark:bg-purple-950/30 dark:text-purple-200">
+                  <MessageSquare class="h-4 w-4" />
+                  Text notes
+                </span>
+                <span class="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-700 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
+                  <Highlighter class="h-4 w-4" />
+                  Highlights
+                </span>
+                <span class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                  <FileType class="h-4 w-4" />
+                  PDF output
+                </span>
+              </div>
+
+              <div>
+                <h3 class="text-xl font-semibold text-slate-900 dark:text-white">
+                  Annotation workspace
+                </h3>
+                <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                  Keep access state, annotation modes, and export intent aligned inside one workspace instead of a separate step-only intro screen.
+                </p>
+              </div>
+
+              <div class="rounded-[24px] border border-slate-200 bg-slate-50/70 px-4 py-4 dark:border-slate-800 dark:bg-slate-950/50">
+                <p class="text-sm font-semibold text-slate-900 dark:text-white">
+                  {{ userStore.isAuthenticated ? 'Signed-in account detected' : 'Not signed in yet' }}
+                </p>
+                <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                  {{ userStore.isAuthenticated
+                    ? 'This account can continue to Pro-only annotation processing once access is confirmed.'
+                    : 'Please sign in first, then the system can decide whether annotation access needs an upgrade.' }}
+                </p>
+              </div>
+
+              <div class="rounded-[24px] border border-slate-200 bg-slate-50/70 p-5 dark:border-slate-800 dark:bg-slate-950/50">
+                <p class="text-sm font-semibold text-slate-900 dark:text-white">
+                  Annotation flow
+                </p>
+                <div class="mt-4 space-y-3">
+                  <div class="flex items-start gap-3 rounded-2xl bg-white px-4 py-4 dark:bg-slate-900">
+                    <span class="flex h-8 w-8 items-center justify-center rounded-full bg-purple-500 text-sm font-semibold text-white">1</span>
+                    <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
+                      Sign in first and upload one PDF.
+                    </p>
+                  </div>
+                  <div class="flex items-start gap-3 rounded-2xl bg-white px-4 py-4 dark:bg-slate-900">
+                    <span class="flex h-8 w-8 items-center justify-center rounded-full bg-fuchsia-500 text-sm font-semibold text-white">2</span>
+                    <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
+                      Choose text note or highlight mode and set page coordinates.
+                    </p>
+                  </div>
+                  <div class="flex items-start gap-3 rounded-2xl bg-white px-4 py-4 dark:bg-slate-900">
+                    <span class="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500 text-sm font-semibold text-white">3</span>
+                    <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
+                      Export a clean annotated PDF and download the result.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
 
         <Card
           v-if="step === 2"

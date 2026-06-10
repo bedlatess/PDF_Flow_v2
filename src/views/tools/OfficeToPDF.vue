@@ -203,7 +203,50 @@ onUnmounted(() => {
         :support-hint="errorState.supportHint"
       />
 
-      <div class="mt-6 grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+      <div
+        v-if="!userStore.isAuthenticated"
+        class="mt-6"
+      >
+        <Card class="rounded-[28px] border border-white/70 bg-white/90 shadow-xl shadow-blue-100/60 dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
+          <div class="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+            <div class="space-y-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.22em] text-blue-500">
+                Access
+              </p>
+              <h2 class="text-2xl font-semibold text-slate-900 dark:text-white">
+                Sign in before Office conversion
+              </h2>
+              <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
+                Office conversion is a cloud workflow, so the app should verify the account first and only surface additional access rules after authentication.
+              </p>
+
+              <Button
+                size="lg"
+                @click="ensureLogin()"
+              >
+                <LogIn class="mr-2 h-4 w-4" />
+                Go to sign in
+              </Button>
+            </div>
+
+            <div class="rounded-[24px] border border-slate-200 bg-slate-50/80 p-5 dark:border-slate-800 dark:bg-slate-950/50">
+              <div class="space-y-4 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                <div class="rounded-2xl bg-white px-4 py-4 dark:bg-slate-900">
+                  1. Sign in first
+                </div>
+                <div class="rounded-2xl bg-white px-4 py-4 dark:bg-slate-900">
+                  2. Upload one Office file
+                </div>
+                <div class="rounded-2xl bg-white px-4 py-4 dark:bg-slate-900">
+                  3. Convert and download the generated PDF
+                </div>
+              </div>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      <div class="mt-6 grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
         <Card class="rounded-[28px] border border-white/70 bg-white/90 shadow-xl shadow-blue-100/60 dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
           <div class="space-y-6">
             <div class="space-y-2">
@@ -310,34 +353,71 @@ onUnmounted(() => {
 
         <div class="space-y-6">
           <Card class="rounded-[28px] border border-white/70 bg-white/90 shadow-xl shadow-blue-100/60 dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
-            <div class="space-y-5">
-              <div>
-                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-blue-500">
-                  Flow
-                </p>
-                <h3 class="mt-2 text-xl font-semibold text-slate-900 dark:text-white">
-                  {{ t('tools.officeToPdf.howItWorks') }}
-                </h3>
+            <div class="space-y-6">
+              <div class="flex flex-wrap gap-2">
+                <span
+                  v-for="format in supportedFormats"
+                  :key="format.label"
+                  :class="['inline-flex rounded-full px-3 py-1 text-xs font-semibold', format.tone]"
+                >
+                  {{ format.label }} {{ format.ext }}
+                </span>
               </div>
 
-              <div class="space-y-4">
-                <div class="flex items-start gap-3 rounded-2xl bg-slate-50 px-4 py-4 dark:bg-slate-950/50">
-                  <span class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-sm font-semibold text-white">1</span>
-                  <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
-                    {{ t('tools.officeToPdf.step1') }}
-                  </p>
-                </div>
-                <div class="flex items-start gap-3 rounded-2xl bg-slate-50 px-4 py-4 dark:bg-slate-950/50">
-                  <span class="flex h-8 w-8 items-center justify-center rounded-full bg-cyan-500 text-sm font-semibold text-white">2</span>
-                  <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
-                    {{ t('tools.officeToPdf.step2') }}
-                  </p>
-                </div>
-                <div class="flex items-start gap-3 rounded-2xl bg-slate-50 px-4 py-4 dark:bg-slate-950/50">
-                  <span class="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500 text-sm font-semibold text-white">3</span>
-                  <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
-                    {{ t('tools.officeToPdf.step3') }}
-                  </p>
+              <div>
+                <h3 class="text-xl font-semibold text-slate-900 dark:text-white">
+                  Conversion workspace
+                </h3>
+                <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                  Match the AI analyzer rhythm: account state, supported formats, conversion progress, and result download all stay in one aligned panel.
+                </p>
+              </div>
+
+              <div class="rounded-[24px] border border-slate-200 bg-slate-50/70 px-4 py-4 dark:border-slate-800 dark:bg-slate-950/50">
+                <p class="text-sm font-semibold text-slate-900 dark:text-white">
+                  {{ userStore.isAuthenticated ? 'Signed-in account detected' : 'Not signed in yet' }}
+                </p>
+                <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                  {{ userStore.isAuthenticated
+                    ? 'This account can submit Office conversion jobs right away.'
+                    : 'Please sign in first before uploading a Word, Excel, or PowerPoint file.' }}
+                </p>
+              </div>
+
+              <Button
+                v-if="!userStore.isAuthenticated"
+                variant="outline"
+                size="lg"
+                full-width
+                @click="ensureLogin()"
+              >
+                <LogIn class="mr-2 h-4 w-4" />
+                Go to sign in
+              </Button>
+
+              <div class="rounded-[24px] border border-slate-200 bg-slate-50/70 p-5 dark:border-slate-800 dark:bg-slate-950/50">
+                <p class="text-sm font-semibold text-slate-900 dark:text-white">
+                  {{ t('tools.officeToPdf.howItWorks') }}
+                </p>
+                <div class="mt-4 space-y-3">
+                  <div class="flex items-start gap-3 rounded-2xl bg-white px-4 py-4 dark:bg-slate-900">
+                    <span class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-sm font-semibold text-white">1</span>
+                    <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
+                      {{ t('tools.officeToPdf.step1') }}
+                    </p>
+                  </div>
+                  <div class="flex items-start gap-3 rounded-2xl bg-white px-4 py-4 dark:bg-slate-900">
+                    <span class="flex h-8 w-8 items-center justify-center rounded-full bg-cyan-500 text-sm font-semibold text-white">2</span>
+                    <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
+                      {{ t('tools.officeToPdf.step2') }}
+                    </p>
+                  </div>
+                  <div class="flex items-start gap-3 rounded-2xl bg-white px-4 py-4 dark:bg-slate-900">
+                    <span class="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500 text-sm font-semibold text-white">3</span>
+                    <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
+                      {{ t('tools.officeToPdf.step3') }}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>

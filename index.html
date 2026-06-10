@@ -13,16 +13,55 @@
   </head>
   <body>
     <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
     <script>
-      // Register Service Worker
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then(reg => console.log('Service Worker registered'))
-            .catch(err => console.log('Service Worker registration failed', err))
+      ;(() => {
+        if (!('serviceWorker' in navigator)) {
+          return
+        }
+
+        const cleanupKey = 'pdf-flow:sw-cleanup-v1'
+
+        const clearCachedAssets = async () => {
+          const registrations = await navigator.serviceWorker.getRegistrations()
+          let hadPdfFlowWorker = false
+
+          await Promise.all(
+            registrations.map(async (registration) => {
+              const scriptUrl = registration.active?.scriptURL
+                || registration.waiting?.scriptURL
+                || registration.installing?.scriptURL
+                || ''
+
+              if (scriptUrl.includes('/sw.js')) {
+                hadPdfFlowWorker = true
+                await registration.unregister()
+              }
+            }),
+          )
+
+          if ('caches' in window) {
+            const cacheKeys = await caches.keys()
+            await Promise.all(
+              cacheKeys
+                .filter((key) => key.startsWith('pdf-flow-'))
+                .map((key) => caches.delete(key)),
+            )
+          }
+
+          if (hadPdfFlowWorker && sessionStorage.getItem(cleanupKey) !== '1') {
+            sessionStorage.setItem(cleanupKey, '1')
+            window.location.reload()
+            return
+          }
+
+          sessionStorage.removeItem(cleanupKey)
+        }
+
+        clearCachedAssets().catch((error) => {
+          console.warn('PDF-Flow cache cleanup skipped', error)
         })
-      }
+      })()
     </script>
+    <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

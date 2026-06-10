@@ -28,6 +28,9 @@ const visibleToolLinks = computed(() =>
   toolLinks.value.filter((link) => siteConfigStore.getFeatureFlag(link.featureKey, link.label).enabled)
 )
 
+const brandName = computed(() => siteConfigStore.getSettingValue('site_name', t('app.title')))
+const supportEmail = computed(() => siteConfigStore.getSettingValue('support_email', 'support@pdf-flow.com'))
+
 const productLinks = computed(() => [
   { label: t('nav.features'), href: '/features' },
   { label: t('nav.pricing'), href: '/pricing' },
@@ -103,6 +106,10 @@ const footerCopy = computed(() => {
   }
 })
 
+const supportContact = computed(() =>
+  siteConfigStore.getSettingValue('support_contact', footerCopy.value.contactDescription)
+)
+
 const trustNotes = computed(() => [
   {
     title: footerCopy.value.trustPrivacyTitle,
@@ -158,7 +165,7 @@ onMounted(() => {
                 {{ footerCopy.eyebrow }}
               </p>
               <h3 class="text-xl font-semibold text-slate-950 dark:text-white">
-                {{ t('app.title') }}
+                {{ brandName }}
               </h3>
             </div>
           </div>
@@ -243,13 +250,13 @@ onMounted(() => {
               {{ footerCopy.contactTitle }}
             </p>
             <p class="mt-2 text-xs leading-6 text-slate-600 dark:text-slate-300">
-              {{ footerCopy.contactDescription }}
+              {{ supportContact }}
             </p>
             <a
-              href="mailto:support@pdf-flow.com"
+              :href="`mailto:${supportEmail}`"
               class="mt-4 inline-flex items-center gap-2 text-sm font-medium text-violet-700 transition hover:text-violet-500 dark:text-violet-300"
             >
-              support@pdf-flow.com
+              {{ supportEmail }}
               <ArrowUpRight class="h-4 w-4" />
             </a>
             <div class="mt-4 inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-2 text-xs font-medium text-slate-600 dark:bg-slate-950/55 dark:text-slate-300">
@@ -261,7 +268,7 @@ onMounted(() => {
       </div>
 
       <div class="mt-8 flex flex-col gap-3 border-t border-slate-200/80 pt-6 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400 sm:flex-row sm:items-center sm:justify-between">
-        <p>&copy; {{ currentYear }} {{ t('app.title') }}. {{ footerCopy.copyright }}</p>
+        <p>&copy; {{ currentYear }} {{ brandName }}. {{ footerCopy.copyright }}</p>
         <p>{{ footerCopy.bottomLine }}</p>
       </div>
     </div>

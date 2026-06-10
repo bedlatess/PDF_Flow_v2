@@ -14,6 +14,7 @@ import {
 } from 'lucide-vue-next'
 import { useSettingsStore } from '@/stores/settings'
 import { useUserStore } from '@/stores/user'
+import { useSiteConfigStore } from '@/stores/siteConfig'
 import Button from '@/components/common/Button.vue'
 
 const router = useRouter()
@@ -21,6 +22,7 @@ const route = useRoute()
 const { t, locale } = useI18n()
 const settingsStore = useSettingsStore()
 const userStore = useUserStore()
+const siteConfigStore = useSiteConfigStore()
 
 const mobileMenuOpen = ref(false)
 const userMenuOpen = ref(false)
@@ -54,6 +56,8 @@ const userInitial = computed(() => {
   const name = userStore.user?.full_name || userStore.user?.email || '?'
   return name.charAt(0).toUpperCase()
 })
+
+const brandName = computed(() => siteConfigStore.getSettingValue('site_name', 'PDF-Flow'))
 
 const isRouteActive = (target: string) => route.path === target
 
@@ -96,6 +100,7 @@ const changeLocale = (newLocale: 'en' | 'zh' | 'es') => {
 
 onMounted(() => {
   userStore.checkAuth()
+  siteConfigStore.fetchPublicConfig()
 })
 </script>
 
@@ -140,7 +145,7 @@ onMounted(() => {
 
           <div class="text-left">
             <p class="text-base font-semibold tracking-[0.01em] text-slate-950 dark:text-white sm:text-[1.05rem]">
-              PDF-Flow
+              {{ brandName }}
             </p>
           </div>
         </button>

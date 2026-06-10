@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
@@ -12,11 +12,13 @@ import {
   Users,
 } from 'lucide-vue-next'
 import { useUserStore } from '@/stores/user'
+import { useSiteConfigStore } from '@/stores/siteConfig'
 import Button from '@/components/common/Button.vue'
 import Card from '@/components/common/Card.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
+const siteConfigStore = useSiteConfigStore()
 const { t, locale } = useI18n()
 const activeLocale = computed(() => locale.value)
 
@@ -107,6 +109,14 @@ const pageCopy = computed(() => {
 })
 
 const enterprisePrice = computed(() => pageCopy.value.enterprisePrice)
+
+const pricingIntroBlock = computed(() =>
+  siteConfigStore.getContentBlock('pricing_intro', locale.value, {
+    title: t('marketing.pricingPage.title'),
+    content: t('marketing.pricingPage.description'),
+    description: null,
+  })
+)
 
 const fitCards = computed(() => [
   {
@@ -256,6 +266,10 @@ const handleCTA = async (tier: PricingTier) => {
     window.location.href = 'mailto:sales@pdf-flow.com?subject=Enterprise Plan Inquiry'
   }
 }
+
+onMounted(() => {
+  siteConfigStore.fetchPublicConfig()
+})
 </script>
 
 <template>
@@ -272,10 +286,10 @@ const handleCTA = async (tier: PricingTier) => {
           </div>
 
           <h1 class="mt-6 max-w-3xl text-4xl font-semibold tracking-tight text-slate-950 dark:text-white sm:text-5xl">
-            {{ t('marketing.pricingPage.title') }}
+            {{ pricingIntroBlock?.title || t('marketing.pricingPage.title') }}
           </h1>
           <p class="mt-5 max-w-2xl text-base leading-8 text-slate-600 dark:text-slate-300 sm:text-lg">
-            {{ t('marketing.pricingPage.description') }}
+            {{ pricingIntroBlock?.content || t('marketing.pricingPage.description') }}
           </p>
 
           <div class="mt-8 flex flex-wrap gap-3">

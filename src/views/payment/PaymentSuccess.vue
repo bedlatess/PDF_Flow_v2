@@ -76,7 +76,7 @@
         <!-- Support Link -->
         <p class="mt-6 text-sm text-gray-500">
           {{ $t('payment.success.needHelp') }}
-          <a href="mailto:support@pdf-flow.com" class="text-indigo-600 hover:text-indigo-700 font-medium">
+          <a :href="`mailto:${supportEmail}`" class="text-indigo-600 hover:text-indigo-700 font-medium">
             {{ $t('payment.success.contactSupport') }}
           </a>
         </p>
@@ -107,15 +107,19 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { CheckCircle2 } from 'lucide-vue-next'
 import { useUserStore } from '@/stores/user'
+import { useSiteConfigStore } from '@/stores/siteConfig'
 
 const router = useRouter()
 const userStore = useUserStore()
+const siteConfigStore = useSiteConfigStore()
+const supportEmail = computed(() => siteConfigStore.getSettingValue('support_email', 'support@pdf-flow.com'))
 
 onMounted(async () => {
+  siteConfigStore.fetchPublicConfig()
   // 刷新用户信息以获取最新的订阅状态
   if (userStore.isAuthenticated) {
     await userStore.checkAuth()

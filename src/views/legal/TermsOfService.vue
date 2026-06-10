@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useSiteConfigStore } from '@/stores/siteConfig'
 import {
   AlertTriangle,
   BadgeCheck,
@@ -22,6 +23,7 @@ type LegalSection = {
 }
 
 const { locale } = useI18n()
+const siteConfigStore = useSiteConfigStore()
 
 const content = {
   zh: {
@@ -213,7 +215,18 @@ const content = {
 
 const activeContent = computed(() => {
   const key = locale.value.startsWith('zh') ? 'zh' : 'en'
-  return content[key]
+  const base = content[key]
+  const block = siteConfigStore.getContentBlock('terms_of_service', locale.value)
+
+  return {
+    ...base,
+    title: block?.title || base.title,
+    summary: block?.content || base.summary,
+  }
+})
+
+onMounted(() => {
+  siteConfigStore.fetchPublicConfig()
 })
 </script>
 

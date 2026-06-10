@@ -144,6 +144,14 @@ const disabledFeatureMessage = computed(() => {
   return flag.maintenance_message || '该功能正在维护中，暂时无法使用。'
 })
 
+const homeHeroBlock = computed(() =>
+  siteConfigStore.getContentBlock('home_hero', locale.value, {
+    title: t('app.title'),
+    content: t('app.tagline'),
+    description: null,
+  })
+)
+
 const featureHighlights = computed(() => [
   {
     title: t('home.highlights.privacy.title'),
@@ -187,10 +195,10 @@ onMounted(() => {
       <div class="container mx-auto px-4">
         <div class="text-center">
           <h1 class="mb-4 text-5xl font-bold text-gray-900 dark:text-white">
-            {{ t('app.title') }}
+            {{ homeHeroBlock?.title || t('app.title') }}
           </h1>
           <p class="mb-8 text-xl text-gray-600 dark:text-gray-300">
-            {{ t('app.tagline') }}
+            {{ homeHeroBlock?.content || t('app.tagline') }}
           </p>
           <div class="flex justify-center gap-4">
             <span

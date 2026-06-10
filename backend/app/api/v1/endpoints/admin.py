@@ -45,6 +45,14 @@ DEFAULT_SETTINGS = [
         "description": "用于页脚或错误提示中的支持说明。",
     },
     {
+        "key": "support_email",
+        "value": "support@pdf-flow.com",
+        "value_type": "text",
+        "group": "support",
+        "label": "支持邮箱",
+        "description": "用于页脚、支付结果页和公开支持入口。",
+    },
+    {
         "key": "global_announcement",
         "value": "",
         "value_type": "textarea",
@@ -63,11 +71,62 @@ DEFAULT_SETTINGS = [
 ]
 
 DEFAULT_CONTENT_BLOCKS = [
-    ("privacy_policy", "zh", "隐私政策", "由后台接管后，可在这里维护隐私政策正文。"),
-    ("terms_of_service", "zh", "服务条款", "由后台接管后，可在这里维护服务条款正文。"),
-    ("home_hero", "zh", "首页主标题", "用于后续从后台维护首页首屏文案。"),
-    ("pricing_intro", "zh", "定价页说明", "用于后续从后台维护定价页说明。"),
+    (
+        "privacy_policy",
+        "zh",
+        "我们如何保护你的文件与账户信息",
+        "我们不会出售你的个人信息，也不会为了广告画像而读取你的文件内容。上传到云端处理的文件仅用于完成你主动发起的任务、排查故障和保障服务安全，并会尽量缩短保留时间。",
+    ),
+    (
+        "privacy_policy",
+        "en",
+        "How we protect your files and account information",
+        "We do not sell your personal information or read your documents for advertising profiles. Files uploaded for cloud processing are used to complete the task you requested, troubleshoot issues, and protect service security, with retention kept as short as practical.",
+    ),
+    (
+        "terms_of_service",
+        "zh",
+        "使用 PDF-Flow 前请了解这些规则",
+        "你可以使用 PDF-Flow 处理合法、合规、属于你或你有权处理的文件。请不要上传违法、侵权、恶意、滥用资源或可能伤害他人的内容。重要文件请自行保留备份并核对处理结果。",
+    ),
+    (
+        "terms_of_service",
+        "en",
+        "Please understand these rules before using PDF-Flow",
+        "You may use PDF-Flow to process legal documents that you own or are allowed to handle. Do not upload unlawful, infringing, malicious, abusive, or harmful content. Keep your own backups and verify important results.",
+    ),
+    (
+        "home_hero",
+        "zh",
+        "PDF-Flow",
+        "隐私优先的 PDF 工作台，合并、拆分、压缩、转换、OCR 与 AI 分析都在一个清晰流程里完成。",
+    ),
+    (
+        "home_hero",
+        "en",
+        "PDF-Flow",
+        "A privacy-first PDF workspace for merging, splitting, compressing, converting, OCR, and AI-assisted document review.",
+    ),
+    (
+        "pricing_intro",
+        "zh",
+        "先从免费开始，需要云端能力时再升级",
+        "基础 PDF 工具适合日常处理；当 OCR、Office 转换、AI 分析或团队流程成为稳定需求时，再开启更高套餐。",
+    ),
+    (
+        "pricing_intro",
+        "en",
+        "Start free, upgrade when cloud work matters",
+        "Core PDF tools cover everyday work. Upgrade when OCR, Office conversion, AI analysis, or team workflows become part of your regular process.",
+    ),
 ]
+
+LEGACY_CONTENT_PLACEHOLDERS = {
+    "由后台接管后，可在这里维护隐私政策正文。",
+    "由后台接管后，可在这里维护服务条款正文。",
+    "用于后续从后台维护首页首屏文案。",
+    "用于后续从后台维护定价页说明。",
+}
 
 
 def _role_value(user: User) -> str:
@@ -85,27 +144,39 @@ def get_current_admin(current_user: User = Depends(get_current_user)) -> User:
 
 
 def _seed_defaults(db: Session) -> None:
-    if db.query(SiteSetting).count() == 0:
-        db.add_all(SiteSetting(**item) for item in DEFAULT_SETTINGS)
+    existing_settings = {
+        item[0] for item in db.query(SiteSetting.key).all()
+    }
+    for item in DEFAULT_SETTINGS:
+        if item["key"] not in existing_settings:
+            db.add(SiteSetting(**item))
 
-    if db.query(FeatureFlag).count() == 0:
-        db.add_all(
-            FeatureFlag(
-                key=key,
-                label=label,
-                description=description,
-                enabled=enabled,
-                requires_login=requires_login,
-                requires_pro=requires_pro,
+    existing_flags = {
+        item[0] for item in db.query(FeatureFlag.key).all()
+    }
+    for key, label, description, enabled, requires_login, requires_pro in DEFAULT_FEATURE_FLAGS:
+        if key not in existing_flags:
+            db.add(
+                FeatureFlag(
+                    key=key,
+                    label=label,
+                    description=description,
+                    enabled=enabled,
+                    requires_login=requires_login,
+                    requires_pro=requires_pro,
+                )
             )
-            for key, label, description, enabled, requires_login, requires_pro in DEFAULT_FEATURE_FLAGS
-        )
 
-    if db.query(ContentBlock).count() == 0:
-        db.add_all(
-            ContentBlock(key=key, locale=locale, title=title, content=content)
-            for key, locale, title, content in DEFAULT_CONTENT_BLOCKS
-        )
+    existing_blocks = {
+        (item.key, item.locale): item for item in db.query(ContentBlock).all()
+    }
+    for key, locale, title, content in DEFAULT_CONTENT_BLOCKS:
+        block = existing_blocks.get((key, locale))
+        if block is None:
+            db.add(ContentBlock(key=key, locale=locale, title=title, content=content))
+        elif block.content in LEGACY_CONTENT_PLACEHOLDERS:
+            block.title = title
+            block.content = content
 
     db.commit()
 

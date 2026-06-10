@@ -2,6 +2,8 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { siteConfigAPI, type PublicFeatureFlag, type PublicSiteConfig } from '@/services/api'
 
+type PublicContentBlock = PublicSiteConfig['content_blocks'][string]
+
 const defaultFlag = (label: string): PublicFeatureFlag => ({
   label,
   description: null,
@@ -46,6 +48,29 @@ export const useSiteConfigStore = defineStore('site-config', () => {
 
   const isFeatureEnabled = (key: string) => getFeatureFlag(key).enabled
 
+  const getSettingValue = (key: string, fallback = '') =>
+    settings.value[key]?.value || fallback
+
+  const resolveLocale = (locale: string) => {
+    if (locale.startsWith('zh')) return 'zh'
+    return 'en'
+  }
+
+  const getContentBlock = (
+    key: string,
+    locale: string,
+    fallback?: PublicContentBlock
+  ) => {
+    const normalizedLocale = resolveLocale(locale)
+    return (
+      contentBlocks.value[`${key}:${normalizedLocale}`] ||
+      contentBlocks.value[`${key}:zh`] ||
+      contentBlocks.value[`${key}:en`] ||
+      fallback ||
+      null
+    )
+  }
+
   return {
     config,
     loading,
@@ -57,5 +82,7 @@ export const useSiteConfigStore = defineStore('site-config', () => {
     fetchPublicConfig,
     getFeatureFlag,
     isFeatureEnabled,
+    getSettingValue,
+    getContentBlock,
   }
 })

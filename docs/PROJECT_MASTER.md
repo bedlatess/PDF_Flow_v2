@@ -659,3 +659,13 @@ python -m pytest tests/ -q      # 35 通过
 - Admin saves refresh the public config store immediately, so changing a switch in `/control-room` is reflected without needing to guess whether the old SPA cache is still active.
 - Verification target for this step: `python -m pytest backend/tests/test_auth.py backend/tests/test_admin.py -q`, `npm run build`, and `git diff --check` before pushing.
 - Server validation after deploy: turn off `merge_pdf` in `/control-room`, confirm `/tools/merge` disappears or redirects, confirm `POST /api/v1/files/merge` returns `503`, then turn it back on.
+
+### 2026-06-10 Public Content Config Wiring / 公开内容接入后台配置
+
+- Server deployment of `99940c7` succeeded on the real host: backend and frontend rebuilt, backend stayed healthy, `alembic upgrade head` ran, and `GET /api/v1/admin/public-config` returned settings, feature flags, and content blocks.
+- Upgraded admin default seeding so it now fills missing settings, feature flags, and content blocks individually instead of only seeding when a table is empty. This lets older live databases receive new defaults such as `support_email` and English content blocks without wiping admin edits.
+- Replaced legacy placeholder content blocks with real user-facing defaults when the saved content still exactly matches the old placeholder text.
+- Added public config helpers in `src/stores/siteConfig.ts` for `getSettingValue()` and locale-aware `getContentBlock()`.
+- Wired public pages to backend-managed content where it is safe: Header/Footer brand name, Footer and payment success support email, Footer support note, Home hero title/description, Pricing intro title/description, and the hero summary/title on Privacy Policy and Terms of Service.
+- Intentional guardrail: legal page body sections remain frontend-rendered structured content for now; admin content blocks can adjust the public title and summary without allowing arbitrary HTML to break layout or introduce unsafe markup.
+- Verification on 2026-06-10: `npm run build` passed and `python -m pytest backend/tests/test_auth.py backend/tests/test_admin.py -q` passed with 20 tests.

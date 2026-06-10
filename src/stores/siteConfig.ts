@@ -51,6 +51,20 @@ export const useSiteConfigStore = defineStore('site-config', () => {
   const getSettingValue = (key: string, fallback = '') =>
     settings.value[key]?.value || fallback
 
+  const getBooleanSetting = (key: string, fallback = false) => {
+    const value = getSettingValue(key)
+    if (!value) return fallback
+    return ['1', 'true', 'yes', 'on'].includes(value.trim().toLowerCase())
+  }
+
+  const globalAnnouncement = computed(() =>
+    getSettingValue('global_announcement').trim()
+  )
+
+  const maintenanceMode = computed(() =>
+    getBooleanSetting('maintenance_mode', false)
+  )
+
   const resolveLocale = (locale: string) => {
     if (locale.startsWith('zh')) return 'zh'
     return 'en'
@@ -79,10 +93,13 @@ export const useSiteConfigStore = defineStore('site-config', () => {
     featureFlags,
     settings,
     contentBlocks,
+    globalAnnouncement,
+    maintenanceMode,
     fetchPublicConfig,
     getFeatureFlag,
     isFeatureEnabled,
     getSettingValue,
+    getBooleanSetting,
     getContentBlock,
   }
 })

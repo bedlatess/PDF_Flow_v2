@@ -669,3 +669,14 @@ python -m pytest tests/ -q      # 35 通过
 - Wired public pages to backend-managed content where it is safe: Header/Footer brand name, Footer and payment success support email, Footer support note, Home hero title/description, Pricing intro title/description, and the hero summary/title on Privacy Policy and Terms of Service.
 - Intentional guardrail: legal page body sections remain frontend-rendered structured content for now; admin content blocks can adjust the public title and summary without allowing arbitrary HTML to break layout or introduce unsafe markup.
 - Verification on 2026-06-10: `npm run build` passed and `python -m pytest backend/tests/test_auth.py backend/tests/test_admin.py -q` passed with 20 tests.
+
+### 2026-06-11 Maintenance Mode And Announcement Wiring / 维护模式与全站公告落地
+
+- Added shared backend helper `backend/app/services/site_state.py` for public site settings such as `maintenance_mode` and `global_announcement`.
+- Backend processing gates now respect `maintenance_mode`: normal users receive `503` with the announcement text, while admin users can still operate and recover the site.
+- Frontend now reads `global_announcement` and `maintenance_mode` from `public-config`. Announcements render as a site-wide banner, and maintenance mode shows a public maintenance panel.
+- Maintenance mode intentionally allows `/auth`, `/control-room`, `/privacy`, and `/terms` to remain accessible so admins can sign in, disable maintenance mode, and users can still read legal/support pages.
+- Added store helpers for boolean settings and global announcement access in `src/stores/siteConfig.ts`.
+- Added regression coverage for public config defaults and maintenance-mode API blocking in `backend/tests/test_admin.py`.
+- Verification on 2026-06-11: `python -m pytest backend/tests/test_auth.py backend/tests/test_admin.py -q` passed with 21 tests, `npm run build` passed, and `git diff --check` passed.
+- Server validation after deploy: set `global_announcement` to a short message and `maintenance_mode=true` in `/control-room`; verify the public site shows the maintenance panel, `/control-room` remains reachable after login, and `POST /api/v1/files/merge` returns `503`; then set `maintenance_mode=false`.

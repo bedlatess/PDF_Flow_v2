@@ -66,7 +66,7 @@ DEFAULT_SETTINGS = [
         "value_type": "boolean",
         "group": "system",
         "label": "维护模式",
-        "description": "后续可接入前台，用于临时关闭公开服务。",
+        "description": "开启后公开页面展示维护提示，处理类接口会暂停普通用户访问。",
     },
 ]
 

@@ -3,6 +3,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.models.user import FeatureFlag, User, UserRole
+from app.services.site_state import get_maintenance_message, is_maintenance_mode_enabled
 
 
 DEFAULT_FEATURE_FLAGS = [
@@ -87,6 +88,12 @@ def require_feature_access(
     current_user: User | None = None,
 ) -> FeatureFlag | None:
     """Enforce feature flag rules before executing a feature."""
+    if is_maintenance_mode_enabled(db) and role_value(current_user) != UserRole.ADMIN.value:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=get_maintenance_message(db),
+        )
+
     flag = get_or_create_feature_flag(db, feature_key)
     if flag is None:
         return None

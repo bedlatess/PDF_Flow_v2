@@ -84,7 +84,9 @@ def test_public_config_exposes_feature_flags(client):
     assert response.status_code == 200
     body = response.json()
     assert "feature_flags" in body
+    assert body["settings"]["support_email"]["value"] == "support@pdf-flow.com"
     assert body["feature_flags"]["merge_pdf"]["enabled"] is True
+    assert body["content_blocks"]["home_hero:zh"]["content"].startswith("隐私优先")
 
 
 def test_disabled_feature_blocks_backend_endpoint(client):
@@ -125,3 +127,46 @@ def test_default_feature_gate_applies_before_admin_seed(client):
 
     assert blocked.status_code == 401
     assert blocked.json()["detail"] == "Please sign in to use this feature."
+
+
+def test_maintenance_mode_blocks_processing_for_non_admin(client):
+    _register(client)
+    _promote_to_admin(client)
+    token = _login(client).json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    response = client.put(
+        "/api/v1/admin/settings/maintenance_mode",
+        headers=headers,
+        json={
+            "value": "true",
+            "value_type": "boolean",
+            "group": "system",
+            "label": "维护模式",
+            "description": "测试维护模式",
+            "is_public": True,
+        },
+    )
+    assert response.status_code == 200
+
+    message = client.put(
+        "/api/v1/admin/settings/global_announcement",
+        headers=headers,
+        json={
+            "value": "系统维护测试中",
+            "value_type": "textarea",
+            "group": "notice",
+            "label": "全站公告",
+            "description": "测试公告",
+            "is_public": True,
+        },
+    )
+    assert message.status_code == 200
+
+    blocked = client.post(
+        "/api/v1/files/merge",
+        json={"file_ids": ["file_a", "file_b"], "output_filename": "merged.pdf"},
+    )
+
+    assert blocked.status_code == 503
+    assert blocked.json()["detail"] == "系统维护测试中"

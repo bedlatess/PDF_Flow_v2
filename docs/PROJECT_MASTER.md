@@ -680,3 +680,12 @@ python -m pytest tests/ -q      # 35 通过
 - Added regression coverage for public config defaults and maintenance-mode API blocking in `backend/tests/test_admin.py`.
 - Verification on 2026-06-11: `python -m pytest backend/tests/test_auth.py backend/tests/test_admin.py -q` passed with 21 tests, `npm run build` passed, and `git diff --check` passed.
 - Server validation after deploy: set `global_announcement` to a short message and `maintenance_mode=true` in `/control-room`; verify the public site shows the maintenance panel, `/control-room` remains reachable after login, and `POST /api/v1/files/merge` returns `503`; then set `maintenance_mode=false`.
+
+### 2026-06-11 Admin User And Job Operations / 后台用户与任务运营能力
+- Added admin-only user operations endpoints under `/api/v1/admin/users`: list/search recent users and update role, active status, and verification status.
+- Added a safety guard that prevents the current admin from demoting or deactivating their own account, reducing the risk of locking the hidden control room during live operations.
+- Added admin-only job observation endpoint `/api/v1/admin/jobs` with recent processing job context, user email, status, progress, file size, and error message.
+- Expanded `/api/v1/admin/overview` with user counts, active user counts, admin count, total job count, and failed job count so the control room can show operational health at a glance.
+- Updated `/control-room` with two new hidden tabs: `用户管理` for role/status adjustments and `任务观察` for recent processing failures and stuck job triage.
+- Verification on 2026-06-11: `python -m pytest backend/tests/test_admin.py -q` passed with 9 tests, and `npm run build` passed with only the existing large chunk warning.
+- Server validation after deploy: visit `/control-room`, confirm `用户管理` can search a test user and promote/demote non-admin users, then confirm `任务观察` shows recent OCR/Office/merge jobs after running smoke tests.

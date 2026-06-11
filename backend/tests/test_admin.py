@@ -170,3 +170,88 @@ def test_maintenance_mode_blocks_processing_for_non_admin(client):
 
     assert blocked.status_code == 503
     assert blocked.json()["detail"] == "系统维护测试中"
+
+
+def test_admin_can_list_and_update_users(client):
+    _register(client)
+    _promote_to_admin(client)
+    _register(client, email="customer@example.com")
+    token = _login(client).json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    users = client.get("/api/v1/admin/users", headers=headers)
+    assert users.status_code == 200
+    customer = next(user for user in users.json() if user["email"] == "customer@example.com")
+
+    updated = client.patch(
+        f"/api/v1/admin/users/{customer['id']}",
+        headers=headers,
+        json={"role": "pro", "is_verified": True},
+    )
+
+    assert updated.status_code == 200
+    assert updated.json()["role"] == "pro"
+    assert updated.json()["is_verified"] is True
+
+    logs = client.get("/api/v1/admin/audit-logs", headers=headers)
+    assert logs.status_code == 200
+    assert logs.json()[0]["target_type"] == "user"
+    assert logs.json()[0]["target_key"] == "customer@example.com"
+
+
+def test_admin_cannot_remove_own_admin_access(client):
+    _register(client)
+    _promote_to_admin(client)
+    token = _login(client).json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    users = client.get("/api/v1/admin/users", headers=headers).json()
+    admin = next(user for user in users if user["email"] == "admin@example.com")
+
+    demote = client.patch(
+        f"/api/v1/admin/users/{admin['id']}",
+        headers=headers,
+        json={"role": "free"},
+    )
+    deactivate = client.patch(
+        f"/api/v1/admin/users/{admin['id']}",
+        headers=headers,
+        json={"is_active": False},
+    )
+
+    assert demote.status_code == 400
+    assert deactivate.status_code == 400
+
+
+def test_admin_can_list_recent_jobs(client):
+    from app.core.database import get_db
+    from app.models.user import ProcessingJob, User
+
+    _register(client)
+    _promote_to_admin(client)
+    token = _login(client).json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    db = next(client.app.dependency_overrides[get_db]())
+    try:
+        user = db.query(User).filter(User.email == "admin@example.com").first()
+        db.add(ProcessingJob(
+            job_id="job_admin_test",
+            user_id=user.id,
+            job_type="merge_pdf",
+            status="failed",
+            progress=25,
+            input_file_name="sample.pdf",
+            input_file_size=1024,
+            error_message="sample failure",
+        ))
+        db.commit()
+    finally:
+        db.close()
+
+    jobs = client.get("/api/v1/admin/jobs", headers=headers)
+
+    assert jobs.status_code == 200
+    assert jobs.json()[0]["job_id"] == "job_admin_test"
+    assert jobs.json()[0]["user_email"] == "admin@example.com"
+    assert jobs.json()[0]["status"] == "failed"

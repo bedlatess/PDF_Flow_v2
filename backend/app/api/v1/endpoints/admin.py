@@ -8,6 +8,7 @@ from app.models.user import (
     AdminAuditLog,
     ContentBlock,
     FeatureFlag,
+    ProcessingJob,
     SiteSetting,
     User,
     UserRole,
@@ -15,7 +16,10 @@ from app.models.user import (
 from app.services.feature_gate import DEFAULT_FEATURE_FLAGS
 from app.schemas.admin import (
     AdminAuditLogResponse,
+    AdminJobResponse,
     AdminOverviewResponse,
+    AdminUserResponse,
+    AdminUserUpdate,
     ContentBlockResponse,
     ContentBlockUpdate,
     FeatureFlagResponse,
@@ -222,6 +226,11 @@ async def get_admin_overview(
         "settings_count": db.query(SiteSetting).count(),
         "feature_flags_count": db.query(FeatureFlag).count(),
         "content_blocks_count": db.query(ContentBlock).count(),
+        "users_count": db.query(User).count(),
+        "active_users_count": db.query(User).filter(User.is_active == True).count(),  # noqa: E712
+        "admin_users_count": db.query(User).filter(User.role == UserRole.ADMIN).count(),
+        "jobs_count": db.query(ProcessingJob).count(),
+        "failed_jobs_count": db.query(ProcessingJob).filter(ProcessingJob.status == "failed").count(),
         "recent_audit_logs": recent_logs,
     }
 
@@ -367,6 +376,134 @@ async def update_content_block(
     db.commit()
     db.refresh(block)
     return block
+
+
+@router.get("/users", response_model=list[AdminUserResponse])
+async def list_users(
+    search: str | None = None,
+    limit: int = 50,
+    _admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    """Return recent users for hidden admin operations."""
+    query = db.query(User).order_by(User.created_at.desc())
+    if search:
+        pattern = f"%{search.strip()}%"
+        query = query.filter(
+            (User.email.ilike(pattern)) | (User.full_name.ilike(pattern))
+        )
+
+    users = query.limit(min(max(limit, 1), 100)).all()
+    return [
+        {
+            "id": user.id,
+            "email": user.email,
+            "full_name": user.full_name,
+            "role": _role_value(user),
+            "is_active": user.is_active,
+            "is_verified": user.is_verified,
+            "created_at": user.created_at,
+            "last_login_at": user.last_login_at,
+        }
+        for user in users
+    ]
+
+
+@router.patch("/users/{user_id}", response_model=AdminUserResponse)
+async def update_user(
+    user_id: int,
+    payload: AdminUserUpdate,
+    request: Request,
+    admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    """Update a user's operational status or role."""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    data = payload.model_dump(exclude_unset=True)
+    if user.id == admin.id and (
+        data.get("is_active") is False
+        or (data.get("role") is not None and data["role"] != UserRole.ADMIN.value)
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You cannot remove your own admin access.",
+        )
+
+    if "role" in data:
+        try:
+            user.role = UserRole(data["role"])
+        except ValueError as exc:
+            allowed = ", ".join(role.value for role in UserRole)
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Invalid role. Allowed values: {allowed}",
+            ) from exc
+    if "is_active" in data:
+        user.is_active = data["is_active"]
+    if "is_verified" in data:
+        user.is_verified = data["is_verified"]
+
+    _write_audit(
+        db,
+        request,
+        admin,
+        "update",
+        "user",
+        user.email,
+        detail=", ".join(sorted(data.keys())),
+    )
+    db.commit()
+    db.refresh(user)
+    return {
+        "id": user.id,
+        "email": user.email,
+        "full_name": user.full_name,
+        "role": _role_value(user),
+        "is_active": user.is_active,
+        "is_verified": user.is_verified,
+        "created_at": user.created_at,
+        "last_login_at": user.last_login_at,
+    }
+
+
+@router.get("/jobs", response_model=list[AdminJobResponse])
+async def list_jobs(
+    status_filter: str | None = None,
+    limit: int = 50,
+    _admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    """Return recent processing jobs with user context."""
+    query = (
+        db.query(ProcessingJob, User.email)
+        .outerjoin(User, ProcessingJob.user_id == User.id)
+        .order_by(ProcessingJob.created_at.desc())
+    )
+    if status_filter:
+        query = query.filter(ProcessingJob.status == status_filter)
+
+    rows = query.limit(min(max(limit, 1), 100)).all()
+    return [
+        {
+            "id": job.id,
+            "job_id": job.job_id,
+            "user_id": job.user_id,
+            "user_email": email,
+            "job_type": job.job_type,
+            "status": job.status,
+            "progress": job.progress,
+            "input_file_name": job.input_file_name,
+            "input_file_size": job.input_file_size,
+            "error_message": job.error_message,
+            "created_at": job.created_at,
+            "started_at": job.started_at,
+            "completed_at": job.completed_at,
+        }
+        for job, email in rows
+    ]
 
 
 @router.get("/audit-logs", response_model=list[AdminAuditLogResponse])

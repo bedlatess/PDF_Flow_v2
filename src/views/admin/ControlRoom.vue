@@ -7,24 +7,28 @@ import {
   EyeOff,
   FileText,
   Flag,
+  GaugeCircle,
   Loader2,
   LockKeyhole,
   Save,
   Settings2,
   ShieldCheck,
   SlidersHorizontal,
+  UserCog,
 } from 'lucide-vue-next'
 import {
   adminAPI,
   type AdminAuditLog,
+  type AdminJob,
   type AdminOverview,
+  type AdminUser,
   type ContentBlock,
   type FeatureFlag,
   type SiteSetting,
 } from '@/services/api'
 import { useSiteConfigStore } from '@/stores/siteConfig'
 
-type TabId = 'flags' | 'settings' | 'content' | 'audit'
+type TabId = 'flags' | 'settings' | 'content' | 'users' | 'jobs' | 'audit'
 
 const siteConfigStore = useSiteConfigStore()
 const loading = ref(true)
@@ -38,11 +42,17 @@ const settings = ref<SiteSetting[]>([])
 const flags = ref<FeatureFlag[]>([])
 const contentBlocks = ref<ContentBlock[]>([])
 const auditLogs = ref<AdminAuditLog[]>([])
+const users = ref<AdminUser[]>([])
+const jobs = ref<AdminJob[]>([])
+const userSearch = ref('')
+const jobStatusFilter = ref('')
 
 const tabs = [
   { id: 'flags' as const, label: '功能开关', icon: Flag },
   { id: 'settings' as const, label: '站点配置', icon: Settings2 },
   { id: 'content' as const, label: '内容块', icon: FileText },
+  { id: 'users' as const, label: '用户管理', icon: UserCog },
+  { id: 'jobs' as const, label: '任务观察', icon: GaugeCircle },
   { id: 'audit' as const, label: '审计日志', icon: Activity },
 ]
 
@@ -69,11 +79,13 @@ const loadAdminData = async () => {
   error.value = ''
 
   try {
-    const [overviewData, settingsData, flagsData, contentData, auditData] = await Promise.all([
+    const [overviewData, settingsData, flagsData, contentData, usersData, jobsData, auditData] = await Promise.all([
       adminAPI.getOverview(),
       adminAPI.listSettings(),
       adminAPI.listFeatureFlags(),
       adminAPI.listContentBlocks(),
+      adminAPI.listUsers(),
+      adminAPI.listJobs(),
       adminAPI.listAuditLogs(),
     ])
 
@@ -81,6 +93,8 @@ const loadAdminData = async () => {
     settings.value = settingsData
     flags.value = flagsData
     contentBlocks.value = contentData
+    users.value = usersData
+    jobs.value = jobsData
     auditLogs.value = auditData
     selectedContent.value = contentData[0] ?? null
   } catch (err: any) {
@@ -169,6 +183,68 @@ const saveContentBlock = async (block: ContentBlock) => {
   }
 }
 
+const searchUsers = async () => {
+  savingKey.value = 'users:search'
+  error.value = ''
+
+  try {
+    users.value = await adminAPI.listUsers({
+      search: userSearch.value.trim() || undefined,
+    })
+  } catch {
+    error.value = '用户列表加载失败，请稍后重试。'
+  } finally {
+    savingKey.value = null
+  }
+}
+
+const saveUser = async (user: AdminUser) => {
+  savingKey.value = `user:${user.id}`
+  error.value = ''
+
+  try {
+    const updated = await adminAPI.updateUser(user.id, {
+      role: user.role,
+      is_active: user.is_active,
+      is_verified: user.is_verified,
+    })
+    const index = users.value.findIndex((item) => item.id === updated.id)
+    if (index >= 0) users.value[index] = updated
+    overview.value = await adminAPI.getOverview()
+    auditLogs.value = await adminAPI.listAuditLogs()
+    setMessage(`已更新用户：${updated.email}`)
+  } catch (err: any) {
+    error.value = err?.response?.data?.detail || '用户更新失败，请确认权限和输入后重试。'
+    users.value = await adminAPI.listUsers({
+      search: userSearch.value.trim() || undefined,
+    })
+  } finally {
+    savingKey.value = null
+  }
+}
+
+const loadJobs = async () => {
+  savingKey.value = 'jobs:refresh'
+  error.value = ''
+
+  try {
+    jobs.value = await adminAPI.listJobs({
+      status_filter: jobStatusFilter.value || undefined,
+    })
+  } catch {
+    error.value = '任务列表加载失败，请稍后重试。'
+  } finally {
+    savingKey.value = null
+  }
+}
+
+const formatBytes = (value: number) => {
+  if (!value) return '0 B'
+  const units = ['B', 'KB', 'MB', 'GB']
+  const index = Math.min(Math.floor(Math.log(value) / Math.log(1024)), units.length - 1)
+  return `${(value / Math.pow(1024, index)).toFixed(index === 0 ? 0 : 1)} ${units[index]}`
+}
+
 onMounted(loadAdminData)
 </script>
 
@@ -196,7 +272,7 @@ onMounted(loadAdminData)
             </p>
           </div>
 
-          <div class="grid grid-cols-3 gap-3 text-center">
+          <div class="grid grid-cols-2 gap-3 text-center sm:grid-cols-5">
             <div class="rounded-3xl border border-white/10 bg-white/[0.07] p-4">
               <p class="text-2xl font-semibold">{{ enabledFlagCount }}</p>
               <p class="mt-1 text-xs text-slate-400">已开启</p>
@@ -208,6 +284,14 @@ onMounted(loadAdminData)
             <div class="rounded-3xl border border-white/10 bg-white/[0.07] p-4">
               <p class="text-2xl font-semibold">{{ overview?.content_blocks_count ?? 0 }}</p>
               <p class="mt-1 text-xs text-slate-400">内容块</p>
+            </div>
+            <div class="rounded-3xl border border-white/10 bg-white/[0.07] p-4">
+              <p class="text-2xl font-semibold">{{ overview?.active_users_count ?? 0 }}</p>
+              <p class="mt-1 text-xs text-slate-400">活跃用户</p>
+            </div>
+            <div class="rounded-3xl border border-white/10 bg-white/[0.07] p-4">
+              <p class="text-2xl font-semibold">{{ overview?.failed_jobs_count ?? 0 }}</p>
+              <p class="mt-1 text-xs text-slate-400">失败任务</p>
             </div>
           </div>
         </div>
@@ -408,6 +492,160 @@ onMounted(loadAdminData)
                 </button>
               </div>
             </article>
+          </div>
+
+          <div v-else-if="activeTab === 'users'" class="rounded-[28px] border border-white/10 bg-white/[0.07] p-5 backdrop-blur-xl">
+            <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p class="text-xl font-semibold">用户管理</p>
+                <p class="mt-2 text-sm leading-6 text-slate-400">
+                  查看最近用户、调整套餐角色、启用或停用账号。为了避免锁死后台，当前管理员不能停用或降级自己。
+                </p>
+              </div>
+              <div class="flex flex-col gap-2 sm:flex-row">
+                <input
+                  v-model="userSearch"
+                  type="search"
+                  placeholder="搜索邮箱或姓名"
+                  class="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-300/60"
+                  @keyup.enter="searchUsers"
+                />
+                <button
+                  type="button"
+                  class="inline-flex items-center justify-center gap-2 rounded-2xl bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-60"
+                  :disabled="savingKey === 'users:search'"
+                  @click="searchUsers"
+                >
+                  <Loader2 v-if="savingKey === 'users:search'" class="h-4 w-4 animate-spin" />
+                  搜索
+                </button>
+              </div>
+            </div>
+
+            <div class="mt-5 overflow-hidden rounded-3xl border border-white/10">
+              <div class="hidden grid-cols-[1.5fr_0.8fr_0.8fr_0.8fr_1fr] gap-3 bg-white/[0.08] px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400 lg:grid">
+                <span>用户</span>
+                <span>角色</span>
+                <span>状态</span>
+                <span>验证</span>
+                <span>操作</span>
+              </div>
+              <div
+                v-for="user in users"
+                :key="user.id"
+                class="grid gap-4 border-t border-white/10 px-4 py-4 lg:grid-cols-[1.5fr_0.8fr_0.8fr_0.8fr_1fr] lg:items-center"
+              >
+                <div>
+                  <p class="font-semibold text-white">{{ user.email }}</p>
+                  <p class="mt-1 text-sm text-slate-400">{{ user.full_name || '未填写姓名' }}</p>
+                  <p class="mt-1 text-xs text-slate-500">注册：{{ formatDate(user.created_at) }}</p>
+                </div>
+                <select
+                  v-model="user.role"
+                  class="rounded-2xl border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-cyan-300/60"
+                >
+                  <option value="free">Free</option>
+                  <option value="pro">Pro</option>
+                  <option value="enterprise">Enterprise</option>
+                  <option value="admin">Admin</option>
+                </select>
+                <label class="flex items-center gap-2 text-sm text-slate-300">
+                  <input v-model="user.is_active" type="checkbox" class="rounded border-white/20 bg-slate-900 text-cyan-300" />
+                  启用
+                </label>
+                <label class="flex items-center gap-2 text-sm text-slate-300">
+                  <input v-model="user.is_verified" type="checkbox" class="rounded border-white/20 bg-slate-900 text-cyan-300" />
+                  已验证
+                </label>
+                <button
+                  type="button"
+                  class="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-60"
+                  :disabled="savingKey === `user:${user.id}`"
+                  @click="saveUser(user)"
+                >
+                  <Loader2 v-if="savingKey === `user:${user.id}`" class="h-4 w-4 animate-spin" />
+                  <Save v-else class="h-4 w-4" />
+                  保存用户
+                </button>
+              </div>
+              <div v-if="users.length === 0" class="border-t border-white/10 px-4 py-10 text-center text-sm text-slate-400">
+                没有找到匹配用户。
+              </div>
+            </div>
+          </div>
+
+          <div v-else-if="activeTab === 'jobs'" class="rounded-[28px] border border-white/10 bg-white/[0.07] p-5 backdrop-blur-xl">
+            <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p class="text-xl font-semibold">任务观察</p>
+                <p class="mt-2 text-sm leading-6 text-slate-400">
+                  快速查看最近云端处理任务，优先定位失败、卡住或异常耗时的用户操作。
+                </p>
+              </div>
+              <div class="flex flex-col gap-2 sm:flex-row">
+                <select
+                  v-model="jobStatusFilter"
+                  class="rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300/60"
+                >
+                  <option value="">全部状态</option>
+                  <option value="pending">Pending</option>
+                  <option value="processing">Processing</option>
+                  <option value="completed">Completed</option>
+                  <option value="failed">Failed</option>
+                </select>
+                <button
+                  type="button"
+                  class="inline-flex items-center justify-center gap-2 rounded-2xl bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-60"
+                  :disabled="savingKey === 'jobs:refresh'"
+                  @click="loadJobs"
+                >
+                  <Loader2 v-if="savingKey === 'jobs:refresh'" class="h-4 w-4 animate-spin" />
+                  刷新
+                </button>
+              </div>
+            </div>
+
+            <div class="mt-5 space-y-3">
+              <article
+                v-for="job in jobs"
+                :key="job.id"
+                class="rounded-3xl border border-white/10 bg-black/20 p-4"
+              >
+                <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                  <div>
+                    <div class="flex flex-wrap items-center gap-2">
+                      <span class="rounded-full bg-cyan-300/15 px-3 py-1 text-xs font-semibold text-cyan-100">{{ job.job_type }}</span>
+                      <span
+                        class="rounded-full px-3 py-1 text-xs font-semibold"
+                        :class="job.status === 'failed' ? 'bg-rose-400/15 text-rose-100' : job.status === 'completed' ? 'bg-emerald-400/15 text-emerald-100' : 'bg-amber-300/15 text-amber-100'"
+                      >
+                        {{ job.status }}
+                      </span>
+                    </div>
+                    <p class="mt-3 font-semibold text-white">{{ job.input_file_name }}</p>
+                    <p class="mt-1 break-all text-sm text-slate-400">{{ job.job_id }}</p>
+                    <p class="mt-2 text-sm text-slate-400">
+                      用户：{{ job.user_email || `#${job.user_id}` }} · 大小：{{ formatBytes(job.input_file_size) }} · 创建：{{ formatDate(job.created_at) }}
+                    </p>
+                    <p v-if="job.error_message" class="mt-3 rounded-2xl border border-rose-400/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-100">
+                      {{ job.error_message }}
+                    </p>
+                  </div>
+                  <div class="min-w-[180px]">
+                    <div class="flex items-center justify-between text-xs text-slate-400">
+                      <span>进度</span>
+                      <span>{{ job.progress }}%</span>
+                    </div>
+                    <div class="mt-2 h-2 rounded-full bg-white/10">
+                      <div class="h-2 rounded-full bg-cyan-300" :style="{ width: `${job.progress}%` }" />
+                    </div>
+                  </div>
+                </div>
+              </article>
+              <div v-if="jobs.length === 0" class="rounded-3xl border border-white/10 bg-black/20 px-4 py-10 text-center text-sm text-slate-400">
+                当前没有匹配任务。
+              </div>
+            </div>
           </div>
 
           <div v-else class="rounded-[28px] border border-white/10 bg-white/[0.07] p-5 backdrop-blur-xl">

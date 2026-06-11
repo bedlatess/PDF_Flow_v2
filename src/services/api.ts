@@ -372,6 +372,11 @@ export interface AdminOverview {
   settings_count: number
   feature_flags_count: number
   content_blocks_count: number
+  users_count: number
+  active_users_count: number
+  admin_users_count: number
+  jobs_count: number
+  failed_jobs_count: number
   recent_audit_logs: AdminAuditLog[]
 }
 
@@ -421,6 +426,39 @@ export interface ContentBlock {
   updated_at: string
 }
 
+export interface AdminUser {
+  id: number
+  email: string
+  full_name: string | null
+  role: 'free' | 'pro' | 'enterprise' | 'admin'
+  is_active: boolean
+  is_verified: boolean
+  created_at: string
+  last_login_at: string | null
+}
+
+export interface AdminUserUpdate {
+  role?: AdminUser['role']
+  is_active?: boolean
+  is_verified?: boolean
+}
+
+export interface AdminJob {
+  id: number
+  job_id: string
+  user_id: number
+  user_email: string | null
+  job_type: string
+  status: string
+  progress: number
+  input_file_name: string
+  input_file_size: number
+  error_message: string | null
+  created_at: string
+  started_at: string | null
+  completed_at: string | null
+}
+
 export const adminAPI = {
   async getOverview(): Promise<AdminOverview> {
     const response = await apiClient.get<AdminOverview>('/api/v1/admin/overview')
@@ -461,6 +499,21 @@ export const adminAPI = {
       `/api/v1/admin/content-blocks/${encodeURIComponent(key)}/${encodeURIComponent(locale)}`,
       data
     )
+    return response.data
+  },
+
+  async listUsers(params?: { search?: string; limit?: number }): Promise<AdminUser[]> {
+    const response = await apiClient.get<AdminUser[]>('/api/v1/admin/users', { params })
+    return response.data
+  },
+
+  async updateUser(userId: number, data: AdminUserUpdate): Promise<AdminUser> {
+    const response = await apiClient.patch<AdminUser>(`/api/v1/admin/users/${userId}`, data)
+    return response.data
+  },
+
+  async listJobs(params?: { status_filter?: string; limit?: number }): Promise<AdminJob[]> {
+    const response = await apiClient.get<AdminJob[]>('/api/v1/admin/jobs', { params })
     return response.data
   },
 

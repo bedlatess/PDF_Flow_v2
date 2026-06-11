@@ -39,20 +39,20 @@ const copy = computed(() => isChinese.value
       badge: '本地工具',
       setupLabel: '水印设置',
       setupTitle: '调整文案和样式',
-      setupDesc: '适合为合同、报告、内部资料添加清晰但不过分抢眼的归属标记。',
+      setupDesc: '适合为合同、报告、草稿或对外传阅文件添加清晰但不过分抢眼的标记。',
       outputLabel: '导出动作',
       outputTitle: '生成带水印的新文件',
       outputTips: [
-        '建议使用简短清晰的水印文字，便于识别和管理。',
-        '透明度高会更醒目，透明度低更适合阅读场景。',
+        '建议使用简短清晰的水印文字，方便识别文件状态。',
+        '透明度高会更醒目，透明度低更适合阅读型文件。',
         '处理完成后会生成新的 PDF 文件，不会修改原文件。',
       ],
-      localTitle: '本地安全处理',
-      localDesc: '水印在浏览器本地完成处理，适合带有内部标识、审阅标识或保密标签的文档。',
+      localTitle: '浏览器本地处理',
+      localDesc: '水印会在当前浏览器中完成处理，适合快速添加文件状态、版本说明或传阅标记。',
       action: '添加水印',
       successTitle: '水印添加完成',
       successMessage: '带水印的 PDF 已准备好，可以立即下载。',
-      placeholder: '例如：内部资料 / 已审核 / Sample',
+      placeholder: '例如：草稿 / 已审核 / 仅供预览',
       color: '水印颜色',
       text: '水印文字',
       position: '位置',
@@ -63,7 +63,7 @@ const copy = computed(() => isChinese.value
       errorFailed: '添加水印失败，请稍后重试。',
       processing: '正在生成水印...',
       done: '处理完成',
-      defaultText: '内部资料',
+      defaultText: '仅供预览',
       positions: [
         { value: 'center' as WatermarkPosition, label: '居中' },
         { value: 'tile' as WatermarkPosition, label: '平铺' },
@@ -75,7 +75,7 @@ const copy = computed(() => isChinese.value
       badge: 'Local tool',
       setupLabel: 'Watermark setup',
       setupTitle: 'Adjust the message and style',
-      setupDesc: 'Useful for contracts, reports, and internal material that needs a clear ownership mark without overpowering the content.',
+      setupDesc: 'Useful for contracts, reports, drafts, and shared files that need a clear but unobtrusive status mark.',
       outputLabel: 'Output',
       outputTitle: 'Generate a new watermarked file',
       outputTips: [
@@ -83,12 +83,12 @@ const copy = computed(() => isChinese.value
         'Higher opacity is more visible, while lower opacity is better for reading-heavy files.',
         'A new PDF is generated after processing. Your original file remains unchanged.',
       ],
-      localTitle: 'Local secure processing',
-      localDesc: 'The watermark is applied locally in your browser, which fits internal marks, review labels, and privacy-sensitive documents.',
+      localTitle: 'Local browser processing',
+      localDesc: 'The watermark is applied locally in your browser, which fits quick status marks, review labels, and privacy-sensitive documents.',
       action: 'Apply watermark',
       successTitle: 'Watermark applied',
       successMessage: 'Your watermarked PDF is ready to download.',
-      placeholder: 'Example: Internal / Reviewed / Sample',
+      placeholder: 'Example: Draft / Reviewed / Preview only',
       color: 'Watermark color',
       text: 'Watermark text',
       position: 'Position',
@@ -110,8 +110,8 @@ const copy = computed(() => isChinese.value
 
 watch(isChinese, (zh) => {
   const trimmed = watermarkText.value.trim()
-  if (!trimmed || trimmed === 'CONFIDENTIAL' || trimmed === '内部资料') {
-    watermarkText.value = zh ? '内部资料' : 'CONFIDENTIAL'
+  if (!trimmed || trimmed === 'CONFIDENTIAL' || trimmed === '仅供预览') {
+    watermarkText.value = zh ? '仅供预览' : 'CONFIDENTIAL'
   }
 }, { immediate: true })
 

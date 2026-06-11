@@ -30,7 +30,7 @@ interface ExtractedError {
 }
 
 const DEFAULT_SUPPORT_HINT =
-  'If this keeps happening, please screenshot this message and send it to the administrator.'
+  'If this keeps happening, keep the diagnostic code and submit feedback from the page.'
 
 const AREA_DEFAULTS: Record<ErrorArea, { title: string; message: string }> = {
   AUTH: {
@@ -235,7 +235,7 @@ function resolveReason(area: ErrorArea, status?: number, detail = '') {
     return {
       code: `${area}-000-TIMEOUT`,
       title: 'This task took too long',
-      message: 'The task started but did not finish in time. Please retry once and contact the administrator if it repeats.',
+      message: 'The task started but did not finish in time. Please retry once and submit feedback if it repeats.',
     }
   }
 

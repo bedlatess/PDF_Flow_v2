@@ -797,3 +797,10 @@ python -m pytest tests/ -q      # 35 通过
 - Renamed destructive actions to `执行：关闭验收反馈` and `执行：删除测试账号`, with inline hints that changes happen only after clicking the specific execution button and confirming.
 - Updated the delete confirmation copy to explicitly distinguish statistics refresh from real deletion, reducing confusion during live operations.
 - Server validation after deploy: open `/control-room -> 维护清理`; click `重新统计数量` and confirm only counts/message change; click an `执行：...` button only when you intend to clean that category.
+### 2026-06-11 Frontend User-Facing Copy Cleanup / 前端用户可见文案清理
+- Cleaned the global feedback widget copy so it speaks to users as `反馈问题 / 告诉我们 / 我们已收到`, without exposing admin-oriented wording.
+- Rebuilt the watermark tool copy for both Chinese and English, removing mojibake, mixed-language examples, and internal-facing labels while preserving the existing local-processing workflow.
+- Replaced the Chinese Privacy Policy and Terms of Service copy with readable, user-facing content covering file processing, account data, retention, prohibited use, subscriptions, service limits, and contact guidance.
+- Adjusted shared user-facing error support hints to point users toward page feedback and diagnostic codes instead of telling them to contact an administrator.
+- Frontend validation: `npm run type-check`, `npm run build`, and `git diff --check` pass. Build still shows the known large PDF vendor chunk warning.
+- Server validation after deploy: open the feedback widget, `/tools/watermark`, `/privacy`, and `/terms` in Chinese; confirm there is no mojibake, no mixed English examples in Chinese mode, and no internal admin-facing wording.

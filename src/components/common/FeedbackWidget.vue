@@ -75,12 +75,12 @@ const submitFeedback = async () => {
   const message = form.value.message.trim()
 
   if (!title || !message) {
-    error.value = '请填写问题标题和具体描述，方便管理员快速定位。'
+    error.value = '请填写问题标题和具体描述，方便我们更快定位。'
     return
   }
 
   if (message.length > MAX_MESSAGE_LENGTH) {
-    error.value = `描述内容过长，请压缩到 ${MAX_MESSAGE_LENGTH} 字以内，或先提交关键复现步骤。`
+    error.value = `描述内容过长，请压缩到 ${MAX_MESSAGE_LENGTH} 字以内，优先保留复现步骤和错误提示。`
     return
   }
 
@@ -100,7 +100,7 @@ const submitFeedback = async () => {
     })
     resultId.value = response.id
   } catch {
-    error.value = '反馈暂时提交失败，请稍后重试；如果页面仍可操作，可以截图发给管理员。'
+    error.value = '反馈暂时提交失败，请稍后重试。你也可以保留截图、页面地址和诊断码，稍后再提交。'
   } finally {
     submitting.value = false
   }
@@ -134,13 +134,13 @@ const copySummary = async () => {
         <div>
           <div class="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-violet-700 dark:bg-violet-500/10 dark:text-violet-200">
             <Bug class="h-3.5 w-3.5" />
-            上线测试反馈
+            使用反馈
           </div>
           <h2 class="mt-3 text-2xl font-bold text-slate-950 dark:text-white">
-            遇到问题？直接发给管理员
+            遇到问题？告诉我们
           </h2>
           <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
-            系统会自动附带页面、浏览器和诊断码，但不会收集文件内容。
+            系统会附带页面地址、浏览器信息和诊断码，帮助我们定位问题；不会收集你的文件内容。
           </p>
         </div>
         <button
@@ -161,7 +161,7 @@ const copySummary = async () => {
           <CheckCircle2 class="h-8 w-8" />
           <h3 class="mt-3 text-lg font-semibold">反馈已提交</h3>
           <p class="mt-2 text-sm leading-6">
-            编号 <strong>#{{ resultId }}</strong>，诊断码 <strong>{{ diagnosticCode }}</strong>。如果管理员需要更多信息，可以把这段编号截图给他。
+            我们已收到你的反馈。编号 <strong>#{{ resultId }}</strong>，诊断码 <strong>{{ diagnosticCode }}</strong>。如果后续需要补充信息，可以保留或复制这段编号。
           </p>
           <button
             type="button"
@@ -186,9 +186,9 @@ const copySummary = async () => {
                 class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100 dark:border-slate-800 dark:bg-slate-900 dark:text-white dark:focus:ring-violet-500/20"
               >
                 <option value="bug">功能异常</option>
-                <option value="ui">显示/排版问题</option>
-                <option value="account">账号/登录问题</option>
-                <option value="suggestion">建议</option>
+                <option value="ui">显示或排版问题</option>
+                <option value="account">账号或登录问题</option>
+                <option value="suggestion">使用建议</option>
               </select>
             </label>
             <label class="block">
@@ -197,9 +197,9 @@ const copySummary = async () => {
                 v-model="form.severity"
                 class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100 dark:border-slate-800 dark:bg-slate-900 dark:text-white dark:focus:ring-violet-500/20"
               >
-                <option value="normal">一般</option>
+                <option value="normal">一般问题</option>
                 <option value="high">影响使用</option>
-                <option value="critical">完全无法使用</option>
+                <option value="critical">无法继续使用</option>
               </select>
             </label>
           </div>
@@ -229,7 +229,7 @@ const copySummary = async () => {
               v-model="form.message"
               rows="5"
               :maxlength="MAX_MESSAGE_LENGTH"
-              placeholder="请写下你点了什么、看到了什么提示、是否可以复现。"
+              placeholder="请写下你点击了什么、看到什么提示、是否可以复现。"
               class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100 dark:border-slate-800 dark:bg-slate-900 dark:text-white dark:focus:ring-violet-500/20"
             />
             <p class="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">
@@ -242,7 +242,7 @@ const copySummary = async () => {
             <input
               v-model="form.email"
               type="email"
-              placeholder="方便管理员需要时联系你"
+              placeholder="方便需要补充信息时联系你"
               class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100 dark:border-slate-800 dark:bg-slate-900 dark:text-white dark:focus:ring-violet-500/20"
             >
           </label>

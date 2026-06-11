@@ -764,3 +764,10 @@ python -m pytest tests/ -q      # 35 通过
 - Added backend tests for admin access and non-admin rejection of the health report endpoint.
 - Local validation: `python -m pytest backend/tests/test_admin.py -q`, `npm run type-check`, `npm run build`, and `git diff --check` pass. Build still shows the known large PDF vendor chunk warning.
 - Server deployment note: rebuild/restart backend and frontend; no new Alembic migration is required.
+### 2026-06-11 Live Acceptance Script / 真实域名上线验收脚本
+- Added `scripts/live-acceptance-test.sh` for repeatable real-domain acceptance checks after deployment.
+- Default target is `https://pdf.pawn.eu.org`; it can also be called with a URL argument or `LIVE_BASE_URL`.
+- The script checks the frontend app shell, backend `/health`, public config, `/control-room` SPA route, and public feedback submission.
+- Optional admin verification is supported with `LIVE_ADMIN_EMAIL` and `LIVE_ADMIN_PASSWORD`; when set, it logs in and verifies `/api/v1/admin/health-report` includes migration and service status fields.
+- Local validation: `bash -n scripts/live-acceptance-test.sh` passed. A real-domain run without admin credentials passed against `https://pdf.pawn.eu.org` on 2026-06-11.
+- Server usage after deploy: `chmod +x scripts/live-acceptance-test.sh && bash scripts/live-acceptance-test.sh`; for admin report validation, prefix with `LIVE_ADMIN_EMAIL=... LIVE_ADMIN_PASSWORD=...`.

@@ -1160,7 +1160,7 @@ export const advancedAPI = {
   /**
    * 填写 PDF 表单
    */
-  async fillForm(file: File, formData: Record<string, any>): Promise<any> {
+  async fillForm(file: File, formData: Record<string, any>): Promise<Blob> {
     const data = new FormData()
     data.append('file', file)
     data.append('form_data', JSON.stringify(formData))
@@ -1168,9 +1168,10 @@ export const advancedAPI = {
     const response = await apiClient.post('/api/v1/advanced/form/fill', data, {
       headers: {
         'Content-Type': 'multipart/form-data'
-      }
+      },
+      responseType: 'blob',
     })
-    return response.data
+    return response.data as Blob
   },
 
   /**
@@ -1183,11 +1184,11 @@ export const advancedAPI = {
     x: number,
     y: number,
     color: string = '#FF0000'
-  ): Promise<any> {
+  ): Promise<Blob> {
     const formData = new FormData()
     formData.append('file', file)
     formData.append('text', text)
-    formData.append('page', page.toString())
+    formData.append('page_number', Math.max(0, page - 1).toString())
     formData.append('x', x.toString())
     formData.append('y', y.toString())
     formData.append('color', color)
@@ -1195,9 +1196,10 @@ export const advancedAPI = {
     const response = await apiClient.post('/api/v1/advanced/annotate/text', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
-      }
+      },
+      responseType: 'blob',
     })
-    return response.data
+    return response.data as Blob
   },
 
   /**
@@ -1211,22 +1213,27 @@ export const advancedAPI = {
     x2: number,
     y2: number,
     color: string = '#FFFF00'
-  ): Promise<any> {
+  ): Promise<Blob> {
+    const x = Math.min(x1, x2)
+    const y = Math.min(y1, y2)
+    const width = Math.abs(x2 - x1)
+    const height = Math.abs(y2 - y1)
     const formData = new FormData()
     formData.append('file', file)
-    formData.append('page', page.toString())
-    formData.append('x1', x1.toString())
-    formData.append('y1', y1.toString())
-    formData.append('x2', x2.toString())
-    formData.append('y2', y2.toString())
+    formData.append('page_number', Math.max(0, page - 1).toString())
+    formData.append('x', x.toString())
+    formData.append('y', y.toString())
+    formData.append('width', width.toString())
+    formData.append('height', height.toString())
     formData.append('color', color)
 
     const response = await apiClient.post('/api/v1/advanced/annotate/highlight', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
-      }
+      },
+      responseType: 'blob',
     })
-    return response.data
+    return response.data as Blob
   },
 
   /**

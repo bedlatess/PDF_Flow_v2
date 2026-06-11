@@ -13,6 +13,7 @@ import PDFViewer from '@/components/pdf/PDFViewer.vue'
 import CloudToggle from '@/components/common/CloudToggle.vue'
 import ToolHeader from '@/components/tools/ToolHeader.vue'
 import { getPDFPageCount } from '@/utils/pdf/merge'
+import { extractPDFPages } from '@/utils/pdf/split'
 import { memoryManager } from '@/utils/memory-manager'
 import { usePDFWorker } from '@/composables/usePDFWorker'
 import { useCloudProcessing } from '@/composables/useCloudProcessing'
@@ -35,7 +36,7 @@ const showSuccessModal = ref(false)
 const resultUrl = ref('')
 const errorMessage = ref('')
 
-const { submitTask, getTask, waitForTask, destroyWorker } = usePDFWorker()
+const { destroyWorker } = usePDFWorker()
 const { processInCloud } = useCloudProcessing()
 
 const copy = computed(() => locale.value.startsWith('zh')
@@ -203,24 +204,9 @@ const extractPages = async () => {
   errorMessage.value = ''
 
   try {
+    processingProgress.value = 35
     processingStatus.value = copy.value.statusProcessing
-    const taskId = await submitTask('split', {
-      file: selectedFile.value,
-      options: { ranges: pageRanges.value },
-    })
-
-    const progressInterval = setInterval(() => {
-      const task = getTask(taskId)
-      if (task) {
-        processingProgress.value = task.progress
-        if (task.progress < 100) {
-          processingStatus.value = copy.value.statusProgress.replace('{progress}', String(Math.round(task.progress)))
-        }
-      }
-    }, 100)
-
-    const blob = await waitForTask(taskId) as Blob
-    clearInterval(progressInterval)
+    const blob = await extractPDFPages(selectedFile.value, pageRanges.value)
 
     processingProgress.value = 100
     processingStatus.value = copy.value.statusDone

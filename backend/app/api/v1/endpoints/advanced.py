@@ -5,19 +5,17 @@ Advanced PDF endpoints
 注：基础水印已在前端纯本地实现（src/utils/pdf/watermark.ts）。
 本端点为云端/企业 API 调用提供后端能力（表单、注释等需服务端 PyPDF2/reportlab）。
 """
+import json
 import os
 import tempfile
 
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Body
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Body, Form
 from fastapi.responses import FileResponse
 
 from app.models.user import User, UserRole
 from app.core.database import get_db
 from app.schemas.advanced_pdf import (
     WatermarkRequest,
-    FormFillRequest,
-    AnnotationRequest,
-    HighlightRequest,
     SignatureFieldRequest,
 )
 from app.api.v1.endpoints.auth import get_current_user
@@ -137,11 +135,12 @@ async def get_form_fields(
     try:
         service = get_advanced_pdf_service()
         fields = service.get_form_fields(input_path)
+        field_list = list(fields.values()) if isinstance(fields, dict) else fields
         return {
             "success": True,
-            "has_form": len(fields) > 0,
-            "fields": fields,
-            "field_count": len(fields),
+            "has_form": len(field_list) > 0,
+            "fields": field_list,
+            "field_count": len(field_list),
         }
     except Exception as e:
         raise HTTPException(
@@ -156,7 +155,7 @@ async def get_form_fields(
 @router.post("/form/fill")
 async def fill_form(
     file: UploadFile = File(...),
-    request: FormFillRequest = Body(...),
+    form_data: str = Form(...),
     current_user: User = Depends(require_pro_user),
     db: Session = Depends(get_db),
 ):
@@ -171,13 +170,23 @@ async def fill_form(
     output_path = _new_output_path()
 
     try:
+        try:
+            field_data = json.loads(form_data)
+        except json.JSONDecodeError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid form data payload",
+            )
+
         service = get_advanced_pdf_service()
-        service.fill_form(input_path, output_path, request.field_data)
+        service.fill_form(input_path, output_path, field_data)
         return FileResponse(
             output_path,
             media_type="application/pdf",
             filename="filled.pdf",
         )
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
@@ -197,7 +206,12 @@ async def fill_form(
 @router.post("/annotate/text")
 async def add_text_annotation(
     file: UploadFile = File(...),
-    request: AnnotationRequest = Body(...),
+    page_number: int = Form(...),
+    text: str = Form(...),
+    x: float = Form(...),
+    y: float = Form(...),
+    width: float = Form(200),
+    height: float = Form(100),
     current_user: User = Depends(require_pro_user),
     db: Session = Depends(get_db),
 ):
@@ -216,12 +230,12 @@ async def add_text_annotation(
         service.add_text_annotation(
             pdf_path=input_path,
             output_path=output_path,
-            page_number=request.page_number,
-            text=request.text,
-            x=request.x,
-            y=request.y,
-            width=request.width,
-            height=request.height,
+            page_number=page_number,
+            text=text,
+            x=x,
+            y=y,
+            width=width,
+            height=height,
         )
         return FileResponse(
             output_path,
@@ -241,7 +255,11 @@ async def add_text_annotation(
 @router.post("/annotate/highlight")
 async def add_highlight(
     file: UploadFile = File(...),
-    request: HighlightRequest = Body(...),
+    page_number: int = Form(...),
+    x: float = Form(...),
+    y: float = Form(...),
+    width: float = Form(...),
+    height: float = Form(...),
     current_user: User = Depends(require_pro_user),
     db: Session = Depends(get_db),
 ):
@@ -260,11 +278,11 @@ async def add_highlight(
         service.add_highlight(
             pdf_path=input_path,
             output_path=output_path,
-            page_number=request.page_number,
-            x=request.x,
-            y=request.y,
-            width=request.width,
-            height=request.height,
+            page_number=page_number,
+            x=x,
+            y=y,
+            width=width,
+            height=height,
         )
         return FileResponse(
             output_path,

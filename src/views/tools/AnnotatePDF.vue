@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import {
@@ -27,6 +27,7 @@ import ToolAccessPanel from '@/components/tools/ToolAccessPanel.vue'
 import { useUserStore } from '@/stores/user'
 import { formatUserFacingError, type FormattedUserError } from '@/utils/error-messages'
 import { redirectForFeatureAccess } from '@/utils/feature-access'
+import { memoryManager } from '@/utils/memory-manager'
 
 const { t, locale } = useI18n()
 const router = useRouter()
@@ -38,7 +39,7 @@ const uploadedFile = ref<File | null>(null)
 const annotationType = ref<'text' | 'highlight'>('text')
 const progress = ref(0)
 const errorState = ref<FormattedUserError | null>(null)
-const resultJobId = ref('')
+const resultUrl = ref('')
 const isChinese = computed(() => locale.value.toLowerCase().startsWith('zh'))
 const stepText = (value: number) => isChinese.value ? `步骤 ${value}` : `Step ${value}`
 
@@ -140,6 +141,10 @@ const handleRemoveFile = () => {
   uploadedFile.value = null
   errorState.value = null
   step.value = 1
+  if (resultUrl.value) {
+    memoryManager.revokeObjectURL(resultUrl.value)
+    resultUrl.value = ''
+  }
 }
 
 const handleAnnotate = async () => {
@@ -164,7 +169,7 @@ const handleAnnotate = async () => {
       }
     }, 300)
 
-    const result = annotationType.value === 'text'
+    const blob = annotationType.value === 'text'
       ? await advancedAPI.annotateText(
         uploadedFile.value,
         textAnnotation.value.text,
@@ -184,7 +189,10 @@ const handleAnnotate = async () => {
       )
 
     progress.value = 100
-    resultJobId.value = result.job_id
+    if (resultUrl.value) {
+      memoryManager.revokeObjectURL(resultUrl.value)
+    }
+    resultUrl.value = memoryManager.createTemporaryURL(blob)
     step.value = 4
   } catch (error) {
     errorState.value = formatUserFacingError(error, {
@@ -200,12 +208,15 @@ const handleAnnotate = async () => {
 }
 
 const handleDownload = async () => {
-  if (!resultJobId.value) {
+  if (!resultUrl.value) {
     return
   }
 
   try {
-    await advancedAPI.downloadResult(resultJobId.value, 'annotated.pdf')
+    const link = document.createElement('a')
+    link.href = resultUrl.value
+    link.download = 'annotated.pdf'
+    link.click()
   } catch (error) {
     errorState.value = formatUserFacingError(error, {
       area: 'ANNOTATE',
@@ -216,9 +227,12 @@ const handleDownload = async () => {
 
 const handleReset = () => {
   uploadedFile.value = null
-  resultJobId.value = ''
   progress.value = 0
   errorState.value = null
+  if (resultUrl.value) {
+    memoryManager.revokeObjectURL(resultUrl.value)
+    resultUrl.value = ''
+  }
   annotationType.value = 'text'
   textAnnotation.value = {
     text: '',
@@ -237,6 +251,12 @@ const handleReset = () => {
   }
   step.value = 1
 }
+
+onUnmounted(() => {
+  if (resultUrl.value) {
+    memoryManager.revokeObjectURL(resultUrl.value)
+  }
+})
 </script>
 
 <template>

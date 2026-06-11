@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import {
@@ -25,13 +25,13 @@ import { useUserStore } from '@/stores/user'
 import { formatUserFacingError, type FormattedUserError } from '@/utils/error-messages'
 import { redirectForFeatureAccess } from '@/utils/feature-access'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
 
 const selectedFile = ref<File | null>(null)
-const selectedLanguage = ref('eng')
+const selectedLanguage = ref(locale.value.toLowerCase().startsWith('zh') ? 'chi_sim' : 'eng')
 const isProcessing = ref(false)
 const processingProgress = ref(0)
 const processingStatus = ref('')
@@ -42,6 +42,20 @@ const errorState = ref<FormattedUserError | null>(null)
 const copyMessage = ref('')
 
 const canUseOCR = computed(() => userStore.isAuthenticated && userStore.canUseCloudFeatures)
+
+const selectedLanguageLabel = computed(() =>
+  languageOptions.value.find((item) => item.value === selectedLanguage.value)?.label || selectedLanguage.value
+)
+
+const resultPreview = computed(() => {
+  const text = extractedText.value.trim()
+  if (!text) return ''
+  return text.length > 900 ? `${text.slice(0, 900)}...` : text
+})
+
+const viewResultLabel = computed(() =>
+  locale.value.toLowerCase().startsWith('zh') ? '查看完整结果' : 'View full result'
+)
 
 const languageOptions = computed(() => [
   { value: 'eng', label: t('tools.ocr.languageOptions.eng'), code: 'EN' },
@@ -86,6 +100,12 @@ const handleFilesSelected = (files: File[]) => {
   extractedText.value = ''
   ocrResult.value = null
 }
+
+watch(locale, (value) => {
+  if (!selectedFile.value && !extractedText.value) {
+    selectedLanguage.value = value.toLowerCase().startsWith('zh') ? 'chi_sim' : 'eng'
+  }
+})
 
 const handleError = (message: string) => {
   errorState.value = formatUserFacingError(new Error(message), {
@@ -301,6 +321,18 @@ const closeResultModal = () => {
                 @remove="clearAll"
               />
 
+              <div class="rounded-[24px] border border-purple-100 bg-purple-50/70 p-4 text-sm leading-6 text-purple-900 dark:border-purple-900/40 dark:bg-purple-950/20 dark:text-purple-100">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <span class="font-semibold">{{ t('tools.ocr.workspaceLanguage') }}</span>
+                  <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-purple-700 shadow-sm dark:bg-slate-900 dark:text-purple-200">
+                    {{ selectedLanguageLabel }}
+                  </span>
+                </div>
+                <p class="mt-2 text-xs text-purple-700/80 dark:text-purple-200/80">
+                  {{ t('tools.ocr.flowStep2') }}
+                </p>
+              </div>
+
               <ProgressBar
                 v-if="isProcessing"
                 :progress="processingProgress"
@@ -317,6 +349,31 @@ const closeResultModal = () => {
               >
                 {{ primaryActionLabel }}
               </Button>
+
+              <div
+                v-if="extractedText"
+                class="rounded-[24px] border border-emerald-200 bg-emerald-50/80 p-4 dark:border-emerald-900/50 dark:bg-emerald-950/20"
+              >
+                <p class="text-sm font-semibold text-emerald-800 dark:text-emerald-100">
+                  {{ t('tools.ocr.resultTitle') }}
+                </p>
+                <p class="mt-2 max-h-20 overflow-hidden text-sm leading-6 text-emerald-700 dark:text-emerald-200">
+                  {{ resultPreview }}
+                </p>
+                <div class="mt-4 flex flex-wrap gap-2">
+                  <Button variant="outline" size="sm" @click="showResultModal = true">
+                    {{ viewResultLabel }}
+                  </Button>
+                  <Button variant="outline" size="sm" @click="copyToClipboard">
+                    <Copy class="mr-2 h-4 w-4" />
+                    {{ t('tools.ocr.copy') }}
+                  </Button>
+                  <Button variant="outline" size="sm" @click="downloadText">
+                    <Download class="mr-2 h-4 w-4" />
+                    {{ t('tools.ocr.download') }}
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         </Card>

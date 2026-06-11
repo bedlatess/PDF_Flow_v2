@@ -8,6 +8,15 @@ from pathlib import Path
 
 try:
     from PyPDF2 import PdfReader, PdfWriter
+    from PyPDF2.generic import (
+        ArrayObject,
+        BooleanObject,
+        DictionaryObject,
+        FloatObject,
+        NameObject,
+        NumberObject,
+        TextStringObject,
+    )
     from reportlab.pdfgen import canvas
     from reportlab.lib.pagesizes import letter
     from reportlab.lib.colors import Color
@@ -162,12 +171,17 @@ class AdvancedPDFService:
         if "/AcroForm" not in reader.trailer["/Root"]:
             raise ValueError("PDF does not contain form fields")
 
-        # Update form fields
         writer.append(reader)
-        writer.update_page_form_field_values(
-            writer.pages[0],
-            field_data
-        )
+        if "/AcroForm" in reader.trailer["/Root"]:
+            writer._root_object.update({
+                NameObject("/AcroForm"): reader.trailer["/Root"]["/AcroForm"]
+            })
+            writer._root_object["/AcroForm"].update({
+                NameObject("/NeedAppearances"): BooleanObject(True)
+            })
+
+        for page in writer.pages:
+            writer.update_page_form_field_values(page, field_data)
 
         # Write output
         with open(output_path, 'wb') as output_file:
@@ -202,14 +216,26 @@ class AdvancedPDFService:
                         field_type = field_obj.get("/FT", "Unknown")
                         field_value = field_obj.get("/V", "")
 
-                        fields[field_name] = {
-                            "type": str(field_type),
-                            "value": str(field_value) if field_value else None
+                        fields[str(field_name)] = {
+                            "name": str(field_name),
+                            "type": self._normalize_form_field_type(str(field_type)),
+                            "default_value": str(field_value) if field_value else "",
+                            "required": False,
+                            "options": [],
                         }
         except Exception as e:
             print(f"Error extracting form fields: {e}")
 
         return fields
+
+    def _normalize_form_field_type(self, raw_type: str) -> str:
+        """Map PDF field names to frontend field types."""
+        field_type = raw_type.replace("/", "").lower()
+        if field_type in {"btn", "checkbox"}:
+            return "checkbox"
+        if field_type in {"ch", "choice"}:
+            return "dropdown"
+        return "text"
 
     # ============================================================================
     # Annotations
@@ -246,19 +272,22 @@ class AdvancedPDFService:
         for i, page in enumerate(reader.pages):
             if i == page_number:
                 # Add annotation
-                annotation = {
-                    "/Type": "/Annot",
-                    "/Subtype": "/FreeText",
-                    "/Contents": text,
-                    "/Rect": [x, y, x + width, y + height],
-                    "/C": [1, 1, 0],  # Yellow background
-                    "/DA": "/Helv 12 Tf 0 0 0 rg"  # Font
-                }
+                annotation = DictionaryObject({
+                    NameObject("/Type"): NameObject("/Annot"),
+                    NameObject("/Subtype"): NameObject("/FreeText"),
+                    NameObject("/Contents"): TextStringObject(text),
+                    NameObject("/Rect"): ArrayObject([
+                        FloatObject(x),
+                        FloatObject(y),
+                        FloatObject(x + width),
+                        FloatObject(y + height),
+                    ]),
+                    NameObject("/C"): ArrayObject([FloatObject(1), FloatObject(1), FloatObject(0)]),
+                    NameObject("/DA"): TextStringObject("/Helv 12 Tf 0 0 0 rg"),
+                    NameObject("/F"): NumberObject(4),
+                })
 
-                if "/Annots" in page:
-                    page["/Annots"].append(annotation)
-                else:
-                    page["/Annots"] = [annotation]
+                self._append_annotation(page, annotation)
 
             writer.add_page(page)
 
@@ -298,18 +327,30 @@ class AdvancedPDFService:
         for i, page in enumerate(reader.pages):
             if i == page_number:
                 # Add highlight annotation
-                annotation = {
-                    "/Type": "/Annot",
-                    "/Subtype": "/Highlight",
-                    "/Rect": [x, y, x + width, y + height],
-                    "/C": list(color),
-                    "/QuadPoints": [x, y + height, x + width, y + height, x, y, x + width, y]
-                }
+                annotation = DictionaryObject({
+                    NameObject("/Type"): NameObject("/Annot"),
+                    NameObject("/Subtype"): NameObject("/Highlight"),
+                    NameObject("/Rect"): ArrayObject([
+                        FloatObject(x),
+                        FloatObject(y),
+                        FloatObject(x + width),
+                        FloatObject(y + height),
+                    ]),
+                    NameObject("/C"): ArrayObject([FloatObject(value) for value in color]),
+                    NameObject("/QuadPoints"): ArrayObject([
+                        FloatObject(x),
+                        FloatObject(y + height),
+                        FloatObject(x + width),
+                        FloatObject(y + height),
+                        FloatObject(x),
+                        FloatObject(y),
+                        FloatObject(x + width),
+                        FloatObject(y),
+                    ]),
+                    NameObject("/F"): NumberObject(4),
+                })
 
-                if "/Annots" in page:
-                    page["/Annots"].append(annotation)
-                else:
-                    page["/Annots"] = [annotation]
+                self._append_annotation(page, annotation)
 
             writer.add_page(page)
 
@@ -391,6 +432,18 @@ class AdvancedPDFService:
             'width': float(page.mediabox.width),
             'height': float(page.mediabox.height)
         }
+
+    def _append_annotation(self, page: Any, annotation: DictionaryObject) -> None:
+        """Append an annotation using valid PDF object containers."""
+        if "/Annots" in page:
+            annotations = page["/Annots"]
+            try:
+                annotations = annotations.get_object()
+            except AttributeError:
+                pass
+            annotations.append(annotation)
+        else:
+            page[NameObject("/Annots")] = ArrayObject([annotation])
 
 
 # Singleton instance

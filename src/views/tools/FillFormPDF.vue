@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import {
@@ -26,6 +26,7 @@ import ToolAccessPanel from '@/components/tools/ToolAccessPanel.vue'
 import { useUserStore } from '@/stores/user'
 import { formatUserFacingError, type FormattedUserError } from '@/utils/error-messages'
 import { redirectForFeatureAccess } from '@/utils/feature-access'
+import { memoryManager } from '@/utils/memory-manager'
 
 const { t, locale } = useI18n()
 const router = useRouter()
@@ -38,7 +39,7 @@ const formFields = ref<any[]>([])
 const loading = ref(false)
 const progress = ref(0)
 const errorState = ref<FormattedUserError | null>(null)
-const resultJobId = ref('')
+const resultUrl = ref('')
 const isChinese = computed(() => locale.value.toLowerCase().startsWith('zh'))
 const stepText = (value: number) => isChinese.value ? `\u6b65\u9aa4 ${value}` : `Step ${value}`
 
@@ -96,6 +97,10 @@ const handleRemoveFile = () => {
   formFields.value = []
   errorState.value = null
   step.value = 1
+  if (resultUrl.value) {
+    memoryManager.revokeObjectURL(resultUrl.value)
+    resultUrl.value = ''
+  }
 }
 
 const analyzeFormFields = async () => {
@@ -154,9 +159,12 @@ const handleFillForm = async () => {
       }
     }, 300)
 
-    const result = await advancedAPI.fillForm(uploadedFile.value, payload)
+    const blob = await advancedAPI.fillForm(uploadedFile.value, payload)
     progress.value = 100
-    resultJobId.value = result.job_id
+    if (resultUrl.value) {
+      memoryManager.revokeObjectURL(resultUrl.value)
+    }
+    resultUrl.value = memoryManager.createTemporaryURL(blob)
     step.value = 4
   } catch (error) {
     errorState.value = formatUserFacingError(error, {
@@ -172,12 +180,15 @@ const handleFillForm = async () => {
 }
 
 const handleDownload = async () => {
-  if (!resultJobId.value) {
+  if (!resultUrl.value) {
     return
   }
 
   try {
-    await advancedAPI.downloadResult(resultJobId.value, 'filled-form.pdf')
+    const link = document.createElement('a')
+    link.href = resultUrl.value
+    link.download = 'filled-form.pdf'
+    link.click()
   } catch (error) {
     errorState.value = formatUserFacingError(error, {
       area: 'FORM',
@@ -189,11 +200,20 @@ const handleDownload = async () => {
 const handleReset = () => {
   uploadedFile.value = null
   formFields.value = []
-  resultJobId.value = ''
   progress.value = 0
   errorState.value = null
+  if (resultUrl.value) {
+    memoryManager.revokeObjectURL(resultUrl.value)
+    resultUrl.value = ''
+  }
   step.value = 1
 }
+
+onUnmounted(() => {
+  if (resultUrl.value) {
+    memoryManager.revokeObjectURL(resultUrl.value)
+  }
+})
 </script>
 
 <template>

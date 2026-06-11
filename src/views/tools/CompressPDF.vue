@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onUnmounted, ref } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { FileText } from 'lucide-vue-next'
 import DragDropZone from '@/components/pdf/DragDropZone.vue'
@@ -132,6 +132,22 @@ const estimatedSize = computed(() => {
   return selectedFile.value.size * (1 - ratio)
 })
 
+const estimatedStats = computed(() => {
+  if (!selectedFile.value) return null
+
+  const originalSize = selectedFile.value.size
+  const estimatedOutputSize = estimatedSize.value
+  const savedSize = Math.max(originalSize - estimatedOutputSize, 0)
+  const formatMB = (value: number) => `${(value / (1024 * 1024)).toFixed(2)} MB`
+
+  return {
+    originalSize: formatMB(originalSize),
+    estimatedOutputSize: formatMB(estimatedOutputSize),
+    savedSize: formatMB(savedSize),
+    ratio: `${estimatedRatio.value.toFixed(0)}%`,
+  }
+})
+
 const resultStats = computed(() => {
   if (!compressionResult.value) return null
 
@@ -155,6 +171,14 @@ const handleFilesSelected = (files: File[]) => {
   errorMessage.value = ''
   compressionResult.value = null
 }
+
+watch(selectedQuality, () => {
+  compressionResult.value = null
+  if (resultUrl.value) {
+    memoryManager.revokeObjectURL(resultUrl.value)
+    resultUrl.value = ''
+  }
+})
 
 const handleError = (message: string) => {
   errorMessage.value = message
@@ -382,50 +406,50 @@ onUnmounted(() => {
               <div class="rounded-[22px] border border-slate-200 bg-slate-50/80 px-4 py-4 dark:border-slate-800 dark:bg-slate-950/40">
                 <p class="text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">{{ copy.originalSize }}</p>
                 <p class="mt-2 text-lg font-semibold text-slate-900 dark:text-white">
-                  {{ (selectedFile.size / (1024 * 1024)).toFixed(2) }} MB
+                  {{ estimatedStats?.originalSize }}
                 </p>
               </div>
               <div class="rounded-[22px] border border-slate-200 bg-slate-50/80 px-4 py-4 dark:border-slate-800 dark:bg-slate-950/40">
                 <p class="text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">{{ copy.estimatedCompression }}</p>
                 <p class="mt-2 text-lg font-semibold text-slate-900 dark:text-white">
-                  {{ estimatedRatio }}%
+                  {{ estimatedStats?.ratio }}
                 </p>
               </div>
               <div class="rounded-[22px] border border-slate-200 bg-slate-50/80 px-4 py-4 dark:border-slate-800 dark:bg-slate-950/40">
                 <p class="text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">{{ copy.estimatedSize }}</p>
                 <p class="mt-2 text-lg font-semibold text-slate-900 dark:text-white">
-                  {{ (estimatedSize / (1024 * 1024)).toFixed(2) }} MB
+                  {{ estimatedStats?.estimatedOutputSize }}
                 </p>
               </div>
             </div>
 
             <div
-              v-if="resultStats"
+              v-if="resultStats || estimatedStats"
               class="rounded-[24px] border border-slate-200 bg-slate-50/80 p-5 dark:border-slate-800 dark:bg-slate-950/40"
             >
               <div class="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <p class="text-slate-500 dark:text-slate-400">{{ copy.originalSize }}</p>
                   <p class="mt-1 font-semibold text-slate-900 dark:text-white">
-                    {{ resultStats.originalSize }}
+                    {{ resultStats?.originalSize || estimatedStats?.originalSize }}
                   </p>
                 </div>
                 <div>
                   <p class="text-slate-500 dark:text-slate-400">{{ copy.outputSize }}</p>
                   <p class="mt-1 font-semibold text-slate-900 dark:text-white">
-                    {{ resultStats.compressedSize }}
+                    {{ resultStats?.compressedSize || estimatedStats?.estimatedOutputSize }}
                   </p>
                 </div>
                 <div>
                   <p class="text-slate-500 dark:text-slate-400">{{ copy.savedSize }}</p>
                   <p class="mt-1 font-semibold text-emerald-600">
-                    {{ resultStats.savedSize }}
+                    {{ resultStats?.savedSize || estimatedStats?.savedSize }}
                   </p>
                 </div>
                 <div>
                   <p class="text-slate-500 dark:text-slate-400">{{ copy.ratio }}</p>
                   <p class="mt-1 font-semibold text-primary">
-                    {{ resultStats.ratio }}
+                    {{ resultStats?.ratio || estimatedStats?.ratio }}
                   </p>
                 </div>
               </div>

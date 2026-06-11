@@ -811,3 +811,11 @@ python -m pytest tests/ -q      # 35 通过
 - Scanned frontend PDF utilities for other direct `StandardFonts`/`drawText` text-writing risks; no similar local PDF text-writing path was found outside watermark.
 - Local validation: `npm run type-check`, `npm run build`, and `git diff --check` pass. Build still shows the known large PDF vendor chunk warning.
 - Server validation after deploy: open `/tools/watermark`, add a Chinese watermark such as `仅供预览`, download the result, then open `/privacy` and `/terms` in Chinese and confirm readable content is shown.
+### 2026-06-11 Tool Area Reliability Fixes / 功能区可靠性修复
+- Fixed `/tools/split` local extraction by using `extractPDFPages` to generate one output PDF for the selected range, avoiding the previous `Blob[]` result being passed to `URL.createObjectURL` and causing `createObjectURL` reload failures.
+- Improved `/tools/compress` quick confirmation so estimated output size, saved space, and compression ratio update immediately when the user switches compression strength; stale previous results are cleared when the strength changes.
+- Hardened advanced PDF form and annotation APIs: multipart form fields now match FastAPI `Form(...)` parameters, form fill and annotation endpoints return PDF blobs directly to the frontend, and annotation objects are written with valid PyPDF2 PDF object containers.
+- Fixed form field discovery response shape so `/tools/fill-form` receives an array of `{name,type,default_value,required,options}` fields instead of a dictionary that the frontend could not map.
+- Optimized `/tools/ocr` UX: Chinese locale now defaults to Simplified Chinese OCR, completed OCR text remains visible in the page with copy/download actions, and the modal remains available for full result review.
+- Local validation: `npm run type-check`, `npm run build`, `python -m compileall backend\app\api\v1\endpoints\advanced.py backend\app\services\advanced_pdf_service.py`, `python -m pytest backend/tests/test_files.py backend/tests/test_admin.py -q`, and `git diff --check` pass. Build still shows the known large PDF vendor chunk warning.
+- Server validation after deploy: test Split PDF local extraction, Compress strength switching, OCR Chinese recognition, Fill Form field detection/fill/download with a real fillable PDF, and Annotate text/highlight download with an admin/pro account.

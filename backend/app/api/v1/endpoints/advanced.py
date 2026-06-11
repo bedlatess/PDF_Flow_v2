@@ -117,6 +117,54 @@ async def add_watermark(
 # Form fields
 # ============================================================================
 
+@router.post("/protect")
+async def protect_pdf(
+    file: UploadFile = File(...),
+    password: str = Form(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Add an open password to a PDF.
+
+    **Requires**: signed-in user
+    """
+    require_feature_access(db, "protect_pdf", current_user)
+    _validate_pdf(file)
+
+    if len(password) < 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must be at least 6 characters.",
+        )
+
+    input_path = await _save_temp(file)
+    output_path = _new_output_path()
+
+    try:
+        service = get_advanced_pdf_service()
+        service.protect_pdf(
+            pdf_path=input_path,
+            output_path=output_path,
+            user_password=password,
+        )
+        return FileResponse(
+            output_path,
+            media_type="application/pdf",
+            filename="protected.pdf",
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"PDF protection failed: {str(e)}",
+        )
+    finally:
+        if os.path.exists(input_path):
+            os.unlink(input_path)
+
+
 @router.post("/form/fields")
 async def get_form_fields(
     file: UploadFile = File(...),

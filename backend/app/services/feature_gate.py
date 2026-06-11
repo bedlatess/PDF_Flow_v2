@@ -16,6 +16,7 @@ DEFAULT_FEATURE_FLAGS = [
     ("delete_pages_pdf", "删除 PDF 页面", "允许用户移除 PDF 中不需要的页面。", True, False, False),
     ("organize_pdf", "整理 PDF 页面", "允许用户调整 PDF 页面顺序。", True, False, False),
     ("page_numbers_pdf", "添加 PDF 页码", "允许用户为 PDF 添加页码。", True, False, False),
+    ("protect_pdf", "保护 PDF", "允许登录用户为 PDF 添加打开密码。", True, True, False),
     ("ocr_pdf", "OCR 文字识别", "允许登录用户提交 OCR 识别任务。", True, True, True),
     ("office_to_pdf", "Office 转 PDF", "允许登录用户将 Office 文件转换为 PDF。", True, True, False),
     ("ai_analyzer", "AI PDF 分析器", "允许 Pro 用户进行 PDF 智能分析。", True, True, True),

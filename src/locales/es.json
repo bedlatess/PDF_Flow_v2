@@ -19,6 +19,7 @@
     "deletePages": { "title": "Eliminar páginas PDF", "desc": "Quita páginas no deseadas de un PDF" },
     "organize": { "title": "Organizar páginas PDF", "desc": "Reordena páginas PDF antes de compartirlas" },
     "pageNumbers": { "title": "Añadir números de página", "desc": "Agrega números de página a informes y contratos" },
+    "protect": { "title": "Proteger PDF", "desc": "Anade una contrasena antes de compartir un PDF" },
     "officeToPdf": {
       "title": "Office a PDF",
       "desc": "Convierte Word, Excel, PowerPoint a PDF",

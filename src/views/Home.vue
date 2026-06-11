@@ -114,6 +114,16 @@ const tools = computed<Tool[]>(() => [
     featureKey: 'page_numbers_pdf',
   },
   {
+    name: 'protect',
+    titleKey: 'tools.protect.title',
+    descriptionKey: 'tools.protect.desc',
+    icon: 'M12 11c1.105 0 2 .895 2 2v2a2 2 0 11-4 0v-2c0-1.105.895-2 2-2zm6 0V8a6 6 0 10-12 0v3m12 0H6a2 2 0 00-2 2v6a2 2 0 002 2h12a2 2 0 002-2v-6a2 2 0 00-2-2z',
+    route: '/tools/protect',
+    color: 'from-slate-700 to-blue-700',
+    glow: 'bg-blue-400/18',
+    featureKey: 'protect_pdf',
+  },
+  {
     name: 'ocr',
     titleKey: 'tools.ocr.title',
     descriptionKey: 'home.toolDescriptions.ocr',

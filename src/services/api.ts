@@ -1158,6 +1158,23 @@ export const aiAPI = {
  */
 export const advancedAPI = {
   /**
+   * Add an open password to a PDF.
+   */
+  async protectPDF(file: File, password: string): Promise<Blob> {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('password', password)
+
+    const response = await apiClient.post('/api/v1/advanced/protect', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      },
+      responseType: 'blob',
+    })
+    return response.data as Blob
+  },
+
+  /**
    * 获取 PDF 表单字段
    */
   async getFormFields(file: File): Promise<any> {

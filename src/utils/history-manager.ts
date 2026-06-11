@@ -8,6 +8,7 @@ export type HistoryToolType =
   | 'deletePages'
   | 'organize'
   | 'pageNumbers'
+  | 'protect'
   | 'watermark'
 
 export interface HistoryItem {
@@ -124,6 +125,7 @@ export function formatToolType(type: HistoryToolType): string {
     deletePages: '删除 PDF 页面',
     organize: '整理 PDF 页面',
     pageNumbers: '添加 PDF 页码',
+    protect: '保护 PDF',
     watermark: '添加水印',
   }
   return typeNames[type]

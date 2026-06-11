@@ -147,6 +147,49 @@ class AdvancedPDFService:
     # Form Filling
     # ============================================================================
 
+    def protect_pdf(
+        self,
+        pdf_path: str,
+        output_path: str,
+        user_password: str,
+        owner_password: Optional[str] = None,
+    ) -> str:
+        """
+        Add password protection to a PDF.
+
+        Args:
+            pdf_path: Input PDF path
+            output_path: Output PDF path
+            user_password: Password required to open the PDF
+            owner_password: Optional owner password for permissions
+
+        Returns:
+            Path to output PDF
+        """
+        reader = PdfReader(pdf_path)
+        writer = PdfWriter()
+
+        for page in reader.pages:
+            writer.add_page(page)
+
+        if reader.metadata:
+            writer.add_metadata(reader.metadata)
+
+        owner = owner_password or user_password
+        try:
+            writer.encrypt(
+                user_password=user_password,
+                owner_password=owner,
+                use_128bit=True,
+            )
+        except TypeError:
+            writer.encrypt(user_password, owner, use_128bit=True)
+
+        with open(output_path, 'wb') as output_file:
+            writer.write(output_file)
+
+        return output_path
+
     def fill_form(
         self,
         pdf_path: str,

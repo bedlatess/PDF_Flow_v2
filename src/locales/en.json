@@ -19,6 +19,7 @@
     "deletePages": { "title": "Delete PDF Pages", "desc": "Remove unwanted pages from a PDF" },
     "organize": { "title": "Organize PDF Pages", "desc": "Reorder PDF pages before sharing or submitting" },
     "pageNumbers": { "title": "Add PDF Page Numbers", "desc": "Add page numbers to reports, contracts, and handouts" },
+    "protect": { "title": "Protect PDF", "desc": "Add an opening password before sharing a PDF" },
     "officeToPdf": {
       "title": "Office to PDF",
       "desc": "Convert Word, Excel, PowerPoint to PDF",

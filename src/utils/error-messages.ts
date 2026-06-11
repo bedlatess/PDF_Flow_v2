@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-export type ErrorArea = 'AUTH' | 'OCR' | 'FORM' | 'ANNOTATE' | 'AI' | 'OFFICE' | 'UPLOAD' | 'GENERAL'
+export type ErrorArea = 'AUTH' | 'OCR' | 'FORM' | 'ANNOTATE' | 'AI' | 'OFFICE' | 'PROTECT' | 'UPLOAD' | 'GENERAL'
 
 export interface FormattedErrorOptions {
   area?: ErrorArea
@@ -56,6 +56,10 @@ const AREA_DEFAULTS: Record<ErrorArea, { title: string; message: string }> = {
   OFFICE: {
     title: 'Conversion failed',
     message: 'We could not convert this Office file right now. Please retry with a supported document.',
+  },
+  PROTECT: {
+    title: 'Protection failed',
+    message: 'We could not create a protected copy of this PDF. Please retry with a standard PDF file.',
   },
   UPLOAD: {
     title: 'Upload failed',

@@ -19,6 +19,7 @@
     "deletePages": { "title": "删除 PDF 页面", "desc": "移除不需要的页面，生成干净的新 PDF" },
     "organize": { "title": "整理 PDF 页面", "desc": "拖拽调整页面顺序，导出新的 PDF" },
     "pageNumbers": { "title": "添加 PDF 页码", "desc": "为合同、报告和讲义添加统一页码" },
+    "protect": { "title": "保护 PDF", "desc": "为 PDF 添加打开密码，分享前多一层保护" },
     "officeToPdf": {
       "title": "Office 转 PDF",
       "desc": "将 Word、Excel、PowerPoint 转换为 PDF",

@@ -64,6 +64,7 @@ const getToolIcon = (type: HistoryItem['type']) => {
     deletePages: 'D',
     organize: 'O',
     pageNumbers: '#',
+    protect: 'L',
     watermark: 'W',
   }
   return icons[type]
@@ -80,6 +81,7 @@ const getToolColor = (type: HistoryItem['type']) => {
     deletePages: 'bg-red-500',
     organize: 'bg-emerald-500',
     pageNumbers: 'bg-blue-500',
+    protect: 'bg-slate-700',
     watermark: 'bg-cyan-500',
   }
   return colors[type]

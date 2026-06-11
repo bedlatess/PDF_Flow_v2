@@ -882,3 +882,11 @@ python -m pytest tests/ -q      # 35 通过
 - Added `src/utils/pdf/pageNumbers.ts`, rendering page labels through canvas before embedding them into the PDF so Chinese formats such as `第 1 页` work safely without StandardFont encoding failures.
 - Wired the tool into the homepage card grid, route guard, history records, translations, and default admin feature flag `page_numbers_pdf`.
 - P0 page management suite status: delete pages, organize/reorder pages, and add page numbers are implemented. Recommended next phase is P1 delivery/safety tools: protect PDF, unlock PDF, signature workflow, extract images, and extract text.
+### 2026-06-11 Protect PDF / 密码保护工具落地
+- Started the P1 delivery and safety suite by adding `/tools/protect`, a signed-in cloud tool that creates a real password-protected PDF instead of a browser-only placeholder.
+- Added backend `POST /api/v1/advanced/protect` using PyPDF2 `PdfWriter.encrypt`, with password length validation and feature-gate enforcement through the new `protect_pdf` flag. The default access model is login-required and not Pro-only, because PDF protection is a basic safety feature.
+- Added the Protect PDF frontend page with upload, password confirmation, show/hide password, strength hint, cloud-processing notice, diagnostic errors, result download, and browser history integration.
+- Wired the tool into the homepage card grid, route guard, translations, public config feature flags, and admin feature-flag defaults so `/control-room` can hide or maintain it without code changes.
+- Cleaned `feature_gate.py` and `history-manager.ts` into readable UTF-8 text while preserving existing behavior, reducing mojibake in admin/public user-visible labels.
+- Local validation: `npm run type-check`, `npm run build`, `python -m pytest backend/tests/test_admin.py backend/tests/test_advanced_pdf_service.py -q`, and `git diff --check` pass. Build still shows the known large PDF vendor chunk warning.
+- Server validation after deploy: pull `main`, rebuild `backend` and `frontend`, open `/tools/protect`, sign in, upload a small PDF, set a password, download the result, and confirm a PDF reader requires the password. Also confirm `/control-room -> 功能开关` contains `protect_pdf` and shows login required / non-Pro.

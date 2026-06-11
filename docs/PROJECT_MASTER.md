@@ -771,3 +771,10 @@ python -m pytest tests/ -q      # 35 通过
 - Optional admin verification is supported with `LIVE_ADMIN_EMAIL` and `LIVE_ADMIN_PASSWORD`; when set, it logs in and verifies `/api/v1/admin/health-report` includes migration and service status fields.
 - Local validation: `bash -n scripts/live-acceptance-test.sh` passed. A real-domain run without admin credentials passed against `https://pdf.pawn.eu.org` on 2026-06-11.
 - Server usage after deploy: `chmod +x scripts/live-acceptance-test.sh && bash scripts/live-acceptance-test.sh`; for admin report validation, prefix with `LIVE_ADMIN_EMAIL=... LIVE_ADMIN_PASSWORD=...`.
+### 2026-06-11 Production Environment And Celery Health Signal / 生产环境与 Celery 健康信号收口
+- Root `docker-compose.yml` now defaults backend and celery-worker to `ENVIRONMENT=production` and `DEBUG=false`, removing Uvicorn `--reload` from the server command path.
+- Added configurable `ALLOWED_HOSTS=${ALLOWED_HOSTS:-*}` so production TrustedHost middleware does not break the current requirement that both domain access and IP+port access remain available. To lock this down later, set `ALLOWED_HOSTS=pdf.pawn.eu.org,<server-ip>` on the server.
+- Admin health services now use `celery_app.control.ping(timeout=1.0)` to report `celery_worker=healthy/degraded/unhealthy` instead of a permanent `unknown` value.
+- Updated test stubs so admin health report tests still exercise a positive worker response locally.
+- Local validation: `python -m pytest backend/tests/test_admin.py -q`, `npm run type-check`, `npm run build`, `python -m compileall backend\app`, and `git diff --check` pass. Docker Compose config validation is deferred to the server because Docker is not installed on the Windows workstation.
+- Server validation after deploy: run `ENVIRONMENT=production DEBUG=false docker compose up -d --build backend celery-worker frontend`, then copy `/control-room -> 运营总览` health report and confirm `环境：production`; `celery_worker` should be `healthy` when the worker responds.

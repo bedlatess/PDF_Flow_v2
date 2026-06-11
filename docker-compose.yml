@@ -44,13 +44,15 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - ENVIRONMENT=development
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - DEBUG=${DEBUG:-false}
       - SECRET_KEY=dev-secret-key-change-in-production
       - DATABASE_URL=postgresql://pdfflow_user:change_me_in_production@postgres:5432/pdfflow
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/1
       - ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000,http://pdf.pawn.eu.org,https://pdf.pawn.eu.org
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-*}
       - FRONTEND_URL=https://pdf.pawn.eu.org
       - OAUTH_REDIRECT_URL=https://pdf.pawn.eu.org
       # Optional: Add your API keys here
@@ -70,7 +72,7 @@ services:
     volumes:
       - ./backend:/app
       - temp_files:/tmp/pdf-flow
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
 
   # Celery Worker
   celery-worker:
@@ -79,7 +81,8 @@ services:
       dockerfile: Dockerfile
     container_name: pdf-flow-celery-worker
     environment:
-      - ENVIRONMENT=development
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - DEBUG=${DEBUG:-false}
       - SECRET_KEY=dev-secret-key-change-in-production
       - DATABASE_URL=postgresql://pdfflow_user:change_me_in_production@postgres:5432/pdfflow
       - REDIS_URL=redis://redis:6379/0

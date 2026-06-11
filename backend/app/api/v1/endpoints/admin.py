@@ -22,6 +22,7 @@ from app.models.user import (
 )
 from app.services.feature_gate import DEFAULT_FEATURE_FLAGS
 from app.services.file_service import file_processing_service
+from app.celery_worker import celery_app
 from app.schemas.admin import (
     AdminAuditLogResponse,
     AdminApiErrorResponse,
@@ -267,12 +268,23 @@ def _check_services(db: Session) -> dict:
     except Exception as exc:
         services["redis"] = {"status": "unhealthy", "detail": str(exc)}
 
-    redis_ok = services.get("redis", {}).get("status") == "healthy"
-    services["celery_worker"] = {
-        "status": "unknown" if redis_ok else "unhealthy",
-        "detail": "Worker health is inferred from task movement; run smoke tests for confirmation."
-        if redis_ok else "Redis broker is unavailable.",
-    }
+    if services.get("redis", {}).get("status") != "healthy":
+        services["celery_worker"] = {
+            "status": "unhealthy",
+            "detail": "Redis broker is unavailable.",
+        }
+    else:
+        try:
+            responses = celery_app.control.ping(timeout=1.0)
+            services["celery_worker"] = {
+                "status": "healthy" if responses else "degraded",
+                "detail": f"{len(responses)} worker response(s)" if responses else "No worker responded to Celery ping.",
+            }
+        except Exception as exc:
+            services["celery_worker"] = {
+                "status": "degraded",
+                "detail": f"Celery ping failed: {exc}",
+            }
     return services
 
 

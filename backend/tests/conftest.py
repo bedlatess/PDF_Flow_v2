@@ -115,6 +115,8 @@ def _install_stubs():
     class _FakeCelery:
         def __init__(self, *a, **k):
             self.conf = MagicMock()
+            self.control = MagicMock()
+            self.control.ping.return_value = [{"celery@fake": {"ok": "pong"}}]
 
         def task(self, *a, **k):
             def deco(fn):

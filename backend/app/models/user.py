@@ -325,3 +325,28 @@ class FeedbackReport(Base):
         Index("idx_feedback_created", "created_at"),
         Index("idx_feedback_user", "user_id"),
     )
+
+
+class ApiErrorLog(Base):
+    """Recent API error summary for hidden admin diagnostics."""
+    __tablename__ = "api_error_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    request_id = Column(String, nullable=True)
+    method = Column(String, nullable=False)
+    path = Column(Text, nullable=False)
+    query_string = Column(Text, nullable=True)
+    status_code = Column(Integer, nullable=False)
+    error_type = Column(String, nullable=True)
+    error_message = Column(Text, nullable=True)
+    traceback_summary = Column(Text, nullable=True)
+    ip_address = Column(String, nullable=True)
+    user_agent = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+
+    __table_args__ = (
+        Index("idx_api_error_status", "status_code"),
+        Index("idx_api_error_created", "created_at"),
+        Index("idx_api_error_path", "path"),
+    )

@@ -406,3 +406,35 @@ def test_feedback_admin_list_requires_admin(client):
     )
 
     assert response.status_code == 403
+
+
+def test_admin_can_observe_api_errors_and_diagnostics(client):
+    from fastapi.testclient import TestClient
+    from app.main import app
+
+    route_path = "/api/v1/test-observable-error"
+
+    if not any(getattr(route, "path", None) == route_path for route in app.router.routes):
+        @app.get(route_path)
+        async def _test_observable_error():
+            raise RuntimeError("observable test failure")
+
+    _register(client)
+    _promote_to_admin(client)
+    token = _login(client).json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    with TestClient(app, raise_server_exceptions=False) as safe_client:
+        failed = safe_client.get(route_path)
+        assert failed.status_code == 500
+
+    errors = client.get("/api/v1/admin/errors", headers=headers)
+    assert errors.status_code == 200
+    assert errors.json()[0]["path"] == route_path
+    assert errors.json()[0]["status_code"] == 500
+
+    diagnostics = client.get("/api/v1/admin/diagnostics", headers=headers)
+    assert diagnostics.status_code == 200
+    body = diagnostics.json()
+    assert body["api_error_count"] >= 1
+    assert body["recent_errors"][0]["path"] == route_path

@@ -737,3 +737,11 @@ python -m pytest tests/ -q      # 35 通过
 - Added `/control-room` `问题反馈` tab with status filtering, report details, diagnostic info, admin note editing, and status updates. Admin overview now includes `feedback_count` and `open_feedback_count`.
 - Local validation: `npm run type-check`, `npm run build`, `python -m pytest backend/tests -q`, and backend compileall pass. Build still shows the known large PDF vendor chunk warning.
 - Server deployment note: after pulling this commit, run `docker compose exec backend alembic upgrade head` before testing feedback submission, then rebuild/restart backend and frontend.
+### 2026-06-11 Admin Error Diagnostics / 后台错误观察
+- Added `api_error_logs` storage with Alembic migration `add_api_error_logs`, capturing recent API 500-level failures for admin-only troubleshooting.
+- Added `backend/app/services/error_log_service.py` and wired it into monitoring middleware. It records method, path, query string, status code, request id, user id when available, IP, user agent, error type, and compact error summaries; it intentionally does not record request bodies, uploaded file contents, or user document text.
+- Added hidden admin APIs `GET /api/v1/admin/errors` and `GET /api/v1/admin/diagnostics`. Diagnostics combines recent API errors, failed jobs, and open feedback so live issues can be triaged without switching between unrelated panels.
+- Added `/control-room` tab `错误观察`, with refreshable cards for API errors, failed tasks, and pending feedback plus recent detail lists for each source.
+- Added regression coverage that triggers a controlled 500 response under `TestClient(raise_server_exceptions=False)` and verifies both admin error listing and diagnostics see it.
+- Local validation: `npm run type-check`, `npm run build`, `python -m pytest backend/tests -q`, `python -m compileall backend\app backend\alembic\versions`, `python -m alembic heads`, and `git diff --check` pass. Build still shows the known large PDF vendor chunk warning.
+- Server deployment note: after pulling this commit, run `docker compose exec backend alembic upgrade head`, rebuild/restart backend and frontend, then open `/control-room -> 错误观察` to confirm the panel loads.

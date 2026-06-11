@@ -10,6 +10,7 @@ from app.api.v1.endpoints.auth import get_current_user
 from app.core.database import get_db
 from app.models.user import (
     AdminAuditLog,
+    ApiErrorLog,
     ContentBlock,
     FeatureFlag,
     FeedbackReport,
@@ -22,6 +23,8 @@ from app.services.feature_gate import DEFAULT_FEATURE_FLAGS
 from app.services.file_service import file_processing_service
 from app.schemas.admin import (
     AdminAuditLogResponse,
+    AdminApiErrorResponse,
+    AdminDiagnosticsResponse,
     AdminJobResponse,
     AdminOperationsResponse,
     AdminOverviewResponse,
@@ -406,6 +409,7 @@ async def get_admin_overview(
         "failed_jobs_count": db.query(ProcessingJob).filter(ProcessingJob.status == "failed").count(),
         "feedback_count": db.query(FeedbackReport).count(),
         "open_feedback_count": db.query(FeedbackReport).filter(FeedbackReport.status.in_(["new", "reviewing"])).count(),
+        "api_error_count": db.query(ApiErrorLog).count(),
         "recent_audit_logs": recent_logs,
     }
 
@@ -701,6 +705,66 @@ async def list_feedback(
     if status_filter:
         query = query.filter(FeedbackReport.status == status_filter)
     return query.limit(safe_limit).all()
+
+
+@router.get("/errors", response_model=list[AdminApiErrorResponse])
+async def list_api_errors(
+    limit: int = 50,
+    _admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    """Return recent API 500-level error summaries."""
+    safe_limit = min(max(limit, 1), 100)
+    return (
+        db.query(ApiErrorLog)
+        .order_by(ApiErrorLog.created_at.desc())
+        .limit(safe_limit)
+        .all()
+    )
+
+
+@router.get("/diagnostics", response_model=AdminDiagnosticsResponse)
+async def get_diagnostics(
+    _admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    """Return combined live-testing signals for quick production triage."""
+    errors = (
+        db.query(ApiErrorLog)
+        .order_by(ApiErrorLog.created_at.desc())
+        .limit(20)
+        .all()
+    )
+    jobs = _list_all_jobs_for_admin(db, limit=50)
+    failed_jobs = [job for job in jobs if job["status"] == "failed"][:10]
+    feedback = (
+        db.query(FeedbackReport)
+        .filter(FeedbackReport.status.in_(["new", "reviewing"]))
+        .order_by(FeedbackReport.created_at.desc())
+        .limit(10)
+        .all()
+    )
+
+    return {
+        "generated_at": datetime.utcnow(),
+        "recent_errors": errors,
+        "recent_failed_jobs": failed_jobs,
+        "recent_feedback": [
+            {
+                "id": item.id,
+                "title": item.title,
+                "status": item.status,
+                "severity": item.severity,
+                "page_url": item.page_url,
+                "diagnostic_code": item.diagnostic_code,
+                "created_at": item.created_at,
+            }
+            for item in feedback
+        ],
+        "open_feedback_count": db.query(FeedbackReport).filter(FeedbackReport.status.in_(["new", "reviewing"])).count(),
+        "failed_jobs_count": len([job for job in jobs if job["status"] == "failed"]),
+        "api_error_count": db.query(ApiErrorLog).count(),
+    }
 
 
 @router.patch("/feedback/{feedback_id}", response_model=AdminFeedbackResponse)

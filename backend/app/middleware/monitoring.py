@@ -6,6 +6,7 @@ from typing import Callable
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from app.services.error_log_service import log_api_error
 from app.services.monitoring_service import get_monitoring_service
 
 
@@ -48,6 +49,13 @@ class MonitoringMiddleware(BaseHTTPMiddleware):
                 }
             )
 
+            if response.status_code >= 500:
+                log_api_error(
+                    request=request,
+                    status_code=response.status_code,
+                    error_message=f"HTTP {response.status_code}",
+                )
+
             return response
 
         except Exception as e:
@@ -63,6 +71,12 @@ class MonitoringMiddleware(BaseHTTPMiddleware):
                     'duration_ms': duration_ms
                 },
                 user={'id': user_id} if user_id else None
+            )
+
+            log_api_error(
+                request=request,
+                status_code=500,
+                error=e,
             )
 
             # Re-raise to let FastAPI handle it

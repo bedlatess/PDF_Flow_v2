@@ -117,6 +117,25 @@ class AdminJobResponse(BaseModel):
     completed_at: Optional[datetime]
 
 
+class AdminApiErrorResponse(BaseModel):
+    id: int
+    user_id: Optional[int]
+    request_id: Optional[str]
+    method: str
+    path: str
+    query_string: Optional[str]
+    status_code: int
+    error_type: Optional[str]
+    error_message: Optional[str]
+    traceback_summary: Optional[str]
+    ip_address: Optional[str]
+    user_agent: Optional[str]
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
 class AdminServiceStatus(BaseModel):
     status: str
     detail: Optional[str] = None
@@ -149,4 +168,15 @@ class AdminOverviewResponse(BaseModel):
     failed_jobs_count: int
     feedback_count: int = 0
     open_feedback_count: int = 0
+    api_error_count: int = 0
     recent_audit_logs: list[AdminAuditLogResponse]
+
+
+class AdminDiagnosticsResponse(BaseModel):
+    generated_at: datetime
+    recent_errors: list[AdminApiErrorResponse]
+    recent_failed_jobs: list[AdminJobResponse]
+    recent_feedback: list[dict]
+    open_feedback_count: int
+    failed_jobs_count: int
+    api_error_count: int

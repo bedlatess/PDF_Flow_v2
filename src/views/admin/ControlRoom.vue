@@ -9,6 +9,7 @@ import {
   EyeOff,
   FileText,
   Flag,
+  Flame,
   GaugeCircle,
   Loader2,
   LockKeyhole,
@@ -22,6 +23,8 @@ import {
 import {
   adminAPI,
   type AdminAuditLog,
+  type AdminApiError,
+  type AdminDiagnostics,
   type AdminFeedback,
   type AdminJob,
   type AdminOperations,
@@ -33,7 +36,7 @@ import {
 } from '@/services/api'
 import { useSiteConfigStore } from '@/stores/siteConfig'
 
-type TabId = 'overview' | 'flags' | 'settings' | 'content' | 'users' | 'jobs' | 'feedback' | 'audit'
+type TabId = 'overview' | 'flags' | 'settings' | 'content' | 'users' | 'jobs' | 'feedback' | 'errors' | 'audit'
 
 const siteConfigStore = useSiteConfigStore()
 const loading = ref(true)
@@ -51,6 +54,8 @@ const auditLogs = ref<AdminAuditLog[]>([])
 const users = ref<AdminUser[]>([])
 const jobs = ref<AdminJob[]>([])
 const feedbackReports = ref<AdminFeedback[]>([])
+const apiErrors = ref<AdminApiError[]>([])
+const diagnostics = ref<AdminDiagnostics | null>(null)
 const userSearch = ref('')
 const jobStatusFilter = ref('')
 const jobSearch = ref('')
@@ -64,6 +69,7 @@ const tabs = [
   { id: 'users' as const, label: '用户管理', icon: UserCog },
   { id: 'jobs' as const, label: '任务观察', icon: GaugeCircle },
   { id: 'feedback' as const, label: '问题反馈', icon: ClipboardList },
+  { id: 'errors' as const, label: '错误观察', icon: Flame },
   { id: 'audit' as const, label: '审计日志', icon: Activity },
 ]
 
@@ -120,7 +126,7 @@ const loadAdminData = async () => {
   error.value = ''
 
   try {
-    const [overviewData, operationsData, settingsData, flagsData, contentData, usersData, jobsData, feedbackData, auditData] = await Promise.all([
+    const [overviewData, operationsData, settingsData, flagsData, contentData, usersData, jobsData, feedbackData, diagnosticsData, auditData] = await Promise.all([
       adminAPI.getOverview(),
       adminAPI.getOperations(),
       adminAPI.listSettings(),
@@ -129,6 +135,7 @@ const loadAdminData = async () => {
       adminAPI.listUsers(),
       adminAPI.listJobs(),
       adminAPI.listFeedback(),
+      adminAPI.getDiagnostics(),
       adminAPI.listAuditLogs(),
     ])
 
@@ -140,6 +147,8 @@ const loadAdminData = async () => {
     users.value = usersData
     jobs.value = jobsData
     feedbackReports.value = feedbackData
+    diagnostics.value = diagnosticsData
+    apiErrors.value = diagnosticsData.recent_errors
     auditLogs.value = auditData
     selectedContent.value = contentData[0] ?? null
   } catch (err: any) {
@@ -355,6 +364,22 @@ const saveFeedback = async (report: AdminFeedback) => {
     setMessage(`已更新反馈 #${updated.id}`)
   } catch {
     error.value = '反馈状态保存失败，请稍后重试。'
+  } finally {
+    savingKey.value = null
+  }
+}
+
+const loadDiagnostics = async () => {
+  savingKey.value = 'errors:refresh'
+  error.value = ''
+
+  try {
+    const data = await adminAPI.getDiagnostics()
+    diagnostics.value = data
+    apiErrors.value = data.recent_errors
+    overview.value = await adminAPI.getOverview()
+  } catch {
+    error.value = '错误观察数据加载失败，请稍后重试。'
   } finally {
     savingKey.value = null
   }
@@ -1042,6 +1067,119 @@ onMounted(loadAdminData)
                 当前没有匹配的问题反馈。用户可通过页面右下角“反馈问题”提交。
               </div>
             </div>
+          </div>
+
+          <div v-else-if="activeTab === 'errors'" class="space-y-5">
+            <section class="rounded-[28px] border border-white/10 bg-white/[0.07] p-5 backdrop-blur-xl">
+              <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <p class="text-xl font-semibold">错误观察</p>
+                  <p class="mt-2 text-sm leading-6 text-slate-400">
+                    把最近 API 500 错误、失败任务和用户反馈放在一起看。这里不会记录请求体或文件内容，只保留排查所需的摘要信息。
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  class="inline-flex items-center justify-center gap-2 rounded-2xl bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-60"
+                  :disabled="savingKey === 'errors:refresh'"
+                  @click="loadDiagnostics"
+                >
+                  <Loader2 v-if="savingKey === 'errors:refresh'" class="h-4 w-4 animate-spin" />
+                  刷新诊断
+                </button>
+              </div>
+
+              <div class="mt-5 grid gap-4 md:grid-cols-3">
+                <div class="rounded-3xl border border-rose-300/20 bg-rose-500/10 p-4">
+                  <p class="text-sm text-rose-100/70">API 错误</p>
+                  <p class="mt-2 text-3xl font-semibold text-rose-50">{{ diagnostics?.api_error_count ?? 0 }}</p>
+                </div>
+                <div class="rounded-3xl border border-amber-300/20 bg-amber-300/10 p-4">
+                  <p class="text-sm text-amber-100/70">失败任务</p>
+                  <p class="mt-2 text-3xl font-semibold text-amber-50">{{ diagnostics?.failed_jobs_count ?? operations?.failed_jobs ?? 0 }}</p>
+                </div>
+                <div class="rounded-3xl border border-cyan-300/20 bg-cyan-300/10 p-4">
+                  <p class="text-sm text-cyan-100/70">待处理反馈</p>
+                  <p class="mt-2 text-3xl font-semibold text-cyan-50">{{ diagnostics?.open_feedback_count ?? overview?.open_feedback_count ?? 0 }}</p>
+                </div>
+              </div>
+            </section>
+
+            <section class="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+              <article class="rounded-[28px] border border-white/10 bg-white/[0.07] p-5 backdrop-blur-xl">
+                <div class="mb-4 flex items-center gap-3">
+                  <Flame class="h-5 w-5 text-rose-200" />
+                  <div>
+                    <p class="font-semibold">最近 API 错误</p>
+                    <p class="text-sm text-slate-400">优先看路径、状态码、错误类型和时间。</p>
+                  </div>
+                </div>
+                <div class="space-y-3">
+                  <div
+                    v-for="item in apiErrors"
+                    :key="item.id"
+                    class="rounded-3xl border border-rose-300/20 bg-black/20 p-4"
+                  >
+                    <div class="flex flex-wrap items-center gap-2">
+                      <span class="rounded-full bg-rose-400/15 px-3 py-1 text-xs font-semibold text-rose-100">{{ item.status_code }}</span>
+                      <span class="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-slate-200">{{ item.method }}</span>
+                      <span class="text-xs text-slate-500">{{ formatDate(item.created_at) }}</span>
+                    </div>
+                    <p class="mt-3 break-all font-semibold text-white">{{ item.path }}</p>
+                    <p v-if="item.error_type || item.error_message" class="mt-2 whitespace-pre-wrap text-sm leading-6 text-rose-100">
+                      {{ item.error_type || 'Error' }}：{{ item.error_message || item.traceback_summary || '无错误摘要' }}
+                    </p>
+                    <p class="mt-2 break-all text-xs text-slate-500">
+                      Request ID: {{ item.request_id || '未记录' }} · IP: {{ item.ip_address || '未知' }}
+                    </p>
+                  </div>
+                  <div v-if="apiErrors.length === 0" class="rounded-3xl border border-white/10 bg-black/20 px-4 py-10 text-center text-sm text-slate-400">
+                    目前没有记录到 API 500 级错误。
+                  </div>
+                </div>
+              </article>
+
+              <div class="space-y-5">
+                <article class="rounded-[28px] border border-white/10 bg-white/[0.07] p-5 backdrop-blur-xl">
+                  <p class="font-semibold">最近失败任务</p>
+                  <div class="mt-4 space-y-3">
+                    <div
+                      v-for="job in diagnostics?.recent_failed_jobs || []"
+                      :key="job.job_id"
+                      class="rounded-2xl border border-amber-300/20 bg-amber-300/10 p-4"
+                    >
+                      <p class="font-semibold text-white">{{ job.job_type }}</p>
+                      <p class="mt-1 break-all text-xs text-slate-400">{{ job.job_id }}</p>
+                      <p class="mt-2 text-sm text-amber-100">{{ job.error_message || '暂无错误摘要' }}</p>
+                    </div>
+                    <div v-if="!diagnostics?.recent_failed_jobs?.length" class="rounded-2xl border border-white/10 bg-black/20 p-6 text-center text-sm text-slate-400">
+                      最近没有失败任务。
+                    </div>
+                  </div>
+                </article>
+
+                <article class="rounded-[28px] border border-white/10 bg-white/[0.07] p-5 backdrop-blur-xl">
+                  <p class="font-semibold">待处理反馈</p>
+                  <div class="mt-4 space-y-3">
+                    <div
+                      v-for="item in diagnostics?.recent_feedback || []"
+                      :key="item.id"
+                      class="rounded-2xl border border-cyan-300/20 bg-cyan-300/10 p-4"
+                    >
+                      <div class="flex flex-wrap items-center gap-2">
+                        <span class="rounded-full bg-cyan-300/15 px-2.5 py-1 text-xs font-semibold text-cyan-100">#{{ item.id }}</span>
+                        <span class="rounded-full bg-white/10 px-2.5 py-1 text-xs font-semibold text-slate-200">{{ item.status }}</span>
+                      </div>
+                      <p class="mt-2 font-semibold text-white">{{ item.title }}</p>
+                      <p v-if="item.page_url" class="mt-1 break-all text-xs text-slate-400">{{ item.page_url }}</p>
+                    </div>
+                    <div v-if="!diagnostics?.recent_feedback?.length" class="rounded-2xl border border-white/10 bg-black/20 p-6 text-center text-sm text-slate-400">
+                      没有待处理反馈。
+                    </div>
+                  </div>
+                </article>
+              </div>
+            </section>
           </div>
 
           <div v-else class="rounded-[28px] border border-white/10 bg-white/[0.07] p-5 backdrop-blur-xl">

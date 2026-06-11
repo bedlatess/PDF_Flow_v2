@@ -379,6 +379,7 @@ export interface AdminOverview {
   failed_jobs_count: number
   feedback_count: number
   open_feedback_count: number
+  api_error_count: number
   recent_audit_logs: AdminAuditLog[]
 }
 
@@ -462,6 +463,22 @@ export interface AdminJob {
   completed_at: string | null
 }
 
+export interface AdminApiError {
+  id: number
+  user_id: number | null
+  request_id: string | null
+  method: string
+  path: string
+  query_string: string | null
+  status_code: number
+  error_type: string | null
+  error_message: string | null
+  traceback_summary: string | null
+  ip_address: string | null
+  user_agent: string | null
+  created_at: string
+}
+
 export interface AdminServiceStatus {
   status: string
   detail: string | null
@@ -481,6 +498,26 @@ export interface AdminOperations {
   recent_users: AdminUser[]
   recent_failed_jobs: AdminJob[]
   recent_jobs: AdminJob[]
+}
+
+export interface AdminDiagnosticFeedbackSummary {
+  id: number
+  title: string
+  status: string
+  severity: string
+  page_url: string | null
+  diagnostic_code: string | null
+  created_at: string
+}
+
+export interface AdminDiagnostics {
+  generated_at: string
+  recent_errors: AdminApiError[]
+  recent_failed_jobs: AdminJob[]
+  recent_feedback: AdminDiagnosticFeedbackSummary[]
+  open_feedback_count: number
+  failed_jobs_count: number
+  api_error_count: number
 }
 
 export interface FeedbackCreate {
@@ -589,6 +626,16 @@ export const adminAPI = {
 
   async listJobs(params?: { status_filter?: string; limit?: number }): Promise<AdminJob[]> {
     const response = await apiClient.get<AdminJob[]>('/api/v1/admin/jobs', { params })
+    return response.data
+  },
+
+  async listErrors(params?: { limit?: number }): Promise<AdminApiError[]> {
+    const response = await apiClient.get<AdminApiError[]>('/api/v1/admin/errors', { params })
+    return response.data
+  },
+
+  async getDiagnostics(): Promise<AdminDiagnostics> {
+    const response = await apiClient.get<AdminDiagnostics>('/api/v1/admin/diagnostics')
     return response.data
   },
 

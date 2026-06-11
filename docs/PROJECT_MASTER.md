@@ -804,3 +804,10 @@ python -m pytest tests/ -q      # 35 通过
 - Adjusted shared user-facing error support hints to point users toward page feedback and diagnostic codes instead of telling them to contact an administrator.
 - Frontend validation: `npm run type-check`, `npm run build`, and `git diff --check` pass. Build still shows the known large PDF vendor chunk warning.
 - Server validation after deploy: open the feedback widget, `/tools/watermark`, `/privacy`, and `/terms` in Chinese; confirm there is no mojibake, no mixed English examples in Chinese mode, and no internal admin-facing wording.
+### 2026-06-11 Watermark Chinese Text And Legal Fallback Fix / 水印中文与法律页兜底修复
+- Fixed `/tools/watermark` failing on Chinese watermark text such as `仅供预览` with `WinAnsi cannot encode ...` by rendering watermark text to a browser canvas PNG and embedding that image into the PDF instead of drawing text with pdf-lib StandardFonts.
+- The watermark flow remains local-only in the browser and still supports center, tiled, top, bottom, opacity, rotation, font size, and color options.
+- Hardened `/privacy` and `/terms` so unreadable backend content blocks with excessive `?` or common mojibake markers cannot override the built-in readable legal copy.
+- Scanned frontend PDF utilities for other direct `StandardFonts`/`drawText` text-writing risks; no similar local PDF text-writing path was found outside watermark.
+- Local validation: `npm run type-check`, `npm run build`, and `git diff --check` pass. Build still shows the known large PDF vendor chunk warning.
+- Server validation after deploy: open `/tools/watermark`, add a Chinese watermark such as `仅供预览`, download the result, then open `/privacy` and `/terms` in Chinese and confirm readable content is shown.

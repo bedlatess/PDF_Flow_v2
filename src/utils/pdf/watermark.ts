@@ -1,37 +1,33 @@
 /**
- * PDF 水印工具
- * 使用 pdf-lib 实现纯前端 PDF 文本水印添加
- * 100% 本地处理，文件不上传服务器
+ * Local PDF watermark utilities.
+ *
+ * pdf-lib's built-in StandardFonts only support WinAnsi text, so Chinese
+ * watermark text fails when drawn directly. We render the text to a browser
+ * canvas first, then embed the PNG into the PDF. This keeps processing local
+ * while supporting the user's system fonts.
  */
 
-import { PDFDocument, rgb, degrees, StandardFonts } from 'pdf-lib'
+import { PDFDocument, degrees } from 'pdf-lib'
 import { pdfBytesToBlob } from './blob'
 
 export type WatermarkPosition = 'center' | 'tile' | 'top' | 'bottom'
 
 export interface WatermarkOptions {
-  /** 水印文字 */
   text: string
-  /** 不透明度 (0.0 - 1.0) */
   opacity?: number
-  /** 旋转角度（度） */
   rotation?: number
-  /** 字号 */
   fontSize?: number
-  /** 颜色 RGB（0-255 每个分量） */
   color?: { r: number; g: number; b: number }
-  /** 位置 */
   position?: WatermarkPosition
-  /** 要添加水印的页码（从 1 开始）；为空则所有页面 */
   pages?: number[]
 }
 
-/**
- * 给 PDF 添加文本水印
- * @param file - PDF 文件
- * @param options - 水印选项
- * @returns 添加水印后的 PDF Blob
- */
+interface WatermarkImage {
+  bytes: Uint8Array
+  width: number
+  height: number
+}
+
 export async function addWatermark(
   file: File,
   options: WatermarkOptions
@@ -61,38 +57,29 @@ export async function addWatermark(
   try {
     const arrayBuffer = await file.arrayBuffer()
     const pdf = await PDFDocument.load(arrayBuffer)
-    const font = await pdf.embedFont(StandardFonts.HelveticaBold)
     const totalPages = pdf.getPageCount()
-
-    // 归一化颜色到 0-1
-    const fillColor = rgb(color.r / 255, color.g / 255, color.b / 255)
-
-    // 确定要处理的页面索引
     const pageIndices =
       pages && pages.length > 0
         ? pages.map((num) => num - 1).filter((i) => i >= 0 && i < totalPages)
         : Array.from({ length: totalPages }, (_, i) => i)
 
+    const watermark = await renderWatermarkImage(text.trim(), fontSize, color)
+    const embeddedWatermark = await pdf.embedPng(watermark.bytes)
     const allPages = pdf.getPages()
-    const textWidth = font.widthOfTextAtSize(text, fontSize)
-    const textHeight = font.heightAtSize(fontSize)
 
     for (const index of pageIndices) {
       const page = allPages[index]
       const { width, height } = page.getSize()
 
       if (position === 'tile') {
-        // 平铺水印：在页面上重复绘制
         drawTiledWatermark(page, {
-          text,
-          font,
-          fontSize,
-          color: fillColor,
+          image: embeddedWatermark,
+          imageWidth: watermark.width,
+          imageHeight: watermark.height,
           opacity,
           rotation,
           width,
           height,
-          textWidth,
         })
       } else {
         const { x, y, rot } = computePosition(
@@ -100,15 +87,14 @@ export async function addWatermark(
           rotation,
           width,
           height,
-          textWidth,
-          textHeight
+          watermark.width,
+          watermark.height
         )
-        page.drawText(text, {
+        page.drawImage(embeddedWatermark, {
           x,
           y,
-          size: fontSize,
-          font,
-          color: fillColor,
+          width: watermark.width,
+          height: watermark.height,
           opacity,
           rotate: degrees(rot),
         })
@@ -125,36 +111,82 @@ export async function addWatermark(
   }
 }
 
-/**
- * 计算单个水印的位置与旋转
- */
+function renderWatermarkImage(
+  text: string,
+  fontSize: number,
+  color: { r: number; g: number; b: number }
+): Promise<WatermarkImage> {
+  const scale = Math.max(window.devicePixelRatio || 1, 2)
+  const measureCanvas = document.createElement('canvas')
+  const measureContext = measureCanvas.getContext('2d')
+  if (!measureContext) {
+    throw new Error('Canvas is unavailable in this browser')
+  }
+
+  const fontFamily = '"Noto Sans SC", "Microsoft YaHei", "PingFang SC", "Source Han Sans SC", sans-serif'
+  measureContext.font = `700 ${fontSize * scale}px ${fontFamily}`
+  const metrics = measureContext.measureText(text)
+  const padding = Math.ceil(fontSize * scale * 0.45)
+  const width = Math.ceil(metrics.width + padding * 2)
+  const height = Math.ceil(fontSize * scale * 1.45 + padding)
+
+  const canvas = document.createElement('canvas')
+  canvas.width = width
+  canvas.height = height
+  const context = canvas.getContext('2d')
+  if (!context) {
+    throw new Error('Canvas is unavailable in this browser')
+  }
+
+  context.clearRect(0, 0, width, height)
+  context.font = `700 ${fontSize * scale}px ${fontFamily}`
+  context.fillStyle = `rgb(${color.r}, ${color.g}, ${color.b})`
+  context.textBaseline = 'middle'
+  context.textAlign = 'center'
+  context.fillText(text, width / 2, height / 2)
+
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(async (blob) => {
+      if (!blob) {
+        reject(new Error('Failed to render watermark text'))
+        return
+      }
+
+      resolve({
+        bytes: new Uint8Array(await blob.arrayBuffer()),
+        width: width / scale,
+        height: height / scale,
+      })
+    }, 'image/png')
+  })
+}
+
 function computePosition(
   position: WatermarkPosition,
   rotation: number,
   pageWidth: number,
   pageHeight: number,
-  textWidth: number,
-  textHeight: number
+  imageWidth: number,
+  imageHeight: number
 ): { x: number; y: number; rot: number } {
   switch (position) {
     case 'top':
       return {
-        x: (pageWidth - textWidth) / 2,
-        y: pageHeight - textHeight - 30,
+        x: (pageWidth - imageWidth) / 2,
+        y: pageHeight - imageHeight - 30,
         rot: 0,
       }
     case 'bottom':
       return {
-        x: (pageWidth - textWidth) / 2,
+        x: (pageWidth - imageWidth) / 2,
         y: 30,
         rot: 0,
       }
     case 'center':
     default: {
-      // 居中（考虑旋转时文本以 (x,y) 为基线起点，做近似居中）
       const rad = (rotation * Math.PI) / 180
-      const offsetX = (textWidth / 2) * Math.cos(rad)
-      const offsetY = (textWidth / 2) * Math.sin(rad)
+      const offsetX = (imageWidth / 2) * Math.cos(rad)
+      const offsetY = (imageWidth / 2) * Math.sin(rad)
       return {
         x: pageWidth / 2 - offsetX,
         y: pageHeight / 2 - offsetY,
@@ -164,38 +196,29 @@ function computePosition(
   }
 }
 
-/**
- * 平铺绘制水印
- */
 function drawTiledWatermark(
   page: ReturnType<PDFDocument['getPages']>[number],
   params: {
-    text: string
-    font: Awaited<ReturnType<PDFDocument['embedFont']>>
-    fontSize: number
-    color: ReturnType<typeof rgb>
+    image: Awaited<ReturnType<PDFDocument['embedPng']>>
+    imageWidth: number
+    imageHeight: number
     opacity: number
     rotation: number
     width: number
     height: number
-    textWidth: number
   }
 ): void {
-  const { text, font, fontSize, color, opacity, rotation, width, height, textWidth } =
-    params
+  const { image, imageWidth, imageHeight, opacity, rotation, width, height } = params
+  const stepX = Math.max(imageWidth + 80, 200)
+  const stepY = Math.max(imageHeight + 80, 150)
 
-  // 水平/垂直间距
-  const stepX = Math.max(textWidth + 80, 200)
-  const stepY = 150
-
-  for (let y = 0; y < height + stepY; y += stepY) {
-    for (let x = -textWidth; x < width + stepX; x += stepX) {
-      page.drawText(text, {
+  for (let y = -stepY; y < height + stepY; y += stepY) {
+    for (let x = -stepX; x < width + stepX; x += stepX) {
+      page.drawImage(image, {
         x,
         y,
-        size: fontSize,
-        font,
-        color,
+        width: imageWidth,
+        height: imageHeight,
         opacity,
         rotate: degrees(rotation),
       })
@@ -203,12 +226,6 @@ function drawTiledWatermark(
   }
 }
 
-/**
- * 给所有页面添加居中对角线水印（便捷方法）
- * @param file - PDF 文件
- * @param text - 水印文字
- * @returns 添加水印后的 PDF Blob
- */
 export async function addDiagonalWatermark(
   file: File,
   text: string

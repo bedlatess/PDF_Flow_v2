@@ -792,3 +792,8 @@ python -m pytest tests/ -q      # 35 通过
 - Added `/control-room -> 维护清理` with refresh, close live-acceptance feedback, and delete test-account actions. The panel explains which records are safe to clean and which records are retained for troubleshooting.
 - Added regression coverage confirming test-account cleanup removes only synthetic accounts, keeps admin/real accounts, and preserves feedback reports by detaching the deleted user id.
 - Server validation after deploy: open `/control-room -> 维护清理`, click `刷新维护数据`, close acceptance feedback if any, then delete test accounts if the count is non-zero. Copy the health report afterward and confirm user/feedback counts changed as expected.
+### 2026-06-11 Maintenance Cleanup UX Clarification / 维护清理操作说明优化
+- Clarified `/control-room -> 维护清理` behavior: `重新统计数量` is read-only and never deletes data.
+- Renamed destructive actions to `执行：关闭验收反馈` and `执行：删除测试账号`, with inline hints that changes happen only after clicking the specific execution button and confirming.
+- Updated the delete confirmation copy to explicitly distinguish statistics refresh from real deletion, reducing confusion during live operations.
+- Server validation after deploy: open `/control-room -> 维护清理`; click `重新统计数量` and confirm only counts/message change; click an `执行：...` button only when you intend to clean that category.

@@ -548,9 +548,9 @@ const refreshMaintenance = async () => {
     await refreshAdminMeta()
     diagnostics.value = await adminAPI.getDiagnostics()
     apiErrors.value = diagnostics.value.recent_errors
-    setMessage('维护清理数据已刷新')
+    setMessage('已重新统计维护数据，未执行任何删除操作')
   } catch {
-    error.value = '维护清理数据加载失败，请稍后重试。'
+    error.value = '维护数据重新统计失败，请稍后重试。'
   } finally {
     savingKey.value = null
   }
@@ -558,7 +558,7 @@ const refreshMaintenance = async () => {
 
 const cleanupTestUsers = async () => {
   const count = maintenance.value?.test_users_count ?? 0
-  const confirmed = window.confirm(`确认删除 ${count} 个测试账号？只会删除 smoke-、ocr-、office- 和 @example.com 测试账号，不会删除管理员或真实用户。`)
+  const confirmed = window.confirm(`确认删除 ${count} 个测试账号？\n\n这才会真正删除数据；“重新统计”不会删除任何内容。\n\n只会删除 smoke-、ocr-、office- 和 @example.com 测试账号，不会删除管理员或真实用户。`)
   if (!confirmed) return
 
   savingKey.value = 'maintenance:cleanup-users'
@@ -1499,7 +1499,7 @@ onMounted(loadAdminData)
                 <div>
                   <p class="text-xl font-semibold">维护清理</p>
                   <p class="mt-2 text-sm leading-6 text-slate-400">
-                    把常见上线测试收尾动作放在后台完成，减少登录服务器执行命令的次数。批量动作只处理明确的测试数据，并会写入审计日志。
+                    上方按钮只负责重新统计，不会删除任何内容。真正清理请点击下方的“关闭验收反馈”或“删除测试账号”，所有批量动作都会写入审计日志。
                   </p>
                 </div>
                 <button
@@ -1509,8 +1509,17 @@ onMounted(loadAdminData)
                   @click="refreshMaintenance"
                 >
                   <Loader2 v-if="savingKey === 'maintenance:refresh'" class="h-4 w-4 animate-spin" />
-                  刷新维护数据
+                  重新统计数量
                 </button>
+              </div>
+
+              <div class="mt-5 rounded-3xl border border-cyan-300/20 bg-cyan-300/10 p-4 text-sm leading-6 text-cyan-50">
+                <div class="flex items-start gap-3">
+                  <CircleDot class="mt-1 h-4 w-4 shrink-0" />
+                  <p>
+                    如果你刚才只点了“重新统计数量”，页面只会更新数字，不会删除数据。要清理测试数据，请继续点对应卡片里的执行按钮。
+                  </p>
+                </div>
               </div>
 
               <div class="mt-5 grid gap-4 md:grid-cols-3">
@@ -1546,6 +1555,9 @@ onMounted(loadAdminData)
                 <div class="mt-5 rounded-3xl border border-cyan-300/20 bg-cyan-300/10 p-4">
                   <p class="text-sm text-cyan-100/70">当前可关闭</p>
                   <p class="mt-2 text-3xl font-semibold text-cyan-50">{{ maintenance?.live_acceptance_feedback_count ?? 0 }}</p>
+                  <p class="mt-2 text-xs text-cyan-100/60">
+                    {{ (maintenance?.live_acceptance_feedback_count ?? 0) === 0 ? '没有可关闭的验收反馈' : '点击下方按钮后才会写入更改' }}
+                  </p>
                 </div>
                 <button
                   type="button"
@@ -1554,7 +1566,7 @@ onMounted(loadAdminData)
                   @click="cleanupLiveAcceptanceFeedback"
                 >
                   <Loader2 v-if="savingKey === 'feedback:cleanup-live'" class="h-4 w-4 animate-spin" />
-                  关闭验收反馈
+                  执行：关闭验收反馈
                 </button>
               </article>
 
@@ -1571,6 +1583,9 @@ onMounted(loadAdminData)
                 <div class="mt-5 rounded-3xl border border-rose-300/20 bg-black/20 p-4">
                   <p class="text-sm text-rose-100/70">当前可删除</p>
                   <p class="mt-2 text-3xl font-semibold text-rose-50">{{ maintenance?.test_users_count ?? operations?.test_users ?? 0 }}</p>
+                  <p class="mt-2 text-xs text-rose-100/60">
+                    {{ (maintenance?.test_users_count ?? operations?.test_users ?? 0) === 0 ? '没有可删除的测试账号' : '点击下方按钮并确认后才会删除' }}
+                  </p>
                 </div>
                 <button
                   type="button"
@@ -1579,7 +1594,7 @@ onMounted(loadAdminData)
                   @click="cleanupTestUsers"
                 >
                   <Loader2 v-if="savingKey === 'maintenance:cleanup-users'" class="h-4 w-4 animate-spin" />
-                  删除测试账号
+                  执行：删除测试账号
                 </button>
               </article>
             </section>

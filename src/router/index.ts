@@ -176,6 +176,13 @@ const router = createRouter({
           meta: { titleKey: 'tools.pageNumbers.title', featureKey: 'page_numbers_pdf' }
         },
         {
+          path: 'crop',
+          name: 'crop-pdf',
+          component: () => import('@/views/tools/CropPDF.vue'),
+          beforeEnter: featureFlagGuard,
+          meta: { titleKey: 'tools.crop.title', featureKey: 'crop_pdf' }
+        },
+        {
           path: 'protect',
           name: 'protect-pdf',
           component: () => import('@/views/tools/ProtectPDF.vue'),

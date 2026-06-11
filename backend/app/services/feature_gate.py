@@ -16,6 +16,7 @@ DEFAULT_FEATURE_FLAGS = [
     ("delete_pages_pdf", "删除 PDF 页面", "允许用户移除 PDF 中不需要的页面。", True, False, False),
     ("organize_pdf", "整理 PDF 页面", "允许用户调整 PDF 页面顺序。", True, False, False),
     ("page_numbers_pdf", "添加 PDF 页码", "允许用户为 PDF 添加页码。", True, False, False),
+    ("crop_pdf", "裁剪 PDF", "允许用户在浏览器本地裁剪 PDF 可视区域。", True, False, False),
     ("protect_pdf", "保护 PDF", "允许登录用户为 PDF 添加打开密码。", True, True, False),
     ("unlock_pdf", "解锁 PDF", "允许登录用户在知道密码的前提下移除 PDF 打开密码。", True, True, False),
     ("sign_pdf", "签署 PDF", "允许用户在浏览器本地为 PDF 添加可视签名图片。", True, False, False),

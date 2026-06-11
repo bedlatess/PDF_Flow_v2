@@ -928,3 +928,12 @@ python -m pytest tests/ -q      # 35 通过
 - P1 delivery and safety suite status: Protect PDF, Unlock PDF, Sign PDF, Extract Text, and Extract Images are now implemented. Next recommended phase is P2 professional conversion tools.
 - Local validation target: `npm run type-check`, `npm run build`, `python -m pytest backend/tests/test_admin.py -q`, and `git diff --check`. Build may still show the known large PDF vendor chunk warning.
 - Server validation after this P1 batch is pushed: test `/tools/sign`, `/tools/extract-text`, and `/tools/extract-images`; confirm `/control-room -> feature flags` contains `sign_pdf`, `extract_text_pdf`, and `extract_images_pdf`.
+
+### 2026-06-11 Crop PDF / P2 professional tool start
+- Started the P2 professional processing suite with `/tools/crop`, a local-first PDF cropping tool for trimming whitespace, scan shadows, and extra page edges.
+- Added `src/utils/pdf/crop.ts` using `pdf-lib` `setCropBox()` to create a new PDF with adjusted visible page areas. The original file is not modified.
+- Added a user-facing Crop PDF page with upload, top/right/bottom/left percentage controls, quick presets, visual kept-area preview, local processing, download, and browser history integration.
+- The page explicitly warns that crop is not secure redaction: cropped content may still exist in the PDF structure, so sensitive information must wait for a true redaction workflow.
+- Wired the tool into the homepage card grid, route guard, translations, history records, and default admin feature flag `crop_pdf` so `/control-room` can hide or maintain it without code changes.
+- Local validation target: `npm run type-check`, `npm run build`, `python -m pytest backend/tests/test_admin.py -q`, and `git diff --check`. Build may still show the known large PDF vendor chunk warning.
+- Server validation when this P2 batch is pushed: open `/tools/crop`, upload a PDF with visible margins, test the light/scan/reset presets, export, and confirm the downloaded PDF opens with a smaller visible page area. Also confirm `/control-room -> feature flags` contains `crop_pdf`.

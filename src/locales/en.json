@@ -19,6 +19,7 @@
     "deletePages": { "title": "Delete PDF Pages", "desc": "Remove unwanted pages from a PDF" },
     "organize": { "title": "Organize PDF Pages", "desc": "Reorder PDF pages before sharing or submitting" },
     "pageNumbers": { "title": "Add PDF Page Numbers", "desc": "Add page numbers to reports, contracts, and handouts" },
+    "crop": { "title": "Crop PDF", "desc": "Trim whitespace, scan borders, and extra page edges" },
     "protect": { "title": "Protect PDF", "desc": "Add an opening password before sharing a PDF" },
     "unlock": { "title": "Unlock PDF", "desc": "Enter the known password and create an unlocked copy" },
     "sign": { "title": "Sign PDF", "desc": "Add a visual signature image and export a signed copy" },

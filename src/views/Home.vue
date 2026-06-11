@@ -114,6 +114,16 @@ const tools = computed<Tool[]>(() => [
     featureKey: 'page_numbers_pdf',
   },
   {
+    name: 'crop',
+    titleKey: 'tools.crop.title',
+    descriptionKey: 'tools.crop.desc',
+    icon: 'M6 2v14a2 2 0 002 2h14M6 6H2m6 0h8a2 2 0 012 2v8m0 0v6m0-6h6',
+    route: '/tools/crop',
+    color: 'from-lime-500 to-emerald-600',
+    glow: 'bg-lime-400/20',
+    featureKey: 'crop_pdf',
+  },
+  {
     name: 'protect',
     titleKey: 'tools.protect.title',
     descriptionKey: 'tools.protect.desc',

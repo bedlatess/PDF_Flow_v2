@@ -8,6 +8,7 @@ export type HistoryToolType =
   | 'deletePages'
   | 'organize'
   | 'pageNumbers'
+  | 'crop'
   | 'protect'
   | 'unlock'
   | 'sign'
@@ -129,6 +130,7 @@ export function formatToolType(type: HistoryToolType): string {
     deletePages: '删除 PDF 页面',
     organize: '整理 PDF 页面',
     pageNumbers: '添加 PDF 页码',
+    crop: '裁剪 PDF',
     protect: '保护 PDF',
     unlock: '解锁 PDF',
     sign: '签署 PDF',

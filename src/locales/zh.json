@@ -19,6 +19,7 @@
     "deletePages": { "title": "删除 PDF 页面", "desc": "移除不需要的页面，生成干净的新 PDF" },
     "organize": { "title": "整理 PDF 页面", "desc": "拖拽调整页面顺序，导出新的 PDF" },
     "pageNumbers": { "title": "添加 PDF 页码", "desc": "为合同、报告和讲义添加统一页码" },
+    "crop": { "title": "裁剪 PDF", "desc": "去除页面白边、扫描黑边和多余留白" },
     "protect": { "title": "保护 PDF", "desc": "为 PDF 添加打开密码，分享前多一层保护" },
     "unlock": { "title": "解锁 PDF", "desc": "输入已知密码，生成无密码 PDF 副本" },
     "sign": { "title": "签署 PDF", "desc": "添加可视签名图片，生成签署副本" },

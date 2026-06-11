@@ -19,6 +19,7 @@
     "deletePages": { "title": "Eliminar páginas PDF", "desc": "Quita páginas no deseadas de un PDF" },
     "organize": { "title": "Organizar páginas PDF", "desc": "Reordena páginas PDF antes de compartirlas" },
     "pageNumbers": { "title": "Añadir números de página", "desc": "Agrega números de página a informes y contratos" },
+    "crop": { "title": "Recortar PDF", "desc": "Quita bordes blancos, sombras de escaneo y margenes" },
     "protect": { "title": "Proteger PDF", "desc": "Anade una contrasena antes de compartir un PDF" },
     "unlock": { "title": "Desbloquear PDF", "desc": "Introduce la contrasena conocida y crea una copia sin bloqueo" },
     "sign": { "title": "Firmar PDF", "desc": "Anade una imagen de firma visual y exporta una copia firmada" },

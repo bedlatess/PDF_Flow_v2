@@ -89,6 +89,9 @@ def test_public_config_exposes_feature_flags(client):
     assert body["feature_flags"]["delete_pages_pdf"]["enabled"] is True
     assert body["feature_flags"]["organize_pdf"]["enabled"] is True
     assert body["feature_flags"]["page_numbers_pdf"]["enabled"] is True
+    assert body["feature_flags"]["crop_pdf"]["enabled"] is True
+    assert body["feature_flags"]["crop_pdf"]["requires_login"] is False
+    assert body["feature_flags"]["crop_pdf"]["requires_pro"] is False
     assert body["feature_flags"]["protect_pdf"]["enabled"] is True
     assert body["feature_flags"]["protect_pdf"]["requires_login"] is True
     assert body["feature_flags"]["protect_pdf"]["requires_pro"] is False

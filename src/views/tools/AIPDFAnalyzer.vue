@@ -358,6 +358,81 @@
                 <pre class="mt-3 max-h-96 overflow-auto whitespace-pre-wrap rounded-2xl bg-white p-4 text-sm text-slate-700 dark:bg-slate-900 dark:text-slate-300">{{ JSON.stringify(extractResult.extracted_data, null, 2) }}</pre>
               </div>
             </div>
+
+            <div v-else-if="activeTab === 'batch'" class="space-y-5">
+              <div>
+                <h3 class="text-xl font-semibold text-slate-900 dark:text-white">
+                  批量分析
+                </h3>
+                <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                  一次选择多个分析任务，适合快速了解长文档的摘要、结构化信息与文档类型。
+                </p>
+              </div>
+
+              <div class="grid gap-3 sm:grid-cols-3">
+                <label
+                  v-for="operation in batchOperationOptions"
+                  :key="operation.value"
+                  :class="[
+                    'cursor-pointer rounded-[22px] border p-4 transition-all',
+                    batchOperations.includes(operation.value)
+                      ? 'border-fuchsia-300 bg-fuchsia-50 text-fuchsia-800 shadow-sm dark:border-fuchsia-700 dark:bg-fuchsia-950/30 dark:text-fuchsia-100'
+                      : 'border-slate-200 bg-white text-slate-700 hover:border-fuchsia-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-fuchsia-700/60',
+                  ]"
+                >
+                  <input
+                    v-model="batchOperations"
+                    class="sr-only"
+                    type="checkbox"
+                    :value="operation.value"
+                  >
+                  <component
+                    :is="operation.icon"
+                    class="h-5 w-5"
+                  />
+                  <span class="mt-3 block text-sm font-semibold">
+                    {{ operation.label }}
+                  </span>
+                  <span class="mt-1 block text-xs leading-5 opacity-75">
+                    {{ operation.description }}
+                  </span>
+                </label>
+              </div>
+
+              <Button
+                :disabled="processing || !selectedFile || batchOperations.length === 0"
+                full-width
+                @click="batchAnalyzePDF"
+              >
+                <Layers3 v-if="!processing" class="mr-2 h-4 w-4" />
+                <Loader2 v-else class="mr-2 h-4 w-4 animate-spin" />
+                {{ processing ? t('common.processing') : '开始批量分析' }}
+              </Button>
+
+              <div
+                v-if="batchResult"
+                class="space-y-4 rounded-[24px] border border-fuchsia-100 bg-fuchsia-50/70 p-5 dark:border-fuchsia-900/30 dark:bg-fuchsia-950/20"
+              >
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h4 class="font-semibold text-slate-900 dark:text-white">
+                      分析完成
+                    </h4>
+                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                      已完成 {{ batchResult.operations_completed?.length || batchOperations.length }} 项分析。
+                    </p>
+                  </div>
+                  <span
+                    v-if="batchClassificationLabel"
+                    class="rounded-full bg-white px-3 py-1 text-sm font-semibold text-fuchsia-700 dark:bg-slate-900 dark:text-fuchsia-200"
+                  >
+                    {{ batchClassificationLabel }}
+                  </span>
+                </div>
+
+                <pre class="max-h-96 overflow-auto whitespace-pre-wrap rounded-2xl bg-white p-4 text-sm leading-6 text-slate-700 dark:bg-slate-900 dark:text-slate-300">{{ JSON.stringify(batchResult.results || batchResult, null, 2) }}</pre>
+              </div>
+            </div>
           </div>
         </Card>
       </div>
@@ -385,6 +460,7 @@ import {
   BookOpen,
   HelpCircle,
   FileJson,
+  Layers3,
   FileText,
   X,
   LockKeyhole,
@@ -412,11 +488,44 @@ const qaResult = ref<any>(null)
 const extractType = ref('general')
 const extractResult = ref<any>(null)
 
+const batchOperations = ref(['summarize', 'extract'])
+const batchResult = ref<any>(null)
+
+const batchClassificationLabel = computed(() => {
+  const classification = batchResult.value?.results?.classification
+  if (!classification?.category) return ''
+
+  const confidence = classification.confidence ? ` · ${classification.confidence}` : ''
+  return `${classification.category}${confidence}`
+})
+
 const tabs = computed(() => [
   { id: 'summarize', label: t('ai.tabs.summarize'), icon: BookOpen },
   { id: 'ask', label: t('ai.tabs.ask'), icon: HelpCircle },
   { id: 'extract', label: t('ai.tabs.extract'), icon: FileJson },
+  { id: 'batch', label: '批量分析', icon: Layers3 },
 ])
+
+const batchOperationOptions = [
+  {
+    value: 'summarize',
+    label: '智能摘要',
+    description: '提炼核心内容与要点',
+    icon: BookOpen,
+  },
+  {
+    value: 'extract',
+    label: '数据提取',
+    description: '整理关键字段与结构',
+    icon: FileJson,
+  },
+  {
+    value: 'classify',
+    label: '文档识别',
+    description: '判断文档类型与用途',
+    icon: Layers3,
+  },
+]
 
 const canUseAI = computed(() => userStore.isAuthenticated && userStore.canUseCloudFeatures)
 
@@ -436,6 +545,7 @@ const handleFileSelected = (files: File[]) => {
     summaryResult.value = null
     qaResult.value = null
     extractResult.value = null
+    batchResult.value = null
   }
 }
 
@@ -451,6 +561,7 @@ const clearFile = () => {
   summaryResult.value = null
   qaResult.value = null
   extractResult.value = null
+  batchResult.value = null
   errorState.value = null
 }
 
@@ -517,6 +628,27 @@ const extractData = async () => {
     errorState.value = formatUserFacingError(error, {
       area: 'AI',
       fallbackMessage: t('ai.errors.extractFailed'),
+    })
+  } finally {
+    processing.value = false
+  }
+}
+
+const batchAnalyzePDF = async () => {
+  if (!selectedFile.value || batchOperations.value.length === 0) return
+  if (!ensureAccess()) return
+
+  try {
+    processing.value = true
+    errorState.value = null
+    batchResult.value = null
+
+    const result = await aiAPI.batchAnalyze(selectedFile.value, batchOperations.value)
+    batchResult.value = result
+  } catch (error) {
+    errorState.value = formatUserFacingError(error, {
+      area: 'AI',
+      fallbackMessage: '批量分析暂时无法完成，请稍后重试或联系管理员。',
     })
   } finally {
     processing.value = false

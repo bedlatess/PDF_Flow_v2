@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import {
   ChevronRight,
   Crown,
+  Clock3,
   LayoutPanelTop,
   Menu,
   Moon,
@@ -78,6 +79,12 @@ const goToLogin = () => {
 
 const goToProfile = () => {
   router.push('/auth/profile')
+  userMenuOpen.value = false
+  mobileMenuOpen.value = false
+}
+
+const goToHistory = () => {
+  router.push('/history')
   userMenuOpen.value = false
   mobileMenuOpen.value = false
 }
@@ -232,6 +239,16 @@ onMounted(() => {
                 <ChevronRight class="h-4 w-4" />
               </button>
               <button
+                class="mt-1 flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800/80"
+                @click="goToHistory"
+              >
+                <span class="inline-flex items-center gap-2">
+                  <Clock3 class="h-4 w-4 text-violet-500" />
+                  处理记录
+                </span>
+                <ChevronRight class="h-4 w-4" />
+              </button>
+              <button
                 class="mt-1 flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left text-sm font-medium text-rose-600 transition hover:bg-rose-50 dark:hover:bg-rose-500/10"
                 @click="handleLogout"
               >
@@ -339,6 +356,16 @@ onMounted(() => {
                 @click="goToProfile"
               >
                 <span>{{ t('account.myAccount') }}</span>
+                <ChevronRight class="h-4 w-4" />
+              </button>
+              <button
+                class="flex items-center justify-between rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700 transition hover:border-violet-200 dark:border-slate-800 dark:text-slate-200 dark:hover:border-violet-400/30"
+                @click="goToHistory"
+              >
+                <span class="inline-flex items-center gap-2">
+                  <Clock3 class="h-4 w-4 text-violet-500" />
+                  处理记录
+                </span>
                 <ChevronRight class="h-4 w-4" />
               </button>
               <button

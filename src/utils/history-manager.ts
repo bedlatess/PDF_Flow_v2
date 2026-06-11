@@ -16,6 +16,13 @@ export interface HistoryItem {
   resultSize?: number
 }
 
+export interface HistoryStats {
+  totalFiles: number
+  todayFiles: number
+  mostUsedTool: HistoryToolType | null
+  totalSaved?: number
+}
+
 const STORAGE_KEY = 'pdf-flow-history'
 const MAX_HISTORY_ITEMS = 20
 
@@ -62,20 +69,14 @@ class HistoryManager {
     return this.getHistory().filter((item) => item.type === type)
   }
 
-  getTodayHistory(): HistoryItem[] {
+  getTodayHistory(history = this.getHistory()): HistoryItem[] {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
-    return this.getHistory().filter((item) => item.timestamp >= today.getTime())
+    return history.filter((item) => item.timestamp >= today.getTime())
   }
 
-  getStats(): {
-    totalFiles: number
-    todayFiles: number
-    mostUsedTool: HistoryToolType | null
-    totalSaved?: number
-  } {
-    const history = this.getHistory()
-    const todayHistory = this.getTodayHistory()
+  getStats(history = this.getHistory()): HistoryStats {
+    const todayHistory = this.getTodayHistory(history)
 
     const toolCount: Partial<Record<HistoryToolType, number>> = {}
     history.forEach((item) => {
@@ -88,7 +89,7 @@ class HistoryManager {
 
     const totalSaved = history
       .filter((item) => item.type === 'compress' && item.fileSize && item.resultSize)
-      .reduce((sum, item) => sum + (item.fileSize! - item.resultSize!), 0)
+      .reduce((sum, item) => sum + Math.max(item.fileSize! - item.resultSize!, 0), 0)
 
     return {
       totalFiles: history.length,

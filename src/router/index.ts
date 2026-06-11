@@ -24,6 +24,12 @@ const router = createRouter({
       meta: { titleKey: 'nav.pricing' }
     },
     {
+      path: '/history',
+      name: 'history',
+      component: () => import('@/views/History.vue'),
+      meta: { title: '处理记录' }
+    },
+    {
       path: '/privacy',
       name: 'privacy-policy',
       component: () => import('@/views/legal/PrivacyPolicy.vue'),

@@ -721,3 +721,11 @@ python -m pytest tests/ -q      # 35 通过
 - Current product note: `HistoryPanel.vue` exists as an internal/local-history component and `historyManager` records operations, but no public page currently mounts the history panel. It needs a deliberate UI entry before users can open it.
 - Current product note: `aiAPI.batchAnalyze()` exists, but the AI PDF Analyzer page currently exposes only summarize, ask, and extract tabs. Batch analysis has no visible UI tab yet, and AI checks are deferred until API keys are configured.
 - Server validation after deploy: rebuild frontend, hard refresh `https://pdf.pawn.eu.org/tools/pdf-to-image`, turn off cloud processing, convert a small PDF to PNG, and confirm `/assets/pdf.worker.min-*.mjs` returns JavaScript instead of failing worker import.
+
+### 2026-06-11 History Page And AI Batch Entry / 历史记录与 AI 批量分析入口
+- Added public `/history` page that mounts the local browser history panel with user-facing copy explaining that records stay on the current device.
+- Added `处理记录` entry to the authenticated desktop avatar menu and mobile menu, so users can actually discover the existing history feature.
+- Repaired the history manager's visible Chinese labels and relative time formatting, preventing corrupted tool names/time strings from leaking into the new page.
+- Added a fourth `批量分析` tab to `AI PDF 分析器`, wiring the existing `/api/v1/ai/batch-analyze` client method to a visible UI with selectable summary, extraction, and classification operations.
+- AI live validation remains deferred until the Gemini/API key is configured; the new batch UI is build-validated and will surface normal AI error messaging if backend AI is unavailable.
+- Local validation: `npm run type-check` and `npm run build` pass with only the existing large PDF vendor chunk warning.

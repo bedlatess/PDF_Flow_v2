@@ -6,17 +6,23 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from authlib.integrations.starlette_client import OAuth
-from datetime import datetime
-import secrets
+import logging
 
 from app.core.database import get_db
-from app.core.security import create_access_token, create_refresh_token, get_password_hash
 from app.core.config import settings
-from app.models.user import User, UserRole
-from app.schemas.user import Token
+from app.models.user import User
+from app.domains.auth.service import (
+    get_or_create_oauth_user,
+    link_oauth_identity,
+    oauth_callback_redirect_url,
+    oauth_error_redirect_url,
+    oauth_link_result_redirect_url,
+    token_pair_for_user,
+)
 from app.api.v1.endpoints.auth import get_current_user
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 # Initialize OAuth client
 oauth = OAuth()
@@ -46,64 +52,6 @@ if settings.GITHUB_CLIENT_ID and settings.GITHUB_CLIENT_SECRET:
         api_base_url='https://api.github.com/',
         client_kwargs={'scope': 'user:email'},
     )
-
-
-def get_or_create_oauth_user(
-    db: Session,
-    provider: str,
-    oauth_id: str,
-    email: str,
-    full_name: str = None
-) -> User:
-    """
-    Get existing user by OAuth provider/id or create new one
-    If email exists but not linked to OAuth, link it
-    """
-    # Try to find user by OAuth provider and ID
-    user = db.query(User).filter(
-        User.oauth_provider == provider,
-        User.oauth_id == oauth_id
-    ).first()
-
-    if user:
-        # Update last login
-        user.last_login_at = datetime.utcnow()
-        db.commit()
-        return user
-
-    # Check if email exists (user registered with email/password)
-    user = db.query(User).filter(User.email == email).first()
-
-    if user:
-        # Link OAuth to existing account
-        user.oauth_provider = provider
-        user.oauth_id = oauth_id
-        user.is_verified = True  # OAuth emails are pre-verified
-        user.last_login_at = datetime.utcnow()
-        db.commit()
-        return user
-
-    # Create new user with OAuth
-    # Generate random password for OAuth users (they won't use it)
-    random_password = secrets.token_urlsafe(32)
-
-    new_user = User(
-        email=email,
-        hashed_password=get_password_hash(random_password),
-        full_name=full_name,
-        oauth_provider=provider,
-        oauth_id=oauth_id,
-        role=UserRole.FREE,
-        is_active=True,
-        is_verified=True,  # OAuth emails are pre-verified
-        last_login_at=datetime.utcnow()
-    )
-
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-
-    return new_user
 
 
 @router.get("/oauth/{provider}")
@@ -209,22 +157,21 @@ async def oauth_callback(
             full_name=full_name
         )
 
-        # Create JWT tokens
-        access_token = create_access_token(data={"sub": user.id})
-        refresh_token = create_refresh_token(data={"sub": user.id})
-
         # Redirect to frontend with tokens
         # Frontend will extract tokens from URL and store them
         frontend_url = settings.ALLOWED_ORIGINS[0]  # Primary frontend URL
-        redirect_url = f"{frontend_url}/auth/oauth-callback?access_token={access_token}&refresh_token={refresh_token}&token_type=bearer"
+        redirect_url = oauth_callback_redirect_url(
+            frontend_url=frontend_url,
+            token_pair=token_pair_for_user(user),
+        )
 
         return RedirectResponse(url=redirect_url)
 
     except Exception as e:
         # Log error and redirect to frontend with error
-        print(f"OAuth error: {str(e)}")
+        logger.warning("OAuth callback failed for provider %s: %s", provider, e)
         frontend_url = settings.ALLOWED_ORIGINS[0]
-        error_url = f"{frontend_url}/auth/login?error=oauth_failed&provider={provider}"
+        error_url = oauth_error_redirect_url(frontend_url=frontend_url, provider=provider)
         return RedirectResponse(url=error_url)
 
 
@@ -280,31 +227,26 @@ async def link_oauth_callback(
             user_info = (await client.get('user')).json()
             oauth_id = str(user_info.get('id'))
 
-        # Check if OAuth ID is already used by another user
-        existing_oauth_user = db.query(User).filter(
-            User.oauth_provider == provider,
-            User.oauth_id == oauth_id,
-            User.id != current_user.id
-        ).first()
-
-        if existing_oauth_user:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"This {provider} account is already linked to another user"
-            )
-
-        # Link to current user
-        current_user.oauth_provider = provider
-        current_user.oauth_id = oauth_id
-        db.commit()
+        link_oauth_identity(
+            db,
+            user=current_user,
+            provider=provider,
+            oauth_id=oauth_id,
+        )
 
         # Redirect to profile page with success
         frontend_url = settings.ALLOWED_ORIGINS[0]
-        return RedirectResponse(url=f"{frontend_url}/profile?oauth_linked=success")
+        return RedirectResponse(url=oauth_link_result_redirect_url(
+            frontend_url=frontend_url,
+            success=True,
+        ))
 
     except HTTPException:
         raise
     except Exception as e:
-        print(f"OAuth link error: {str(e)}")
+        logger.warning("OAuth link failed for provider %s: %s", provider, e)
         frontend_url = settings.ALLOWED_ORIGINS[0]
-        return RedirectResponse(url=f"{frontend_url}/profile?oauth_linked=error")
+        return RedirectResponse(url=oauth_link_result_redirect_url(
+            frontend_url=frontend_url,
+            success=False,
+        ))

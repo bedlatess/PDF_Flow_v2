@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+import secrets
+from urllib.parse import urlencode
 
 from fastapi import BackgroundTasks, HTTPException, status
 from sqlalchemy.orm import Session
@@ -78,6 +80,98 @@ def token_pair_for_user(user: User) -> dict:
         "refresh_token": create_refresh_token(data={"sub": user.id}),
         "token_type": "bearer",
     }
+
+
+def oauth_callback_redirect_url(*, frontend_url: str, token_pair: dict) -> str:
+    query = urlencode({
+        "access_token": token_pair["access_token"],
+        "refresh_token": token_pair["refresh_token"],
+        "token_type": token_pair.get("token_type", "bearer"),
+    })
+    return f"{frontend_url}/auth/oauth-callback?{query}"
+
+
+def oauth_error_redirect_url(*, frontend_url: str, provider: str) -> str:
+    query = urlencode({"error": "oauth_failed", "provider": provider})
+    return f"{frontend_url}/auth/login?{query}"
+
+
+def oauth_link_result_redirect_url(*, frontend_url: str, success: bool) -> str:
+    return f"{frontend_url}/profile?oauth_linked={'success' if success else 'error'}"
+
+
+def get_or_create_oauth_user(
+    db: Session,
+    *,
+    provider: str,
+    oauth_id: str,
+    email: str,
+    full_name: str | None = None,
+) -> User:
+    user = db.query(User).filter(
+        User.oauth_provider == provider,
+        User.oauth_id == oauth_id,
+    ).first()
+
+    if user:
+        user.last_login_at = datetime.utcnow()
+        db.commit()
+        return user
+
+    user = db.query(User).filter(User.email == email).first()
+
+    if user:
+        user.oauth_provider = provider
+        user.oauth_id = oauth_id
+        user.is_verified = True
+        user.last_login_at = datetime.utcnow()
+        db.commit()
+        return user
+
+    random_password = secrets.token_urlsafe(32)
+    new_user = User(
+        email=email,
+        hashed_password=get_password_hash(random_password),
+        full_name=full_name,
+        oauth_provider=provider,
+        oauth_id=oauth_id,
+        role=UserRole.FREE,
+        is_active=True,
+        is_verified=True,
+        last_login_at=datetime.utcnow(),
+    )
+
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return new_user
+
+
+def link_oauth_identity(
+    db: Session,
+    *,
+    user: User,
+    provider: str,
+    oauth_id: str,
+) -> User:
+    existing_oauth_user = db.query(User).filter(
+        User.oauth_provider == provider,
+        User.oauth_id == oauth_id,
+        User.id != user.id,
+    ).first()
+
+    if existing_oauth_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"This {provider} account is already linked to another user",
+        )
+
+    user.oauth_provider = provider
+    user.oauth_id = oauth_id
+    db.commit()
+    db.refresh(user)
+    return user
 
 
 def register_user(

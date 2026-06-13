@@ -29,6 +29,14 @@ class TestHealth:
         r = client.get("/")
         assert r.status_code == 200
 
+    def test_session_middleware_is_available_for_oauth(self, client):
+        from starlette.middleware.sessions import SessionMiddleware
+
+        assert any(
+            middleware.cls is SessionMiddleware
+            for middleware in client.app.user_middleware
+        )
+
 
 class TestRegister:
     def test_register_success(self, client):

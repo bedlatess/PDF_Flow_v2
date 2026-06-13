@@ -17,6 +17,7 @@ email-validator==2.1.0.post1
 python-dotenv==1.0.0
 pydantic==2.5.3
 pydantic-settings==2.1.0
+itsdangerous==2.2.0
 
 # Redis & Queue
 redis==5.0.1

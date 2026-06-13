@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
+from starlette.middleware.sessions import SessionMiddleware
 import uvicorn
 
 from app.core.config import settings
@@ -28,6 +29,16 @@ app = FastAPI(
 
 # Add monitoring middleware
 app.add_middleware(MonitoringMiddleware)
+
+# OAuth providers use a signed session cookie to store the CSRF state between
+# the provider redirect and callback.
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=settings.SECRET_KEY,
+    same_site="lax",
+    https_only=settings.ENVIRONMENT == "production",
+    max_age=3600,
+)
 
 # CORS Configuration
 app.add_middleware(

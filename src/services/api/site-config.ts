@@ -9,6 +9,13 @@ export interface PublicFeatureFlag {
   maintenance_message: string | null
 }
 
+export type PublicOAuthProviderKey = 'google' | 'github'
+
+export interface PublicOAuthProvider {
+  label: string
+  enabled: boolean
+}
+
 export interface PublicSiteConfig {
   settings: Record<
     string,
@@ -28,6 +35,7 @@ export interface PublicSiteConfig {
       description: string | null
     }
   >
+  oauth_providers?: Partial<Record<PublicOAuthProviderKey, PublicOAuthProvider>>
 }
 
 export const siteConfigAPI = {

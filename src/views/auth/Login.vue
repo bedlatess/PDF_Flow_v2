@@ -109,7 +109,7 @@
             </button>
           </form>
 
-          <div class="mt-6">
+          <div v-if="enabledOAuthProviders.length" class="mt-6">
             <div class="relative">
               <div class="absolute inset-0 flex items-center">
                 <div class="w-full border-t border-slate-200 dark:border-slate-700" />
@@ -119,8 +119,12 @@
               </div>
             </div>
 
-            <div class="mt-5 grid gap-3 sm:grid-cols-2">
+            <div
+              class="mt-5 grid gap-3"
+              :class="enabledOAuthProviders.length > 1 ? 'sm:grid-cols-2' : 'sm:grid-cols-1'"
+            >
               <button
+                v-if="siteConfigStore.isOAuthProviderEnabled('google')"
                 type="button"
                 :disabled="loading"
                 class="inline-flex items-center justify-center rounded-md border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition hover:border-sky-200 hover:text-sky-600 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-950/50 dark:text-slate-200 dark:hover:border-sky-500/40 dark:hover:text-sky-300"
@@ -135,6 +139,7 @@
                 Google
               </button>
               <button
+                v-if="siteConfigStore.isOAuthProviderEnabled('github')"
                 type="button"
                 :disabled="loading"
                 class="inline-flex items-center justify-center rounded-md border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:text-slate-950 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-950/50 dark:text-slate-200 dark:hover:border-slate-500 dark:hover:text-white"
@@ -162,16 +167,21 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Eye, EyeOff, Loader2 } from 'lucide-vue-next'
 import { useUserStore } from '@/stores/user'
+import { useSiteConfigStore } from '@/stores/siteConfig'
 import { useI18n } from 'vue-i18n'
 import DiagnosticAlert from '@/components/common/DiagnosticAlert.vue'
 import AuthWorkspaceShell from '@/components/auth/AuthWorkspaceShell.vue'
+import { type PublicOAuthProviderKey } from '@/services/api'
 import { formatUserFacingError, type FormattedUserError } from '@/utils/error-messages'
 import { getFirstQueryValue, resolveInternalRedirect } from '@/utils/route-state'
 
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
+const siteConfigStore = useSiteConfigStore()
 const { t, tm } = useI18n()
+
+const oauthProviderOrder: PublicOAuthProviderKey[] = ['google', 'github']
 
 type LoginNotice = FormattedUserError & { tone?: 'danger' | 'warning' | 'info' }
 
@@ -205,6 +215,10 @@ const errorState = ref<LoginNotice | null>(null)
 
 const marketingCopy = computed(() => tm('auth.loginMarketing') as AuthMarketingCopy)
 
+const enabledOAuthProviders = computed(() =>
+  oauthProviderOrder.filter((provider) => siteConfigStore.isOAuthProviderEnabled(provider))
+)
+
 const queryNotices = computed<Record<string, LoginNotice>>(() => ({
   registered: {
     title: t('auth.loginNotices.registeredTitle'),
@@ -230,6 +244,8 @@ const queryNotices = computed<Record<string, LoginNotice>>(() => ({
 }))
 
 onMounted(() => {
+  void siteConfigStore.fetchPublicConfig()
+
   const registered = getFirstQueryValue(route.query.registered)
   const queryError = getFirstQueryValue(route.query.error)
   const noticeKey = registered === 'true' ? 'registered' : queryError

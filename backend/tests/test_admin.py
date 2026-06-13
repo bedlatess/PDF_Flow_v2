@@ -114,6 +114,24 @@ def test_public_config_exposes_feature_flags(client):
     assert body["feature_flags"]["extract_images_pdf"]["requires_login"] is False
     assert body["feature_flags"]["extract_images_pdf"]["requires_pro"] is False
     assert body["content_blocks"]["home_hero:zh"]["content"].startswith("隐私优先")
+    assert body["oauth_providers"]["google"]["enabled"] is False
+    assert body["oauth_providers"]["github"]["enabled"] is False
+
+
+def test_public_config_marks_only_configured_oauth_providers(client, monkeypatch):
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "GOOGLE_CLIENT_ID", None)
+    monkeypatch.setattr(settings, "GOOGLE_CLIENT_SECRET", None)
+    monkeypatch.setattr(settings, "GITHUB_CLIENT_ID", "github-client")
+    monkeypatch.setattr(settings, "GITHUB_CLIENT_SECRET", "github-secret")
+
+    response = client.get("/api/v1/admin/public-config")
+
+    assert response.status_code == 200
+    providers = response.json()["oauth_providers"]
+    assert providers["google"] == {"label": "Google", "enabled": False}
+    assert providers["github"] == {"label": "GitHub", "enabled": True}
 
 
 def test_disabled_feature_blocks_backend_endpoint(client):

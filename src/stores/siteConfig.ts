@@ -1,6 +1,11 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import { siteConfigAPI, type PublicFeatureFlag, type PublicSiteConfig } from '@/services/api'
+import {
+  siteConfigAPI,
+  type PublicFeatureFlag,
+  type PublicOAuthProviderKey,
+  type PublicSiteConfig,
+} from '@/services/api'
 import { formatUserFacingError, type FormattedUserError } from '@/utils/error-messages'
 import { resolveContentLocale } from '@/locales/registry'
 
@@ -25,6 +30,7 @@ export const useSiteConfigStore = defineStore('site-config', () => {
   const featureFlags = computed(() => config.value?.feature_flags ?? {})
   const settings = computed(() => config.value?.settings ?? {})
   const contentBlocks = computed(() => config.value?.content_blocks ?? {})
+  const oauthProviders = computed(() => config.value?.oauth_providers ?? {})
 
   const fetchPublicConfig = async (force = false) => {
     if (pendingRequest) return pendingRequest
@@ -60,6 +66,9 @@ export const useSiteConfigStore = defineStore('site-config', () => {
     featureFlags.value[key] ?? defaultFlag(fallbackLabel)
 
   const isFeatureEnabled = (key: string) => getFeatureFlag(key).enabled
+
+  const isOAuthProviderEnabled = (provider: PublicOAuthProviderKey) =>
+    oauthProviders.value[provider]?.enabled === true
 
   const getSettingValue = (key: string, fallback = '') =>
     settings.value[key]?.value || fallback
@@ -101,11 +110,13 @@ export const useSiteConfigStore = defineStore('site-config', () => {
     featureFlags,
     settings,
     contentBlocks,
+    oauthProviders,
     globalAnnouncement,
     maintenanceMode,
     fetchPublicConfig,
     getFeatureFlag,
     isFeatureEnabled,
+    isOAuthProviderEnabled,
     getSettingValue,
     getBooleanSetting,
     getContentBlock,

@@ -188,6 +188,13 @@ Deployment:
   - verified with `pytest backend/tests/test_config.py backend/tests/test_payment_domain.py -q`
   - verified with `pytest backend/tests/test_admin_payment_domain.py -q`
   - verified with `pytest backend/tests/test_admin.py::test_admin_payment_operations_returns_provider_health_and_reconciliation backend/tests/test_admin.py::test_admin_payment_operations_requires_admin -q`
+- Implemented OAuth provider visibility control:
+  - `/api/v1/admin/public-config` now exposes configured OAuth provider status without exposing secrets
+  - login UI hides the entire OAuth section when no providers are configured
+  - Google remains hidden unless both Google OAuth values are configured
+  - GitHub will be shown after its production client id and secret are present
+  - verified with `pytest backend/tests/test_admin.py::test_public_config_exposes_feature_flags backend/tests/test_admin.py::test_public_config_marks_only_configured_oauth_providers -q`
+  - verified with `npm run type-check`
 
 ## Known Code Issues
 
@@ -471,10 +478,12 @@ Goal: prove real external integrations.
 
 OAuth:
 
-- Google and GitHub provider credentials do not currently exist in server `backend/.env`.
+- GitHub OAuth is the first provider being enabled for production.
+- Google OAuth should remain unconfigured and hidden until its dashboard and credentials are ready.
 - Provider dashboards use:
   - `{BACKEND_PUBLIC_URL}/api/v1/auth/oauth/google/callback`
   - `{BACKEND_PUBLIC_URL}/api/v1/auth/oauth/github/callback`
+- Public config exposes only non-secret provider readiness, and the login UI displays only configured providers.
 - OAuth failures return friendly callback states.
 - Account linking/unlinking UI remains optional.
 
@@ -623,7 +632,7 @@ pytest tests/test_payment_domain.py -q
 
 ## Next Recommended Work
 
-1. Configure real OAuth, email, payment, and Gemini credentials, then run provider-specific production acceptance.
+1. Finish production acceptance for GitHub OAuth, then configure email, payment, and Gemini credentials when real provider accounts are ready.
 2. Split `src/locales/overrides.ts` with an encoding-safe migration script and add missing baseline translations before exposing more locales.
 3. Add competitor-gap tools only after the platform refactor remains stable under production traffic.
 4. Decide whether to split the admin frontend into its own repository after the dedicated admin domain is live and daily operation is stable.

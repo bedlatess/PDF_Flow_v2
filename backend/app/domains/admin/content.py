@@ -3,6 +3,7 @@
 from fastapi import Request
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.domains.admin.audit import write_admin_audit
 from app.models.user import (
     AdminAuditLog,
@@ -121,6 +122,19 @@ LEGACY_CONTENT_PLACEHOLDERS = {
 }
 
 
+def get_public_oauth_providers() -> dict:
+    return {
+        "google": {
+            "label": "Google",
+            "enabled": bool(settings.GOOGLE_CLIENT_ID and settings.GOOGLE_CLIENT_SECRET),
+        },
+        "github": {
+            "label": "GitHub",
+            "enabled": bool(settings.GITHUB_CLIENT_ID and settings.GITHUB_CLIENT_SECRET),
+        },
+    }
+
+
 def seed_defaults(db: Session) -> None:
     existing_settings = {
         item[0] for item in db.query(SiteSetting.key).all()
@@ -194,6 +208,7 @@ def get_public_config(db: Session) -> dict:
             }
             for item in content_blocks
         },
+        "oauth_providers": get_public_oauth_providers(),
     }
 
 

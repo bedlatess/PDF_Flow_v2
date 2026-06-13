@@ -286,7 +286,8 @@ Deployment:
   - production `/health` returns `{"status":"healthy","version":"2.0.0","environment":"production"}`
   - `https://pdf.pawn.eu.org/zh-cn/pricing` returns HTTP 200
   - `https://admin.pawn.eu.org/` returns HTTP 200
-- Implemented Admin v2 Phase 1 information architecture locally:
+- Deployed Admin v2 Phase 1 information architecture:
+  - commit `9a56be4fc21aa739db935df74f32a56a394b8511`
   - rebuilt the admin shell around a formal operations console with top health/revenue/support indicators
   - grouped navigation into Overview, Users and Revenue, Product Configuration, Operations Support, and Security domains
   - split payment setup from payment reconciliation so merchant readiness, required server config, webhook URLs, return URLs, blockers, sandbox runbooks, and go-live checklists have a dedicated `Payment Setup` module
@@ -295,7 +296,15 @@ Deployment:
   - verified with `npm run test:unit:ci -- tests/unit/admin-control-room-utils.test.ts`
   - verified with `npm run build`
   - verified with `npm run build:admin`
+  - verified with `npm run test:e2e:admin`
   - browser-verified local admin mock at desktop `1440x1100` and mobile `390x900`: overview, payment setup, and payment reconciliation rendered without document-level horizontal overflow and without browser console errors
+  - server `.deploy_state/main/current_deployed_commit` records `9a56be4fc21aa739db935df74f32a56a394b8511`
+  - production containers `backend`, `celery-worker`, and `frontend` are healthy after deploy
+  - production `/health` returns `{"status":"healthy","version":"2.0.0","environment":"production"}`
+  - `https://pdf.pawn.eu.org/` returns HTTP 200
+  - `https://admin.pawn.eu.org/` returns HTTP 200 with title `PDF-Flow Admin`
+  - `https://admin.pawn.eu.org/assets/ControlRoom-DVPqbD5G.js` returns HTTP 200
+  - Playwright production unauthenticated admin smoke returned HTTP 200, title `PDF-Flow Admin`, no document-level horizontal overflow at `1440x1000`, and no console/page errors
 
 ## Known Code Issues
 
@@ -734,8 +743,8 @@ pytest tests/test_payment_domain.py -q
 
 ## Next Recommended Work
 
-1. Deploy Admin v2 Phase 1 and record production smoke evidence for `https://admin.pawn.eu.org`.
-2. Configure payment and Gemini credentials when real provider accounts are ready.
+1. Configure real payment provider credentials when merchant accounts are ready, then run sandbox and low-value live smoke tests from the Admin `Payment Setup` checklist.
+2. Configure Gemini credentials when the AI quota/account is ready and rerun AI feature smoke tests.
 3. Split `src/locales/overrides.ts` with an encoding-safe migration script and add missing baseline translations before exposing more locales.
 4. Add competitor-gap tools only after the platform refactor remains stable under production traffic.
 5. Decide whether to split the admin frontend into its own repository after the dedicated admin domain is live and daily operation is stable.

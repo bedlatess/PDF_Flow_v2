@@ -286,6 +286,16 @@ Deployment:
   - production `/health` returns `{"status":"healthy","version":"2.0.0","environment":"production"}`
   - `https://pdf.pawn.eu.org/zh-cn/pricing` returns HTTP 200
   - `https://admin.pawn.eu.org/` returns HTTP 200
+- Implemented Admin v2 Phase 1 information architecture locally:
+  - rebuilt the admin shell around a formal operations console with top health/revenue/support indicators
+  - grouped navigation into Overview, Users and Revenue, Product Configuration, Operations Support, and Security domains
+  - split payment setup from payment reconciliation so merchant readiness, required server config, webhook URLs, return URLs, blockers, sandbox runbooks, and go-live checklists have a dedicated `Payment Setup` module
+  - simplified `Payment Reconciliation` into orders, events, reconciliation summary, and evidence packet review
+  - verified with `npm run type-check`
+  - verified with `npm run test:unit:ci -- tests/unit/admin-control-room-utils.test.ts`
+  - verified with `npm run build`
+  - verified with `npm run build:admin`
+  - browser-verified local admin mock at desktop `1440x1100` and mobile `390x900`: overview, payment setup, and payment reconciliation rendered without document-level horizontal overflow and without browser console errors
 
 ## Known Code Issues
 
@@ -724,7 +734,8 @@ pytest tests/test_payment_domain.py -q
 
 ## Next Recommended Work
 
-1. Configure payment and Gemini credentials when real provider accounts are ready.
-2. Split `src/locales/overrides.ts` with an encoding-safe migration script and add missing baseline translations before exposing more locales.
-3. Add competitor-gap tools only after the platform refactor remains stable under production traffic.
-4. Decide whether to split the admin frontend into its own repository after the dedicated admin domain is live and daily operation is stable.
+1. Deploy Admin v2 Phase 1 and record production smoke evidence for `https://admin.pawn.eu.org`.
+2. Configure payment and Gemini credentials when real provider accounts are ready.
+3. Split `src/locales/overrides.ts` with an encoding-safe migration script and add missing baseline translations before exposing more locales.
+4. Add competitor-gap tools only after the platform refactor remains stable under production traffic.
+5. Decide whether to split the admin frontend into its own repository after the dedicated admin domain is live and daily operation is stable.

@@ -21,16 +21,31 @@ describe('admin control room utilities', () => {
   it('keeps the admin tab registry stable', () => {
     expect(controlRoomTabs.map((tab) => tab.id)).toEqual([
       'overview',
+      'users',
+      'paymentSetup',
+      'payments',
       'flags',
       'settings',
       'content',
-      'users',
       'jobs',
-      'payments',
       'feedback',
       'errors',
       'maintenance',
       'audit',
+    ])
+    expect(controlRoomTabs.map((tab) => tab.group)).toEqual([
+      '概览',
+      '客户与收入',
+      '客户与收入',
+      '客户与收入',
+      '产品配置',
+      '产品配置',
+      '产品配置',
+      '运营支持',
+      '运营支持',
+      '运营支持',
+      '运营支持',
+      '安全',
     ])
   })
 

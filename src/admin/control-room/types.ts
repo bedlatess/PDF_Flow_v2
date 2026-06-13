@@ -1,15 +1,23 @@
 export type ControlRoomTabId =
   | 'overview'
+  | 'users'
+  | 'paymentSetup'
+  | 'payments'
   | 'flags'
   | 'settings'
   | 'content'
-  | 'users'
   | 'jobs'
-  | 'payments'
   | 'feedback'
   | 'errors'
   | 'maintenance'
   | 'audit'
+
+export type ControlRoomTabGroup =
+  | '概览'
+  | '客户与收入'
+  | '产品配置'
+  | '运营支持'
+  | '安全'
 
 export type AdminConfirmation = {
   title: string

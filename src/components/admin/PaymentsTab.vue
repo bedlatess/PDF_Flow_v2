@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ClipboardCopy, CreditCard, RefreshCw, ShieldCheck } from 'lucide-vue-next'
+import { ClipboardCopy, CreditCard, RefreshCw } from 'lucide-vue-next'
 import type { AdminPaymentSummary } from '@/admin/api'
 import AdminActionButton from './AdminActionButton.vue'
 import AdminPanel from './AdminPanel.vue'
@@ -25,35 +25,31 @@ const emit = defineEmits<{
 }>()
 
 const statusTone = (status: string) => {
-  if (status === 'paid') return 'success'
-  if (status === 'applied') return 'success'
-  if (status === 'pending') return 'warning'
-  if (status === 'received' || status === 'ignored') return 'warning'
-  if (status === 'amount_mismatch' || status === 'currency_mismatch') return 'danger'
-  if (status === 'failed' || status === 'canceled' || status === 'cancelled') return 'danger'
-  return 'neutral'
-}
-
-const acceptanceTone = (status: string) => {
-  if (status === 'accepted') return 'success'
-  if (status === 'needs_review') return 'danger'
-  if (status === 'missing_config' || status === 'waiting_callback') return 'warning'
-  if (status === 'ready_to_test') return 'info'
+  if (status === 'paid' || status === 'applied') return 'success'
+  if (status === 'pending' || status === 'received' || status === 'ignored') return 'warning'
+  if (
+    status === 'amount_mismatch' ||
+    status === 'currency_mismatch' ||
+    status === 'failed' ||
+    status === 'canceled' ||
+    status === 'cancelled'
+  )
+    return 'danger'
   return 'neutral'
 }
 </script>
 
 <template>
-  <div class="space-y-5">
-    <AdminPanel as="section">
+  <div class="min-w-0 space-y-6">
+    <section class="min-w-0 rounded-lg border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
       <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div>
           <div class="flex items-center gap-3">
-            <CreditCard class="h-5 w-5 text-sky-600 dark:text-sky-300" />
-            <p class="text-xl font-semibold">支付对账</p>
+            <CreditCard class="h-5 w-5 text-slate-700 dark:text-slate-200" />
+            <h2 class="text-xl font-semibold">支付对账</h2>
           </div>
           <p class="mt-2 max-w-3xl text-sm leading-6 text-slate-500 dark:text-slate-400">
-            这里是只读支付运营视图，用来确认订单状态、支付方式配置和需要人工核对的异常。权益仍然只由后端已验证的回调或捕获结果激活。
+            这里聚焦订单、回调事件、金额币种异常和对账证据。是否允许用户获得权益，仍以服务端已验证的支付结果为准。
           </p>
         </div>
 
@@ -100,24 +96,24 @@ const acceptanceTone = (status: string) => {
         </div>
       </div>
 
-      <div class="mt-5 grid gap-4 md:grid-cols-3 xl:grid-cols-6">
-        <AdminPanel as="div" padding="sm" tone="subtle">
+      <div class="mt-5 grid gap-3 md:grid-cols-3 xl:grid-cols-6">
+        <div class="rounded-md border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/45">
           <p class="text-sm text-slate-500 dark:text-slate-400">总订单</p>
           <p class="mt-2 text-3xl font-semibold">{{ paymentSummary?.total_orders ?? 0 }}</p>
-        </AdminPanel>
-        <AdminPanel as="div" padding="sm" tone="warning">
+        </div>
+        <div class="rounded-md border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/30 dark:bg-amber-500/10">
           <p class="text-sm text-amber-700 dark:text-amber-200/80">待支付</p>
           <p class="mt-2 text-3xl font-semibold text-amber-800 dark:text-amber-100">
             {{ paymentSummary?.pending_orders ?? 0 }}
           </p>
-        </AdminPanel>
-        <AdminPanel as="div" padding="sm" tone="success">
+        </div>
+        <div class="rounded-md border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-500/30 dark:bg-emerald-500/10">
           <p class="text-sm text-emerald-700 dark:text-emerald-200/80">已支付</p>
           <p class="mt-2 text-3xl font-semibold text-emerald-800 dark:text-emerald-100">
             {{ paymentSummary?.paid_orders ?? 0 }}
           </p>
-        </AdminPanel>
-        <AdminPanel as="div" padding="sm" tone="danger">
+        </div>
+        <div class="rounded-md border border-rose-200 bg-rose-50 p-4 dark:border-rose-500/30 dark:bg-rose-500/10">
           <p class="text-sm text-rose-700 dark:text-rose-200/80">需核对</p>
           <p class="mt-2 text-3xl font-semibold text-rose-800 dark:text-rose-100">
             {{
@@ -125,14 +121,14 @@ const acceptanceTone = (status: string) => {
               (paymentSummary?.currency_mismatch_orders ?? 0)
             }}
           </p>
-        </AdminPanel>
-        <AdminPanel as="div" padding="sm" tone="warning">
+        </div>
+        <div class="rounded-md border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/30 dark:bg-amber-500/10">
           <p class="text-sm text-amber-700 dark:text-amber-200/80">过期待付</p>
           <p class="mt-2 text-3xl font-semibold text-amber-800 dark:text-amber-100">
             {{ paymentSummary?.expired_pending_orders ?? 0 }}
           </p>
-        </AdminPanel>
-        <AdminPanel as="div" padding="sm" tone="info">
+        </div>
+        <div class="rounded-md border border-sky-200 bg-sky-50 p-4 dark:border-sky-500/30 dark:bg-sky-500/10">
           <p class="text-sm text-sky-700 dark:text-sky-200/80">已入账</p>
           <div class="mt-2 space-y-1">
             <p
@@ -149,88 +145,17 @@ const acceptanceTone = (status: string) => {
               0
             </p>
           </div>
-        </AdminPanel>
+        </div>
       </div>
-    </AdminPanel>
+    </section>
 
     <section class="grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
-      <AdminPanel as="article">
-        <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p class="font-semibold">支付方式健康</p>
-            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              enabled 表示前台可选择，configured 表示商户关键配置已存在。
-            </p>
-          </div>
-          <ShieldCheck class="h-5 w-5 text-emerald-600 dark:text-emerald-300" />
-        </div>
-
-        <div class="grid gap-3">
-          <div
-            v-for="provider in paymentSummary?.providers || []"
-            :key="provider.key"
-            class="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/45"
-          >
-            <div class="flex flex-wrap items-center gap-2">
-              <p class="mr-auto font-semibold text-slate-950 dark:text-white">
-                {{ provider.display_name }}
-              </p>
-              <StatusPill :tone="provider.enabled ? 'success' : 'neutral'">
-                {{ provider.enabled ? 'enabled' : 'disabled' }}
-              </StatusPill>
-              <StatusPill :tone="provider.configured ? 'success' : 'warning'">
-                {{ provider.configured ? 'configured' : 'missing config' }}
-              </StatusPill>
-              <StatusPill :tone="acceptanceTone(provider.acceptance_status)">
-                {{ provider.acceptance_label }}
-              </StatusPill>
-            </div>
-            <p class="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
-              {{ provider.detail }}
-            </p>
-            <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
-              {{ provider.acceptance_detail }}
-            </p>
-            <div class="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
-              <div class="rounded-md bg-white p-2 dark:bg-slate-900">
-                <p class="font-semibold">{{ provider.open_orders }}</p>
-                <p class="mt-1 text-slate-500 dark:text-slate-400">open</p>
-              </div>
-              <div class="rounded-md bg-white p-2 dark:bg-slate-900">
-                <p class="font-semibold">{{ provider.paid_orders }}</p>
-                <p class="mt-1 text-slate-500 dark:text-slate-400">paid</p>
-              </div>
-              <div class="rounded-md bg-white p-2 dark:bg-slate-900">
-                <p class="font-semibold">{{ provider.failed_orders }}</p>
-                <p class="mt-1 text-slate-500 dark:text-slate-400">review</p>
-              </div>
-            </div>
-            <div
-              v-if="provider.acceptance_blockers.length || provider.latest_paid_event_at"
-              class="mt-3 rounded-md bg-white p-3 text-xs leading-5 text-slate-500 dark:bg-slate-900 dark:text-slate-400"
-            >
-              <p v-if="provider.latest_paid_event_at">
-                最近通过事件：{{ formatDate(provider.latest_paid_event_at) }}
-              </p>
-              <ul v-if="provider.acceptance_blockers.length" class="space-y-1">
-                <li
-                  v-for="blocker in provider.acceptance_blockers"
-                  :key="`${provider.key}-blocker-${blocker}`"
-                >
-                  {{ blocker }}
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </AdminPanel>
-
-      <AdminPanel as="article">
+      <AdminPanel as="article" class="min-w-0">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p class="font-semibold">对账排障包</p>
+            <p class="font-semibold">对账摘要</p>
             <p class="mt-1 text-sm leading-6 text-slate-500 dark:text-slate-400">
-              后端生成的安全摘要，可粘贴到工单或商户联调记录；不包含原始回调、文档内容或完整 checkout 链接。
+              后端生成的安全摘要，可用于工单、商户联调记录或线上复盘，不包含原始回调载荷和完整 checkout 链接。
             </p>
           </div>
           <AdminActionButton
@@ -250,105 +175,13 @@ const acceptanceTone = (status: string) => {
           >{{ paymentSummary?.reconciliation_summary || '暂无对账摘要，请刷新支付数据。' }}</pre
         >
       </AdminPanel>
-    </section>
 
-    <AdminPanel as="section">
-      <div class="mb-4">
-        <p class="font-semibold">商户回调配置清单</p>
-        <p class="mt-1 text-sm leading-6 text-slate-500 dark:text-slate-400">
-          以后配置 PayPal、支付宝、微信支付、易支付或 USDT 网关时，以这里的 webhook/notify URL 为准。成功/取消地址只是用户返回页面，不能作为开通会员的依据。
-        </p>
-      </div>
-
-      <div class="grid gap-3 lg:grid-cols-2">
-        <div
-          v-for="provider in paymentSummary?.providers || []"
-          :key="`${provider.key}-setup`"
-          class="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/45"
-        >
-          <div class="flex flex-wrap items-center gap-2">
-            <p class="mr-auto font-semibold text-slate-950 dark:text-white">
-              {{ provider.display_name }}
-            </p>
-            <StatusPill :tone="provider.missing_config_keys.length ? 'warning' : 'success'">
-              {{ provider.missing_config_keys.length ? 'needs config' : 'ready' }}
-            </StatusPill>
-            <StatusPill :tone="acceptanceTone(provider.acceptance_status)">
-              {{ provider.acceptance_label }}
-            </StatusPill>
-          </div>
-
-          <p class="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
-            {{ provider.acceptance_detail }}
-          </p>
-
-          <p class="mt-3 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
-            Merchant console
-          </p>
-          <p class="mt-1 text-sm text-slate-700 dark:text-slate-200">
-            {{ provider.merchant_console_hint }}
-          </p>
-
-          <dl class="mt-3 space-y-3 text-sm">
-            <div>
-              <dt class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
-                Webhook / notify URL
-              </dt>
-              <dd class="mt-1 break-all rounded-md bg-white p-2 font-mono text-[12px] leading-5 text-slate-700 dark:bg-slate-900 dark:text-slate-200">
-                {{ provider.webhook_url }}
-              </dd>
-            </div>
-            <div class="grid gap-3 sm:grid-cols-2">
-              <div>
-                <dt class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
-                  Success return
-                </dt>
-                <dd class="mt-1 break-all rounded-md bg-white p-2 font-mono text-[12px] leading-5 text-slate-700 dark:bg-slate-900 dark:text-slate-200">
-                  {{ provider.success_return_url }}
-                </dd>
-              </div>
-              <div>
-                <dt class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
-                  Cancel return
-                </dt>
-                <dd class="mt-1 break-all rounded-md bg-white p-2 font-mono text-[12px] leading-5 text-slate-700 dark:bg-slate-900 dark:text-slate-200">
-                  {{ provider.cancel_return_url }}
-                </dd>
-              </div>
-            </div>
-          </dl>
-
-          <div class="mt-3">
-            <p class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
-              Required backend config
-            </p>
-            <div class="mt-2 flex flex-wrap gap-2">
-              <StatusPill
-                v-for="key in provider.required_config_keys"
-                :key="key"
-                :tone="provider.missing_config_keys.includes(key) ? 'warning' : 'success'"
-              >
-                {{ key }}
-              </StatusPill>
-            </div>
-          </div>
-
-          <ul class="mt-3 space-y-1 text-xs leading-5 text-slate-500 dark:text-slate-400">
-            <li v-for="note in provider.setup_notes" :key="note">
-              {{ note }}
-            </li>
-          </ul>
-        </div>
-      </div>
-    </AdminPanel>
-
-    <AdminPanel as="section">
-      <div class="mb-4">
-        <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+      <AdminPanel as="article" class="min-w-0">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p class="font-semibold">支付联调运维包</p>
+            <p class="font-semibold">联调证据包</p>
             <p class="mt-1 text-sm leading-6 text-slate-500 dark:text-slate-400">
-              用于你后面自己跑 sandbox 或低金额 live smoke test。每个渠道都按“沙箱步骤、上线检查、预期事件链、失败排查、证据字段”整理，方便逐项核对和复盘。
+              用于记录沙箱或小额 live smoke test 的关键字段。配置入口已经移动到“支付配置”模块。
             </p>
           </div>
           <AdminActionButton
@@ -363,98 +196,23 @@ const acceptanceTone = (status: string) => {
             {{ evidenceCopied ? '已复制证据包' : '复制证据包' }}
           </AdminActionButton>
         </div>
-      </div>
-
-      <div class="grid gap-4 xl:grid-cols-2">
-        <div
-          v-for="provider in paymentSummary?.providers || []"
-          :key="`${provider.key}-runbook`"
-          class="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/45"
+        <pre
+          class="mt-4 max-h-80 overflow-y-auto whitespace-pre-wrap break-words rounded-md border border-slate-200 bg-slate-50 p-4 font-mono text-[12px] leading-5 text-slate-600 dark:border-slate-800 dark:bg-slate-950/45 dark:text-slate-300"
+          >{{ paymentSummary?.integration_evidence_packet || '暂无联调证据，请刷新支付数据。' }}</pre
         >
-          <div class="flex flex-wrap items-center gap-2">
-            <p class="mr-auto font-semibold text-slate-950 dark:text-white">
-              {{ provider.display_name }}
-            </p>
-            <StatusPill :tone="provider.enabled ? 'success' : 'neutral'">
-              {{ provider.enabled ? 'enabled' : 'disabled' }}
-            </StatusPill>
-            <StatusPill :tone="provider.configured ? 'success' : 'warning'">
-              {{ provider.configured ? 'configured' : 'missing config' }}
-            </StatusPill>
-          </div>
+      </AdminPanel>
+    </section>
 
-          <div class="mt-4 grid gap-4 lg:grid-cols-2">
-            <div>
-              <p class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
-                Sandbox smoke test
-              </p>
-              <ol class="mt-2 space-y-1 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                <li v-for="(step, index) in provider.sandbox_runbook" :key="`${provider.key}-sandbox-${step}`">
-                  {{ index + 1 }}. {{ step }}
-                </li>
-              </ol>
-            </div>
-
-            <div>
-              <p class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
-                Go-live checklist
-              </p>
-              <ol class="mt-2 space-y-1 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                <li v-for="(step, index) in provider.go_live_checklist" :key="`${provider.key}-live-${step}`">
-                  {{ index + 1 }}. {{ step }}
-                </li>
-              </ol>
-            </div>
-          </div>
-
-          <div class="mt-4 grid gap-4 lg:grid-cols-2">
-            <div>
-              <p class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
-                Expected event flow
-              </p>
-              <ol class="mt-2 space-y-1 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                <li v-for="(step, index) in provider.expected_event_flow" :key="`${provider.key}-flow-${step}`">
-                  {{ index + 1 }}. {{ step }}
-                </li>
-              </ol>
-            </div>
-
-            <div>
-              <p class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
-                Troubleshooting
-              </p>
-              <ol class="mt-2 space-y-1 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                <li v-for="(step, index) in provider.troubleshooting_steps" :key="`${provider.key}-trouble-${step}`">
-                  {{ index + 1 }}. {{ step }}
-                </li>
-              </ol>
-            </div>
-          </div>
-
-          <div class="mt-4">
-            <p class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
-              Evidence fields to record
-            </p>
-            <div class="mt-2 flex flex-wrap gap-2">
-              <StatusPill v-for="field in provider.evidence_fields" :key="`${provider.key}-${field}`">
-                {{ field }}
-              </StatusPill>
-            </div>
-          </div>
-        </div>
-      </div>
-    </AdminPanel>
-
-    <AdminPanel as="section">
+    <AdminPanel as="section" class="min-w-0 overflow-hidden">
       <div class="mb-4">
         <p class="font-semibold">最近支付订单</p>
         <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          只展示运营排查需要的订单字段。完整支付确认仍以 provider 回调和后端订单状态为准。
+          仅展示运营排查需要的订单字段。完整权益开通仍以 provider 回调和后端订单状态为准。
         </p>
       </div>
 
-      <div class="overflow-x-auto">
-        <table class="min-w-[980px] w-full text-left text-sm">
+      <div class="-mx-5 min-w-0 overflow-x-auto px-5">
+        <table class="w-full min-w-[980px] text-left text-sm">
           <thead class="border-b border-slate-200 text-xs uppercase text-slate-500 dark:border-slate-800 dark:text-slate-400">
             <tr>
               <th class="py-3 pr-4 font-semibold">订单</th>
@@ -476,9 +234,7 @@ const acceptanceTone = (status: string) => {
                 <p class="break-all font-mono text-xs font-semibold text-slate-950 dark:text-white">
                   {{ order.merchant_order_id }}
                 </p>
-                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  {{ order.plan }}
-                </p>
+                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ order.plan }}</p>
               </td>
               <td class="py-4 pr-4">
                 <p class="break-all text-slate-700 dark:text-slate-200">
@@ -495,9 +251,7 @@ const acceptanceTone = (status: string) => {
                 {{ formatMoney(order.amount_cents, order.currency) }}
               </td>
               <td class="py-4 pr-4">
-                <StatusPill :tone="statusTone(order.status)">
-                  {{ order.status }}
-                </StatusPill>
+                <StatusPill :tone="statusTone(order.status)">{{ order.status }}</StatusPill>
               </td>
               <td class="py-4 pr-4">
                 <div class="flex flex-wrap gap-2">
@@ -527,11 +281,11 @@ const acceptanceTone = (status: string) => {
       </div>
     </AdminPanel>
 
-    <AdminPanel as="section">
+    <AdminPanel as="section" class="min-w-0">
       <div class="mb-4">
         <p class="font-semibold">支付事件留痕</p>
         <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          记录 provider 回调或捕获结果的处理状态，用来判断重复通知、已应用事件和需要人工核对的失败事件。
+          记录 provider 回调或捕获结果的处理状态，用于判断重复通知、已应用事件和需要人工核对的失败事件。
         </p>
       </div>
 

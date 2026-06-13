@@ -777,10 +777,34 @@ async function expectNoHorizontalOverflow(page: Page) {
     bodyClientWidth: document.body.clientWidth,
     docScrollWidth: document.documentElement.scrollWidth,
     docClientWidth: document.documentElement.clientWidth,
+    offenders: Array.from(document.querySelectorAll<HTMLElement>('body *'))
+      .map((element) => {
+        const rect = element.getBoundingClientRect()
+        return {
+          tag: element.tagName.toLowerCase(),
+          className: element.getAttribute('class') ?? '',
+          text: element.textContent?.trim().replace(/\s+/g, ' ').slice(0, 120),
+          width: Math.round(rect.width),
+          scrollWidth: element.scrollWidth,
+          clientWidth: element.clientWidth,
+          right: Math.round(rect.right),
+        }
+      })
+      .filter(
+        (item) =>
+          item.right > document.documentElement.clientWidth + 2 ||
+          item.scrollWidth > item.clientWidth + 2,
+      )
+      .sort((a, b) => Math.max(b.right, b.scrollWidth) - Math.max(a.right, a.scrollWidth))
+      .slice(0, 8),
   }))
 
-  expect(metrics.bodyScrollWidth).toBeLessThanOrEqual(metrics.bodyClientWidth + 2)
-  expect(metrics.docScrollWidth).toBeLessThanOrEqual(metrics.docClientWidth + 2)
+  expect(metrics.bodyScrollWidth, JSON.stringify(metrics.offenders, null, 2)).toBeLessThanOrEqual(
+    metrics.bodyClientWidth + 2,
+  )
+  expect(metrics.docScrollWidth, JSON.stringify(metrics.offenders, null, 2)).toBeLessThanOrEqual(
+    metrics.docClientWidth + 2,
+  )
 }
 
 test.describe('Admin Control Room visual QA', () => {
@@ -793,15 +817,17 @@ test.describe('Admin Control Room visual QA', () => {
       await page.setViewportSize({ width: viewport.width, height: viewport.height })
       await page.goto('/')
 
-      await expect(page.getByRole('heading', { name: 'PDF-Flow Control Room' })).toBeVisible()
-      await expect(page.locator('p.text-lg', { hasText: '上线健康报告' })).toBeVisible()
+      await expect(page.getByRole('heading', { name: 'PDF-Flow Admin' })).toBeVisible()
+      await expect(page.getByText('客户与收入')).toBeVisible()
       await expectNoHorizontalOverflow(page)
 
       const tabs = [
         { label: '功能开关', visibleText: 'OCR 识别' },
         { label: '站点配置', visibleText: '全站公告' },
         { label: '内容块', visibleText: 'PDF 工作台' },
-        { label: '用户管理', visibleText: 'smoke-compress@example.com' },
+        { label: '用户与权限', visibleText: 'smoke-compress@example.com' },
+        { label: '支付配置', visibleText: 'Webhook / Notify URL' },
+        { label: '支付对账', visibleText: 'PDF-Flow payment reconciliation packet' },
         { label: '任务观察', visibleText: 'quarterly-board-pack-with-long-readable-name.pdf' },
         { label: '问题反馈', visibleText: '压缩完成后下载按钮没有响应' },
         { label: '错误观察', visibleText: '/api/v1/files/compress' },
@@ -876,7 +902,7 @@ test.describe('Admin Control Room visual QA', () => {
     await mockAdminControlRoom(page, calls)
     await page.goto('/')
 
-    await page.getByRole('button', { name: '用户管理' }).click()
+    await page.getByRole('button', { name: '用户与权限' }).click()
     const smokeUserRow = page
       .getByText('smoke-compress@example.com', { exact: true })
       .locator('xpath=ancestor::div[contains(@class, "border-t")][1]')
@@ -940,23 +966,24 @@ test.describe('Admin payment reconciliation QA', () => {
     await mockAdminControlRoom(page)
     await page.goto('/')
 
-    await page.getByRole('button', { name: '支付对账' }).click()
-    await expect(page.getByText('PDF-Flow payment reconciliation packet')).toBeVisible()
+    await page.getByRole('button', { name: '支付配置' }).click()
     await expect(page.getByText('Smoke passed').first()).toBeVisible()
     await expect(page.getByText('Missing config').first()).toBeVisible()
     await expect(page.getByText('Needs review').first()).toBeVisible()
     await expect(page.getByText('At least one paid order has a matching applied PaymentEvent.').first()).toBeVisible()
-    await expect(page.getByText('Enabled but merchant configuration is incomplete.')).toBeVisible()
-    await expect(page.getByText('商户回调配置清单')).toBeVisible()
+    await expect(page.getByText('Add backend merchant config before starting sandbox or live smoke tests.')).toBeVisible()
+    await expect(page.getByText('商户后台配置').first()).toBeVisible()
     await expect(page.getByText('https://api.pdf-flow.test/api/v1/payment/webhooks/epusdt')).toBeVisible()
     await expect(page.getByText('PAYMENT_GATEWAY_CONFIGS.epusdt.secret').first()).toBeVisible()
-    await expect(page.getByText('支付联调运维包')).toBeVisible()
+    await expect(page.getByText('Sandbox smoke test').first()).toBeVisible()
     await expect(page.getByText('Use a low-value USDT test order and verify the gateway callback amount/currency mapping.')).toBeVisible()
-    await expect(page.getByText('For WeChat Pay decrypt failures, verify API v3 key length and platform certificate freshness.')).toBeVisible()
+
+    await page.getByRole('button', { name: '支付对账' }).click()
+    await expect(page.getByText('PDF-Flow payment reconciliation packet')).toBeVisible()
     await expect(page.getByText('evt_mismatch_admin_001', { exact: true })).toBeVisible()
     await expect(page.getByText('Payment amount mismatch')).toBeVisible()
     await page.getByRole('button', { name: '复制证据包' }).click()
-    await expect(page.getByText('已复制支付联调证据包')).toBeVisible()
+    await expect(page.getByText('已复制证据包')).toBeVisible()
     const evidenceCopied = await page.evaluate(() => navigator.clipboard.readText())
     expect(evidenceCopied).toContain('PDF-Flow payment integration evidence packet')
     expect(evidenceCopied).toContain('acceptance_status=missing_config')
@@ -966,7 +993,7 @@ test.describe('Admin payment reconciliation QA', () => {
     expect(evidenceCopied).not.toContain('tron:private-payment-address')
 
     await page.getByRole('button', { name: '复制对账包' }).click()
-    await expect(page.getByText('已复制支付对账包')).toBeVisible()
+    await expect(page.getByText('已复制对账包')).toBeVisible()
 
     const copied = await page.evaluate(() => navigator.clipboard.readText())
     expect(copied).toContain('pf_admin_mismatch')

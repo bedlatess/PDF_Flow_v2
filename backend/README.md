@@ -116,9 +116,9 @@ Supported provider framework:
 
 - Stripe
 - PayPal
-- 易支付
-- 支付宝
-- 微信支付
+- EPay
+- Alipay
+- WeChat Pay
 - TokenPay
 - BEPUSDT
 - EPUSDT

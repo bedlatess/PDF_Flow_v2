@@ -44,6 +44,7 @@ def test_admin_content_domain_seeds_public_config_and_updates_with_audit(client)
 
         public_config = get_public_config(db)
         assert public_config["settings"]["support_email"]["value"] == "support@pdf-flow.com"
+        assert public_config["settings"]["site_name"]["label"] == "站点名称"
         assert public_config["content_blocks"]["home_hero:zh"]["content"].startswith("隐私优先")
         assert public_config["content_blocks"]["privacy_policy:zh"]["content"].startswith("我们不会出售")
 
@@ -108,4 +109,3 @@ def test_admin_content_domain_seeds_public_config_and_updates_with_audit(client)
         assert audit_targets[-3:] == ["site_setting", "feature_flag", "content_block"]
     finally:
         db.close()
-

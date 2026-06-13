@@ -12,12 +12,13 @@ const createTestI18n = () => createI18n({
         dragDrop: 'Drag and drop files here',
         or: 'or',
         browse: 'browse',
-        privacyBadge: '100% local-first processing',
         dragDropZone: {
           helper: {
             format: '{types} up to {size} MB',
             pdfAndImages: 'PDF and images up to {size} MB',
             files: 'Files up to {size} MB',
+            single: 'Choose one file',
+            multiple: 'Multiple files supported',
           },
           errors: {
             maxFiles: 'Upload up to {count} files',
@@ -84,9 +85,9 @@ describe('DragDropZone Component', () => {
     expect(wrapper.text()).toContain('PDF up to 50 MB')
   })
 
-  it('displays privacy badge', () => {
+  it('shows multiple file helper text', () => {
     const wrapper = mountZone()
 
-    expect(wrapper.text()).toContain('100% local-first processing')
+    expect(wrapper.text()).toContain('Multiple files supported')
   })
 })

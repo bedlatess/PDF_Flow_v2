@@ -71,10 +71,11 @@ curl http://localhost:8000/health
 
 ## Current Stage
 
-- Stage: pre-P0 acceptance hardening.
-- Focus: public UI quality, account recovery, payment entry, and production deploy stability.
-- P0 resumes after the public shell, account recovery, pricing/payment entry, admin access, and deploy smoke checks are stable on the v2 server.
-- Independent backend split should wait until the single-repo deployment is stable in production. The current backend has the domain boundaries needed for a later split; separating it too early would add deployment risk before P0 closes.
+- Stage: production acceptance hardening.
+- Focus: external integration readiness, provider callbacks, deploy smoke evidence, and regression coverage for public tool flows.
+- Public shell, account recovery routes, pricing/payment entry, admin access, deploy smoke checks, gated tool flow, and tool-page regression coverage are now in place on the v2 line.
+- Remaining acceptance work is mostly configuration and evidence: OAuth credentials, email delivery, payment provider callbacks, AI/OCR provider keys, and live smoke checks.
+- Independent backend split should wait until the single-repo deployment is stable in production. The current backend has the domain boundaries needed for a later split; separating it too early would add deployment risk.
 
 ## Latest Progress
 
@@ -87,6 +88,8 @@ curl http://localhost:8000/health
 - Account recovery: frontend routes for `/auth/forgot-password` and `/auth/reset-password` are connected to the existing backend reset endpoints. Email delivery remains configurable for production; when mail is not configured, the UI gives a manual recovery fallback instead of pretending the email definitely arrived.
 - Admin bootstrap: trusted CLI initializer added for first-admin creation or promotion, including audit logging and repeat-safe behavior.
 - Completion audit: public tool copy was re-scanned and cleaned again so ordinary tool/pricing/account flows no longer lean on internal local/cloud/server wording. Legal policy and admin diagnostics keep precise processing terms where they are necessary.
+- Tool flow regression: gated tools, Pro-only tools, staged local tools, and free-mode cloud copy now have Playwright coverage in `tests/e2e-playwright/tool-flow-regression.spec.ts`.
+- Repository cleanup: OAuth setup docs, backend runbook, admin content defaults, CI runtime, and duplicate backend dependency declarations were cleaned up; see `docs/DOCS_AUDIT.md`.
 
 ## Cleanup Rules
 

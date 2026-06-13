@@ -96,6 +96,7 @@ Useful setup docs:
 
 - [docs/STAGING_DEPLOY_GUIDE.md](./docs/STAGING_DEPLOY_GUIDE.md)
 - [docs/OAUTH_SETUP.md](./docs/OAUTH_SETUP.md)
+- [docs/DOCS_AUDIT.md](./docs/DOCS_AUDIT.md)
 - [backend/README.md](./backend/README.md)
 - [backend/docs/EMAIL_SERVICE.md](./backend/docs/EMAIL_SERVICE.md)
 

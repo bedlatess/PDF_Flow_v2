@@ -12,7 +12,7 @@ psycopg2-binary==2.9.9
 # Authentication & Security
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
-bcrypt==4.0.1  # 固定版本：passlib 1.7.4 与 bcrypt>=4.1 不兼容（缺 __about__）
+bcrypt==4.0.1  # Pinned for passlib 1.7.4 compatibility; bcrypt >=4.1 removed __about__.
 email-validator==2.1.0.post1
 python-dotenv==1.0.0
 pydantic==2.5.3
@@ -57,4 +57,3 @@ python-magic-bin==0.4.14; sys_platform == "win32"
 pytest==7.4.4
 pytest-asyncio==0.23.3
 pytest-cov==4.1.0
-httpx==0.26.0

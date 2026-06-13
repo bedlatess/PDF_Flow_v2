@@ -248,6 +248,15 @@ Deployment:
   - verified with `pytest backend/tests/test_entitlements.py backend/tests/test_account_domain.py backend/tests/test_admin_users_domain.py backend/tests/test_admin.py -q`
   - verified with `npm run type-check`
   - verified with `npm run build`
+- Deployed and verified manual admin entitlement grants on production:
+  - deployment `fb34c4ff208f912fdde9d5ab7a3b533b2adf4914` completed successfully at `2026-06-13 23:09:01`
+  - deploy script rebuilt public/admin frontend and backend images, ran migrations, and passed health/API-doc smoke checks
+  - production runtime records `.deploy_state/main/current_deployed_commit=fb34c4ff208f912fdde9d5ab7a3b533b2adf4914`
+  - all Compose services are healthy: `frontend`, `backend`, `celery-worker`, `postgres`, and `redis`
+  - live entitlement smoke registered `manual-entitlement-*`, patched it through the admin API to `role=pro`, `subscription_status=manual`, and a future `subscription_end_date`
+  - the test user login returned bearer tokens; `/api/v1/auth/me` returned `role=pro` and `subscription_status=manual`
+  - `/api/v1/users/me/stats` returned `role=pro` and `quota_limit=-1`
+  - the temporary test user was deleted after verification
 
 ## Known Code Issues
 
@@ -686,7 +695,7 @@ pytest tests/test_payment_domain.py -q
 
 ## Next Recommended Work
 
-1. Deploy and production-verify manual admin entitlement grants, then configure payment and Gemini credentials when real provider accounts are ready.
+1. Configure payment and Gemini credentials when real provider accounts are ready.
 2. Split `src/locales/overrides.ts` with an encoding-safe migration script and add missing baseline translations before exposing more locales.
 3. Add competitor-gap tools only after the platform refactor remains stable under production traffic.
 4. Decide whether to split the admin frontend into its own repository after the dedicated admin domain is live and daily operation is stable.

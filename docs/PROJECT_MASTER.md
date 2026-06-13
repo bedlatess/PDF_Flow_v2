@@ -9,7 +9,7 @@ This is the internal source of truth for development direction, current progress
 - Official repository: `https://github.com/bedlatess/PDF_Flow_v2.git`
 - Official remote name: `v2`
 - Branch: `main`
-- Current deployed commit after the last verified server run: `c10f65d8183954d7b7381c1189bc3a935f7c08f0`
+- Current deployed commit after the last verified server run is recorded on the server at `.deploy_state/main/current_deployed_commit`.
 - Server path: `/root/data/docker_data/PDF/pdf-flow`
 - Deployment model: single repository, single Docker Compose server
 - Runtime services: `frontend`, `backend`, `celery-worker`, `postgres`, `redis`
@@ -107,6 +107,14 @@ Deployment:
 - Normalized the PDF fixture generator to a single `.mjs` script and removed the duplicate `.ts` copy.
 - Fixed CI/runtime alignment around Node 22 and current target tests.
 - Fixed an outdated DragDropZone unit test.
+- Verified server health after deploying Phase 1 foundation cleanup:
+  - commit `96fa34dbe85b87107848295b5b900359dc67836a`
+  - `backend` healthy
+  - `celery-worker` healthy
+  - `postgres` healthy
+  - `redis` healthy
+  - `/health` returns production healthy
+  - frontend home returns HTTP 200
 - Verified server health after deploying `c10f65d`:
   - `frontend` healthy
   - `backend` healthy

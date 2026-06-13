@@ -61,44 +61,45 @@ const accentClasses = computed(() => {
     data-testid="tool-access-panel"
     class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900/90"
   >
-    <div class="grid gap-5 lg:grid-cols-[minmax(0,0.9fr)_minmax(280px,0.7fr)] lg:items-center">
-      <div>
+    <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+      <div class="min-w-0">
         <p :class="['text-xs font-semibold uppercase tracking-[0.2em]', accentClasses.label]">
           {{ label }}
         </p>
-        <h2 class="mt-2 max-w-xl text-2xl font-semibold leading-tight text-slate-950 dark:text-white">
+        <h2 class="mt-2 max-w-2xl text-2xl font-semibold leading-tight text-slate-950 dark:text-white">
           {{ title }}
         </h2>
-        <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300">
+        <p class="mt-3 max-w-3xl text-sm leading-6 text-slate-600 dark:text-slate-300">
           {{ description }}
         </p>
-
-        <Button
-          size="lg"
-          class="mt-5 w-full sm:w-fit"
-          :class="accentClasses.button"
-          @click="emit('action')"
-        >
-          <slot name="actionIcon" />
-          {{ actionLabel }}
-        </Button>
       </div>
 
-      <div class="rounded-md border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/40">
-        <div class="grid gap-3">
-          <div
-            v-for="(step, index) in steps"
-            :key="step"
-            :class="['flex min-h-12 items-center gap-3 rounded-md border px-3 py-2', accentClasses.step]"
-          >
-            <span :class="['flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-xs font-semibold', accentClasses.marker]">
-              {{ index + 1 }}
-            </span>
-            <p class="text-sm leading-6">
-              {{ step }}
-            </p>
-          </div>
-        </div>
+      <Button
+        size="lg"
+        class="w-full shrink-0 sm:w-fit"
+        :class="accentClasses.button"
+        @click="emit('action')"
+      >
+        <slot name="actionIcon" />
+        {{ actionLabel }}
+      </Button>
+    </div>
+
+    <div
+      v-if="steps.length > 0"
+      class="mt-5 grid gap-2 sm:grid-cols-3"
+    >
+      <div
+        v-for="(step, index) in steps"
+        :key="step"
+        :class="['flex min-h-12 items-center gap-3 rounded-md border px-3 py-2', accentClasses.step]"
+      >
+        <span :class="['flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-xs font-semibold', accentClasses.marker]">
+          {{ index + 1 }}
+        </span>
+        <p class="text-sm leading-6">
+          {{ step }}
+        </p>
       </div>
     </div>
   </section>

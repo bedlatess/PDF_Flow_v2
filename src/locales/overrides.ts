@@ -292,7 +292,7 @@ const sharedEn = {
         {
           title: '7. Security',
           paragraphs: [
-            'We use hashed passwords, token-based authentication, role-based access, security logs, containerized deployment, and least-necessary access practices to reduce risk.',
+            'We use hashed passwords, secure sign-in, role-based access, security logs, and least-necessary access practices to reduce risk.',
             'No online service can be perfectly secure. If you handle highly sensitive files, consider local processing or redaction before upload.',
           ],
         },
@@ -1161,7 +1161,7 @@ const sharedEn = {
         workspaceDescription: 'Useful for your own contracts, document packs, and archives before merging, splitting, numbering, or converting.',
         step1: 'You must know the current password. We do not guess, bypass, or break passwords.',
         step2: 'A new copy is exported; the original protected file is not overwritten.',
-        step3: 'If the password is incorrect, you will see a diagnostic code you can share with support.',
+        step3: 'If the password is incorrect, the page will explain what to check before you try again.',
         guardTitle: 'Permission reminder',
         guardBody: 'Only unlock files you are allowed to process. For third-party files, confirm authorization first.',
         errorFailed: 'The PDF could not be unlocked. Please confirm the password and retry with a standard protected PDF.',
@@ -2003,7 +2003,7 @@ const sharedZh = {
         {
           title: '7. 安全措施',
           paragraphs: [
-            '我们采用密码哈希、令牌登录、角色权限、基础安全日志、容器化部署和最小必要访问原则来降低风险。',
+            '我们采用密码哈希、安全登录、角色权限、基础安全日志和最小必要访问原则来降低风险。',
             '没有任何在线服务能保证绝对安全。处理高度敏感文件前，请优先考虑本地处理或自行脱敏。',
           ],
         },
@@ -2799,7 +2799,7 @@ const sharedZh = {
         workspaceDescription: '适合处理你自己的合同、资料包或归档文件，解锁后可以继续合并、拆分、加页码或转换格式。',
         step1: '必须输入当前密码。平台不会尝试猜测、绕过或破解密码。',
         step2: '导出的文件是新副本，原始受保护文件不会被覆盖。',
-        step3: '如果密码错误或文件不是标准加密 PDF，页面会给出可截取的诊断提示。',
+        step3: '如果密码错误或文件不是标准加密 PDF，页面会提示你检查后再试。',
         guardTitle: '权限提醒',
         guardBody: '请只解锁你拥有处理权限的文件。对于第三方文件，请先确认授权。',
         errorFailed: 'PDF 解锁失败，请确认密码后用标准受保护 PDF 重试。',
@@ -3858,7 +3858,7 @@ export const localeOverrides = {
           {
             title: '7. Seguridad',
             paragraphs: [
-              'Usamos contrasenas con hash, autenticacion por token, roles, registros de seguridad, despliegue en contenedores y acceso minimo necesario para reducir riesgos.',
+              'Usamos contrasenas con hash, inicio de sesion seguro, roles, registros de seguridad y acceso minimo necesario para reducir riesgos.',
               'Ningun servicio en linea es perfectamente seguro. Para archivos muy sensibles, considera procesamiento local o redaccion antes de subirlos.',
             ],
           },
@@ -4547,7 +4547,7 @@ export const localeOverrides = {
           workspaceDescription: 'Util para tus propios contratos, paquetes de documentos y archivos que despues quieres combinar, dividir o numerar.',
           step1: 'Debes conocer la contrasena actual. No intentamos adivinarla ni saltarla.',
           step2: 'Se exporta una copia nueva; el archivo protegido original no se sobrescribe.',
-          step3: 'Si la contrasena es incorrecta, veras un mensaje con codigo de diagnostico.',
+          step3: 'Si la contrasena es incorrecta, la pagina indicara que revisar antes de intentarlo otra vez.',
           guardTitle: 'Recordatorio de permisos',
           guardBody: 'Desbloquea solo archivos que tienes derecho a procesar. Para archivos de terceros, confirma la autorizacion primero.',
           errorFailed: 'No se pudo desbloquear el PDF. Confirma la contrasena e intenta de nuevo con un PDF protegido estandar.',

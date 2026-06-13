@@ -234,7 +234,10 @@ onUnmounted(revokeResultUrl)
             </div>
           </Card>
 
-          <Card class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
+          <Card
+            v-if="selectedFile || isProcessing || resultUrl"
+            class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none"
+          >
             <div class="space-y-5">
               <div>
                 <h3 class="text-xl font-semibold text-slate-900 dark:text-white">

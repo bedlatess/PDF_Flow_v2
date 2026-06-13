@@ -53,7 +53,7 @@
         </template>
       </ToolAccessPanel>
 
-      <div class="mt-6 grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
+      <div v-if="canUseAI" class="mt-6 grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
         <Card class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
           <div class="space-y-6">
             <div class="space-y-2">

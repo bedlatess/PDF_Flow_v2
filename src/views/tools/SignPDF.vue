@@ -220,7 +220,10 @@ onUnmounted(() => {
             </div>
           </Card>
 
-          <Card class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
+          <Card
+            v-if="pdfFile"
+            class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none"
+          >
             <div class="space-y-5">
               <div>
                 <p class="text-xs font-semibold uppercase tracking-[0.22em] text-orange-600">
@@ -284,7 +287,10 @@ onUnmounted(() => {
             </div>
           </Card>
 
-          <Card class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
+          <Card
+            v-if="pdfFile && signatureFile"
+            class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none"
+          >
             <div class="space-y-5">
               <div>
                 <p class="text-xs font-semibold uppercase tracking-[0.22em] text-amber-600">
@@ -391,7 +397,10 @@ onUnmounted(() => {
         </div>
 
         <div class="space-y-6">
-          <Card class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
+          <Card
+            v-if="pdfFile"
+            class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none"
+          >
             <div class="space-y-5">
               <div>
                 <p class="text-xs font-semibold uppercase tracking-[0.22em] text-amber-600">
@@ -440,7 +449,10 @@ onUnmounted(() => {
             </div>
           </Card>
 
-          <Card class="rounded-lg border border-emerald-200 bg-emerald-50/90 shadow-sm dark:border-emerald-900/40 dark:bg-emerald-950/20 dark:shadow-none">
+          <Card
+            v-if="pdfFile"
+            class="rounded-lg border border-emerald-200 bg-emerald-50/90 shadow-sm dark:border-emerald-900/40 dark:bg-emerald-950/20 dark:shadow-none"
+          >
             <div class="flex items-start gap-4">
               <BadgeCheck class="mt-0.5 h-6 w-6 shrink-0 text-emerald-500" />
               <div>

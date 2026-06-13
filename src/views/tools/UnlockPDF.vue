@@ -235,7 +235,10 @@ onUnmounted(() => {
               @remove="removeFile"
             />
 
-            <label class="block">
+            <label
+              v-if="selectedFile"
+              class="block"
+            >
               <span class="mb-2 block text-sm font-medium text-slate-900 dark:text-white">
                 {{ copy.passwordLabel }}
               </span>
@@ -265,7 +268,10 @@ onUnmounted(() => {
               size="md"
             />
 
-            <div class="flex flex-col gap-3 sm:flex-row">
+            <div
+              v-if="selectedFile"
+              class="flex flex-col gap-3 sm:flex-row"
+            >
               <Button
                 variant="primary"
                 size="lg"
@@ -293,7 +299,10 @@ onUnmounted(() => {
           </Card>
 
         <div class="space-y-6">
-          <Card class="overflow-hidden rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
+          <Card
+            v-if="selectedFile"
+            class="overflow-hidden rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none"
+          >
             <div class="space-y-6">
                 <div class="rounded-md border border-emerald-100 bg-emerald-50/80 p-5 dark:border-emerald-900/50 dark:bg-emerald-950/20">
                   <div class="flex items-start gap-3">

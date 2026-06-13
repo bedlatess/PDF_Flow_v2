@@ -1,6 +1,6 @@
 # PDF-Flow Project Master
 
-Last updated: 2026-06-13
+Last updated: 2026-06-14
 
 This is the internal source of truth for development direction, current progress, architecture decisions, known risks, and next work. Public-facing setup belongs in `README.md`.
 
@@ -257,6 +257,14 @@ Deployment:
   - the test user login returned bearer tokens; `/api/v1/auth/me` returned `role=pro` and `subscription_status=manual`
   - `/api/v1/users/me/stats` returned `role=pro` and `quota_limit=-1`
   - the temporary test user was deleted after verification
+- Added account and admin entitlement visibility:
+  - shared frontend entitlement summary helper now labels Free, Pro, Enterprise, Admin, active/manual/trial/canceling, expired, and canceled states consistently
+  - Profile page shows the user's plan, subscription status, and access expiry/expiration summary
+  - admin user management shows an entitlement pill and expiry summary above the manual entitlement controls
+  - verified with `npm run type-check`
+  - verified with `npm run test:unit:ci -- tests/unit/entitlements.test.ts`
+  - verified with `npm run build`
+  - verified with `npm run build:admin`
 
 ## Known Code Issues
 

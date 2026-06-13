@@ -4,6 +4,7 @@ import type { AdminPasswordResetLink, AdminUser } from '@/admin/api'
 import AdminActionButton from './AdminActionButton.vue'
 import AdminPanel from './AdminPanel.vue'
 import StatusPill from './StatusPill.vue'
+import { getEntitlementSummary } from '@/utils/entitlements'
 
 defineProps<{
   users: AdminUser[]
@@ -68,6 +69,8 @@ const expireSubscription = (user: AdminUser) => {
   user.subscription_status = 'expired'
   user.subscription_end_date = new Date().toISOString()
 }
+
+const entitlementSummary = (user: AdminUser) => getEntitlementSummary(user)
 </script>
 
 <template>
@@ -199,6 +202,14 @@ const expireSubscription = (user: AdminUser) => {
           <div
             class="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950/35 sm:grid-cols-[0.9fr_1fr_auto] lg:col-span-4"
           >
+            <div class="flex flex-wrap items-center gap-2 sm:col-span-3">
+              <StatusPill :tone="entitlementSummary(user).tone">
+                {{ entitlementSummary(user).label }} · {{ entitlementSummary(user).statusLabel }}
+              </StatusPill>
+              <span class="text-xs font-medium text-slate-500 dark:text-slate-400">
+                {{ entitlementSummary(user).detail }}
+              </span>
+            </div>
             <label class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
               Entitlement
               <select

@@ -85,6 +85,36 @@
               </div>
             </div>
 
+            <div class="mt-4 grid gap-3 rounded-md border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950/45 sm:grid-cols-3">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+                  Plan
+                </p>
+                <p class="mt-2 text-sm font-semibold text-slate-950 dark:text-white">
+                  {{ entitlement.label }}
+                </p>
+              </div>
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+                  Status
+                </p>
+                <p class="mt-2 text-sm font-semibold text-slate-950 dark:text-white">
+                  {{ entitlement.statusLabel }}
+                </p>
+              </div>
+              <div class="sm:col-span-1">
+                <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+                  Access
+                </p>
+                <p
+                  class="mt-2 text-sm font-semibold"
+                  :class="entitlement.isActive ? 'text-emerald-700 dark:text-emerald-200' : 'text-slate-600 dark:text-slate-300'"
+                >
+                  {{ entitlement.detail }}
+                </p>
+              </div>
+            </div>
+
             <form v-if="editing" class="mt-6 space-y-4" @submit.prevent="saveProfile">
               <label class="block">
                 <span class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">
@@ -242,6 +272,7 @@ import ConfirmationDialog from '@/components/common/ConfirmationDialog.vue'
 import DiagnosticAlert from '@/components/common/DiagnosticAlert.vue'
 import { formatUserFacingError, type FormattedUserError } from '@/utils/error-messages'
 import { useLocalePath } from '@/composables/useLocalePath'
+import { getEntitlementSummary } from '@/utils/entitlements'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -257,13 +288,21 @@ const editForm = reactive({ full_name: '' })
 const initialLoading = computed(() => userStore.loading && !userStore.user)
 const displayName = computed(() => userStore.user?.full_name || userStore.user?.email || t('account.notSet'))
 const initials = computed(() => displayName.value.charAt(0).toUpperCase())
+const entitlement = computed(() =>
+  getEntitlementSummary({
+    role: userStore.user?.role,
+    subscription_status: userStore.user?.subscription_status,
+    subscription_end_date: userStore.user?.subscription_end_date,
+  })
+)
 
 const planLabel = computed(() => {
-  const role = userStore.user?.role || 'free'
+  const role = entitlement.value.isActive ? userStore.user?.role || 'free' : 'free'
   return t(`account.plans.${role}`)
 })
 
 const planBadgeClass = computed(() => {
+  if (entitlement.value.isExpired) return 'bg-rose-400/15 text-rose-700 dark:text-rose-200'
   if (userStore.isEnterpriseTier) return 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900'
   if (userStore.isProTier) return 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-200'
   return 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200'

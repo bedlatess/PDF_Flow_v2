@@ -9,7 +9,7 @@ This is the internal source of truth for development direction, current progress
 - Official repository: `https://github.com/bedlatess/PDF_Flow_v2.git`
 - Official remote name: `v2`
 - Branch: `main`
-- Last verified runtime commit: `e7bb5cb848aa78dd9badac804471948d93326a5f`
+- Last verified runtime commit: `985efb3bb82065baf395c0af626bd661aa61dce3`
 - The server also records the active runtime commit at `.deploy_state/main/current_deployed_commit`.
 - Server path: `/root/data/docker_data/PDF/pdf-flow`
 - Deployment model: single repository, single Docker Compose server
@@ -215,6 +215,13 @@ Deployment:
   - reset-link generation is admin-only, blocked for inactive users, and recorded in admin audit logs without storing the token
   - verified with `pytest backend/tests/test_admin.py::test_admin_can_create_user_password_reset_link backend/tests/test_admin.py::test_admin_password_reset_link_requires_admin_and_active_user -q`
   - verified with `npm run type-check`
+- Deployed and verified no-SMTP account recovery on production:
+  - deployment `985efb3bb82065baf395c0af626bd661aa61dce3` completed successfully at `2026-06-13 22:14:48`
+  - live admin generated a reset link for test user `reset-smoke-20260613221610@example.com`
+  - generated link pointed to `https://pdf.pawn.eu.org/zh-cn/auth/reset-password`
+  - reset token successfully changed the test user's password and subsequent login returned bearer tokens
+  - latest audit log recorded `target_type=password_reset_link`
+  - test user cleanup deleted the generated account
 
 ## Known Code Issues
 

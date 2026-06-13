@@ -27,11 +27,13 @@
     "required": "必填",
     "optional": "可选",
     "error": "错误",
+    "cancel": "取消",
     "close": "关闭",
     "copy": "复制",
     "replace": "替换",
     "create": "创建",
     "creating": "创建中...",
+    "privacyBadge": "免费工作流",
     "cloudToggle": {
       "localTitle": "免费模式",
       "localDesc": "适合快速处理日常文件。",
@@ -970,6 +972,7 @@
     "watermark": {
       "title": "PDF 加水印",
       "desc": "为 PDF 添加文字水印",
+      "localHint": "会尽量在浏览器中处理；本地工具会让文件留在你的设备上。",
       "page": {
         "badge": "免费工具",
         "setupLabel": "水印设置",
@@ -1022,6 +1025,7 @@
     "fillForm": {
       "title": "填写 PDF 表单",
       "desc": "填写 PDF 表单字段",
+      "proOnly": "Pro 功能 - 需要云端处理",
       "pageExtra": "适合带有可识别字段的结构化 PDF 表单。",
       "notice": "上传 PDF 表单，检查识别出的字段，然后生成填写后的副本。",
       "accessLabel": "访问权限",
@@ -1058,6 +1062,7 @@
     "annotate": {
       "title": "批注 PDF",
       "desc": "为 PDF 添加备注和高亮",
+      "proOnly": "Pro 功能 - 需要云端处理",
       "pageExtra": "适合需要生成带可见批注或高亮标记的 PDF。",
       "notice": "上传 PDF，选择标注类型，设置页码和坐标，然后导出标注副本。",
       "accessLabel": "访问权限",
@@ -1130,7 +1135,9 @@
       "ready": "可以下载"
     }
   },
-  "cloud": {},
+  "cloud": {
+    "proOnly": "Pro 功能 - 升级后启用"
+  },
   "payment": {
     "success": {
       "badge": "支付流程已完成",
@@ -1750,6 +1757,24 @@
       "enterpriseDescription": "适合团队统一使用、更多额度、权限管理和上线支持。",
       "enterpriseBestFor": "团队使用",
       "enterpriseCta": "联系咨询",
+      "cloudTitle": "如何选择",
+      "cloudBody": "偶尔处理简单 PDF 任务时选择免费版。高级工具或高频文档工作成为日常时，再选择 Pro。",
+      "promiseTitle": "Pro 面向规律性的 PDF 工作",
+      "promiseBody": "偶尔处理文件时保留免费版即可。当 OCR、Office 转换、AI 分析、表单、批注或更大的文档流程成为常规需求时，再选择 Pro。",
+      "proofCards": [
+        {
+          "title": "免费",
+          "body": "覆盖日常 PDF 工具的实用组合。"
+        },
+        {
+          "title": "Pro",
+          "body": "面向高频文档工作的高级工具。"
+        },
+        {
+          "title": "企业",
+          "body": "为团队提供规划和支持。"
+        }
+      ],
       "currentPlan": "当前套餐",
       "popular": "推荐",
       "featuresLabel": "功能对比",

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { localeRouteFixtures } from '../fixtures/locale-route-fixtures'
 
 test.describe('Locale SEO metadata', () => {
   test.beforeEach(async ({ page }) => {
@@ -25,21 +26,28 @@ test.describe('Locale SEO metadata', () => {
     const canonical = page.locator('link[rel="canonical"]')
     await expect(canonical).toHaveAttribute('href', 'http://localhost:4173/en/tools/merge')
 
-    await expect(page.locator('link[rel="alternate"][hreflang="zh-CN"]')).toHaveAttribute(
-      'href',
-      'http://localhost:4173/zh-cn/tools/merge',
-    )
-    await expect(page.locator('link[rel="alternate"][hreflang="en"]')).toHaveAttribute(
-      'href',
-      'http://localhost:4173/en/tools/merge',
-    )
-    await expect(page.locator('link[rel="alternate"][hreflang="es"]')).toHaveAttribute(
-      'href',
-      'http://localhost:4173/es/tools/merge',
-    )
+    for (const locale of localeRouteFixtures) {
+      await expect(
+        page.locator(`link[rel="alternate"][hreflang="${locale.hreflang}"]`),
+      ).toHaveAttribute('href', `http://localhost:4173/${locale.routePrefix}/tools/merge`)
+    }
+
     await expect(page.locator('link[rel="alternate"][hreflang="x-default"]')).toHaveAttribute(
       'href',
       'http://localhost:4173/zh-cn/tools/merge',
     )
   })
+
+  for (const locale of localeRouteFixtures) {
+    test(`renders the merge tool title for ${locale.id}`, async ({ page }) => {
+      await page.goto(`/${locale.routePrefix}/tools/merge`)
+
+      await expect(page).toHaveTitle(
+        new RegExp(`${locale.mergeTitle} - PDF-Flow`),
+      )
+      await expect(
+        page.getByRole('heading', { name: locale.mergeTitle }),
+      ).toBeVisible()
+    })
+  }
 })

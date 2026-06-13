@@ -27,6 +27,7 @@
     "required": "Obligatorio",
     "optional": "Opcional",
     "error": "Error",
+    "cancel": "Cancelar",
     "close": "Cerrar",
     "copy": "Copiar",
     "replace": "Reemplazar",
@@ -974,6 +975,7 @@
     "watermark": {
       "title": "Marca de agua PDF",
       "desc": "Agrega una marca de agua de texto",
+      "localHint": "Se procesa en el navegador siempre que sea posible; en las herramientas locales, tu archivo permanece en tu dispositivo.",
       "page": {
         "badge": "Herramienta local",
         "setupLabel": "Marca de agua",
@@ -1186,7 +1188,9 @@
       "annotateError": "No se pudo agregar la anotacion"
     }
   },
-  "cloud": {},
+  "cloud": {
+    "proOnly": "Funcion Pro - mejora para activarla"
+  },
   "payment": {
     "success": {
       "badge": "Pago completado",

@@ -327,6 +327,19 @@ Deployment:
   - `https://pdf.pawn.eu.org/zh-cn/`, `/en/tools/merge`, and `/es/tools/merge` return HTTP 200
   - `https://admin.pawn.eu.org/` returns HTTP 200 and the active admin bundle returns HTTP 200
   - Playwright production render smoke for `zh`, `en`, `es`, and `admin` returned HTTP 200, no console/page errors, no document-level horizontal overflow at `1366x900`, and no raw `home.toolsTitle`/`home.tools` key exposure
+- Added locale rollout guardrails locally:
+  - added shared locale fixtures for route metadata and baseline message files
+  - `tests/unit/locale-overrides.test.ts` now verifies every supported locale has a message file and recursively covers all English baseline keys
+  - filled missing `zh` and `es` baseline keys found by the recursive check
+  - `tests/unit/locale-registry.test.ts` now derives route pattern expectations from the shared locale fixture instead of hard-coding `zh-cn|en|es`
+  - `tests/e2e-playwright/locale-seo.spec.ts` now derives canonical `hreflang` assertions from the locale registry and verifies localized Merge PDF titles for `zh`, `en`, and `es`
+  - verified with `npm run test:unit:ci -- tests/unit/locale-overrides.test.ts tests/unit/locale-registry.test.ts`
+  - verified with `npm run type-check`
+  - verified with `npm run test:unit:ci`
+  - verified with `npm run build`
+  - verified with `npm run build:admin`
+  - verified with Playwright locale/public checks: `locale-seo`, `public-shell`, and `public-marketing`
+  - verified with `npm run test:e2e:admin`
 
 ## Known Code Issues
 
@@ -422,7 +435,6 @@ Current local progress:
 Still to finish in this phase:
 
 - Decide when to expose additional locales such as `ja`, `ko`, and `de`; do not expose them until baseline translations exist.
-- Update Playwright route fixtures to assert locale-prefixed canonical paths directly.
 
 Recommended route model:
 
@@ -766,6 +778,5 @@ pytest tests/test_payment_domain.py -q
 1. Configure real payment provider credentials when merchant accounts are ready, then run sandbox and low-value live smoke tests from the Admin `Payment Setup` checklist.
 2. Configure Gemini credentials when the AI quota/account is ready and rerun AI feature smoke tests.
 3. Decide when to expose additional locales such as `ja`, `ko`, and `de`; do not expose them until baseline translations exist.
-4. Update Playwright route fixtures to assert locale-prefixed canonical paths directly.
-5. Add competitor-gap tools only after the platform refactor remains stable under production traffic.
-6. Decide whether to split the admin frontend into its own repository after the dedicated admin domain is live and daily operation is stable.
+4. Add competitor-gap tools only after the platform refactor remains stable under production traffic.
+5. Decide whether to split the admin frontend into its own repository after the dedicated admin domain is live and daily operation is stable.

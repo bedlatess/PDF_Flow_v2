@@ -7,6 +7,7 @@ import {
   splitLocaleFromPath,
   withLocalePrefix,
 } from '@/locales/registry'
+import { expectedLocaleRoutePattern, localeRouteFixtures } from '../fixtures/locale-route-fixtures'
 
 describe('locale registry', () => {
   it('normalizes locale aliases used by browsers and URLs', () => {
@@ -17,11 +18,12 @@ describe('locale registry', () => {
   })
 
   it('maps public route prefixes to internal locale ids', () => {
-    expect(getLocaleByRoutePrefix('zh-cn')).toBe('zh')
-    expect(getLocaleByRoutePrefix('en')).toBe('en')
-    expect(getLocaleByRoutePrefix('es')).toBe('es')
+    for (const locale of localeRouteFixtures) {
+      expect(getLocaleByRoutePrefix(locale.routePrefix)).toBe(locale.id)
+    }
+
     expect(getLocaleByRoutePrefix('zh')).toBeNull()
-    expect(localeRoutePattern).toBe('zh-cn|en|es')
+    expect(localeRoutePattern).toBe(expectedLocaleRoutePattern)
   })
 
   it('splits and rewrites locale-prefixed paths', () => {

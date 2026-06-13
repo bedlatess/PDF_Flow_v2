@@ -20,6 +20,7 @@ import { useUserStore } from '@/stores/user'
 import { formatUserFacingError, type FormattedUserError } from '@/utils/error-messages'
 import type { PaymentProviderKey, PaymentProviderOption } from '@/services/api'
 import { useLocalePath } from '@/composables/useLocalePath'
+import { getEntitlementSummary } from '@/utils/entitlements'
 
 type PlanId = 'free' | 'pro' | 'enterprise'
 type ButtonVariant = 'primary' | 'outline'
@@ -137,7 +138,20 @@ const QR_PAYMENT_PROVIDERS = new Set<PaymentProviderKey>([
   'okpay',
 ])
 
-const currentTier = computed(() => userStore.user?.role || 'free')
+const currentEntitlement = computed(() =>
+  getEntitlementSummary({
+    role: userStore.user?.role,
+    subscription_status: userStore.user?.subscription_status,
+    subscription_end_date: userStore.user?.subscription_end_date,
+  }),
+)
+
+const currentTier = computed<PlanId | 'admin'>(() => {
+  const role = userStore.user?.role
+  if (role === 'admin') return 'admin'
+  if (!currentEntitlement.value.isActive) return 'free'
+  return role === 'pro' || role === 'enterprise' ? role : 'free'
+})
 const copy = computed(() => tm('pricing.page') as PricingPageCopy)
 
 const plans = computed<Plan[]>(() => [

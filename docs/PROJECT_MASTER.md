@@ -273,6 +273,12 @@ Deployment:
   - `https://pdf.pawn.eu.org/zh-cn/profile` returns HTTP 200
   - `https://admin.pawn.eu.org/` returns HTTP 200
   - all Compose services are healthy: `frontend`, `backend`, `celery-worker`, `postgres`, and `redis`
+- Fixed pricing page entitlement consistency:
+  - pricing current-plan detection now uses the same frontend entitlement summary as Profile and admin user management
+  - expired or canceled Pro/Enterprise accounts are treated as Free on pricing, so users can see the upgrade CTA again
+  - verified with `npm run type-check`
+  - verified with `npm run test:unit:ci -- tests/unit/entitlements.test.ts`
+  - verified with `npm run build`
 
 ## Known Code Issues
 

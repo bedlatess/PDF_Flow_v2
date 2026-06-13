@@ -49,6 +49,7 @@ extract.log
 pdf_content.txt
 
 # Server-side deployment state
+.deploy.env
 .deploy_state/
 .deploy_backups/
 

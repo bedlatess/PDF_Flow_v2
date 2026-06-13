@@ -376,6 +376,7 @@ Admin domain:
 - Configure backend CORS to allow the public domain and admin domain explicitly.
 - Keep `/api/v1/admin/*` protected by admin auth.
 - Add stricter CSP and noindex headers for the admin app.
+- Keep backend settings in `backend/.env`; keep Compose/frontend host settings in untracked `.deploy.env`.
 - Production environment should set:
   - `PUBLIC_FRONTEND_HOST` to the public frontend host.
   - `ADMIN_FRONTEND_HOST` to the prepared admin frontend host.
@@ -399,7 +400,10 @@ Admin refactor scope:
 Still to finish in this phase:
 
 - Move admin API clients/types into an admin-facing module or shared package before a full monorepo split.
-- Push/deploy the local serving boundary and set the real prepared admin domain environment values on the server.
+- Add a Nginx Proxy Manager host for the prepared admin domain that forwards to server port `5174`.
+- Set the real prepared admin domain environment values on the server:
+  - `backend/.env`: `ADMIN_FRONTEND_URL=https://<admin-domain>`
+  - `.deploy.env`: `PUBLIC_FRONTEND_HOST=pdf.pawn.eu.org` and `ADMIN_FRONTEND_HOST=<admin-domain>`
 - Verify real DNS/TLS routing so the public domain never serves the admin artifact and the admin domain can reach `/api/v1/admin/*`.
 - Decide whether the future monorepo split is worth doing after production admin usage is stable.
 
@@ -485,6 +489,15 @@ git pull --ff-only v2 main
 bash scripts/deploy-main.sh
 ```
 
+Server deploy env:
+
+```bash
+cat > .deploy.env <<'EOF'
+PUBLIC_FRONTEND_HOST=pdf.pawn.eu.org
+ADMIN_FRONTEND_HOST=<admin-domain>
+EOF
+```
+
 Server status:
 
 ```bash
@@ -498,6 +511,16 @@ Full smoke:
 ```bash
 bash scripts/main-smoke-suite.sh
 ```
+
+Production acceptance:
+
+```bash
+PUBLIC_URL=https://pdf.pawn.eu.org \
+ADMIN_URL=https://<admin-domain> \
+bash scripts/production-acceptance.sh
+```
+
+Set `RUN_WRITE_PROBE=1` only with `LIVE_ADMIN_EMAIL` and `LIVE_ADMIN_PASSWORD`; the default acceptance path is read-only.
 
 Rollback:
 

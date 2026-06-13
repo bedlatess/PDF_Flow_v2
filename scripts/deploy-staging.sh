@@ -17,6 +17,7 @@ LAST_SUCCESSFUL_AT_FILE="$STATE_DIR/last_successful_at"
 SMOKE_BASE_URL="${SMOKE_BASE_URL:-http://localhost:8000}"
 RUN_MIGRATIONS="${RUN_MIGRATIONS:-1}"
 BACKUP_COMMAND="${DEPLOY_BACKUP_COMMAND:-}"
+COMPOSE_DEPLOY_ENV_FILE="${COMPOSE_DEPLOY_ENV_FILE:-$ROOT_DIR/.deploy.env}"
 
 mkdir -p "$STATE_DIR" "$BACKUP_DIR"
 touch "$DEPLOY_LOG"
@@ -38,6 +39,7 @@ require_cmd() {
 
 detect_compose() {
   local compose_env_file="${COMPOSE_ENV_FILE:-}"
+  local compose_deploy_env_file="${COMPOSE_DEPLOY_ENV_FILE:-}"
 
   if [[ -z "$compose_env_file" && -f "$ROOT_DIR/backend/.env" ]]; then
     compose_env_file="$ROOT_DIR/backend/.env"
@@ -50,6 +52,11 @@ detect_compose() {
     fi
     COMPOSE_ENV_ARGS=(--env-file "$compose_env_file")
     log "Using Docker Compose env file: $compose_env_file"
+  fi
+
+  if [[ -n "$compose_deploy_env_file" && -f "$compose_deploy_env_file" ]]; then
+    COMPOSE_ENV_ARGS+=(--env-file "$compose_deploy_env_file")
+    log "Using Docker Compose deploy env file: $compose_deploy_env_file"
   fi
 
   if docker compose version >/dev/null 2>&1; then
@@ -100,6 +107,7 @@ run_backup() {
   } > "$backup_path/metadata.txt"
 
   backup_file_if_present ".env" "$backup_path"
+  backup_file_if_present ".deploy.env" "$backup_path"
   backup_file_if_present "backend/.env" "$backup_path"
   backup_file_if_present "docker-compose.override.yml" "$backup_path"
   backup_file_if_present "backend/docker-compose.override.yml" "$backup_path"

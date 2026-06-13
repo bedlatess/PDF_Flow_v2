@@ -169,6 +169,13 @@ bash scripts/deploy-main.sh
 
 The frontend image builds both `dist/` and `dist-admin/`. Nginx serves the public app from `PUBLIC_FRONTEND_HOST` and the admin app from `ADMIN_FRONTEND_HOST`; the admin server adds `X-Robots-Tag: noindex, nofollow` and a stricter CSP. For local Compose, ports `5173` and `5174` map to those two entries.
 
+For production, keep backend-only values in `backend/.env`. Put Compose/frontend host values in an untracked `.deploy.env` file:
+
+```text
+PUBLIC_FRONTEND_HOST=pdf.pawn.eu.org
+ADMIN_FRONTEND_HOST=admin.example.com
+```
+
 Check status:
 
 ```bash
@@ -176,6 +183,16 @@ docker compose --env-file backend/.env -f docker-compose.yml ps
 curl http://localhost:8000/health
 cat .deploy_state/main/current_deployed_commit
 ```
+
+Production acceptance:
+
+```bash
+PUBLIC_URL=https://pdf.pawn.eu.org \
+ADMIN_URL=https://admin.example.com \
+bash scripts/production-acceptance.sh
+```
+
+Set `RUN_WRITE_PROBE=1` only when you also provide `LIVE_ADMIN_EMAIL` and `LIVE_ADMIN_PASSWORD`; otherwise the acceptance script stays read-only.
 
 Rollback:
 

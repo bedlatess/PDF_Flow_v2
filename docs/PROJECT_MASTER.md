@@ -9,7 +9,7 @@ This is the internal source of truth for development direction, current progress
 - Official repository: `https://github.com/bedlatess/PDF_Flow_v2.git`
 - Official remote name: `v2`
 - Branch: `main`
-- Last verified runtime commit: `77f939199a97634d48f1768bc5e297783942cedb`
+- Last verified runtime commit: `7d975725d939b4b8e5e093def9441c28bf08c2e7`
 - The server also records the active runtime commit at `.deploy_state/main/current_deployed_commit`.
 - Server path: `/root/data/docker_data/PDF/pdf-flow`
 - Deployment model: single repository, single Docker Compose server
@@ -174,7 +174,8 @@ Deployment:
   - OCR smoke passed with generated Pro test user `ocr-prod-20260613202001@example.com`; result text contained `OCR SMOKE 123`
   - Office to PDF smoke passed with generated test user `office-prod-20260613202001@example.com`; downloaded result was a valid PDF
   - backend container has Tesseract `5.5.0` and LibreOffice `25.2.3.2`
-  - OAuth routes for Google and GitHub currently return HTTP 503 because provider credentials are not configured
+  - GitHub OAuth is configured and starts the provider flow with HTTP 302 to GitHub
+  - Google OAuth remains unconfigured and returns HTTP 503
   - password reset request returns the enumeration-safe HTTP 200 response, but `RESEND_API_KEY` is not configured so real email delivery is not accepted yet
   - `GEMINI_API_KEY` is not configured, so AI PDF analysis is not production-accepted yet
   - payment provider credentials are not configured; `PAYMENT_ENABLED_PROVIDERS` was hotfixed on the server to `[]` so public checkout providers are disabled until real merchant credentials are added
@@ -195,6 +196,13 @@ Deployment:
   - GitHub will be shown after its production client id and secret are present
   - verified with `pytest backend/tests/test_admin.py::test_public_config_exposes_feature_flags backend/tests/test_admin.py::test_public_config_marks_only_configured_oauth_providers -q`
   - verified with `npm run type-check`
+- Deployed and verified GitHub OAuth on production:
+  - deployment `7d975725d939b4b8e5e093def9441c28bf08c2e7` completed successfully at `2026-06-13 21:24:23`
+  - production health returns `{"status":"healthy","version":"2.0.0","environment":"production"}`
+  - `https://pdf.pawn.eu.org/api/v1/admin/public-config` reports Google disabled and GitHub enabled
+  - `https://pdf.pawn.eu.org/api/v1/auth/oauth/github` returns HTTP 302 to GitHub with callback `https://pdf.pawn.eu.org/api/v1/auth/oauth/github/callback`
+  - `https://pdf.pawn.eu.org/api/v1/auth/oauth/google` returns HTTP 503
+  - OAuth session state is now backed by `SessionMiddleware`
 
 ## Known Code Issues
 
@@ -480,6 +488,7 @@ OAuth:
 
 - GitHub OAuth is the first provider being enabled for production.
 - Google OAuth should remain unconfigured and hidden until its dashboard and credentials are ready.
+- Current production status: GitHub client id and secret are present in `backend/.env`; Google values are empty.
 - Provider dashboards use:
   - `{BACKEND_PUBLIC_URL}/api/v1/auth/oauth/google/callback`
   - `{BACKEND_PUBLIC_URL}/api/v1/auth/oauth/github/callback`

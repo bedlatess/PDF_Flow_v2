@@ -8,7 +8,13 @@
     "tools": "Tools",
     "features": "Features",
     "pricing": "Pricing",
-    "login": "Sign In"
+    "login": "Sign In",
+    "themeToDark": "Switch to dark mode",
+    "themeToLight": "Switch to light mode",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "language": "Language",
+    "primaryNavigation": "Primary navigation"
   },
   "common": {
     "upload": "Upload file",
@@ -20,7 +26,36 @@
     "back": "Back",
     "required": "Required",
     "optional": "Optional",
-    "error": "Error"
+    "error": "Error",
+    "cancel": "Cancel",
+    "close": "Close",
+    "copy": "Copy",
+    "replace": "Replace",
+    "create": "Create",
+    "creating": "Creating...",
+    "privacyBadge": "Free workflow",
+    "cloudToggle": {
+      "localTitle": "Free mode",
+      "localDesc": "Good for quick everyday files.",
+      "cloudTitle": "Pro mode",
+      "cloudDesc": "Use Pro for bigger files, OCR, Office, AI, and longer jobs.",
+      "lockedDesc": "Pro unlocks bigger files, OCR, Office, AI, and longer jobs.",
+      "switchLabel": "Switch processing mode"
+    },
+    "dragDropZone": {
+      "helper": {
+        "format": "{types} up to {size}MB",
+        "pdfAndImages": "PDF and image files up to {size}MB",
+        "files": "Files up to {size}MB",
+        "single": "Choose one file",
+        "multiple": "Multiple files supported"
+      },
+      "errors": {
+        "maxFiles": "You can upload up to {count} files at a time.",
+        "fileTooLarge": "{file} is larger than {size}MB.",
+        "unsupportedType": "{file} is not a supported file type."
+      }
+    }
   },
   "auth": {
     "login": "Sign In",
@@ -40,37 +75,1827 @@
     "loginSubtitle": "Sign in to continue",
     "registerSubtitle": "Create your account to continue",
     "processingLogin": "Processing login...",
-    "pleaseWait": "Please wait while we complete your login"
+    "pleaseWait": "Please wait while we complete your login",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "oauthCallback": {
+      "badge": "OAuth sign-in",
+      "saving": "Saving the secure session and refreshing your account.",
+      "completeTitle": "Sign-in complete",
+      "redirecting": "Your account is ready. Redirecting you back to PDF-Flow.",
+      "errorTitle": "We could not finish sign-in",
+      "errorMessage": "The OAuth provider did not return the expected session details. Please start sign-in again.",
+      "backToLogin": "Back to sign in",
+      "goHome": "Go home"
+    },
+    "registerFailedTitle": "Registration failed",
+    "loginNotices": {
+      "registeredTitle": "Account created",
+      "registeredMessage": "Your account is ready. Sign in to continue your PDF workflow.",
+      "registeredHint": "Use the email and password you just registered.",
+      "oauthFailedTitle": "OAuth sign-in did not finish",
+      "oauthFailedMessage": "The provider returned an error before PDF-Flow could complete sign-in.",
+      "oauthCallbackTitle": "OAuth session was incomplete",
+      "oauthCallbackMessage": "PDF-Flow did not receive the expected session details from the OAuth return.",
+      "oauthFailedHint": "Try the provider again, or sign in with email and password if your account has one."
+    },
+    "loginMarketing": {
+      "heroTitle": "Sign in and continue your PDF workflow",
+      "heroDescription": "Open recent jobs, continue OCR or conversion work, and check downloads from one account.",
+      "panelTitle": "After signing in you can",
+      "panelDescription": "Your tools, recent results, and account status stay connected so it is easier to pick up where you left off.",
+      "highlights": [
+        {
+          "title": "Recent results",
+          "description": "Jump back to your latest processed files, downloads, and finished outputs."
+        },
+        {
+          "title": "Familiar tools",
+          "description": "Continue OCR, conversion, merge, and other common PDF tasks without hunting for the next step."
+        },
+        {
+          "title": "Account and plan",
+          "description": "Review your account status, plan access, and available processing capacity in one place."
+        }
+      ]
+    },
+    "registerMarketing": {
+      "heroTitle": "Start processing PDFs in minutes",
+      "heroDescription": "Create an account to manage document tasks, review results, and unlock advanced tools only when you actually need them.",
+      "panelTitle": "After you register",
+      "panelDescription": "Your account keeps tools, recent activity, and plan access connected so the workflow feels more complete from the start.",
+      "highlights": [
+        {
+          "title": "Organized tools",
+          "description": "Keep your core PDF tools, tasks, and results connected inside one account."
+        },
+        {
+          "title": "Recent progress",
+          "description": "Return to your latest downloads and processed files with less friction."
+        },
+        {
+          "title": "Advanced features on demand",
+          "description": "Use OCR, Office to PDF, and other cloud tools only when the job calls for them."
+        }
+      ]
+    },
+    "passwordRecoveryTitle": "Reset your password",
+    "passwordRecoverySubtitle": "Enter your account email. If the account exists, we will send the next step.",
+    "passwordRecoverySubmit": "Send reset link",
+    "passwordRecoverySending": "Sending...",
+    "passwordRecoverySentTitle": "Check your email",
+    "passwordRecoverySentMessage": "If this email belongs to an active account, the next step has been sent.",
+    "passwordRecoverySentHint": "Check your inbox and spam folder before requesting another link.",
+    "passwordRecoveryFailedTitle": "Reset request failed",
+    "passwordRecoveryFailedMessage": "We could not start password recovery. Please try again later.",
+    "resetPasswordTitle": "Create a new password",
+    "resetPasswordSubtitle": "Use your secure reset link to set a new password for this account.",
+    "resetPasswordSubmit": "Save new password",
+    "resetPasswordSaving": "Saving...",
+    "resetPasswordSuccessTitle": "Password updated",
+    "resetPasswordSuccessMessage": "Your password has been changed. You can sign in with the new password now.",
+    "resetPasswordSuccessHint": "Return to sign in and continue your PDF workflow.",
+    "resetPasswordFailedTitle": "Password could not be updated",
+    "resetPasswordFailedMessage": "The reset link may be expired or invalid. Request a new link and try again.",
+    "resetPasswordMissingTitle": "Reset link is missing",
+    "resetPasswordMissingMessage": "Open this page from the latest password reset email, or request a new link.",
+    "newPassword": "New password",
+    "backToLogin": "Back to sign in",
+    "requestNewResetLink": "Request a new link",
+    "recoveryMarketing": {
+      "heroTitle": "Recover access without changing your files",
+      "heroDescription": "Password recovery only updates account sign-in. Your documents, downloads, and plan status are not changed by the request.",
+      "panelTitle": "Account recovery",
+      "panelDescription": "Reset links expire for account safety. Request a fresh link whenever you are unsure which one is current.",
+      "highlights": [
+        {
+          "title": "Private by default",
+          "description": "The form does not reveal whether an email is registered."
+        },
+        {
+          "title": "Clear next step",
+          "description": "After a request, check your inbox and continue from the newest reset email."
+        },
+        {
+          "title": "Safe retry",
+          "description": "Expired or older links can be replaced by requesting a new one."
+        }
+      ]
+    }
   },
   "tools": {
-    "merge": { "title": "Merge PDF", "desc": "Combine multiple PDFs into one file" },
-    "split": { "title": "Split PDF", "desc": "Extract pages or ranges from a PDF" },
-    "rotate": { "title": "Rotate PDF", "desc": "Rotate PDF pages and export a new copy" },
-    "compress": { "title": "Compress PDF", "desc": "Reduce PDF file size when possible" },
-    "imageToPdf": { "title": "Image to PDF", "desc": "Convert images into a PDF" },
-    "pdfToImage": { "title": "PDF to Image", "desc": "Export PDF pages as images" },
-    "deletePages": { "title": "Delete PDF Pages", "desc": "Remove unwanted pages from a PDF" },
-    "organize": { "title": "Organize PDF Pages", "desc": "Reorder pages before exporting" },
-    "pageNumbers": { "title": "Add PDF Page Numbers", "desc": "Add page numbers to PDF files" },
-    "crop": { "title": "Crop PDF", "desc": "Trim whitespace and page edges" },
-    "flatten": { "title": "Flatten PDF", "desc": "Lock form appearance into a flat copy" },
-    "repair": { "title": "Repair PDF", "desc": "Rebuild readable PDF structure" },
-    "protect": { "title": "Protect PDF", "desc": "Add an opening password to a PDF" },
-    "unlock": { "title": "Unlock PDF", "desc": "Create an unlocked copy with the known password" },
-    "sign": { "title": "Sign PDF", "desc": "Add a visual signature to a PDF" },
-    "extractText": { "title": "Extract PDF Text", "desc": "Export copyable text from PDFs" },
-    "extractImages": { "title": "Extract PDF Images", "desc": "Pull embedded images from PDFs" },
-    "ocr": { "title": "OCR PDF", "desc": "Recognize text from scanned files" },
-    "officeToPdf": { "title": "Office to PDF", "desc": "Convert Office files to PDF" },
-    "watermark": { "title": "Watermark PDF", "desc": "Add a text watermark to a PDF" },
-    "fillForm": { "title": "Fill PDF Form", "desc": "Fill PDF form fields" },
-    "annotate": { "title": "Annotate PDF", "desc": "Add notes and highlights to a PDF" }
+    "merge": {
+      "title": "Merge PDF",
+      "desc": "Combine multiple PDFs into one file",
+      "page": {
+        "badge": "Local tool",
+        "queueLabel": "Merge queue",
+        "queueTitle": "Selected files",
+        "queueDesc": "{pages} total pages. Drag the cards to adjust the final merge order.",
+        "clear": "Clear list",
+        "addMore": "Add more files",
+        "actionLabel": "Output",
+        "actionTitle": "Confirm the order, then merge",
+        "actionDesc": "Choose local or cloud processing. A new merged file will be generated when the task finishes.",
+        "fileCount": "Files",
+        "pageCount": "Pages",
+        "merge": "Merge PDF",
+        "successTitle": "Merge complete",
+        "successMessage": "Successfully merged {count} PDF files with {pages} total pages.",
+        "mergeMore": "Merge more files",
+        "pagesSuffix": "pages",
+        "morePages": "{count} more pages...",
+        "errorLoad": "Failed to load PDF files.",
+        "errorMinFiles": "Select at least 2 PDF files to merge.",
+        "errorFailed": "Failed to merge PDFs.",
+        "errorCloudFailed": "Cloud merge failed.",
+        "statusPreparing": "Preparing...",
+        "statusProcessing": "Merging {count} files...",
+        "statusProgress": "Processing... {progress}%",
+        "statusDone": "Completed"
+      }
+    },
+    "split": {
+      "title": "Split PDF",
+      "desc": "Extract pages or ranges from a PDF",
+      "page": {
+        "badge": "Local tool",
+        "setupLabel": "Page extraction",
+        "setupTitle": "Choose the pages to export",
+        "setupDesc": "Enter page ranges directly or open the visual selector for a clearer way to pick the pages you want to keep.",
+        "rangeLabel": "{count} pages available",
+        "rangePlaceholder": "Example: 1-3,5,7-9",
+        "rangeHint": "Separate single pages or ranges with commas. For example, 1-3,5 keeps pages 1, 2, 3, and 5.",
+        "visualSelect": "Visual selector",
+        "actionLabel": "Output",
+        "actionTitle": "Confirm the range, then generate a new file",
+        "actionTips": [
+          "Confirm the page range before extracting.",
+          "For longer documents, the visual selector helps reduce typing mistakes.",
+          "A new PDF is created after processing. Your original file stays unchanged."
+        ],
+        "extract": "Extract pages",
+        "modalTitle": "Choose pages to extract",
+        "successTitle": "Extraction complete",
+        "successMessage": "The selected pages are ready to download.",
+        "errorLoad": "Failed to load the PDF. Please reselect the file and try again.",
+        "errorNoPages": "Select at least one page.",
+        "errorNoRange": "Enter the pages to extract, for example 1-3,5,7-9.",
+        "statusPreparing": "Preparing...",
+        "statusProcessing": "Extracting pages...",
+        "statusProgress": "Processing... {progress}%",
+        "statusDone": "Completed",
+        "errorFailed": "Failed to extract pages. Please try again later.",
+        "errorCloudFailed": "Cloud extraction failed. Please try again later."
+      }
+    },
+    "rotate": {
+      "title": "Rotate PDF",
+      "desc": "Rotate PDF pages and export a new copy",
+      "page": {
+        "badge": "Local tool",
+        "setupLabel": "Rotation setup",
+        "setupTitle": "Correct the page direction",
+        "setupDesc": "Useful for scanned files, camera-made PDFs, or documents with inconsistent page orientation.",
+        "actionLabel": "Output",
+        "actionTitle": "Confirm the angle, then generate a new file",
+        "actionTips": [
+          "90° and 270° are useful when pages are sideways.",
+          "180° works well for upside-down scans.",
+          "A new PDF is generated after processing. The original file stays unchanged."
+        ],
+        "action": "Rotate PDF",
+        "successTitle": "Rotation complete",
+        "successMessage": "Your rotated PDF is ready to download.",
+        "errorFailed": "Rotation failed. Please try again later.",
+        "errorCloudFailed": "Cloud rotation failed. Please try again later.",
+        "statusPreparing": "Preparing...",
+        "statusProcessing": "Rotating pages...",
+        "statusProgress": "Processing... {progress}%",
+        "statusDone": "Completed",
+        "angleOptions": [
+          {
+            "value": 90,
+            "label": "90°",
+            "hint": "Clockwise"
+          },
+          {
+            "value": 180,
+            "label": "180°",
+            "hint": "Upside down"
+          },
+          {
+            "value": 270,
+            "label": "270°",
+            "hint": "Counterclockwise"
+          }
+        ]
+      }
+    },
+    "compress": {
+      "title": "Compress PDF",
+      "desc": "Reduce PDF file size when possible",
+      "page": {
+        "badge": "Local-first",
+        "setupLabel": "Compression setup",
+        "setupTitle": "Choose a compression level",
+        "setupDesc": "Compression depends on how the PDF was built. The level changes the optimization pass, but actual savings are shown after processing.",
+        "resultLabel": "Reference estimate",
+        "resultTitle": "Review before exporting",
+        "estimateHint": "The estimate helps choose a level, but the real size depends on the file. Actual results appear after processing.",
+        "actualLabel": "Actual result",
+        "noSavingsTitle": "Already near optimal",
+        "noSavingsDesc": "This PDF did not shrink further, so PDF-Flow kept the original file instead of creating a larger \"compressed\" copy.",
+        "optimizedDesc": "A smaller PDF was generated with the selected setting.",
+        "originalSize": "Original size",
+        "estimatedCompression": "Reference compression",
+        "estimatedSize": "Reference size",
+        "outputSize": "Output size",
+        "savedSize": "Space saved",
+        "ratio": "Actual ratio",
+        "action": "Compress PDF",
+        "successTitle": "Compression complete",
+        "compressMore": "Compress more files",
+        "errorFailed": "Compression failed. Please try again later.",
+        "errorCloudFailed": "Cloud compression failed. Please try again later.",
+        "statusPreparing": "Preparing compression...",
+        "statusProcessing": "Compressing PDF...",
+        "statusDone": "Compression complete",
+        "qualityOptions": [
+          {
+            "value": "high",
+            "label": "High quality",
+            "description": "Light optimization with a stronger focus on visual clarity."
+          },
+          {
+            "value": "medium",
+            "label": "Balanced",
+            "description": "A steady middle ground for most sharing, archive, and upload workflows."
+          },
+          {
+            "value": "low",
+            "label": "Size first",
+            "description": "Prioritizes a smaller file size for uploads and fast distribution."
+          }
+        ]
+      }
+    },
+    "imageToPdf": {
+      "title": "Image to PDF",
+      "desc": "Convert images into a PDF",
+      "page": {
+        "badge": "Local tool",
+        "filesLabel": "Image list",
+        "filesTitle": "{count} images selected",
+        "filesDesc": "Organize the images you want to include, then choose the final page size and orientation.",
+        "clear": "Clear",
+        "addMore": "Add more images",
+        "outputLabel": "Output setup",
+        "outputTitle": "Adjust the page format",
+        "outputDesc": "Choose the PDF page size and orientation so the result fits printing, archiving, or sharing.",
+        "pageSize": "Page size",
+        "orientation": "Orientation",
+        "portrait": "Portrait",
+        "landscape": "Landscape",
+        "action": "Convert to PDF",
+        "successTitle": "Conversion complete",
+        "successMessage": "Your images were successfully converted to a PDF and are ready to download.",
+        "errorFailed": "Conversion failed. Please try again later.",
+        "errorCloudFailed": "Cloud conversion failed. Please try again later."
+      }
+    },
+    "pdfToImage": {
+      "title": "PDF to Image",
+      "desc": "Export PDF pages as images",
+      "page": {
+        "badge": "Local tool",
+        "outputLabel": "Output setup",
+        "outputTitle": "Choose the image format",
+        "outputDesc": "PNG is better for clarity and fine detail, while JPEG is more suitable for smaller shareable files.",
+        "resultLabel": "Conversion result",
+        "waitingTitle": "Waiting to start",
+        "readyTitle": "{count} images generated",
+        "emptyHint": "Choose an output format and start the conversion. The results will appear here page by page for quick review and download.",
+        "downloadAll": "Download all",
+        "downloadPage": "Download page {page}",
+        "action": "Convert to images",
+        "successCloud": "Cloud conversion is complete. The result package has been downloaded as a ZIP file.",
+        "errorFailed": "PDF to image conversion failed. Please try again later.",
+        "errorCloudFailed": "Cloud conversion failed. Please try again later."
+      }
+    },
+    "deletePages": {
+      "title": "Delete PDF Pages",
+      "desc": "Remove unwanted pages from a PDF",
+      "page": {
+        "title": "Delete PDF Pages",
+        "subtitle": "Remove unwanted pages and create a clean new PDF.",
+        "badge": "Local tool",
+        "setupLabel": "Page cleanup",
+        "setupTitle": "Choose pages to remove",
+        "setupDesc": "Enter page ranges or open the visual selector to pick the pages you want to remove. Processing runs locally in your browser and never overwrites the original file.",
+        "rangeLabel": "{count} pages available",
+        "rangePlaceholder": "Example: 2,4-6,9",
+        "rangeHint": "Separate single pages or ranges with commas. Example: 2,4-6 removes pages 2, 4, 5, and 6.",
+        "visualSelect": "Visual selector",
+        "outputLabel": "Output check",
+        "outputTitle": "Create a new file without those pages",
+        "removeLabel": "Remove",
+        "keepLabel": "Keep",
+        "outputTips": [
+          "Useful for removing blank pages, scanning mistakes, duplicate pages, or pages you do not want to share.",
+          "The original PDF stays unchanged. A new result file is created.",
+          "To prevent mistakes, you cannot delete every page at once."
+        ],
+        "delete": "Delete selected pages",
+        "modalTitle": "Choose pages to delete",
+        "successTitle": "Pages deleted",
+        "successMessage": "Your new PDF is ready to download.",
+        "download": "Download result",
+        "errorLoad": "Could not read this PDF. Please choose the file again and try once more.",
+        "errorNoRange": "Enter the pages to delete, for example 2,4-6,9.",
+        "errorNoPages": "Select at least one page to delete.",
+        "errorAllPages": "You cannot delete every page. Keep at least one page.",
+        "errorFailed": "Failed to delete pages. Please check the page range and try again.",
+        "statusPreparing": "Preparing file...",
+        "statusProcessing": "Deleting pages...",
+        "statusDone": "Completed"
+      }
+    },
+    "organize": {
+      "title": "Organize PDF Pages",
+      "desc": "Reorder pages before exporting",
+      "page": {
+        "title": "Organize PDF Pages",
+        "subtitle": "Drag pages into the right order and export a new PDF.",
+        "badge": "Local tool",
+        "workspaceLabel": "Page order",
+        "workspaceTitle": "Drag pages into order",
+        "workspaceDesc": "Useful before submitting contracts, reports, or scanned files. Processing runs locally in your browser and never overwrites the original file.",
+        "outputLabel": "Output check",
+        "outputTitle": "Confirm the order, then create a new file",
+        "outputTips": [
+          "Drag thumbnails to move pages directly.",
+          "On mobile or when dragging is inconvenient, use the move up and move down buttons.",
+          "The result keeps every page and only changes the order."
+        ],
+        "reverse": "Reverse order",
+        "reset": "Reset order",
+        "moveUp": "Move up",
+        "moveDown": "Move down",
+        "generate": "Generate organized PDF",
+        "successTitle": "Pages organized",
+        "successMessage": "Your new PDF is ready to download.",
+        "download": "Download result",
+        "errorLoad": "Could not read this PDF. Please choose the file again and try once more.",
+        "errorNoChange": "The page order has not changed yet. Move at least one page before generating.",
+        "errorFailed": "Failed to organize pages. Please choose the file again and try once more.",
+        "statusPreparing": "Preparing pages...",
+        "statusProcessing": "Creating new PDF...",
+        "statusDone": "Completed",
+        "pageCount": "Pages",
+        "firstPage": "First page",
+        "lastPage": "Last page",
+        "dragHint": "Drag cards or use the move buttons",
+        "page": "Page {page}"
+      }
+    },
+    "pageNumbers": {
+      "title": "Add PDF Page Numbers",
+      "desc": "Add page numbers to PDF files",
+      "page": {
+        "title": "Add PDF Page Numbers",
+        "subtitle": "Add consistent page numbers to contracts, reports, and handouts.",
+        "badge": "Local tool",
+        "setupLabel": "Numbering style",
+        "setupTitle": "Set the format and position",
+        "setupDesc": "Page numbers are written into a new PDF, which is useful before archiving, printing, submitting, or sharing a document.",
+        "outputLabel": "Output check",
+        "outputTitle": "Confirm the numbering, then create a new file",
+        "outputTips": [
+          "Start numbering on a later page when the cover should stay unnumbered.",
+          "Use prefix and suffix text to match your document style.",
+          "Processing runs locally in your browser. The original file stays unchanged."
+        ],
+        "position": "Position",
+        "startNumber": "Start number",
+        "startOnPage": "Start on page",
+        "prefix": "Prefix",
+        "suffix": "Suffix",
+        "includeTotal": "Show total pages",
+        "fontSize": "Font size",
+        "opacity": "Opacity",
+        "color": "Color",
+        "sample": "Preview",
+        "generate": "Add page numbers",
+        "successTitle": "Page numbers added",
+        "successMessage": "Your numbered PDF is ready to download.",
+        "download": "Download result",
+        "errorLoad": "Could not read this PDF. Please choose the file again and try once more.",
+        "errorStartPage": "The start page cannot be greater than the total number of PDF pages.",
+        "errorFailed": "Failed to add page numbers. Please check the settings and try again.",
+        "statusPreparing": "Preparing pages...",
+        "statusProcessing": "Writing page numbers...",
+        "statusDone": "Completed",
+        "stampedSummary": "pages will be numbered",
+        "placeholders": {
+          "prefix": "Example: Page ",
+          "suffix": "",
+          "defaultPrefix": "",
+          "defaultSuffix": ""
+        },
+        "positions": [
+          {
+            "value": "bottom-center",
+            "label": "Bottom center"
+          },
+          {
+            "value": "bottom-left",
+            "label": "Bottom left"
+          },
+          {
+            "value": "bottom-right",
+            "label": "Bottom right"
+          },
+          {
+            "value": "top-center",
+            "label": "Top center"
+          },
+          {
+            "value": "top-left",
+            "label": "Top left"
+          },
+          {
+            "value": "top-right",
+            "label": "Top right"
+          }
+        ]
+      }
+    },
+    "crop": {
+      "title": "Crop PDF",
+      "desc": "Trim whitespace and page edges",
+      "page": {
+        "title": "Crop PDF",
+        "subtitle": "Remove page edges, scan shadows, and extra whitespace for cleaner reading, printing, and sharing.",
+        "badge": "Local tool",
+        "notice": "Cropping only changes the visible PDF area. It is not secure redaction. Do not use it to hide ID numbers, phone numbers, or contract values; use a true redaction workflow for sensitive content.",
+        "uploadLabel": "PDF file",
+        "uploadTitleIdle": "Choose the PDF to crop",
+        "uploadTitleReady": "File is ready",
+        "uploadDescriptionIdle": "Best for trimming whitespace, scan borders, and extra page edges. The original file is not modified.",
+        "uploadDescriptionReady": "Set the top, right, bottom, and left crop margins to export a new copy.",
+        "dropTitle": "Drop your PDF here",
+        "dropSubtitle": "or click to choose a file",
+        "settingsLabel": "Crop setup",
+        "settingsTitle": "Set crop margins",
+        "top": "Top",
+        "right": "Right",
+        "bottom": "Bottom",
+        "left": "Left",
+        "quick": "Presets",
+        "small": "Light trim",
+        "scan": "Scan border",
+        "reset": "Reset",
+        "previewLabel": "Visual preview",
+        "previewTitle": "Kept area",
+        "previewHint": "The preview confirms approximate margins; the exported PDF is the final result.",
+        "action": "Create cropped PDF",
+        "processing": "Applying crop...",
+        "done": "Cropped copy is ready",
+        "download": "Download cropped PDF",
+        "successTitle": "Crop complete",
+        "successMessage": "Your new cropped PDF is ready to review.",
+        "localTitle": "For layout cleanup, not redaction",
+        "localDesc": "Cropping makes pages cleaner, but cropped content may still exist in the PDF structure. Use true redaction for sensitive information.",
+        "pages": "Pages",
+        "errorLoad": "Could not read this PDF. Please choose the file again.",
+        "errorFailed": "Failed to crop the PDF. Please check the margins and try again."
+      }
+    },
+    "flatten": {
+      "title": "Flatten PDF",
+      "desc": "Lock form appearance into a flat copy",
+      "page": {
+        "title": "Flatten PDF",
+        "subtitle": "Turn fillable form fields into fixed page content for submission, archiving, and sharing.",
+        "badge": "Local tool",
+        "notice": "Flattening locks form appearance. It is not encryption, permission control, or secure redaction. Use a true redaction workflow for sensitive content.",
+        "uploadLabel": "PDF file",
+        "uploadTitleIdle": "Choose the PDF to flatten",
+        "uploadTitleReady": "File is ready",
+        "uploadDescriptionIdle": "Best for completed forms, applications, receipts, and confirmation files. The original file is not modified.",
+        "uploadDescriptionReady": "A new copy will be generated with form fields fixed into the page appearance.",
+        "dropTitle": "Drop your PDF here",
+        "dropSubtitle": "or click to choose a file",
+        "action": "Create flattened PDF",
+        "processing": "Flattening form fields...",
+        "done": "Flattened copy is ready",
+        "download": "Download flattened PDF",
+        "successTitle": "Flatten complete",
+        "successMessage": "Your new PDF copy is ready to review.",
+        "resultLabel": "Result",
+        "waitingTitle": "Waiting to start",
+        "waitingBody": "Upload a PDF and start flattening. Processing happens locally in your browser.",
+        "fieldLabel": "Fillable fields",
+        "pages": "Pages",
+        "outputSize": "Output size",
+        "noFieldsTitle": "No fillable fields detected",
+        "noFieldsBody": "This PDF may already be ordinary page content. You can still download the processed copy, but the visible change may be small.",
+        "localTitle": "Lock form appearance before sending",
+        "localDesc": "Flattening helps reduce accidental field edits and improves stability across different PDF readers.",
+        "step1": "Upload completed PDF",
+        "step2": "Fix field appearance",
+        "step3": "Download archive copy",
+        "errorLoad": "Could not read this PDF. Please choose the file again.",
+        "errorFailed": "Failed to flatten the PDF. Please confirm this is a standard PDF."
+      }
+    },
+    "repair": {
+      "title": "Repair PDF",
+      "desc": "Rebuild readable PDF structure",
+      "page": {
+        "title": "Repair PDF",
+        "subtitle": "Rebuild readable PDFs into cleaner copies that are easier to open and process.",
+        "badge": "Sign-in required",
+        "notice": "Repair uploads the PDF to the server so it can be read and exported again. It can help with light structure issues, unstable opening, or files that fail in other tools.",
+        "accessLabel": "Sign-in required",
+        "accessTitle": "Sign in to repair readable PDF files",
+        "accessDescription": "Repair needs cloud processing to parse PDF pages and export a fresh copy. Temporary files are cleaned by the cloud file lifecycle policy.",
+        "goToSignIn": "Sign in to use",
+        "accessSteps": [
+          "Sign in",
+          "Upload the PDF",
+          "Download the rebuilt copy"
+        ],
+        "uploadLabel": "File to repair",
+        "uploadTitleIdle": "Choose the PDF to repair",
+        "uploadTitleSelected": "File is ready",
+        "uploadDescriptionIdle": "Useful for PDFs that open unstably, have structure issues, or fail in other processing tools.",
+        "uploadDescriptionSelected": "The server will try to read available pages and export a new copy without overwriting the original.",
+        "dropTitle": "Drop your PDF here",
+        "dropSubtitle": "or click to choose a file",
+        "noFile": "Please upload a PDF file to repair first.",
+        "repair": "Repair PDF",
+        "uploading": "Uploading file...",
+        "processing": "Rebuilding PDF structure...",
+        "ready": "Repaired copy is ready",
+        "successTitle": "Repair complete",
+        "successMessage": "Download the new copy and check that all pages are complete.",
+        "download": "Download repaired PDF",
+        "workspaceTitle": "Repair first, then continue",
+        "workspaceDescription": "If a PDF fails while splitting, compressing, converting, or opening in a reader, try creating a clean copy first.",
+        "step1": "Helps with light structure issues, cross-reference problems, and reader compatibility issues.",
+        "step2": "If the file is encrypted, unlock it first. If pages cannot be read, this tool cannot recover the content.",
+        "step3": "The result is a new file. Review page count, content, and layout after downloading.",
+        "resultSize": "Output size",
+        "errorFailed": "The PDF could not be repaired. Please retry with a readable standard PDF file."
+      }
+    },
+    "protect": {
+      "title": "Protect PDF",
+      "desc": "Add an opening password to a PDF",
+      "page": {
+        "title": "Protect PDF",
+        "subtitle": "Add an opening password before sharing contracts, drafts, and sensitive documents.",
+        "badge": "Sign-in required",
+        "notice": "This tool uploads the PDF to the server to create a truly password-protected file. Download the result promptly; temporary files are cleaned by the cloud file lifecycle policy.",
+        "accessLabel": "Sign-in required",
+        "accessTitle": "Sign in to create a protected PDF",
+        "accessDescription": "Password protection needs cloud processing to rewrite the PDF security layer. After signing in, you can upload the file and download the protected result.",
+        "goToSignIn": "Sign in to use",
+        "accessSteps": [
+          "Sign in",
+          "Upload the PDF and set a password",
+          "Download the protected copy"
+        ],
+        "uploadLabel": "File",
+        "uploadTitleIdle": "Choose the PDF to protect",
+        "uploadTitleSelected": "File is ready",
+        "uploadDescriptionIdle": "Standard PDF files are supported. Your original file will not be overwritten.",
+        "uploadDescriptionSelected": "Confirm the password to create a new protected PDF.",
+        "dropTitle": "Drop your PDF here",
+        "dropSubtitle": "or click to choose a file",
+        "passwordLabel": "Open password",
+        "confirmLabel": "Confirm password",
+        "passwordPlaceholder": "At least 6 characters; letters and numbers recommended",
+        "confirmPlaceholder": "Enter the same password again",
+        "strengthLabel": "Password strength",
+        "weak": "Weak",
+        "fair": "Usable",
+        "strong": "Strong",
+        "mismatch": "The two passwords do not match.",
+        "tooShort": "Password must be at least 6 characters.",
+        "noFile": "Please upload a PDF file first.",
+        "protect": "Create protected PDF",
+        "processing": "Applying password protection...",
+        "uploading": "Uploading file...",
+        "ready": "Protected file is ready",
+        "successTitle": "PDF protected",
+        "successMessage": "The new PDF now requires the password to open.",
+        "download": "Download protected PDF",
+        "workspaceTitle": "One extra layer before sharing",
+        "workspaceDescription": "Useful for external materials, contract drafts, and files you do not want opened accidentally.",
+        "step1": "A separate copy is created; the original file is not modified.",
+        "step2": "The password is only used for this processing request. Store it safely.",
+        "step3": "Open the downloaded file once to confirm the password works.",
+        "errorFailed": "The PDF could not be protected. Please retry with a standard PDF file."
+      }
+    },
+    "unlock": {
+      "title": "Unlock PDF",
+      "desc": "Create an unlocked copy with the known password",
+      "page": {
+        "title": "Unlock PDF",
+        "subtitle": "Enter the password you already know and create an unlocked copy for organizing or archiving.",
+        "badge": "Sign-in required",
+        "notice": "This tool does not break unknown passwords. Use it only when you have permission to process the file and know the current password. The PDF is processed on the server and temporary files are cleaned by the cloud file lifecycle policy.",
+        "accessLabel": "Sign-in required",
+        "accessTitle": "Sign in to unlock PDFs you are allowed to process",
+        "accessDescription": "Unlocking needs cloud processing to read the encrypted PDF and export a fresh copy. Only process files you are authorized to handle.",
+        "goToSignIn": "Sign in to use",
+        "accessSteps": [
+          "Sign in",
+          "Upload the protected PDF",
+          "Enter the password and download the copy"
+        ],
+        "uploadLabel": "Protected file",
+        "uploadTitleIdle": "Choose the PDF to unlock",
+        "uploadTitleSelected": "File is ready",
+        "uploadDescriptionIdle": "Upload a PDF that requires an open password. A normal PDF does not need unlocking.",
+        "uploadDescriptionSelected": "Enter the current open password to create an unlocked copy.",
+        "dropTitle": "Drop your protected PDF here",
+        "dropSubtitle": "or click to choose a file",
+        "passwordLabel": "Current open password",
+        "passwordPlaceholder": "Enter the password currently used by this PDF",
+        "noFile": "Please upload a password-protected PDF first.",
+        "noPassword": "Please enter the current PDF password.",
+        "unlock": "Create unlocked copy",
+        "processing": "Removing open password...",
+        "uploading": "Uploading file...",
+        "ready": "Unlocked copy is ready",
+        "successTitle": "PDF unlocked",
+        "successMessage": "The new PDF copy no longer requires a password to open.",
+        "download": "Download unlocked PDF",
+        "workspaceTitle": "Unlock first, then organize",
+        "workspaceDescription": "Useful for your own contracts, document packs, and archives before merging, splitting, numbering, or converting.",
+        "step1": "You must know the current password. We do not guess, bypass, or break passwords.",
+        "step2": "A new copy is exported; the original protected file is not overwritten.",
+        "step3": "If the password is incorrect, the page will explain what to check before you try again.",
+        "guardTitle": "Permission reminder",
+        "guardBody": "Only unlock files you are allowed to process. For third-party files, confirm authorization first.",
+        "errorFailed": "The PDF could not be unlocked. Please confirm the password and retry with a standard protected PDF."
+      }
+    },
+    "sign": {
+      "title": "Sign PDF",
+      "desc": "Add a visual signature to a PDF",
+      "page": {
+        "title": "Sign PDF",
+        "subtitle": "Place a signature image on a PDF and create a signed copy for sharing or archiving.",
+        "badge": "Local tool",
+        "notice": "This is a visual signature/image stamp tool, not certificate-based digital signing. The PDF and signature image are processed locally in your browser.",
+        "pdfLabel": "PDF file",
+        "pdfTitleIdle": "Choose the PDF to sign",
+        "pdfTitleReady": "PDF is ready",
+        "pdfDescIdle": "The original file is not overwritten; a new signed copy is exported.",
+        "pdfDescReady": "Upload a signature image and adjust where it appears.",
+        "signLabel": "Signature image",
+        "signTitleIdle": "Transparent PNG signatures work best",
+        "signTitleReady": "Signature image loaded",
+        "signDescIdle": "PNG, JPG, and WEBP are supported.",
+        "signDescReady": "Use the preview to adjust position and size.",
+        "pdfDropTitle": "Drop your PDF here",
+        "imageDropTitle": "Drop your signature here",
+        "dropSubtitle": "or click to choose a file",
+        "settingsLabel": "Placement",
+        "settingsTitle": "Adjust the signature position",
+        "page": "Page",
+        "x": "Horizontal position",
+        "y": "Vertical position",
+        "width": "Signature width",
+        "opacity": "Opacity",
+        "previewLabel": "Quick preview",
+        "previewTitle": "The signature will appear in this area",
+        "previewHint": "The preview confirms approximate placement; the exported PDF is the final result.",
+        "placeholder": "Signature",
+        "localTitle": "Local processing",
+        "localDesc": "Useful for contracts, forms, and receipts. Certificate-based legal digital signing should be handled by a separate signing workflow.",
+        "action": "Create signed PDF",
+        "processing": "Applying signature...",
+        "done": "Signed copy is ready",
+        "download": "Download signed PDF",
+        "remove": "Remove",
+        "successTitle": "Signature applied",
+        "successMessage": "Your new PDF copy with a visual signature is ready.",
+        "errorPdf": "Could not read this PDF. Please choose the file again.",
+        "errorSignature": "Please upload a signature image first.",
+        "errorFailed": "Failed to sign the PDF. Please check the files and try again."
+      }
+    },
+    "extractText": {
+      "title": "Extract PDF Text",
+      "desc": "Export copyable text from PDFs",
+      "page": {
+        "title": "Extract PDF Text",
+        "subtitle": "Export copyable text from PDFs with a text layer, ready for reports, contracts, notes, or AI prep.",
+        "badge": "Local tool",
+        "notice": "The file is read locally in your browser and is not uploaded. This extracts the PDF text layer; for scanned PDFs or image text, use OCR.",
+        "uploadLabel": "PDF file",
+        "uploadTitleIdle": "Choose the PDF to extract text from",
+        "uploadTitleReady": "File is ready",
+        "uploadDescriptionIdle": "Best for PDFs where text can already be selected and copied.",
+        "uploadDescriptionReady": "The extracted text will appear here and can be copied or downloaded as TXT.",
+        "dropTitle": "Drop your PDF here",
+        "dropSubtitle": "or click to choose a file",
+        "action": "Extract text",
+        "processing": "Reading text layer...",
+        "ready": "Text extracted",
+        "copied": "Copied",
+        "copyFailed": "Copy failed. Please select the text manually.",
+        "copyText": "Copy text",
+        "download": "Download TXT",
+        "remove": "Remove",
+        "textPreview": "Text preview",
+        "emptyTitle": "No usable text found",
+        "emptyBody": "This usually means the PDF is scanned, image-based, or specially encoded. Try OCR text recognition instead.",
+        "resultTitle": "Result",
+        "resultBody": "Text is organized by page and ready to copy or download.",
+        "pageCount": "Pages",
+        "characters": "Characters",
+        "fileSize": "File size",
+        "localTitle": "Local, with no server copy",
+        "localBody": "Text-based PDFs are usually faster locally because no upload is needed. Use OCR for scanned documents.",
+        "step1": "Upload PDF",
+        "step2": "Read text layer",
+        "step3": "Copy or download",
+        "errorFailed": "Text could not be extracted. Confirm this is a standard PDF or try OCR.",
+        "pageLabel": "Page {page}"
+      }
+    },
+    "extractImages": {
+      "title": "Extract PDF Images",
+      "desc": "Pull embedded images from PDFs",
+      "page": {
+        "title": "Extract PDF Images",
+        "subtitle": "Pull embedded images from PDF pages for reuse, reporting, or archiving.",
+        "badge": "Local tool",
+        "notice": "The file is read locally in your browser and is not uploaded. This extracts embedded images; to export every full page as an image, use PDF to Image.",
+        "uploadLabel": "PDF file",
+        "uploadTitleIdle": "Choose the PDF to extract images from",
+        "uploadTitleReady": "File is ready",
+        "uploadDescriptionIdle": "Best for PDFs with embedded photos, illustrations, charts, or screenshots.",
+        "uploadDescriptionReady": "Extracted images will appear for preview and download.",
+        "dropTitle": "Drop your PDF here",
+        "dropSubtitle": "or click to choose a file",
+        "action": "Extract images",
+        "processing": "Scanning page images...",
+        "ready": "Images extracted",
+        "remove": "Remove",
+        "download": "Download",
+        "downloadAll": "Download all",
+        "resultLabel": "Result",
+        "waitingTitle": "Waiting to start",
+        "readyTitle": "{count} images found",
+        "emptyHint": "Upload a PDF and start extraction. Images will appear in the order they are found.",
+        "emptyTitle": "No extractable images found",
+        "emptyBody": "This PDF may be mostly text, vector graphics, or full-page scans. Use PDF to Image if you need full-page exports.",
+        "page": "Page",
+        "size": "Size",
+        "fileSize": "File size",
+        "localTitle": "Extract embedded images, not page screenshots",
+        "localBody": "Unlike PDF to Image, this tries to recover the actual image resources inside the page.",
+        "step1": "Upload PDF",
+        "step2": "Scan image resources",
+        "step3": "Preview and download",
+        "errorFailed": "Images could not be extracted. Confirm this is a standard PDF or use PDF to Image."
+      }
+    },
+    "ocr": {
+      "title": "OCR Text Recognition",
+      "desc": "Recognize text from scanned files",
+      "subtitle": "Extract text from scanned PDFs and images with cloud OCR.",
+      "badge": "Pro Feature",
+      "pageExtra": "Cloud OCR is best for scans, photos, and image-heavy documents.",
+      "notice": "Upload a PDF or image, choose a recognition language, and download the extracted text when the job completes.",
+      "accessLabel": "Access",
+      "accessGuestTitle": "Sign in to use OCR",
+      "accessMemberTitle": "Upgrade required",
+      "accessGuestDescription": "OCR uses cloud processing. Sign in first so the job can be attached to your account.",
+      "accessMemberDescription": "OCR is a Pro workflow for longer, server-powered document processing.",
+      "goToSignIn": "Sign in",
+      "goToUpgrade": "View Pro",
+      "accessStep1": "Upload the scan or image",
+      "accessStep2": "Run recognition in the cloud",
+      "accessStep3": "Download text results",
+      "uploadLabel": "Upload",
+      "uploadTitleIdle": "Upload a PDF or image",
+      "uploadTitleSelected": "File selected",
+      "uploadDescriptionIdle": "Choose the document you want to recognize.",
+      "uploadDescriptionSelected": "Review the language and start OCR.",
+      "dropTitle": "Drop your file here",
+      "dropSubtitle": "PDF, PNG, JPG, and other common scan formats",
+      "flowTitle": "Suggested flow",
+      "flowStep1": "Upload",
+      "flowStep2": "Recognize",
+      "flowStep3": "Review",
+      "workspaceTitle": "OCR workspace",
+      "workspaceDescription": "Choose the best language for your document before starting recognition.",
+      "workspaceLanguage": "Recognition language",
+      "languageOptions": {
+        "eng": "English",
+        "chi_sim": "Simplified Chinese",
+        "chi_tra": "Traditional Chinese",
+        "spa": "Spanish",
+        "fra": "French",
+        "deu": "German",
+        "jpn": "Japanese",
+        "kor": "Korean"
+      },
+      "start": "Start OCR",
+      "signInToUse": "Sign in to use",
+      "upgradeToUse": "Upgrade to use",
+      "submitting": "Submitting...",
+      "uploading": "Uploading...",
+      "waiting": "Waiting...",
+      "running": "Recognizing...",
+      "recognizing": "Recognizing text...",
+      "preparingResults": "Preparing results...",
+      "completed": "Completed",
+      "failed": "OCR failed",
+      "resultTitle": "Recognized text",
+      "confidence": "Confidence",
+      "pages": "Pages",
+      "copy": "Copy text",
+      "copied": "Copied",
+      "copyFailed": "Copy failed",
+      "download": "Download TXT",
+      "recognizeAnother": "Recognize another file",
+      "defaultLanguage": "eng",
+      "viewFullResult": "View full result"
+    },
+    "officeToPdf": {
+      "title": "Office to PDF",
+      "desc": "Convert Office files to PDF",
+      "badge": "Pro Feature",
+      "formats": {
+        "word": "Word",
+        "excel": "Excel",
+        "powerpoint": "PowerPoint"
+      },
+      "pageNotice": "Office conversion runs in the cloud for better format compatibility.",
+      "accessLabel": "Access",
+      "accessGuestTitle": "Sign in to convert Office files",
+      "accessGuestDescription": "Office conversion requires an account so the cloud job can be tracked.",
+      "goToSignIn": "Sign in",
+      "accessStep1": "Upload Office file",
+      "accessStep2": "Convert in the cloud",
+      "accessStep3": "Download PDF",
+      "uploadLabel": "Upload",
+      "uploadTitleIdle": "Upload an Office file",
+      "uploadTitleSelected": "File selected",
+      "uploadDescriptionIdle": "Choose a Word, Excel, or PowerPoint file.",
+      "uploadDescriptionSelected": "Review the selected file and start conversion.",
+      "dropSubtitle": "Word, Excel, and PowerPoint files are supported.",
+      "workspaceTitle": "Conversion workspace",
+      "workspaceDescription": "Cloud conversion keeps complex Office layouts more stable.",
+      "converting": "Converting...",
+      "uploading": "Uploading...",
+      "queued": "Queued...",
+      "serverProcessing": "Server processing...",
+      "preparingDownload": "Preparing download...",
+      "resultReady": "Result ready",
+      "unsupported": "Choose a Word, Excel, or PowerPoint file.",
+      "conversionFailed": "Office conversion failed. Please try again later.",
+      "conversionFailedShort": "Conversion failed"
+    },
+    "watermark": {
+      "title": "Watermark PDF",
+      "desc": "Add a text watermark to a PDF",
+      "localHint": "Processed in your browser whenever possible; your file stays on your device for local tools.",
+      "page": {
+        "badge": "Local tool",
+        "setupLabel": "Watermark setup",
+        "setupTitle": "Adjust the message and style",
+        "setupDesc": "Useful for contracts, reports, drafts, and shared files that need a clear but unobtrusive status mark.",
+        "outputLabel": "Output",
+        "outputTitle": "Generate a new watermarked file",
+        "outputTips": [
+          "Keep the watermark short and easy to identify.",
+          "Higher opacity is more visible, while lower opacity is better for reading-heavy files.",
+          "A new PDF is generated after processing. Your original file remains unchanged."
+        ],
+        "localTitle": "Local browser processing",
+        "localDesc": "The watermark is applied locally in your browser, which fits quick status marks, review labels, and privacy-sensitive documents.",
+        "action": "Apply watermark",
+        "successTitle": "Watermark applied",
+        "successMessage": "Your watermarked PDF is ready to download.",
+        "placeholder": "Example: Draft / Reviewed / Preview only",
+        "color": "Watermark color",
+        "text": "Watermark text",
+        "position": "Position",
+        "opacity": "Opacity",
+        "rotation": "Rotation",
+        "fontSize": "Font size",
+        "errorNoText": "Enter watermark text before continuing.",
+        "errorFailed": "Failed to apply the watermark. Please try again later.",
+        "processing": "Applying watermark...",
+        "done": "Completed",
+        "defaultText": "CONFIDENTIAL",
+        "positions": [
+          {
+            "value": "center",
+            "label": "Center"
+          },
+          {
+            "value": "tile",
+            "label": "Tile"
+          },
+          {
+            "value": "top",
+            "label": "Top"
+          },
+          {
+            "value": "bottom",
+            "label": "Bottom"
+          }
+        ]
+      }
+    },
+    "fillForm": {
+      "title": "Fill PDF Form",
+      "desc": "Fill PDF form fields",
+      "proOnly": "Pro feature - cloud processing required",
+      "pageExtra": "Cloud form filling is best for structured documents with recognizable fields.",
+      "notice": "Upload a PDF form, review detected fields, then generate a filled copy.",
+      "accessLabel": "Access",
+      "accessGuestTitle": "Sign in to fill forms",
+      "accessMemberTitle": "Upgrade required",
+      "accessGuestDescription": "Form detection runs in the cloud and requires an account.",
+      "accessMemberDescription": "Form filling is a Pro workflow for structured document processing.",
+      "goToSignIn": "Sign in",
+      "goToUpgrade": "View Pro",
+      "useAfterLogin": "Sign in to use",
+      "upgradeAfterLogin": "Upgrade to use",
+      "accessStep1": "Upload form",
+      "accessStep2": "Review fields",
+      "accessStep3": "Generate filled PDF",
+      "uploadLabel": "Upload",
+      "uploadTitle": "Upload a PDF form",
+      "uploadDescription": "Choose a fillable or structured PDF form.",
+      "dropTitle": "Drop your form here",
+      "dropSubtitle": "PDF forms and structured PDFs are supported.",
+      "flowTitle": "Workflow",
+      "flowStep1": "Detect",
+      "flowStep2": "Fill",
+      "flowStep3": "Download",
+      "workspaceTitle": "Form workspace",
+      "workspaceDescription": "Review detected fields before generating the filled document.",
+      "stepDetecting": "Detecting fields",
+      "stepReview": "Review fields",
+      "stepGenerating": "Generating PDF",
+      "stepLabel": "Step {step}",
+      "preparingResult": "Preparing result",
+      "ready": "Ready to download",
+      "noFieldsHelp": "Try another PDF or check whether the form fields are embedded."
+    },
+    "annotate": {
+      "title": "Annotate PDF",
+      "desc": "Add notes and highlights to a PDF",
+      "proOnly": "Pro feature - cloud processing required",
+      "pageExtra": "Use cloud annotation when you need a generated PDF with visible notes or highlights.",
+      "notice": "Upload a PDF, choose annotation type, set page and coordinates, then export a marked copy.",
+      "accessLabel": "Access",
+      "accessGuestTitle": "Sign in to annotate",
+      "accessMemberTitle": "Upgrade required",
+      "accessGuestDescription": "Annotation generation runs in the cloud and requires an account.",
+      "accessMemberDescription": "PDF annotation is a Pro workflow for server-generated document output.",
+      "goToSignIn": "Sign in",
+      "goToUpgrade": "View Pro",
+      "useAfterLogin": "Sign in to use",
+      "upgradeAfterLogin": "Upgrade to use",
+      "accessStep1": "Upload PDF",
+      "accessStep2": "Add note or highlight",
+      "accessStep3": "Download annotated PDF",
+      "uploadLabel": "Upload",
+      "uploadTitle": "Upload a PDF",
+      "uploadDescription": "Choose the PDF you want to annotate.",
+      "dropTitle": "Drop your PDF here",
+      "dropSubtitle": "PDF files are supported.",
+      "flowTitle": "Workflow",
+      "flowStep1": "Upload",
+      "flowStep2": "Configure",
+      "flowStep3": "Export",
+      "workspaceTitle": "Annotation workspace",
+      "workspaceDescription": "Add visible text notes or highlight a rectangular area.",
+      "configureTitle": "Configure annotation",
+      "configureDescription": "Set the annotation content, page, position, and color.",
+      "modeLabel": "Annotation type",
+      "coordinateHintTitle": "Coordinate hint",
+      "coordinateHintDescription": "Coordinates use PDF page units. Start with small values and adjust after previewing the result.",
+      "stepGenerating": "Generating PDF",
+      "stepLabel": "Step {step}",
+      "textColors": [
+        {
+          "name": "Red",
+          "value": "#FF0000"
+        },
+        {
+          "name": "Blue",
+          "value": "#2563EB"
+        },
+        {
+          "name": "Green",
+          "value": "#059669"
+        },
+        {
+          "name": "Black",
+          "value": "#111827"
+        }
+      ],
+      "highlightColors": [
+        {
+          "name": "Yellow",
+          "value": "#FACC15"
+        },
+        {
+          "name": "Mint",
+          "value": "#34D399"
+        },
+        {
+          "name": "Sky",
+          "value": "#38BDF8"
+        },
+        {
+          "name": "Pink",
+          "value": "#F472B6"
+        }
+      ],
+      "preparingResult": "Preparing result",
+      "ready": "Ready to download"
+    }
   },
-  "cloud": {},
-  "payment": {},
-  "account": {},
+  "cloud": {
+    "proOnly": "Pro feature - upgrade to enable"
+  },
+  "payment": {
+    "success": {
+      "badge": "Payment complete",
+      "message": "Thanks for upgrading. PDF-Flow is refreshing your account state.",
+      "checkoutState": "Payment status",
+      "checkoutReturned": "Payment finished successfully. Your account will update shortly.",
+      "checkoutReturnedWithReference": "Payment finished with a reference number. Keep it handy if support needs it.",
+      "referenceLabel": "Reference",
+      "accountPending": "We will refresh your account once the page is ready.",
+      "accountSyncing": "Refreshing your account so the latest subscription state is visible.",
+      "accountSynced": "Your account details were refreshed. If Pro access does not appear immediately, wait a moment and refresh again.",
+      "accountGuest": "You are not signed in on this browser. Sign in with the account used at checkout to see subscription status.",
+      "step1": "Open your account to confirm the current plan and billing status.",
+      "step2": "Try cloud OCR, Office conversion, or AI workflows when Pro access is visible.",
+      "step3": "Contact support with the payment reference if access does not update after a few minutes."
+    },
+    "cancel": {
+      "badge": "Payment not completed",
+      "message": "Payment was closed before it finished. Your current plan stays unchanged, and you can restart whenever you are ready.",
+      "noChargeTitle": "No plan change",
+      "noChargeDescription": "No Pro subscription was activated.",
+      "checkoutStatus": "Payment",
+      "checkoutCanceled": "Cancelled",
+      "currentPlan": "Current plan",
+      "freePlan": "Free / unchanged",
+      "benefit4": "Priority processing, email support, and account-level subscription controls."
+    }
+  },
+  "account": {
+    "profile": "Profile",
+    "usage": "Usage",
+    "myAccount": "My Account",
+    "totalRequests": "Total requests",
+    "requestsToday": "Requests today",
+    "quotaRemaining": "Quota remaining",
+    "unlimited": "Unlimited",
+    "currentPlan": "Current plan",
+    "upgradeToPro": "Upgrade to Pro",
+    "editProfile": "Edit profile",
+    "save": "Save",
+    "cancel": "Cancel",
+    "deleteAccount": "Delete account",
+    "deleteConfirm": "Delete this account? This action cannot be undone.",
+    "updateSuccess": "Profile updated successfully",
+    "workspaceDescription": "Review your profile, plan, and usage state before returning to PDF work.",
+    "refresh": "Refresh",
+    "loading": "Loading account...",
+    "emptyTitle": "Account details are unavailable",
+    "emptyMessage": "We could not load a signed-in account for this page.",
+    "emptyHint": "Sign in again or refresh the page if you expected to be logged in.",
+    "usageDescription": "Usage is refreshed from your account service and may be delayed briefly after new work.",
+    "usageLoading": "Loading usage...",
+    "usageEmptyTitle": "No usage data yet",
+    "usageEmptyMessage": "Once you process files while signed in, account usage appears here.",
+    "todayQuota": "Today quota usage",
+    "notSet": "Not set",
+    "dangerZone": "Danger zone",
+    "deleteDescription": "Account deletion removes access to this account. Some security, billing, or audit records may remain as required.",
+    "deleteDialog": {
+      "title": "Delete this account?",
+      "summary": "This will remove access for {email}.",
+      "detailAccess": "You will be signed out after the account is deleted.",
+      "detailRetention": "Security, billing, support, or audit records may remain where required.",
+      "detailSignIn": "This action cannot be undone from the account page.",
+      "confirm": "Delete account"
+    },
+    "updateFailedTitle": "Profile update failed",
+    "updateFailedMessage": "We could not save your profile changes. Please review the value and try again.",
+    "deleteFailedTitle": "Account deletion failed",
+    "deleteFailedMessage": "We could not delete this account right now. Please try again or contact support.",
+    "plans": {
+      "free": "Free",
+      "pro": "Pro",
+      "enterprise": "Enterprise",
+      "admin": "Admin"
+    }
+  },
   "enterprise": {},
   "ai": {
-    "title": "AI PDF Analyzer"
+    "title": "AI PDF Analyzer",
+    "pageExtra": "AI analysis runs in the cloud and is best for long documents, summaries, Q&A, and structured extraction.",
+    "notice": "Upload a PDF, choose an AI task, and review the generated result before reusing it.",
+    "tabs": {
+      "batch": "Batch analysis"
+    },
+    "accessLabel": "Access",
+    "accessGuestTitle": "Sign in to use AI analysis",
+    "accessMemberTitle": "Upgrade required",
+    "accessGuestDescription": "AI analysis requires an account so the document task can be processed securely.",
+    "accessMemberDescription": "AI analysis is a Pro workflow for server-powered document understanding.",
+    "goToSignIn": "Sign in",
+    "goToUpgrade": "View Pro",
+    "accessStep1": "Upload PDF",
+    "accessStep2": "Choose analysis mode",
+    "accessStep3": "Review generated output",
+    "uploadLabel": "Upload",
+    "uploadTitleIdle": "Upload a PDF",
+    "uploadTitleSelected": "PDF selected",
+    "uploadDescriptionIdle": "Choose a document for AI analysis.",
+    "uploadDescriptionSelected": "Select a task and run analysis.",
+    "dropSubtitle": "PDF files are supported.",
+    "suggestedFlowTitle": "Suggested flow",
+    "suggestedFlowDescription": "Start with a summary, ask follow-up questions, then extract structured fields if needed.",
+    "batch": {
+      "title": "Batch analysis",
+      "description": "Run multiple analysis tasks at once to understand long documents faster.",
+      "start": "Start batch analysis",
+      "complete": "Analysis complete",
+      "completedCount": "{count} tasks completed.",
+      "operations": {
+        "summarize": {
+          "label": "Smart summary",
+          "description": "Pull out core content and key points."
+        },
+        "extract": {
+          "label": "Data extraction",
+          "description": "Organize important fields and structure."
+        },
+        "classify": {
+          "label": "Document classification",
+          "description": "Identify document type and purpose."
+        }
+      }
+    },
+    "errors": {
+      "batchFailed": "Batch analysis could not be completed. Please try again later."
+    }
+  },
+  "footer": {
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "eyebrow": "PDF tools",
+    "brandDescription": "Fast PDF tools for everyday work. Open a tool, add files, and keep the workflow moving.",
+    "toolsTitle": "Tools",
+    "productTitle": "Product",
+    "supportTitle": "Support",
+    "contactTitle": "Contact support",
+    "contactDescription": "If something goes wrong, send a screenshot, the time it happened, and the action you tried. Do not send document contents unless support asks for them.",
+    "trustPrivacyTitle": "Practical defaults",
+    "trustPrivacyDescription": "Common PDF jobs stay simple and predictable from the first click.",
+    "trustWorkflowTitle": "Direct tool entry",
+    "trustWorkflowDescription": "Tools stay close to the footer so repeat work starts faster.",
+    "trustSupportTitle": "Easier support",
+    "trustSupportDescription": "Support prompts ask for context without requesting document contents.",
+    "copyright": "Simple PDF tools for everyday work.",
+    "bottomLine": "Free tools for daily work, Pro when you need more."
+  },
+  "history": {
+    "title": "Processing History",
+    "page": {
+      "backHome": "Back to home",
+      "badge": "Local processing history",
+      "title": "Processing History",
+      "description": "Review recent PDF actions saved by this browser. History stays on this device and helps you revisit files, tools, and processing time.",
+      "localTitle": "Stored locally",
+      "localDescription": "History data is not uploaded. It disappears when browser data is cleared.",
+      "reviewTitle": "Quick review",
+      "reviewDescription": "Useful when you need to confirm which tool ran and which files were processed.",
+      "continueProcessing": "Continue processing PDF"
+    },
+    "panel": {
+      "confirmClear": "Clear all processing history?",
+      "confirmTitle": "Clear all local history?",
+      "confirmMessage": "This removes the processing history saved in this browser. It does not affect downloaded files or documents on your device.",
+      "confirmAction": "Clear history",
+      "cancelClear": "Keep history",
+      "itemMeta": "{tool} · {time}",
+      "none": "None",
+      "deleteItem": "Delete this history item",
+      "clearAll": "Clear all history",
+      "emptyTitle": "No processing history yet",
+      "emptyDescription": "After processing PDFs, recent actions are saved in this browser so you can review file names, tool types, and processing time.",
+      "groups": {
+        "today": "Today",
+        "yesterday": "Yesterday",
+        "older": "Earlier"
+      },
+      "stats": {
+        "totalFiles": "Total files",
+        "todayFiles": "Processed today",
+        "mostUsed": "Most used",
+        "spaceSaved": "Space saved"
+      },
+      "time": {
+        "justNow": "Just now",
+        "minutesAgo": "{count} min ago",
+        "hoursAgo": "{count} hr ago",
+        "daysAgo": "{count} days ago"
+      }
+    },
+    "tools": {
+      "merge": "Merge PDF",
+      "split": "Split PDF",
+      "rotate": "Rotate PDF",
+      "compress": "Compress PDF",
+      "imageToPdf": "Image to PDF",
+      "pdfToImage": "PDF to Image",
+      "deletePages": "Delete PDF pages",
+      "organize": "Organize PDF pages",
+      "pageNumbers": "Add PDF page numbers",
+      "crop": "Crop PDF",
+      "protect": "Protect PDF",
+      "unlock": "Unlock PDF",
+      "sign": "Sign PDF",
+      "extractText": "Extract PDF text",
+      "extractImages": "Extract PDF images",
+      "watermark": "Add watermark",
+      "flatten": "Flatten PDF",
+      "repair": "Repair PDF"
+    }
+  },
+  "appShell": {
+    "skipToContent": "Skip to main content",
+    "announcement": "Site announcement",
+    "configRetry": "Retry settings",
+    "configRetrying": "Retrying...",
+    "configUnavailableTitle": "Site settings are using defaults",
+    "configUnavailableMessage": "PDF-Flow could not reach the public configuration service. Core tools remain available with default settings.",
+    "configUnavailableHint": "Retry once, or include this code if you contact support.",
+    "maintenanceBadge": "Maintenance",
+    "maintenanceTitle": "Site maintenance in progress",
+    "maintenanceMessage": "The site is under maintenance. Please try again later.",
+    "maintenanceAdminHint": "Admins can still sign in and adjust maintenance status from the control room."
+  },
+  "feedbackWidget": {
+    "launcher": "Send feedback",
+    "dialogLabel": "Send feedback to PDF-Flow",
+    "close": "Close feedback window",
+    "badge": "Support trail",
+    "title": "Tell us what happened",
+    "description": "We attach the page URL, browser context, and a diagnostic code. We do not ask for document contents.",
+    "categoryLabel": "Type",
+    "severityLabel": "Impact",
+    "titleLabel": "Short title",
+    "messageLabel": "Details",
+    "emailLabel": "Email, optional",
+    "titlePlaceholder": "Example: PDF to image failed locally",
+    "messagePlaceholder": "Write what you clicked, what you saw, and whether it happens again.",
+    "emailPlaceholder": "Useful if we need to ask a follow-up",
+    "messageHint": "Up to {count} characters. Prefer steps, visible errors, and expected result. Do not paste document contents.",
+    "diagnosticTitle": "Diagnostic context",
+    "diagnosticLine": "Code: {code} · Page: {path}",
+    "privacyHint": "Only troubleshooting context is attached; your PDF file contents are not included.",
+    "submit": "Submit feedback",
+    "submitting": "Submitting...",
+    "submitFailedTitle": "Feedback could not be submitted",
+    "submitFailedMessage": "The feedback service did not accept the report. Keep this diagnostic code and try again later.",
+    "successTitle": "Feedback submitted",
+    "successMessage": "We received your feedback. Reference #{id}, diagnostic code {code}. Keep this if you need to add more context later.",
+    "copyReference": "Copy reference",
+    "copied": "Copied",
+    "copyFailed": "Copy failed. You can still select the reference text manually.",
+    "categories": {
+      "bug": "Functional issue",
+      "ui": "Display or layout issue",
+      "account": "Account or sign-in issue",
+      "suggestion": "Suggestion"
+    },
+    "severities": {
+      "normal": "General issue",
+      "high": "Affects workflow",
+      "critical": "Cannot continue"
+    },
+    "validation": {
+      "requiredTitle": "Title and details are required",
+      "requiredMessage": "Add a short title and the steps or visible error so we can locate the issue.",
+      "requiredHint": "A screenshot is useful, but please do not paste document contents.",
+      "tooLongTitle": "Details are too long",
+      "tooLongMessage": "Keep the description under {count} characters and focus on reproduction steps.",
+      "tooLongHint": "Short reports are easier to triage."
+    },
+    "summary": {
+      "feedbackId": "Feedback #{id}",
+      "diagnosticCode": "Diagnostic code {code}",
+      "page": "Page {page}"
+    }
+  },
+  "availability": {
+    "featureDisabledEyebrow": "Feature availability",
+    "featureDisabledTitle": "This tool is temporarily unavailable",
+    "featureDisabledMessage": "This PDF workflow is currently turned off by site settings. You can continue with other tools and try again later.",
+    "featureDisabledHint": "The tool entry is hidden while the feature flag is disabled. Admins can re-enable it from the control room.",
+    "notFoundEyebrow": "Route not found",
+    "notFoundTitle": "We could not find that page",
+    "notFoundMessage": "The requested path \"{path}\" does not match an available PDF-Flow route.",
+    "notFoundHint": "Return home or open the tools page to continue with an available tool.",
+    "requestedPath": "Requested path",
+    "backToTools": "Back to tools",
+    "backHome": "Back home",
+    "retryTool": "Try this tool again",
+    "goBack": "Go back"
+  },
+  "legal": {
+    "privacy": {
+      "eyebrow": "Privacy Policy",
+      "title": "How we protect your files and account information",
+      "updated": "Last updated: June 11, 2026",
+      "description": "PDF-Flow is an online PDF workspace for everyday document tasks. Core tools run locally in your browser whenever possible. Files are uploaded only when you choose OCR, Office conversion, AI analysis, or cloud processing.",
+      "summaryTitle": "Short version",
+      "summary": "We do not sell your personal information or read your documents for advertising profiles. Cloud files are used only to complete the task you requested, provide downloads, troubleshoot issues, and protect service security, then removed under our temporary file lifecycle policy.",
+      "note": "If you process highly sensitive, regulated, or legally binding documents, prefer local processing and assess whether cloud upload is appropriate.",
+      "sections": [
+        {
+          "title": "1. Information we collect",
+          "paragraphs": [
+            "When you visit the site, we may receive basic access data such as browser type, visit time, page path, language setting, IP-related security information, and error logs.",
+            "When you create or use an account, we store information needed to operate the service, including email, display name, hashed password, account role, subscription status, and login timestamps."
+          ],
+          "bullets": [
+            "Account information: email, display name, authentication status, role, and permissions.",
+            "Operational information: task status, error codes, and necessary diagnostic logs.",
+            "Payment information: payment details are handled by the payment provider; PDF-Flow stores only necessary subscription status."
+          ]
+        },
+        {
+          "title": "2. How files are processed",
+          "paragraphs": [
+            "Basic tools such as merge, split, rotate, compress, image to PDF, and PDF to image are designed to run locally in your browser whenever possible.",
+            "OCR, Office to PDF, AI PDF analysis, and cloud-processing workflows require backend processing. When you submit these tasks, related files are uploaded temporarily."
+          ],
+          "bullets": [
+            "Local processing: the server normally cannot see the document contents.",
+            "Cloud processing: the server temporarily receives files, generates results, and records necessary task status.",
+            "Support troubleshooting: avoid sending unnecessary sensitive files or full document contents in feedback."
+          ]
+        },
+        {
+          "title": "3. Cloud file lifecycle policy",
+          "paragraphs": [
+            "Cloud uploads, generated results, and temporary download bundles are stored in controlled temporary directories. Expired files are removed through automatic cleanup and admin maintenance tools.",
+            "Current defaults are about 1 hour for uploaded files and generated results, and about 30 minutes for download bundles. Actual deletion may be delayed by queues, load, troubleshooting, or maintenance windows."
+          ],
+          "bullets": [
+            "Cleanup scope: temporary upload directories, generated result directories, and download bundle directories.",
+            "Not removed by file cleanup: accounts, audit logs, feedback, error summaries, and necessary task metadata.",
+            "Safety boundary: cleanup scans only configured temporary directories and deletes only system-generated paths with known prefixes."
+          ]
+        },
+        {
+          "title": "4. How information is used",
+          "paragraphs": [
+            "We use necessary information to provide login, file processing, task progress, downloads, permission checks, subscription recognition, troubleshooting, and security protection.",
+            "If you contact support, we may use screenshots, timestamps, error codes, page URLs, and steps you provide to locate the issue."
+          ]
+        },
+        {
+          "title": "5. Retention and deletion",
+          "paragraphs": [
+            "Temporary files are removed according to the lifecycle policy above. Redis file and job caches also use expiry times to avoid long-lived temporary access.",
+            "Account records, subscription status, required audit records, error summaries, and feedback reports may remain for reasonable security, billing, troubleshooting, and compliance purposes."
+          ]
+        },
+        {
+          "title": "6. Your choices and rights",
+          "paragraphs": [
+            "You may use some basic features without creating an account. For login, subscription, or cloud features, you decide whether to continue.",
+            "You may request access, correction, or deletion of account-related information. Some security, billing, audit, or troubleshooting records may need to remain for a reasonable period."
+          ]
+        },
+        {
+          "title": "7. Security",
+          "paragraphs": [
+            "We use hashed passwords, secure sign-in, role-based access, security logs, and least-necessary access practices to reduce risk.",
+            "No online service can be perfectly secure. If you handle highly sensitive files, consider local processing or redaction before upload."
+          ]
+        },
+        {
+          "title": "8. Updates",
+          "paragraphs": [
+            "As billing, team, enterprise API, or cloud features expand, this policy may change. Material updates will be reflected on this page."
+          ]
+        },
+        {
+          "title": "9. Contact",
+          "paragraphs": [
+            "For privacy, file-processing, or account-data questions, contact us through the support channel shown by the site. Include screenshots, timestamps, error codes, and short reproduction steps when reporting issues."
+          ]
+        }
+      ]
+    },
+    "terms": {
+      "eyebrow": "Terms of Service",
+      "title": "Please understand these rules before using PDF-Flow",
+      "updated": "Last updated: June 11, 2026",
+      "description": "These terms explain the basic rights, responsibilities, and limits that apply when you use PDF-Flow. We use plain language so important information is easier to understand.",
+      "summaryTitle": "Core principle",
+      "summary": "You may use PDF-Flow to process legal documents that you own or are allowed to handle. Do not upload unlawful, infringing, malicious, abusive, or harmful content. Keep your own backups and verify important results.",
+      "note": "If you do not agree with these terms, please stop using features that require login, upload, cloud processing, or subscription.",
+      "sections": [
+        {
+          "title": "1. Acceptance",
+          "paragraphs": [
+            "By accessing, registering, signing in, or continuing to use PDF-Flow, you agree to the current Terms of Service and Privacy Policy.",
+            "We may update these terms as the product, legal requirements, or operations change. Updated terms will be shown on this page."
+          ]
+        },
+        {
+          "title": "2. Accounts and security",
+          "paragraphs": [
+            "You are responsible for your account, credentials, and activity under your account. Use a secure password and do not share access with unauthorized people.",
+            "If you notice suspicious account activity, billing issues, or unknown tasks, contact us through the support channel promptly."
+          ],
+          "bullets": [
+            "Do not impersonate another person when registering or using the service.",
+            "Do not bypass permissions, plan limits, upload limits, or security controls.",
+            "Do not attempt to access private admin areas, private APIs, or other users data."
+          ]
+        },
+        {
+          "title": "3. Files and content responsibility",
+          "paragraphs": [
+            "You confirm that you have the legal right to upload, convert, recognize, analyze, or download the files you use with PDF-Flow.",
+            "You should keep your own originals and backups, and review results before relying on them. Conversion, compression, OCR, and AI analysis can be affected by file quality, format, language, browser environment, and third-party dependencies."
+          ]
+        },
+        {
+          "title": "4. Prohibited use",
+          "paragraphs": [
+            "To protect the service and other users, you may not use PDF-Flow for unlawful, infringing, fraudulent, harassing, malicious, abusive, or access-control-bypassing activity.",
+            "If we detect suspicious requests, malicious files, resource abuse, or high-risk behavior, we may limit uploads, stop tasks, suspend accounts, or refuse part of the service."
+          ],
+          "bullets": [
+            "Do not upload viruses, attack scripts, or disguised malicious files.",
+            "Do not scrape APIs in bulk, bypass rate limits, or consume abnormal resources.",
+            "Do not process copyrighted, private, or regulated content that you have no right to handle."
+          ]
+        },
+        {
+          "title": "5. Subscriptions and feature limits",
+          "paragraphs": [
+            "Some advanced features may require login, Pro, or enterprise access. Feature availability, quotas, prices, refunds, and cancellation rules follow the purchase or payment flow shown at the time.",
+            "We may adjust plan boundaries, quotas, and feature availability as the product evolves. Material changes should be communicated clearly."
+          ]
+        },
+        {
+          "title": "6. Availability and limits",
+          "paragraphs": [
+            "We work to keep the service stable, but we cannot guarantee every file, format, browser, network, or third-party dependency will work at all times.",
+            "Maintenance, upgrades, dependency failures, network issues, security events, or force majeure may interrupt or slow the service."
+          ]
+        },
+        {
+          "title": "7. Disclaimer",
+          "paragraphs": [
+            "PDF-Flow is a document-processing tool. It does not provide legal, financial, medical, or professional review advice. AI analysis, OCR, and conversion results may contain errors or omissions.",
+            "For contracts, invoices, identity documents, compliance materials, or other critical files, review results yourself and seek professional confirmation when needed."
+          ]
+        },
+        {
+          "title": "8. Changes, suspension, and termination",
+          "paragraphs": [
+            "If an account violates these terms, harms service security, infringes rights, or causes clear resource abuse, we may restrict, suspend, or terminate related accounts and tasks.",
+            "You may stop using the service or request account deletion where supported. Some security, billing, audit, and troubleshooting records may remain for a reasonable period."
+          ]
+        },
+        {
+          "title": "9. Contact",
+          "paragraphs": [
+            "For questions about these terms, accounts, subscriptions, or file results, contact us through the support channel shown by the site. Include screenshots, timestamps, error codes, and short reproduction steps for technical issues."
+          ]
+        }
+      ]
+    }
+  },
+  "home": {
+    "badges": {
+      "fast": "Fast processing",
+      "languages": "Multi-language"
+    },
+    "workspace": {
+      "eyebrow": "PDF tools",
+      "title": "PDF tools you can open and use right away",
+      "description": "Merge, compress, split, convert, OCR, and analyze PDFs from one focused workspace.",
+      "primaryAction": "Start with Merge PDF",
+      "secondaryAction": "See pricing",
+      "searchPlaceholder": "Search tools: compress, OCR, watermark",
+      "quickTitle": "Common tools",
+      "allTools": "All tools",
+      "noResults": "No matching tools",
+      "noResultsHint": "Try another keyword or switch back to all categories.",
+      "advancedTitle": "Advanced tools for Pro",
+      "advancedDescription": "OCR, Office conversion, AI analysis, form filling, and annotation sit together as the upgrade path.",
+      "featuredTitle": "Frequent tools",
+      "toolsTitle": "Everyday PDF tools",
+      "disabledFallback": "This feature is currently under maintenance.",
+      "stats": [
+        [
+          "23+",
+          "tools"
+        ],
+        [
+          "2",
+          "plan levels"
+        ],
+        [
+          "1",
+          "simple place to start"
+        ]
+      ],
+      "trust": [
+        [
+          "Free tools",
+          "Common PDF actions stay easy to find and quick to open."
+        ],
+        [
+          "Pro tools",
+          "Advanced document tasks live in one clearly marked area."
+        ],
+        [
+          "Clean layout",
+          "Tool groups stay readable without repeated upgrade tags."
+        ]
+      ],
+      "categories": {
+        "organize": "Organize",
+        "convert": "Convert",
+        "optimize": "Optimize",
+        "secure": "Secure",
+        "extract": "Extract",
+        "advanced": "Advanced"
+      },
+      "modeLabels": {
+        "local": "Free",
+        "cloud": "Pro",
+        "ai": "AI"
+      }
+    },
+    "toolsTitle": "Everyday PDF tools",
+    "whyTitle": "A clearer PDF workflow",
+    "highlights": {
+      "privacy": {
+        "title": "Free tools",
+        "description": "Common PDF jobs stay easy to open and scan."
+      },
+      "speed": {
+        "title": "Faster entry",
+        "description": "Frequent tools are easy to scan and open directly."
+      },
+      "free": {
+        "title": "Clean plan levels",
+        "description": "Advanced tools are grouped instead of tagged everywhere."
+      }
+    },
+    "toolDescriptions": {
+      "ocr": "Recognize text from scans, image PDFs, and photos",
+      "aiAnalyzer": "Summarize, ask questions, and extract structured data from PDFs"
+    }
+  },
+  "features": {
+    "page": {
+      "heroEyebrow": "Features",
+      "heroTitle": "PDF work that stays clear from upload to export",
+      "heroDescription": "PDF-Flow keeps everyday edits, heavier cloud jobs, and account history in one focused workspace, so each document task starts in the right place.",
+      "primaryAction": "Open tools",
+      "secondaryAction": "View pricing",
+      "pillars": [
+        {
+          "title": "Everyday PDF actions",
+          "body": "Merge, split, compress, rotate, convert, watermark, number pages, and extract content without turning the page into a maze."
+        },
+        {
+          "title": "Advanced work when needed",
+          "body": "OCR, Office conversion, AI analysis, forms, and annotation are available for jobs that need more processing power or a signed-in workspace."
+        },
+        {
+          "title": "A workflow, not a directory",
+          "body": "Tool pages focus on the current task, while history, account state, plan access, and exports stay connected around the work."
+        }
+      ],
+      "workflowTitle": "Built around the document flow",
+      "workflowDescription": "The product separates choosing a tool from doing the work. Features explain the system; the tools page is where files move.",
+      "workflowSteps": [
+        "Choose the kind of work from the tools page or continue from recent activity.",
+        "Use focused controls for the current file instead of scanning a second catalog.",
+        "Export, download, or return to account history when the job is done."
+      ],
+      "trustTitle": "Designed for practical document handling",
+      "trustItems": [
+        {
+          "title": "Clear access states",
+          "body": "Free, Pro, account-required, and unavailable states are shown where they matter."
+        },
+        {
+          "title": "Private by default where possible",
+          "body": "Local tools stay in the browser, while cloud tools explain when sign-in or upload is required."
+        },
+        {
+          "title": "Room to grow",
+          "body": "The same structure can support larger files, team workflows, and advanced processing without cluttering the basics."
+        }
+      ],
+      "ctaTitle": "Start with the tool you need",
+      "ctaDescription": "Go to the tools page for the full list of actions, or review pricing when advanced workflows become part of your routine."
+    }
+  },
+  "pricing": {
+    "page": {
+      "eyebrow": "Pricing",
+      "title": "Choose the plan that matches how often you work with PDFs",
+      "description": "Free covers everyday PDF actions. Pro adds advanced document tools for people who work with PDFs often.",
+      "freeName": "Free",
+      "freeEyebrow": "Everyday PDF tools",
+      "freePeriod": "Start forever",
+      "freeDescription": "For occasional PDF work such as merging, splitting, rotating, and lightweight compression.",
+      "freeBestFor": "Light personal use",
+      "freeCta": "Start free",
+      "proName": "Pro",
+      "proEyebrow": "Advanced document tools",
+      "proPeriod": "Monthly subscription",
+      "proDescription": "For frequent document work, OCR / Office / AI tasks, form filling, annotation, and heavier jobs.",
+      "proBestFor": "Frequent document work",
+      "proCta": "Upgrade to Pro",
+      "enterpriseName": "Enterprise",
+      "enterpriseEyebrow": "Teams and integration",
+      "enterprisePrice": "Custom",
+      "enterprisePeriod": "Contact us",
+      "enterpriseDescription": "For teams that need shared access, workflow integration, permissions, or delivery support.",
+      "enterpriseBestFor": "Teams and workflows",
+      "enterpriseCta": "Contact sales",
+      "currentPlan": "Current plan",
+      "popular": "Recommended",
+      "featuresLabel": "Included",
+      "notesLabel": "Best for",
+      "cloudTitle": "How to choose",
+      "cloudBody": "Pick Free for simple, occasional PDF tasks. Pick Pro when advanced tools or repeated document work are part of your routine.",
+      "promiseTitle": "Pro is for regular PDF work",
+      "promiseBody": "Keep the free plan for occasional tasks. Choose Pro when OCR, Office conversion, AI analysis, forms, annotation, or bigger document workflows become routine.",
+      "faqTitle": "Questions",
+      "faqSubtitle": "Answers to the common questions.",
+      "ctaTitle": "Start free, upgrade when you need Pro",
+      "ctaBody": "Use Free for everyday PDF actions. Move to Pro when advanced tools become part of your normal workflow.",
+      "authHint": "Sign in to upgrade or view your current plan.",
+      "paymentFailed": "We could not open payment. Please try again later or send feedback.",
+      "paymentFailedTitle": "Payment could not be opened",
+      "paymentFailedHint": "Retry once. If it repeats, submit feedback with this diagnostic code.",
+      "paymentMethodTitle": "Payment method",
+      "paymentMethodSubtitle": "Choose how you want to pay.",
+      "paymentModalTitle": "Choose payment method",
+      "paymentModalSubtitle": "Choose a payment method and continue. Pro opens after payment is confirmed.",
+      "paymentModalConfirm": "Pay now",
+      "paymentModalChange": "Not now",
+      "paymentProvidersLoading": "Loading available payment methods...",
+      "paymentProvidersRetry": "Reload payment methods",
+      "paymentProvidersFailedTitle": "Payment methods are unavailable",
+      "paymentProvidersFailedMessage": "PDF-Flow could not load payment methods. Please retry before paying.",
+      "paymentProvidersFailedHint": "Retry once. If payment methods still do not load, send feedback with this diagnostic code.",
+      "paymentNoProviders": "No payment method is currently enabled. Please try again later.",
+      "paymentProviderUnavailable": "Unavailable",
+      "paymentRedirectBadge": "Redirect",
+      "paymentQrBadge": "Pay code",
+      "paymentSubscriptionBadge": "Subscription",
+      "paymentOneTimeBadge": "One-time entitlement",
+      "paymentQrTitle": "Payment code ready",
+      "paymentQrMessage": "Open the payment page or copy the payment code. Pro will activate after payment is confirmed.",
+      "paymentQrCodeLabel": "Payment code",
+      "paymentQrOpen": "Open payment page",
+      "paymentQrCopy": "Copy code",
+      "paymentQrCopied": "Copied",
+      "paymentQrCopyFailed": "Copy failed. Select the code manually.",
+      "viewFeatures": "View features",
+      "freeFeatures": [
+        "Merge, split, and rotate PDFs",
+        "Light compression and everyday export",
+        "Image to PDF and PDF to images",
+        "Watermark, page numbers, crop, and extract tools"
+      ],
+      "freeNotes": [
+        "Occasional file work",
+        "Everyday PDF cleanup",
+        "Trying the product first"
+      ],
+      "proFeatures": [
+        "OCR text recognition",
+        "Office to PDF",
+        "AI PDF analyzer",
+        "PDF form filling and annotation",
+        "Larger and longer document workflows"
+      ],
+      "proNotes": [
+        "Frequent PDF work",
+        "Advanced document tasks",
+        "Workflows that need more capacity"
+      ],
+      "enterpriseFeatures": [
+        "Team access planning",
+        "Higher usage and stability support",
+        "Workflow or API integration",
+        "Launch and maintenance guidance"
+      ],
+      "enterpriseNotes": [
+        "Multi-user teams",
+        "Internal workflow adoption",
+        "Clearer support expectations"
+      ],
+      "proofCards": [
+        {
+          "title": "Free",
+          "body": "A practical set of everyday PDF tools."
+        },
+        {
+          "title": "Pro",
+          "body": "Advanced tools for regular document work."
+        },
+        {
+          "title": "Enterprise",
+          "body": "Planning and support for teams."
+        }
+      ],
+      "faq": [
+        [
+          "When should I choose Pro?",
+          "Choose Pro when OCR, Office conversion, AI analysis, forms, annotation, or higher-volume PDF work become routine."
+        ],
+        [
+          "Can I keep using Free?",
+          "Yes. Free is intended for common PDF tasks and occasional document cleanup."
+        ],
+        [
+          "Can I start without paying?",
+          "Yes. Use the free tools first, then upgrade when you need Pro."
+        ],
+        [
+          "Who is Enterprise for?",
+          "Teams that need shared usage, higher limits, access planning, workflow integration, or support expectations."
+        ]
+      ]
+    }
+  },
+  "toolsCenter": {
+    "eyebrow": "Tools center",
+    "title": "Every PDF tool in one place",
+    "description": "Filter by task and plan level. Common tools open directly, while Pro tools stay grouped and easy to recognize.",
+    "searchPlaceholder": "Search: merge, compress, AI",
+    "allCategories": "All categories",
+    "allModes": "All levels",
+    "noResults": "No matching tools",
+    "noResultsHint": "Clear search or change category.",
+    "enabled": "Available tools",
+    "advanced": "Pro tools",
+    "localFirst": "Free tools",
+    "categoryLabel": "Category",
+    "modeLabel": "Level",
+    "openTool": "Open tool",
+    "localDescription": "Best for everyday files and core PDF operations.",
+    "cloudDescription": "Best for OCR, Office conversion, larger files, and longer jobs.",
+    "aiDescription": "Best for summaries, Q&A, and structured information extraction.",
+    "categories": {
+      "organize": "Organize PDFs",
+      "convert": "Convert formats",
+      "optimize": "Optimize files",
+      "secure": "Secure and sign",
+      "extract": "Extract content",
+      "advanced": "Advanced workflows"
+    },
+    "modes": {
+      "local": "Free",
+      "cloud": "Pro",
+      "ai": "AI analysis"
+    }
   }
 }

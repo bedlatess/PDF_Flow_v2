@@ -305,18 +305,31 @@ Deployment:
   - `https://admin.pawn.eu.org/` returns HTTP 200 with title `PDF-Flow Admin`
   - `https://admin.pawn.eu.org/assets/ControlRoom-DVPqbD5G.js` returns HTTP 200
   - Playwright production unauthenticated admin smoke returned HTTP 200, title `PDF-Flow Admin`, no document-level horizontal overflow at `1440x1000`, and no console/page errors
+- Migrated locale override copy into baseline locale JSON files locally:
+  - `src/locales/en.json`, `src/locales/zh.json`, and `src/locales/es.json` now contain the public copy that previously lived in `src/locales/overrides.ts`
+  - `src/locales/overrides.ts` is reduced to the compatibility merge helper plus empty per-locale override objects
+  - added `scripts/migrate-locale-overrides.mjs` for encoding-safe legacy override migration and post-migration JSON validation
+  - added unit coverage in `tests/unit/locale-overrides.test.ts`
+  - verified migration parity by comparing pre-migration merged messages from Git against post-migration JSON for `en`, `zh`, and `es`
+  - verified with `node scripts/migrate-locale-overrides.mjs`
+  - verified with `npm run test:unit:ci -- tests/unit/locale-overrides.test.ts tests/unit/locale-registry.test.ts`
+  - verified with `npm run type-check`
+  - verified with `npm run test:unit:ci`
+  - verified with `npm run build`
+  - verified with `npm run build:admin`
+  - verified with Playwright locale/public checks: `locale-seo`, `public-shell`, and `public-marketing`
+  - verified with `npm run test:e2e:admin`
 
 ## Known Code Issues
 
 Fix these before large feature work:
 
 1. Repository metadata in `package.json` previously pointed to placeholder GitHub URLs. Keep it aligned with `PDF_Flow_v2`.
-2. `src/locales/overrides.ts` is too large and acts as an uncontrolled patch layer over JSON locale files.
-3. The dedicated admin frontend is live at `https://admin.pawn.eu.org` with DNS, TLS through Nginx Proxy Manager, server environment values, CORS, read-only smoke evidence, and protected admin acceptance evidence.
-4. Admin UI now has a separate frontend entry, but it still lives in the same repository tree until a future monorepo split is justified.
-5. Locale-prefixed routes, browser-language preference, and basic SEO `hreflang` output exist for the current supported locales, but additional locale rollout and deeper locale-file cleanup still need completion.
-6. Public content blocks only normalize `zh*` to `zh` and otherwise fall back to `en`, so future languages need a more formal locale model.
-7. Some internal diagnostic codes are still visible in advanced/account/admin-adjacent flows. They are useful for support, but public user-facing copy should stay calm and hide internal detail unless troubleshooting is needed.
+2. The dedicated admin frontend is live at `https://admin.pawn.eu.org` with DNS, TLS through Nginx Proxy Manager, server environment values, CORS, read-only smoke evidence, and protected admin acceptance evidence.
+3. Admin UI now has a separate frontend entry, but it still lives in the same repository tree until a future monorepo split is justified.
+4. Locale-prefixed routes, browser-language preference, and basic SEO `hreflang` output exist for the current supported locales, but additional locale rollout still needs completion.
+5. Public content blocks only normalize `zh*` to `zh` and otherwise fall back to `en`, so future languages need a more formal locale model.
+6. Some internal diagnostic codes are still visible in advanced/account/admin-adjacent flows. They are useful for support, but public user-facing copy should stay calm and hide internal detail unless troubleshooting is needed.
 
 ## Documentation Policy
 
@@ -401,7 +414,6 @@ Current local progress:
 Still to finish in this phase:
 
 - Decide when to expose additional locales such as `ja`, `ko`, and `de`; do not expose them until baseline translations exist.
-- Split the large `src/locales/overrides.ts` patch layer into domain locale modules with an encoding-safe migration script. A naive text split exposed historical mojibake/unterminated-string risk, so this must be handled as its own cleanup step.
 - Update Playwright route fixtures to assert locale-prefixed canonical paths directly.
 
 Recommended route model:
@@ -745,6 +757,7 @@ pytest tests/test_payment_domain.py -q
 
 1. Configure real payment provider credentials when merchant accounts are ready, then run sandbox and low-value live smoke tests from the Admin `Payment Setup` checklist.
 2. Configure Gemini credentials when the AI quota/account is ready and rerun AI feature smoke tests.
-3. Split `src/locales/overrides.ts` with an encoding-safe migration script and add missing baseline translations before exposing more locales.
-4. Add competitor-gap tools only after the platform refactor remains stable under production traffic.
-5. Decide whether to split the admin frontend into its own repository after the dedicated admin domain is live and daily operation is stable.
+3. Decide when to expose additional locales such as `ja`, `ko`, and `de`; do not expose them until baseline translations exist.
+4. Update Playwright route fixtures to assert locale-prefixed canonical paths directly.
+5. Add competitor-gap tools only after the platform refactor remains stable under production traffic.
+6. Decide whether to split the admin frontend into its own repository after the dedicated admin domain is live and daily operation is stable.

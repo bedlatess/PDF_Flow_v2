@@ -8,7 +8,13 @@
     "tools": "Herramientas",
     "features": "Funciones",
     "pricing": "Precios",
-    "login": "Iniciar sesion"
+    "login": "Iniciar sesion",
+    "themeToDark": "Cambiar a modo oscuro",
+    "themeToLight": "Cambiar a modo claro",
+    "openMenu": "Abrir menu",
+    "closeMenu": "Cerrar menu",
+    "language": "Idioma",
+    "primaryNavigation": "Navegacion principal"
   },
   "common": {
     "upload": "Subir archivo",
@@ -20,7 +26,38 @@
     "back": "Volver",
     "required": "Obligatorio",
     "optional": "Opcional",
-    "error": "Error"
+    "error": "Error",
+    "close": "Cerrar",
+    "copy": "Copiar",
+    "replace": "Reemplazar",
+    "create": "Crear",
+    "creating": "Creando...",
+    "fillAnother": "Rellenar otro formulario",
+    "annotateAnother": "Anotar otro PDF",
+    "downloadError": "No se pudo descargar el archivo",
+    "privacyBadge": "Procesamiento local primero",
+    "cloudToggle": {
+      "localTitle": "Procesamiento local inmediato",
+      "localDesc": "Suele ser mas rapido para archivos pequenos y mantiene el trabajo en el navegador.",
+      "cloudTitle": "Nube Pro",
+      "cloudDesc": "Ideal para archivos grandes, tareas largas, lotes, OCR / Office / IA y flujos con servidor.",
+      "lockedDesc": "Sube de plan para archivos grandes, tareas largas, OCR / Office / IA y flujos en la nube.",
+      "switchLabel": "Cambiar procesamiento en la nube"
+    },
+    "dragDropZone": {
+      "helper": {
+        "format": "{types} hasta {size}MB",
+        "pdfAndImages": "Archivos PDF e imagen hasta {size}MB",
+        "files": "Archivos hasta {size}MB",
+        "single": "Elige un archivo",
+        "multiple": "Admite varios archivos"
+      },
+      "errors": {
+        "maxFiles": "Puedes subir hasta {count} archivos a la vez.",
+        "fileTooLarge": "{file} supera el limite de {size}MB.",
+        "unsupportedType": "{file} no es un tipo de archivo compatible."
+      }
+    }
   },
   "auth": {
     "login": "Iniciar sesion",
@@ -40,37 +77,2087 @@
     "loginSubtitle": "Inicia sesion para continuar",
     "registerSubtitle": "Crea tu cuenta para continuar",
     "processingLogin": "Procesando inicio de sesion...",
-    "pleaseWait": "Espera mientras completamos tu inicio de sesion"
+    "pleaseWait": "Espera mientras completamos tu inicio de sesion",
+    "showPassword": "Mostrar contrasena",
+    "hidePassword": "Ocultar contrasena",
+    "oauthCallback": {
+      "badge": "Inicio OAuth",
+      "saving": "Guardando la sesion segura y actualizando tu cuenta.",
+      "completeTitle": "Inicio completado",
+      "redirecting": "Tu cuenta esta lista. Volviendo a PDF-Flow.",
+      "errorTitle": "No pudimos completar el inicio",
+      "errorMessage": "El proveedor OAuth no devolvio los datos de sesion esperados. Inicia sesion de nuevo.",
+      "backToLogin": "Volver a iniciar sesion",
+      "goHome": "Ir al inicio"
+    },
+    "registerFailedTitle": "Registro fallido",
+    "loginNotices": {
+      "registeredTitle": "Cuenta creada",
+      "registeredMessage": "Tu cuenta esta lista. Inicia sesion para seguir tu flujo PDF.",
+      "registeredHint": "Usa el correo y la contrasena que acabas de registrar.",
+      "oauthFailedTitle": "El inicio OAuth no termino",
+      "oauthFailedMessage": "El proveedor devolvio un error antes de que PDF-Flow completara el inicio.",
+      "oauthCallbackTitle": "Sesion OAuth incompleta",
+      "oauthCallbackMessage": "PDF-Flow no recibio los datos de sesion esperados desde el retorno OAuth.",
+      "oauthFailedHint": "Prueba el proveedor otra vez, o inicia sesion con correo y contrasena si tu cuenta tiene una."
+    },
+    "loginMarketing": {
+      "heroTitle": "Vuelve a tu espacio PDF y sigue trabajando",
+      "heroDescription": "Retoma OCR, conversiones, descargas y ajustes desde un mismo lugar.",
+      "panelTitle": "Al iniciar sesion podras",
+      "panelDescription": "Tus herramientas, resultados recientes y estado de cuenta quedan conectados en una experiencia mas clara.",
+      "highlights": [
+        {
+          "title": "Resultados recientes",
+          "description": "Vuelve rapido a tus ultimos archivos procesados, descargas y salidas."
+        },
+        {
+          "title": "Herramientas habituales",
+          "description": "Continua con OCR, conversion, fusion y otras tareas PDF sin rodeos."
+        },
+        {
+          "title": "Cuenta y plan",
+          "description": "Consulta permisos, estado de cuenta y funciones disponibles en un mismo lugar."
+        }
+      ]
+    },
+    "registerMarketing": {
+      "heroTitle": "Empieza tu espacio de trabajo PDF en minutos",
+      "heroDescription": "Crea tu cuenta para gestionar tareas, revisar resultados y activar funciones avanzadas solo cuando las necesites.",
+      "panelTitle": "Despues de registrarte",
+      "panelDescription": "Tu cuenta conecta herramientas, historial y estado del plan para que el flujo se sienta mas continuo.",
+      "highlights": [
+        {
+          "title": "Herramientas organizadas",
+          "description": "Reune tareas PDF, resultados y accesos en una misma cuenta."
+        },
+        {
+          "title": "Progreso reciente",
+          "description": "Vuelve a tus ultimas descargas y archivos procesados con menos friccion."
+        },
+        {
+          "title": "Funciones bajo demanda",
+          "description": "Activa OCR, Office a PDF y otras funciones avanzadas solo cuando haga falta."
+        }
+      ]
+    },
+    "passwordRecoveryTitle": "Restablecer contrasena",
+    "passwordRecoverySubtitle": "Introduce el correo de tu cuenta. Si existe, enviaremos el siguiente paso.",
+    "passwordRecoverySubmit": "Enviar enlace",
+    "passwordRecoverySending": "Enviando...",
+    "passwordRecoverySentTitle": "Revisa tu correo",
+    "passwordRecoverySentMessage": "Si el correo pertenece a una cuenta activa, se ha enviado el siguiente paso.",
+    "passwordRecoverySentHint": "Revisa tu bandeja de entrada y spam antes de solicitar otro enlace.",
+    "passwordRecoveryFailedTitle": "No se pudo iniciar la recuperacion",
+    "passwordRecoveryFailedMessage": "La solicitud no se completo. Intentalo mas tarde.",
+    "resetPasswordTitle": "Crea una nueva contrasena",
+    "resetPasswordSubtitle": "Usa tu enlace seguro para definir una nueva contrasena.",
+    "resetPasswordSubmit": "Guardar contrasena",
+    "resetPasswordSaving": "Guardando...",
+    "resetPasswordSuccessTitle": "Contrasena actualizada",
+    "resetPasswordSuccessMessage": "Ya puedes iniciar sesion con la nueva contrasena.",
+    "resetPasswordSuccessHint": "Vuelve al inicio de sesion para continuar.",
+    "resetPasswordFailedTitle": "No se pudo actualizar la contrasena",
+    "resetPasswordFailedMessage": "El enlace puede estar vencido o no ser valido. Solicita uno nuevo.",
+    "resetPasswordMissingTitle": "Falta el enlace",
+    "resetPasswordMissingMessage": "Abre esta pagina desde el correo mas reciente o solicita otro enlace.",
+    "newPassword": "Nueva contrasena",
+    "backToLogin": "Volver a iniciar sesion",
+    "requestNewResetLink": "Solicitar otro enlace",
+    "recoveryMarketing": {
+      "heroTitle": "Recupera el acceso a tu cuenta",
+      "heroDescription": "La recuperacion solo cambia el inicio de sesion. Tus documentos, descargas y plan no cambian por esta solicitud.",
+      "panelTitle": "Recuperacion de cuenta",
+      "panelDescription": "Los enlaces caducan por seguridad. Solicita uno nuevo si no sabes cual es el actual.",
+      "highlights": [
+        {
+          "title": "Sin revelar cuentas",
+          "description": "El formulario no confirma si un correo esta registrado."
+        },
+        {
+          "title": "Siguiente paso claro",
+          "description": "Despues de solicitarlo, revisa tu correo y continua desde el mensaje mas reciente."
+        },
+        {
+          "title": "Reintento seguro",
+          "description": "Si un enlace expiro o es antiguo, puedes pedir uno nuevo."
+        }
+      ]
+    }
   },
   "tools": {
-    "merge": { "title": "Unir PDF", "desc": "Combina varios PDF en un archivo" },
-    "split": { "title": "Dividir PDF", "desc": "Extrae paginas o rangos de un PDF" },
-    "rotate": { "title": "Rotar PDF", "desc": "Rota paginas PDF y exporta una copia" },
-    "compress": { "title": "Comprimir PDF", "desc": "Reduce el tamano del PDF cuando sea posible" },
-    "imageToPdf": { "title": "Imagen a PDF", "desc": "Convierte imagenes en PDF" },
-    "pdfToImage": { "title": "PDF a imagen", "desc": "Exporta paginas PDF como imagenes" },
-    "deletePages": { "title": "Eliminar paginas PDF", "desc": "Quita paginas no deseadas de un PDF" },
-    "organize": { "title": "Organizar paginas PDF", "desc": "Reordena paginas antes de exportar" },
-    "pageNumbers": { "title": "Agregar numeros de pagina", "desc": "Agrega numeros de pagina a PDF" },
-    "crop": { "title": "Recortar PDF", "desc": "Recorta margenes y bordes de pagina" },
-    "flatten": { "title": "Aplanar PDF", "desc": "Bloquea la apariencia del formulario" },
-    "repair": { "title": "Reparar PDF", "desc": "Reconstruye la estructura legible del PDF" },
-    "protect": { "title": "Proteger PDF", "desc": "Agrega una contrasena de apertura" },
-    "unlock": { "title": "Desbloquear PDF", "desc": "Crea una copia desbloqueada con la contrasena conocida" },
-    "sign": { "title": "Firmar PDF", "desc": "Agrega una firma visual al PDF" },
-    "extractText": { "title": "Extraer texto PDF", "desc": "Exporta texto copiable desde PDF" },
-    "extractImages": { "title": "Extraer imagenes PDF", "desc": "Extrae imagenes incrustadas de PDF" },
-    "ocr": { "title": "OCR PDF", "desc": "Reconoce texto en archivos escaneados" },
-    "officeToPdf": { "title": "Office a PDF", "desc": "Convierte archivos Office a PDF" },
-    "watermark": { "title": "Marca de agua PDF", "desc": "Agrega una marca de agua de texto" },
-    "fillForm": { "title": "Rellenar formulario PDF", "desc": "Rellena campos de formulario PDF" },
-    "annotate": { "title": "Anotar PDF", "desc": "Agrega notas y resaltados a un PDF" }
+    "merge": {
+      "title": "Unir PDF",
+      "desc": "Combina varios PDF en un archivo",
+      "page": {
+        "badge": "Herramienta local",
+        "queueLabel": "Cola de union",
+        "queueTitle": "Archivos seleccionados",
+        "queueDesc": "{pages} paginas en total. Arrastra las tarjetas para ajustar el orden final.",
+        "clear": "Limpiar lista",
+        "addMore": "Agregar mas archivos",
+        "actionLabel": "Salida",
+        "actionTitle": "Confirma el orden y une los PDF",
+        "actionDesc": "Elige procesamiento local o en la nube. Se generara un nuevo archivo unido.",
+        "fileCount": "Archivos",
+        "pageCount": "Paginas",
+        "merge": "Unir PDF",
+        "successTitle": "Union completa",
+        "successMessage": "Se unieron {count} PDF con {pages} paginas en total.",
+        "mergeMore": "Unir mas archivos",
+        "pagesSuffix": "paginas",
+        "morePages": "{count} paginas mas...",
+        "errorLoad": "No se pudieron cargar los PDF.",
+        "errorMinFiles": "Selecciona al menos 2 PDF para unir.",
+        "errorFailed": "No se pudieron unir los PDF.",
+        "errorCloudFailed": "La union en la nube fallo.",
+        "statusPreparing": "Preparando...",
+        "statusProcessing": "Uniendo {count} archivos...",
+        "statusProgress": "Procesando... {progress}%",
+        "statusDone": "Completado"
+      }
+    },
+    "split": {
+      "title": "Dividir PDF",
+      "desc": "Extrae paginas o rangos de un PDF",
+      "page": {
+        "badge": "Herramienta local",
+        "setupLabel": "Extraccion de paginas",
+        "setupTitle": "Elige las paginas para exportar",
+        "setupDesc": "Escribe rangos de paginas o abre el selector visual para elegir con mas claridad.",
+        "rangeLabel": "{count} paginas disponibles",
+        "rangePlaceholder": "Ejemplo: 1-3,5,7-9",
+        "rangeHint": "Separa paginas o rangos con comas. Por ejemplo, 1-3,5 conserva las paginas 1, 2, 3 y 5.",
+        "visualSelect": "Selector visual",
+        "actionLabel": "Salida",
+        "actionTitle": "Confirma el rango y genera un nuevo archivo",
+        "actionTips": [
+          "Confirma el rango antes de extraer.",
+          "En documentos largos, el selector visual reduce errores de escritura.",
+          "Se crea un nuevo PDF. El archivo original no se modifica."
+        ],
+        "extract": "Extraer paginas",
+        "modalTitle": "Elegir paginas para extraer",
+        "successTitle": "Extraccion completa",
+        "successMessage": "Las paginas seleccionadas estan listas para descargar.",
+        "errorLoad": "No se pudo cargar el PDF. Vuelve a seleccionar el archivo.",
+        "errorNoPages": "Selecciona al menos una pagina.",
+        "errorNoRange": "Escribe las paginas a extraer, por ejemplo 1-3,5,7-9.",
+        "statusPreparing": "Preparando...",
+        "statusProcessing": "Extrayendo paginas...",
+        "statusProgress": "Procesando... {progress}%",
+        "statusDone": "Completado",
+        "errorFailed": "No se pudieron extraer las paginas. Intentalo mas tarde.",
+        "errorCloudFailed": "La extraccion en la nube fallo. Intentalo mas tarde."
+      }
+    },
+    "rotate": {
+      "title": "Rotar PDF",
+      "desc": "Rota paginas PDF y exporta una copia",
+      "page": {
+        "badge": "Herramienta local",
+        "setupLabel": "Configuracion de rotacion",
+        "setupTitle": "Corrige la orientacion de paginas",
+        "setupDesc": "Util para escaneos, PDFs hechos con camara o documentos con orientacion inconsistente.",
+        "actionLabel": "Salida",
+        "actionTitle": "Confirma el angulo y genera un nuevo archivo",
+        "actionTips": [
+          "90° y 270° sirven para paginas de lado.",
+          "180° funciona para escaneos invertidos.",
+          "Se genera un PDF nuevo. El original no cambia."
+        ],
+        "action": "Rotar PDF",
+        "successTitle": "Rotacion completa",
+        "successMessage": "Tu PDF rotado esta listo para descargar.",
+        "errorFailed": "La rotacion fallo. Intentalo mas tarde.",
+        "errorCloudFailed": "La rotacion en la nube fallo. Intentalo mas tarde.",
+        "statusPreparing": "Preparando...",
+        "statusProcessing": "Rotando paginas...",
+        "statusProgress": "Procesando... {progress}%",
+        "statusDone": "Completado",
+        "angleOptions": [
+          {
+            "value": 90,
+            "label": "90°",
+            "hint": "Horario"
+          },
+          {
+            "value": 180,
+            "label": "180°",
+            "hint": "Invertido"
+          },
+          {
+            "value": 270,
+            "label": "270°",
+            "hint": "Antihorario"
+          }
+        ]
+      }
+    },
+    "compress": {
+      "title": "Comprimir PDF",
+      "desc": "Reduce el tamano del PDF cuando sea posible",
+      "page": {
+        "badge": "Local primero",
+        "setupLabel": "Configuracion de compresion",
+        "setupTitle": "Elige un nivel de compresion",
+        "setupDesc": "La compresion depende de como fue creado el PDF. El nivel cambia la optimizacion, pero el ahorro real se muestra al terminar.",
+        "resultLabel": "Estimacion",
+        "resultTitle": "Revisa antes de exportar",
+        "estimateHint": "La estimacion ayuda a elegir nivel, pero el tamano real depende del archivo.",
+        "actualLabel": "Resultado real",
+        "noSavingsTitle": "Archivo casi optimizado",
+        "noSavingsDesc": "Este PDF no se redujo mas, asi que PDF-Flow conservo el archivo original para evitar crear una copia mas grande.",
+        "optimizedDesc": "Se genero un PDF mas pequeno con la configuracion seleccionada.",
+        "originalSize": "Tamano original",
+        "estimatedCompression": "Compresion estimada",
+        "estimatedSize": "Tamano estimado",
+        "outputSize": "Tamano final",
+        "savedSize": "Espacio ahorrado",
+        "ratio": "Relacion real",
+        "action": "Comprimir PDF",
+        "successTitle": "Compresion completa",
+        "compressMore": "Comprimir mas archivos",
+        "errorFailed": "La compresion fallo. Intentalo mas tarde.",
+        "errorCloudFailed": "La compresion en la nube fallo. Intentalo mas tarde.",
+        "statusPreparing": "Preparando compresion...",
+        "statusProcessing": "Comprimiendo PDF...",
+        "statusDone": "Compresion completa",
+        "qualityOptions": [
+          {
+            "value": "high",
+            "label": "Alta calidad",
+            "description": "Optimizacion ligera con prioridad en claridad visual."
+          },
+          {
+            "value": "medium",
+            "label": "Equilibrado",
+            "description": "Punto medio para compartir, archivar y subir archivos."
+          },
+          {
+            "value": "low",
+            "label": "Menor tamano",
+            "description": "Prioriza reducir el archivo para cargas y distribucion rapida."
+          }
+        ]
+      }
+    },
+    "imageToPdf": {
+      "title": "Imagen a PDF",
+      "desc": "Convierte imagenes en PDF",
+      "page": {
+        "badge": "Herramienta local",
+        "filesLabel": "Lista de imagenes",
+        "filesTitle": "{count} imagenes seleccionadas",
+        "filesDesc": "Organiza las imagenes y luego elige tamano de pagina y orientacion.",
+        "clear": "Limpiar",
+        "addMore": "Agregar mas imagenes",
+        "outputLabel": "Salida",
+        "outputTitle": "Ajustar formato de pagina",
+        "outputDesc": "Elige tamano y orientacion para imprimir, archivar o compartir.",
+        "pageSize": "Tamano de pagina",
+        "orientation": "Orientacion",
+        "portrait": "Vertical",
+        "landscape": "Horizontal",
+        "action": "Convertir a PDF",
+        "successTitle": "Conversion completa",
+        "successMessage": "Tus imagenes se convirtieron correctamente en PDF.",
+        "errorFailed": "La conversion fallo. Intentalo mas tarde.",
+        "errorCloudFailed": "La conversion en la nube fallo. Intentalo mas tarde."
+      }
+    },
+    "pdfToImage": {
+      "title": "PDF a imagen",
+      "desc": "Exporta paginas PDF como imagenes",
+      "page": {
+        "badge": "Herramienta local",
+        "outputLabel": "Salida",
+        "outputTitle": "Elige el formato de imagen",
+        "outputDesc": "PNG conserva mejor los detalles; JPEG suele crear archivos mas pequenos.",
+        "resultLabel": "Resultado",
+        "waitingTitle": "Esperando para empezar",
+        "readyTitle": "{count} imagenes generadas",
+        "emptyHint": "Elige un formato y comienza. Los resultados apareceran pagina por pagina.",
+        "downloadAll": "Descargar todo",
+        "downloadPage": "Descargar pagina {page}",
+        "action": "Convertir a imagenes",
+        "successCloud": "La conversion en la nube termino. El paquete ZIP se descargo.",
+        "errorFailed": "La conversion de PDF a imagen fallo. Intentalo mas tarde.",
+        "errorCloudFailed": "La conversion en la nube fallo. Intentalo mas tarde."
+      }
+    },
+    "deletePages": {
+      "title": "Eliminar paginas PDF",
+      "desc": "Quita paginas no deseadas de un PDF",
+      "page": {
+        "title": "Eliminar paginas PDF",
+        "subtitle": "Quita paginas innecesarias y crea un PDF limpio.",
+        "badge": "Herramienta local",
+        "setupLabel": "Limpieza de paginas",
+        "setupTitle": "Elige las paginas para eliminar",
+        "setupDesc": "Escribe rangos o usa el selector visual. El proceso corre localmente y no sobrescribe el original.",
+        "rangeLabel": "{count} paginas disponibles",
+        "rangePlaceholder": "Ejemplo: 2,4-6,9",
+        "rangeHint": "Separa paginas o rangos con comas. Ejemplo: 2,4-6 elimina 2, 4, 5 y 6.",
+        "visualSelect": "Selector visual",
+        "outputLabel": "Salida",
+        "outputTitle": "Crear un nuevo archivo sin esas paginas",
+        "removeLabel": "Eliminar",
+        "keepLabel": "Conservar",
+        "outputTips": [
+          "Util para quitar paginas en blanco, errores de escaneo, duplicados o paginas privadas.",
+          "El PDF original no cambia. Se crea un nuevo resultado.",
+          "Para evitar errores, no puedes eliminar todas las paginas."
+        ],
+        "delete": "Eliminar paginas seleccionadas",
+        "modalTitle": "Elegir paginas para eliminar",
+        "successTitle": "Paginas eliminadas",
+        "successMessage": "Tu nuevo PDF esta listo para descargar.",
+        "download": "Descargar resultado",
+        "errorLoad": "No se pudo leer este PDF. Vuelve a elegir el archivo.",
+        "errorNoRange": "Escribe las paginas a eliminar, por ejemplo 2,4-6,9.",
+        "errorNoPages": "Selecciona al menos una pagina para eliminar.",
+        "errorAllPages": "No puedes eliminar todas las paginas. Conserva al menos una.",
+        "errorFailed": "No se pudieron eliminar las paginas. Revisa el rango e intentalo de nuevo.",
+        "statusPreparing": "Preparando archivo...",
+        "statusProcessing": "Eliminando paginas...",
+        "statusDone": "Completado"
+      }
+    },
+    "organize": {
+      "title": "Organizar paginas PDF",
+      "desc": "Reordena paginas antes de exportar",
+      "page": {
+        "title": "Organizar paginas PDF",
+        "subtitle": "Arrastra paginas al orden correcto y exporta un nuevo PDF.",
+        "badge": "Herramienta local",
+        "workspaceLabel": "Espacio de paginas",
+        "workspaceTitle": "Arrastra paginas al orden correcto",
+        "workspaceDesc": "Util antes de enviar contratos, informes o escaneos. Todo se procesa localmente y no sobrescribe el original.",
+        "outputLabel": "Salida",
+        "outputTitle": "Confirma el orden y crea un nuevo archivo",
+        "outputTips": [
+          "Arrastra miniaturas para mover paginas directamente.",
+          "En movil, usa los botones subir y bajar.",
+          "El resultado conserva todas las paginas y solo cambia el orden."
+        ],
+        "reverse": "Invertir orden",
+        "reset": "Restablecer orden",
+        "moveUp": "Subir",
+        "moveDown": "Bajar",
+        "generate": "Generar PDF organizado",
+        "successTitle": "Paginas organizadas",
+        "successMessage": "Tu nuevo PDF esta listo para descargar.",
+        "download": "Descargar resultado",
+        "errorLoad": "No se pudo leer este PDF. Vuelve a elegir el archivo.",
+        "errorNoChange": "El orden aun no cambio. Mueve al menos una pagina antes de generar.",
+        "errorFailed": "No se pudieron organizar las paginas. Vuelve a elegir el archivo.",
+        "statusPreparing": "Preparando paginas...",
+        "statusProcessing": "Creando nuevo PDF...",
+        "statusDone": "Completado",
+        "pageCount": "Paginas",
+        "firstPage": "Primera pagina",
+        "lastPage": "Ultima pagina",
+        "dragHint": "Arrastra tarjetas o usa los botones",
+        "page": "Pagina {page}"
+      }
+    },
+    "pageNumbers": {
+      "title": "Agregar numeros de pagina",
+      "desc": "Agrega numeros de pagina a PDF",
+      "page": {
+        "title": "Agregar numeros de pagina",
+        "subtitle": "Agrega numeracion uniforme a contratos, informes y documentos.",
+        "badge": "Herramienta local",
+        "setupLabel": "Estilo de numeracion",
+        "setupTitle": "Configura formato y posicion",
+        "setupDesc": "Los numeros se escriben en un PDF nuevo, util antes de archivar, imprimir, enviar o compartir.",
+        "outputLabel": "Salida",
+        "outputTitle": "Confirma la numeracion y crea un nuevo archivo",
+        "outputTips": [
+          "Comienza en una pagina posterior cuando la portada no debe numerarse.",
+          "Usa prefijo y sufijo para adaptar el estilo del documento.",
+          "El proceso corre localmente en el navegador y no cambia el original."
+        ],
+        "position": "Posicion",
+        "startNumber": "Numero inicial",
+        "startOnPage": "Empezar en pagina",
+        "prefix": "Prefijo",
+        "suffix": "Sufijo",
+        "includeTotal": "Mostrar total",
+        "fontSize": "Tamano de fuente",
+        "opacity": "Opacidad",
+        "color": "Color",
+        "sample": "Vista previa",
+        "generate": "Agregar numeros",
+        "successTitle": "Numeros agregados",
+        "successMessage": "Tu PDF numerado esta listo para descargar.",
+        "download": "Descargar resultado",
+        "errorLoad": "No se pudo leer este PDF. Vuelve a elegir el archivo.",
+        "errorStartPage": "La pagina inicial no puede ser mayor que el total de paginas.",
+        "errorFailed": "No se pudieron agregar los numeros. Revisa la configuracion e intenta de nuevo.",
+        "statusPreparing": "Preparando paginas...",
+        "statusProcessing": "Escribiendo numeros...",
+        "statusDone": "Completado",
+        "stampedSummary": "paginas seran numeradas",
+        "placeholders": {
+          "prefix": "Ejemplo: Pagina ",
+          "suffix": "",
+          "defaultPrefix": "",
+          "defaultSuffix": ""
+        },
+        "positions": [
+          {
+            "value": "bottom-center",
+            "label": "Abajo centro"
+          },
+          {
+            "value": "bottom-left",
+            "label": "Abajo izquierda"
+          },
+          {
+            "value": "bottom-right",
+            "label": "Abajo derecha"
+          },
+          {
+            "value": "top-center",
+            "label": "Arriba centro"
+          },
+          {
+            "value": "top-left",
+            "label": "Arriba izquierda"
+          },
+          {
+            "value": "top-right",
+            "label": "Arriba derecha"
+          }
+        ]
+      }
+    },
+    "crop": {
+      "title": "Recortar PDF",
+      "desc": "Recorta margenes y bordes de pagina",
+      "page": {
+        "title": "Recortar PDF",
+        "subtitle": "Quita bordes, margenes grandes o sombras de escaneo para que el documento se vea mas limpio.",
+        "badge": "Herramienta local",
+        "notice": "Recortar solo ajusta el area visible del PDF; no elimina informacion sensible de forma segura. Para ocultar datos privados, usa una herramienta de redaccion real.",
+        "uploadLabel": "Archivo PDF",
+        "uploadTitleIdle": "Elige el PDF para recortar",
+        "uploadTitleReady": "Archivo listo",
+        "uploadDescriptionIdle": "Ideal para quitar bordes blancos, sombras de escaneo y margenes innecesarios.",
+        "uploadDescriptionReady": "Define los margenes y crea una copia recortada.",
+        "dropTitle": "Arrastra tu PDF aqui",
+        "dropSubtitle": "o haz clic para elegir un archivo",
+        "settingsLabel": "Recorte",
+        "settingsTitle": "Ajusta los margenes",
+        "top": "Arriba",
+        "right": "Derecha",
+        "bottom": "Abajo",
+        "left": "Izquierda",
+        "quick": "Preajustes",
+        "small": "Margen ligero",
+        "scan": "Borde escaneado",
+        "reset": "Restablecer",
+        "previewLabel": "Vista previa",
+        "previewTitle": "Area conservada",
+        "previewHint": "La vista previa es aproximada; el PDF exportado es el resultado final.",
+        "action": "Crear PDF recortado",
+        "processing": "Aplicando recorte...",
+        "done": "Copia recortada lista",
+        "download": "Descargar PDF recortado",
+        "successTitle": "Recorte listo",
+        "successMessage": "La nueva copia recortada esta lista para revisar.",
+        "localTitle": "Para limpiar bordes, no para redaccion segura",
+        "localDesc": "El recorte mejora la vista, pero el contenido recortado puede seguir dentro de la estructura PDF.",
+        "pages": "Paginas",
+        "errorLoad": "No se pudo leer este PDF. Elige el archivo de nuevo.",
+        "errorFailed": "No se pudo recortar el PDF. Revisa los margenes e intenta de nuevo."
+      }
+    },
+    "flatten": {
+      "title": "Aplanar PDF",
+      "desc": "Bloquea la apariencia del formulario",
+      "page": {
+        "title": "Aplanar PDF",
+        "subtitle": "Convierte campos rellenables en contenido fijo para enviar, archivar o compartir con mas estabilidad.",
+        "badge": "Herramienta local",
+        "notice": "Aplanar bloquea la apariencia de formularios. No es cifrado, control de permisos ni redaccion segura.",
+        "uploadLabel": "Archivo PDF",
+        "uploadTitleIdle": "Elige el PDF para aplanar",
+        "uploadTitleReady": "Archivo listo",
+        "uploadDescriptionIdle": "Ideal para formularios completados, solicitudes y recibos.",
+        "uploadDescriptionReady": "Se creara una copia nueva con campos de formulario fijados.",
+        "dropTitle": "Arrastra tu PDF aqui",
+        "dropSubtitle": "o haz clic para elegir un archivo",
+        "action": "Crear PDF aplanado",
+        "processing": "Fijando campos...",
+        "done": "Copia aplanada lista",
+        "download": "Descargar PDF aplanado",
+        "successTitle": "PDF aplanado",
+        "successMessage": "La nueva copia esta lista para revisar.",
+        "resultLabel": "Resultado",
+        "waitingTitle": "Esperando inicio",
+        "waitingBody": "Sube un PDF y comienza. El proceso ocurre localmente.",
+        "fieldLabel": "Campos rellenables",
+        "pages": "Paginas",
+        "outputSize": "Tamano de salida",
+        "noFieldsTitle": "No se detectaron campos rellenables",
+        "noFieldsBody": "Este PDF puede estar ya aplanado. Puedes descargar la copia, aunque el cambio visual puede ser pequeno.",
+        "localTitle": "Bloquea formularios antes de enviar",
+        "localDesc": "Aplanar reduce la posibilidad de que otros editen campos y mejora la estabilidad entre lectores PDF.",
+        "step1": "Subir PDF rellenado",
+        "step2": "Fijar apariencia",
+        "step3": "Descargar copia",
+        "errorLoad": "No se pudo leer este PDF. Elige el archivo de nuevo.",
+        "errorFailed": "No se pudo aplanar el PDF. Confirma que sea un PDF estandar."
+      }
+    },
+    "repair": {
+      "title": "Reparar PDF",
+      "desc": "Reconstruye la estructura legible del PDF",
+      "page": {
+        "title": "Reparar PDF",
+        "subtitle": "Reconstruye PDFs legibles para crear una copia mas estable y facil de procesar.",
+        "badge": "Requiere inicio de sesion",
+        "notice": "La reparacion sube el PDF al servidor para leerlo y exportar una copia nueva. Ayuda con problemas leves de estructura o archivos que fallan en otras herramientas.",
+        "accessLabel": "Inicio de sesion requerido",
+        "accessTitle": "Inicia sesion para reparar PDFs legibles",
+        "accessDescription": "La reparacion necesita analizar el PDF en la nube y exportar una copia nueva. Los temporales se limpian segun la politica de ciclo de vida.",
+        "goToSignIn": "Iniciar sesion",
+        "accessSteps": [
+          "Inicia sesion",
+          "Sube el PDF",
+          "Descarga la copia reconstruida"
+        ],
+        "uploadLabel": "Archivo para reparar",
+        "uploadTitleIdle": "Elige el PDF para reparar",
+        "uploadTitleSelected": "Archivo listo",
+        "uploadDescriptionIdle": "Util para PDFs que se abren de forma inestable o fallan en otros procesos.",
+        "uploadDescriptionSelected": "Se intentara leer las paginas disponibles y exportar una copia nueva.",
+        "dropTitle": "Arrastra tu PDF aqui",
+        "dropSubtitle": "o haz clic para elegir un archivo",
+        "noFile": "Sube primero un PDF para reparar.",
+        "repair": "Reparar PDF",
+        "uploading": "Subiendo archivo...",
+        "processing": "Reconstruyendo estructura...",
+        "ready": "Copia reparada lista",
+        "successTitle": "Reparacion completa",
+        "successMessage": "Descarga la copia nueva y revisa que las paginas esten completas.",
+        "download": "Descargar PDF reparado",
+        "workspaceTitle": "Repara antes de continuar",
+        "workspaceDescription": "Si un PDF falla al dividir, comprimir o convertir, prueba crear una copia limpia primero.",
+        "step1": "Ayuda con problemas leves de estructura y compatibilidad.",
+        "step2": "Si el archivo esta cifrado, desbloquealo primero. Si las paginas no son legibles, no se puede recuperar contenido.",
+        "step3": "El resultado es un archivo nuevo; revisa paginas, contenido y formato.",
+        "resultSize": "Tamano de salida",
+        "errorFailed": "No se pudo reparar el PDF. Vuelve a intentarlo con un PDF estandar legible."
+      }
+    },
+    "protect": {
+      "title": "Proteger PDF",
+      "desc": "Agrega una contrasena de apertura",
+      "page": {
+        "title": "Proteger PDF",
+        "subtitle": "Agrega una contrasena de apertura antes de compartir contratos o documentos importantes.",
+        "badge": "Requiere inicio de sesion",
+        "notice": "Este proceso sube el PDF al servidor para crear un archivo realmente protegido por contrasena. Descarga el resultado pronto; los temporales se limpian segun la politica de ciclo de vida.",
+        "accessLabel": "Inicio de sesion requerido",
+        "accessTitle": "Inicia sesion para crear un PDF protegido",
+        "accessDescription": "La proteccion con contrasena necesita reescribir el PDF en la nube. Despues de iniciar sesion podras subir el archivo y descargar el resultado.",
+        "goToSignIn": "Iniciar sesion",
+        "accessSteps": [
+          "Inicia sesion",
+          "Sube el PDF y define la contrasena",
+          "Descarga el archivo protegido"
+        ],
+        "uploadLabel": "Archivo",
+        "uploadTitleIdle": "Elige el PDF que quieres proteger",
+        "uploadTitleSelected": "Archivo listo",
+        "uploadDescriptionIdle": "Compatible con archivos PDF estandar. El archivo original no se sobrescribe.",
+        "uploadDescriptionSelected": "Confirma la contrasena para crear un nuevo PDF protegido.",
+        "dropTitle": "Arrastra tu PDF aqui",
+        "dropSubtitle": "o haz clic para elegir un archivo",
+        "passwordLabel": "Contrasena de apertura",
+        "confirmLabel": "Confirmar contrasena",
+        "passwordPlaceholder": "Minimo 6 caracteres; letras y numeros recomendado",
+        "confirmPlaceholder": "Vuelve a escribir la misma contrasena",
+        "strengthLabel": "Fortaleza",
+        "weak": "Baja",
+        "fair": "Aceptable",
+        "strong": "Fuerte",
+        "mismatch": "Las contrasenas no coinciden.",
+        "tooShort": "La contrasena debe tener al menos 6 caracteres.",
+        "noFile": "Sube primero un archivo PDF.",
+        "protect": "Crear PDF protegido",
+        "processing": "Aplicando proteccion...",
+        "uploading": "Subiendo archivo...",
+        "ready": "Archivo protegido listo",
+        "successTitle": "PDF protegido",
+        "successMessage": "El nuevo PDF ahora requiere contrasena para abrirse.",
+        "download": "Descargar PDF protegido",
+        "workspaceTitle": "Una capa extra antes de compartir",
+        "workspaceDescription": "Ideal para documentos externos, borradores de contrato y archivos que no quieres dejar abiertos accidentalmente.",
+        "step1": "Se crea una copia independiente; el archivo original no se modifica.",
+        "step2": "La contrasena solo se usa para este proceso. Guardala en un lugar seguro.",
+        "step3": "Abre el archivo descargado una vez para confirmar que la contrasena funciona.",
+        "errorFailed": "No se pudo proteger el PDF. Vuelve a intentarlo con un PDF estandar."
+      }
+    },
+    "unlock": {
+      "title": "Desbloquear PDF",
+      "desc": "Crea una copia desbloqueada con la contrasena conocida",
+      "page": {
+        "title": "Desbloquear PDF",
+        "subtitle": "Introduce la contrasena que ya conoces y crea una copia sin contrasena para organizar o archivar.",
+        "badge": "Requiere inicio de sesion",
+        "notice": "Esta funcion no rompe contrasenas desconocidas. Usala solo cuando tengas permiso sobre el archivo y conozcas la contrasena actual. El PDF se procesa en el servidor y los temporales se limpian segun la politica de ciclo de vida.",
+        "accessLabel": "Inicio de sesion requerido",
+        "accessTitle": "Inicia sesion para desbloquear PDFs autorizados",
+        "accessDescription": "El desbloqueo necesita leer el PDF cifrado en la nube y exportar una copia nueva. Procesa solo archivos para los que tienes permiso.",
+        "goToSignIn": "Iniciar sesion",
+        "accessSteps": [
+          "Inicia sesion",
+          "Sube el PDF protegido",
+          "Introduce la contrasena y descarga la copia"
+        ],
+        "uploadLabel": "Archivo protegido",
+        "uploadTitleIdle": "Elige el PDF que quieres desbloquear",
+        "uploadTitleSelected": "Archivo listo",
+        "uploadDescriptionIdle": "Sube un PDF que requiera contrasena de apertura. Un PDF normal no necesita desbloqueo.",
+        "uploadDescriptionSelected": "Introduce la contrasena actual para crear una copia sin contrasena.",
+        "dropTitle": "Arrastra el PDF protegido aqui",
+        "dropSubtitle": "o haz clic para elegir un archivo",
+        "passwordLabel": "Contrasena actual",
+        "passwordPlaceholder": "Introduce la contrasena de apertura actual",
+        "noFile": "Sube primero un PDF protegido por contrasena.",
+        "noPassword": "Introduce la contrasena actual del PDF.",
+        "unlock": "Crear copia sin contrasena",
+        "processing": "Quitando contrasena de apertura...",
+        "uploading": "Subiendo archivo...",
+        "ready": "Copia sin contrasena lista",
+        "successTitle": "PDF desbloqueado",
+        "successMessage": "La nueva copia ya no requiere contrasena para abrirse.",
+        "download": "Descargar PDF desbloqueado",
+        "workspaceTitle": "Desbloquea antes de organizar",
+        "workspaceDescription": "Util para tus propios contratos, paquetes de documentos y archivos que despues quieres combinar, dividir o numerar.",
+        "step1": "Debes conocer la contrasena actual. No intentamos adivinarla ni saltarla.",
+        "step2": "Se exporta una copia nueva; el archivo protegido original no se sobrescribe.",
+        "step3": "Si la contrasena es incorrecta, la pagina indicara que revisar antes de intentarlo otra vez.",
+        "guardTitle": "Recordatorio de permisos",
+        "guardBody": "Desbloquea solo archivos que tienes derecho a procesar. Para archivos de terceros, confirma la autorizacion primero.",
+        "errorFailed": "No se pudo desbloquear el PDF. Confirma la contrasena e intenta de nuevo con un PDF protegido estandar."
+      }
+    },
+    "sign": {
+      "title": "Firmar PDF",
+      "desc": "Agrega una firma visual al PDF",
+      "page": {
+        "title": "Firmar PDF",
+        "subtitle": "Coloca una imagen de firma en el PDF y crea una copia lista para enviar o archivar.",
+        "badge": "Herramienta local",
+        "notice": "Esta es una firma visual con imagen, no una firma digital con certificado. El PDF y la imagen se procesan localmente en el navegador.",
+        "pdfLabel": "Archivo PDF",
+        "pdfTitleIdle": "Elige el PDF que quieres firmar",
+        "pdfTitleReady": "PDF listo",
+        "pdfDescIdle": "El archivo original no se sobrescribe; se exporta una copia nueva.",
+        "pdfDescReady": "Sube la imagen de firma y ajusta su posicion.",
+        "signLabel": "Imagen de firma",
+        "signTitleIdle": "Una firma PNG transparente funciona mejor",
+        "signTitleReady": "Firma cargada",
+        "signDescIdle": "Compatible con PNG, JPG y WEBP.",
+        "signDescReady": "Ajusta posicion y tamano desde la vista previa.",
+        "pdfDropTitle": "Arrastra tu PDF aqui",
+        "imageDropTitle": "Arrastra tu firma aqui",
+        "dropSubtitle": "o haz clic para elegir un archivo",
+        "settingsLabel": "Posicion",
+        "settingsTitle": "Ajusta la ubicacion de la firma",
+        "page": "Pagina",
+        "x": "Posicion horizontal",
+        "y": "Posicion vertical",
+        "width": "Ancho de firma",
+        "opacity": "Opacidad",
+        "previewLabel": "Vista previa",
+        "previewTitle": "La firma se colocara en esta zona",
+        "previewHint": "La vista previa confirma la posicion aproximada; el PDF exportado es el resultado final.",
+        "placeholder": "Firma",
+        "localTitle": "Procesamiento local",
+        "localDesc": "Util para contratos, formularios y recibos. Para firma legal con certificado, se necesita un flujo de firma digital separado.",
+        "action": "Crear PDF firmado",
+        "processing": "Aplicando firma...",
+        "done": "Copia firmada lista",
+        "download": "Descargar PDF firmado",
+        "remove": "Quitar",
+        "successTitle": "Firma aplicada",
+        "successMessage": "La nueva copia con firma visual esta lista.",
+        "errorPdf": "No se pudo leer este PDF. Elige el archivo de nuevo.",
+        "errorSignature": "Sube primero una imagen de firma.",
+        "errorFailed": "No se pudo firmar el PDF. Revisa los archivos e intenta de nuevo."
+      }
+    },
+    "extractText": {
+      "title": "Extraer texto PDF",
+      "desc": "Exporta texto copiable desde PDF",
+      "page": {
+        "title": "Extraer texto de PDF",
+        "subtitle": "Exporta texto copiable desde PDFs con capa de texto, ideal para informes, contratos y preparacion antes de IA.",
+        "badge": "Herramienta local",
+        "notice": "El archivo se lee localmente en el navegador y no se sube al servidor. Para PDFs escaneados o texto dentro de imagenes, usa OCR.",
+        "uploadLabel": "Archivo PDF",
+        "uploadTitleIdle": "Elige el PDF para extraer texto",
+        "uploadTitleReady": "Archivo listo",
+        "uploadDescriptionIdle": "Funciona mejor con PDFs donde puedes seleccionar y copiar texto.",
+        "uploadDescriptionReady": "El texto se mostrara en la pagina y podras copiarlo o descargarlo como TXT.",
+        "dropTitle": "Arrastra tu PDF aqui",
+        "dropSubtitle": "o haz clic para elegir un archivo",
+        "action": "Extraer texto",
+        "processing": "Leyendo capa de texto...",
+        "ready": "Texto extraido",
+        "copied": "Copiado",
+        "copyFailed": "No se pudo copiar. Selecciona el texto manualmente.",
+        "copyText": "Copiar texto",
+        "download": "Descargar TXT",
+        "remove": "Quitar",
+        "textPreview": "Vista previa del texto",
+        "emptyTitle": "No se encontro texto util",
+        "emptyBody": "Probablemente es un PDF escaneado, una imagen o texto con codificacion especial. Prueba OCR.",
+        "resultTitle": "Resultado",
+        "resultBody": "El texto se organiza por paginas y esta listo para copiar o descargar.",
+        "pageCount": "Paginas",
+        "characters": "Caracteres",
+        "fileSize": "Tamano",
+        "localTitle": "Local y sin copia en servidor",
+        "localBody": "Los PDFs con texto suelen ser mas rapidos localmente porque no requieren subida. Usa OCR para documentos escaneados.",
+        "step1": "Subir PDF",
+        "step2": "Leer texto",
+        "step3": "Copiar o descargar",
+        "errorFailed": "No se pudo extraer el texto. Confirma que sea un PDF estandar o prueba OCR.",
+        "pageLabel": "Pagina {page}"
+      }
+    },
+    "extractImages": {
+      "title": "Extraer imagenes PDF",
+      "desc": "Extrae imagenes incrustadas de PDF",
+      "page": {
+        "title": "Extraer imagenes de PDF",
+        "subtitle": "Extrae imagenes incrustadas desde paginas PDF para reutilizar recursos, graficos o fotos.",
+        "badge": "Herramienta local",
+        "notice": "El archivo se lee localmente en el navegador y no se sube al servidor. Para exportar cada pagina completa como imagen, usa PDF a imagen.",
+        "uploadLabel": "Archivo PDF",
+        "uploadTitleIdle": "Elige el PDF para extraer imagenes",
+        "uploadTitleReady": "Archivo listo",
+        "uploadDescriptionIdle": "Ideal para PDFs con fotos, ilustraciones o capturas incrustadas.",
+        "uploadDescriptionReady": "Las imagenes encontradas apareceran para vista previa y descarga.",
+        "dropTitle": "Arrastra tu PDF aqui",
+        "dropSubtitle": "o haz clic para elegir un archivo",
+        "action": "Extraer imagenes",
+        "processing": "Buscando imagenes...",
+        "ready": "Imagenes extraidas",
+        "remove": "Quitar",
+        "download": "Descargar",
+        "downloadAll": "Descargar todo",
+        "resultLabel": "Resultado",
+        "waitingTitle": "Esperando inicio",
+        "readyTitle": "{count} imagenes encontradas",
+        "emptyHint": "Sube un PDF y comienza. Las imagenes se mostraran segun el orden encontrado.",
+        "emptyTitle": "No se encontraron imagenes extraibles",
+        "emptyBody": "Este PDF puede estar formado por texto, vectores o paginas escaneadas completas. Para exportar paginas completas, usa PDF a imagen.",
+        "page": "Pagina",
+        "size": "Tamano",
+        "fileSize": "Peso",
+        "localTitle": "Extrae imagenes incrustadas, no capturas de pagina",
+        "localBody": "A diferencia de PDF a imagen, intenta obtener los recursos de imagen reales dentro de la pagina.",
+        "step1": "Subir PDF",
+        "step2": "Buscar imagenes",
+        "step3": "Vista previa y descarga",
+        "errorFailed": "No se pudieron extraer imagenes. Confirma que sea un PDF estandar o usa PDF a imagen."
+      }
+    },
+    "ocr": {
+      "title": "OCR de texto",
+      "desc": "Reconoce texto en archivos escaneados",
+      "subtitle": "Extrae texto desde PDFs escaneados e imagenes con OCR en la nube.",
+      "badge": "Funcion Pro",
+      "pageExtra": "El OCR en la nube funciona mejor para escaneos, fotos y documentos basados en imagen.",
+      "notice": "Sube un PDF o imagen, elige el idioma de reconocimiento y descarga el texto cuando termine la tarea.",
+      "accessLabel": "Acceso",
+      "accessGuestTitle": "Inicia sesion para usar OCR",
+      "accessMemberTitle": "Necesitas Pro",
+      "accessGuestDescription": "OCR usa procesamiento en la nube. Inicia sesion para asociar la tarea a tu cuenta.",
+      "accessMemberDescription": "OCR es un flujo Pro para procesamiento documental mas largo en servidor.",
+      "goToSignIn": "Iniciar sesion",
+      "goToUpgrade": "Ver Pro",
+      "accessStep1": "Sube el escaneo o imagen",
+      "accessStep2": "Reconoce texto en la nube",
+      "accessStep3": "Descarga el texto",
+      "uploadLabel": "Subida",
+      "uploadTitleIdle": "Sube un PDF o imagen",
+      "uploadTitleSelected": "Archivo seleccionado",
+      "uploadDescriptionIdle": "Elige el documento que quieres reconocer.",
+      "uploadDescriptionSelected": "Revisa el idioma y comienza OCR.",
+      "dropTitle": "Arrastra tu archivo aqui",
+      "dropSubtitle": "PDF, PNG, JPG y otros formatos comunes de escaneo",
+      "flowTitle": "Flujo sugerido",
+      "flowStep1": "Subir",
+      "flowStep2": "Reconocer",
+      "flowStep3": "Revisar",
+      "workspaceTitle": "Espacio OCR",
+      "workspaceDescription": "Elige el idioma mas adecuado para el documento antes de iniciar el reconocimiento.",
+      "workspaceLanguage": "Idioma de reconocimiento",
+      "languageOptions": {
+        "eng": "Ingles",
+        "chi_sim": "Chino simplificado",
+        "chi_tra": "Chino tradicional",
+        "spa": "Espanol",
+        "fra": "Frances",
+        "deu": "Aleman",
+        "jpn": "Japones",
+        "kor": "Coreano"
+      },
+      "start": "Iniciar OCR",
+      "signInToUse": "Inicia sesion para usar",
+      "upgradeToUse": "Sube a Pro para usar",
+      "submitting": "Enviando...",
+      "uploading": "Subiendo...",
+      "waiting": "Esperando...",
+      "running": "Reconociendo...",
+      "recognizing": "Reconociendo texto...",
+      "preparingResults": "Preparando resultados...",
+      "completed": "Completado",
+      "failed": "OCR fallido",
+      "resultTitle": "Texto reconocido",
+      "confidence": "Confianza",
+      "pages": "Paginas",
+      "copy": "Copiar texto",
+      "copied": "Copiado",
+      "copyFailed": "No se pudo copiar",
+      "download": "Descargar TXT",
+      "recognizeAnother": "Reconocer otro archivo",
+      "defaultLanguage": "spa",
+      "viewFullResult": "Ver resultado completo"
+    },
+    "officeToPdf": {
+      "title": "Office a PDF",
+      "desc": "Convierte archivos Office a PDF",
+      "badge": "Funcion Pro",
+      "formats": {
+        "word": "Word",
+        "excel": "Excel",
+        "powerpoint": "PowerPoint"
+      },
+      "pageNotice": "La conversion de Office usa la nube para mejorar compatibilidad de formato.",
+      "accessLabel": "Acceso",
+      "accessGuestTitle": "Inicia sesion para convertir archivos Office",
+      "accessGuestDescription": "La conversion de Office requiere una cuenta para seguir la tarea en la nube.",
+      "goToSignIn": "Iniciar sesion",
+      "accessStep1": "Sube el archivo Office",
+      "accessStep2": "Convierte en la nube",
+      "accessStep3": "Descarga el PDF",
+      "uploadLabel": "Subida",
+      "uploadTitleIdle": "Sube un archivo Office",
+      "uploadTitleSelected": "Archivo seleccionado",
+      "uploadDescriptionIdle": "Elige un archivo Word, Excel o PowerPoint.",
+      "uploadDescriptionSelected": "Revisa el archivo seleccionado e inicia la conversion.",
+      "dropSubtitle": "Se admiten archivos Word, Excel y PowerPoint.",
+      "workspaceTitle": "Espacio de conversion",
+      "workspaceDescription": "La conversion en la nube mantiene mas estables los disenos complejos de Office.",
+      "converting": "Convirtiendo...",
+      "uploading": "Subiendo...",
+      "queued": "En cola...",
+      "serverProcessing": "Procesando en servidor...",
+      "preparingDownload": "Preparando descarga...",
+      "resultReady": "Resultado listo",
+      "unsupported": "Elige un archivo Word, Excel o PowerPoint.",
+      "conversionFailed": "La conversion de Office fallo. Intentalo mas tarde.",
+      "conversionFailedShort": "Conversion fallida"
+    },
+    "watermark": {
+      "title": "Marca de agua PDF",
+      "desc": "Agrega una marca de agua de texto",
+      "page": {
+        "badge": "Herramienta local",
+        "setupLabel": "Marca de agua",
+        "setupTitle": "Ajusta mensaje y estilo",
+        "setupDesc": "Util para contratos, informes, borradores y archivos compartidos que necesitan una marca clara pero discreta.",
+        "outputLabel": "Salida",
+        "outputTitle": "Generar un nuevo archivo con marca",
+        "outputTips": [
+          "Mantén la marca corta y facil de reconocer.",
+          "Mayor opacidad es mas visible; menor opacidad favorece la lectura.",
+          "Se genera un PDF nuevo. El archivo original no cambia."
+        ],
+        "localTitle": "Procesamiento local",
+        "localDesc": "La marca de agua se aplica en el navegador, ideal para etiquetas rapidas, versiones y documentos sensibles.",
+        "action": "Aplicar marca",
+        "successTitle": "Marca aplicada",
+        "successMessage": "Tu PDF con marca de agua esta listo para descargar.",
+        "placeholder": "Ejemplo: Borrador / Revisado / Solo vista previa",
+        "color": "Color de marca",
+        "text": "Texto de marca",
+        "position": "Posicion",
+        "opacity": "Opacidad",
+        "rotation": "Rotacion",
+        "fontSize": "Tamano de fuente",
+        "errorNoText": "Introduce texto de marca antes de continuar.",
+        "errorFailed": "No se pudo aplicar la marca de agua. Intentalo mas tarde.",
+        "processing": "Aplicando marca de agua...",
+        "done": "Completado",
+        "defaultText": "CONFIDENCIAL",
+        "positions": [
+          {
+            "value": "center",
+            "label": "Centro"
+          },
+          {
+            "value": "tile",
+            "label": "Mosaico"
+          },
+          {
+            "value": "top",
+            "label": "Arriba"
+          },
+          {
+            "value": "bottom",
+            "label": "Abajo"
+          }
+        ]
+      }
+    },
+    "fillForm": {
+      "title": "Rellenar formulario PDF",
+      "desc": "Rellena campos de formulario PDF",
+      "description": "Detecta campos de formulario y genera un PDF rellenado.",
+      "proOnly": "Funcion Pro - requiere nube",
+      "pageExtra": "Ideal para formularios PDF estructurados con campos reconocibles.",
+      "notice": "Sube un formulario PDF, revisa los campos detectados y genera una copia rellenada.",
+      "accessLabel": "Acceso",
+      "accessGuestTitle": "Inicia sesion para rellenar formularios",
+      "accessMemberTitle": "Necesitas Pro",
+      "accessGuestDescription": "La deteccion de formularios se ejecuta en la nube y requiere una cuenta.",
+      "accessMemberDescription": "Rellenar formularios es un flujo Pro para procesamiento documental estructurado.",
+      "goToSignIn": "Iniciar sesion",
+      "goToUpgrade": "Ver Pro",
+      "useAfterLogin": "Inicia sesion para usar",
+      "upgradeAfterLogin": "Sube a Pro para usar",
+      "accessStep1": "Sube el formulario",
+      "accessStep2": "Revisa campos",
+      "accessStep3": "Genera el PDF rellenado",
+      "uploadLabel": "Subida",
+      "uploadTitle": "Sube un formulario PDF",
+      "uploadDescription": "Elige un formulario PDF rellenable o estructurado.",
+      "dropTitle": "Arrastra tu formulario aqui",
+      "dropSubtitle": "Se admiten formularios PDF y PDFs estructurados.",
+      "flowTitle": "Flujo",
+      "flowStep1": "Detectar",
+      "flowStep2": "Rellenar",
+      "flowStep3": "Descargar",
+      "workspaceTitle": "Espacio de formulario",
+      "workspaceDescription": "Revisa los campos detectados antes de generar el documento rellenado.",
+      "stepDetecting": "Detectando campos",
+      "stepReview": "Revisar campos",
+      "stepGenerating": "Generando PDF",
+      "stepLabel": "Paso {step}",
+      "preparingResult": "Preparando resultado",
+      "ready": "Listo para descargar",
+      "analyzing": "Analizando campos...",
+      "foundFields": "Se encontraron {count} campos",
+      "fieldTypes": {
+        "text": "Campo de texto",
+        "checkbox": "Casilla",
+        "radio": "Boton de opcion",
+        "dropdown": "Desplegable"
+      },
+      "enterValue": "Introduce un valor...",
+      "checkThis": "Marcar esta opcion",
+      "selectOption": "Selecciona una opcion...",
+      "fillForm": "Rellenar formulario",
+      "filling": "Rellenando campos...",
+      "success": "Formulario rellenado",
+      "successMessage": "Tu formulario rellenado esta listo para descargar.",
+      "filledFields": "{count} campos rellenados",
+      "noFields": "No se encontraron campos en este PDF",
+      "noFieldsHelp": "Prueba otro PDF o revisa si los campos estan incrustados.",
+      "analyzeError": "No se pudieron analizar los campos",
+      "fillError": "No se pudo rellenar el formulario"
+    },
+    "annotate": {
+      "title": "Anotar PDF",
+      "desc": "Agrega notas y resaltados a un PDF",
+      "description": "Agrega notas de texto y resaltados a tu PDF.",
+      "proOnly": "Funcion Pro - requiere nube",
+      "pageExtra": "Usa anotacion en la nube cuando necesites un PDF generado con notas o resaltados visibles.",
+      "notice": "Sube un PDF, elige el tipo de anotacion, configura pagina y coordenadas, y exporta una copia marcada.",
+      "accessLabel": "Acceso",
+      "accessGuestTitle": "Inicia sesion para anotar",
+      "accessMemberTitle": "Necesitas Pro",
+      "accessGuestDescription": "La generacion de anotaciones se ejecuta en la nube y requiere una cuenta.",
+      "accessMemberDescription": "Anotar PDF es un flujo Pro para salida documental generada en servidor.",
+      "goToSignIn": "Iniciar sesion",
+      "goToUpgrade": "Ver Pro",
+      "useAfterLogin": "Inicia sesion para usar",
+      "upgradeAfterLogin": "Sube a Pro para usar",
+      "accessStep1": "Sube PDF",
+      "accessStep2": "Agrega nota o resaltado",
+      "accessStep3": "Descarga PDF anotado",
+      "uploadLabel": "Subida",
+      "uploadTitle": "Sube un PDF",
+      "uploadDescription": "Elige el PDF que quieres anotar.",
+      "dropTitle": "Arrastra tu PDF aqui",
+      "dropSubtitle": "Se admiten archivos PDF.",
+      "flowTitle": "Flujo",
+      "flowStep1": "Subir",
+      "flowStep2": "Configurar",
+      "flowStep3": "Exportar",
+      "workspaceTitle": "Espacio de anotacion",
+      "workspaceDescription": "Agrega notas de texto visibles o resalta un area rectangular.",
+      "configureTitle": "Configurar anotacion",
+      "configureDescription": "Define contenido, pagina, posicion y color de la anotacion.",
+      "modeLabel": "Tipo de anotacion",
+      "coordinateHintTitle": "Nota de coordenadas",
+      "coordinateHintDescription": "Las coordenadas usan unidades de pagina PDF. Empieza con valores pequenos y ajusta despues de revisar el resultado.",
+      "stepGenerating": "Generando PDF",
+      "stepLabel": "Paso {step}",
+      "textColors": [
+        {
+          "name": "Rojo",
+          "value": "#FF0000"
+        },
+        {
+          "name": "Azul",
+          "value": "#2563EB"
+        },
+        {
+          "name": "Verde",
+          "value": "#059669"
+        },
+        {
+          "name": "Negro",
+          "value": "#111827"
+        }
+      ],
+      "highlightColors": [
+        {
+          "name": "Amarillo",
+          "value": "#FACC15"
+        },
+        {
+          "name": "Menta",
+          "value": "#34D399"
+        },
+        {
+          "name": "Cielo",
+          "value": "#38BDF8"
+        },
+        {
+          "name": "Rosa",
+          "value": "#F472B6"
+        }
+      ],
+      "preparingResult": "Preparando resultado",
+      "ready": "Listo para descargar",
+      "types": {
+        "text": "Nota de texto",
+        "textDesc": "Agrega comentarios de texto al PDF.",
+        "highlight": "Resaltar area",
+        "highlightDesc": "Resalta areas especificas."
+      },
+      "text": {
+        "content": "Texto de anotacion",
+        "placeholder": "Escribe una nota o comentario...",
+        "page": "Pagina",
+        "pagePlaceholder": "Ej. 1",
+        "color": "Color de texto",
+        "x": "Posicion X",
+        "y": "Posicion Y"
+      },
+      "highlight": {
+        "page": "Pagina",
+        "pagePlaceholder": "Ej. 1",
+        "color": "Color de resaltado",
+        "coordinates": "Area de resaltado (x1, y1, x2, y2)",
+        "coordsHelp": "Define el rectangulo que quieres resaltar."
+      },
+      "addAnnotation": "Agregar anotacion",
+      "processing": "Agregando anotacion...",
+      "success": "Anotacion agregada",
+      "successMessage": "Tu PDF anotado esta listo.",
+      "textAdded": "Nota de texto agregada correctamente",
+      "highlightAdded": "Resaltado agregado correctamente",
+      "annotateError": "No se pudo agregar la anotacion"
+    }
   },
   "cloud": {},
-  "payment": {},
-  "account": {},
-  "enterprise": {},
+  "payment": {
+    "success": {
+      "badge": "Pago completado",
+      "message": "Gracias por mejorar. Stripe regreso correctamente a PDF-Flow y estamos actualizando el estado de tu cuenta.",
+      "checkoutState": "Estado del pago",
+      "checkoutReturned": "Stripe regreso correctamente a PDF-Flow. Actualizaremos el acceso de la cuenta en cuanto el pago quede confirmado.",
+      "checkoutReturnedWithReference": "Stripe regreso con una referencia de pago. Guardala por si soporte necesita rastrear el pago.",
+      "referenceLabel": "Referencia",
+      "accountPending": "Actualizaremos tu cuenta cuando la pagina este lista.",
+      "accountSyncing": "Actualizando tu cuenta para mostrar el estado de suscripcion mas reciente.",
+      "accountSynced": "Los datos de tu cuenta se actualizaron. Si el acceso Pro no aparece enseguida, la confirmacion de pago puede seguir procesandose.",
+      "accountGuest": "No has iniciado sesion en este navegador. Inicia sesion con la cuenta usada en el pago para ver la suscripcion.",
+      "step1": "Abre tu cuenta para confirmar el plan actual y el estado de facturacion.",
+      "step2": "Prueba OCR en la nube, conversion Office o flujos de IA cuando el acceso Pro aparezca.",
+      "step3": "Contacta soporte con la referencia de pago si el acceso no se actualiza tras unos minutos."
+    },
+    "cancel": {
+      "badge": "Pago no completado",
+      "message": "El pago se cerro antes de terminar. Tu plan actual no cambia y puedes reiniciarlo cuando quieras.",
+      "noChargeTitle": "Sin cambio de plan",
+      "noChargeDescription": "PDF-Flow no activa una suscripcion Pro desde un retorno de pago cancelado.",
+      "checkoutStatus": "Pago",
+      "checkoutCanceled": "Cancelado",
+      "currentPlan": "Plan actual",
+      "freePlan": "Gratis / sin cambios",
+      "benefit4": "Procesamiento prioritario, soporte por correo y controles de suscripcion en la cuenta."
+    }
+  },
+  "account": {
+    "profile": "Perfil",
+    "usage": "Uso",
+    "myAccount": "Mi cuenta",
+    "totalRequests": "Solicitudes totales",
+    "requestsToday": "Solicitudes hoy",
+    "quotaRemaining": "Cuota restante",
+    "unlimited": "Ilimitado",
+    "currentPlan": "Plan actual",
+    "upgradeToPro": "Mejorar a Pro",
+    "editProfile": "Editar perfil",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "deleteAccount": "Eliminar cuenta",
+    "deleteConfirm": "Eliminar esta cuenta? Esta accion no se puede deshacer.",
+    "updateSuccess": "Perfil actualizado correctamente",
+    "workspaceDescription": "Revisa perfil, plan y uso antes de volver al trabajo PDF.",
+    "refresh": "Actualizar",
+    "loading": "Cargando cuenta...",
+    "emptyTitle": "Datos de cuenta no disponibles",
+    "emptyMessage": "No pudimos cargar una cuenta iniciada para esta pagina.",
+    "emptyHint": "Inicia sesion de nuevo o actualiza la pagina si esperabas estar dentro.",
+    "usageDescription": "El uso se actualiza desde el servicio de cuenta y puede tardar un poco tras nuevos trabajos.",
+    "usageLoading": "Cargando uso...",
+    "usageEmptyTitle": "Aun no hay datos de uso",
+    "usageEmptyMessage": "Cuando proceses archivos con sesion iniciada, el uso aparecera aqui.",
+    "todayQuota": "Uso de cuota hoy",
+    "notSet": "Sin definir",
+    "dangerZone": "Zona de riesgo",
+    "deleteDescription": "Eliminar la cuenta quita el acceso a esta cuenta. Algunos registros de seguridad, facturacion o auditoria pueden conservarse si es necesario.",
+    "deleteDialog": {
+      "title": "Eliminar esta cuenta?",
+      "summary": "Esto quitara el acceso de {email}.",
+      "detailAccess": "La sesion se cerrara cuando la cuenta se elimine.",
+      "detailRetention": "Registros de seguridad, facturacion, soporte o auditoria pueden conservarse si es necesario.",
+      "detailSignIn": "Esta accion no se puede deshacer desde la pagina de cuenta.",
+      "confirm": "Eliminar cuenta"
+    },
+    "updateFailedTitle": "No se pudo actualizar el perfil",
+    "updateFailedMessage": "No pudimos guardar los cambios del perfil. Revisa el valor e intentalo de nuevo.",
+    "deleteFailedTitle": "No se pudo eliminar la cuenta",
+    "deleteFailedMessage": "No pudimos eliminar esta cuenta ahora. Intentalo de nuevo o contacta soporte.",
+    "plans": {
+      "free": "Gratis",
+      "pro": "Pro",
+      "enterprise": "Empresa",
+      "admin": "Admin"
+    }
+  },
+  "enterprise": {
+    "dashboard": {
+      "title": "Panel Enterprise",
+      "subtitle": "Gestiona claves API, uso, webhooks y facturacion.",
+      "failureTitle": "No se pudo cargar el resumen Enterprise",
+      "failureMessage": "El servicio Enterprise no devolvio las metricas mas recientes.",
+      "failureHint": "Reintenta una vez. Si se repite, envia feedback con este codigo.",
+      "retry": "Reintentar resumen"
+    },
+    "stats": {
+      "apiKeys": "Claves API",
+      "total": "total",
+      "requests30d": "Solicitudes",
+      "last30Days": "Ultimos 30 dias",
+      "tokens": "Tokens",
+      "thisMonth": "Este mes",
+      "cost": "Coste"
+    },
+    "tabs": {
+      "apiKeys": "Claves API",
+      "usage": "Uso",
+      "webhooks": "Webhooks",
+      "billing": "Facturacion",
+      "documentation": "Documentacion"
+    },
+    "apiKeys": {
+      "title": "Claves API",
+      "description": "Gestiona claves API para acceso programatico.",
+      "create": "Crear clave API",
+      "empty": "Aun no hay claves API",
+      "createFirst": "Crear primera clave API",
+      "active": "Activa",
+      "inactive": "Inactiva",
+      "created": "Creada",
+      "lastUsed": "Ultimo uso",
+      "neverUsed": "Sin uso",
+      "disable": "Desactivar",
+      "enable": "Activar",
+      "deleteButtonLabel": "Eliminar clave API {name}",
+      "copied": "Copiado al portapapeles",
+      "confirmDelete": "Eliminar la clave API \"{name}\"? Esta accion no se puede deshacer.",
+      "retry": "Reintentar claves API",
+      "failureHint": "Reintenta una vez. Si se repite, contacta soporte con este codigo.",
+      "copyFailureHint": "Si el navegador bloquea el portapapeles, todavia puedes seleccionar la clave manualmente.",
+      "loadFailedTitle": "No se pudieron cargar las claves API",
+      "loadFailedMessage": "La lista de claves no esta disponible temporalmente. Las claves existentes no cambiaron.",
+      "createFailedTitle": "No se pudo crear la clave API",
+      "createFailedMessage": "La solicitud de creacion no se completo. Revisa el nombre y los limites, y reintenta.",
+      "updateFailedTitle": "No se pudo actualizar la clave API",
+      "updateFailedMessage": "El cambio de estado no se completo. Reintenta antes de confiar en el nuevo estado.",
+      "deleteFailedTitle": "No se pudo eliminar la clave API",
+      "deleteFailedMessage": "La solicitud de eliminacion no se completo. La clave puede seguir activa.",
+      "deleteDialog": {
+        "title": "Eliminar clave API?",
+        "summary": "Esto quitara \"{name}\" del acceso API Enterprise.",
+        "detailAccess": "Las aplicaciones que usen esta clave ya no podran llamar a la API tras eliminarla.",
+        "detailAudit": "El backend conserva la operacion auditable para seguridad de la cuenta Enterprise.",
+        "detailRecovery": "Crea una clave nueva si una integracion necesita acceso de nuevo.",
+        "confirm": "Eliminar clave API"
+      },
+      "copyFailedTitle": "No se pudo copiar la clave API",
+      "copyFailedMessage": "El acceso al portapapeles fue bloqueado o interrumpido.",
+      "createModal": {
+        "title": "Crear clave API",
+        "name": "Nombre de la clave",
+        "namePlaceholder": "Ejemplo: Produccion, Desarrollo",
+        "rateLimit": "Limite de tasa (solicitudes/hora)",
+        "rateLimitPlaceholder": "-1 para ilimitado",
+        "rateLimitHelp": "Usa -1 para solicitudes ilimitadas.",
+        "expiration": "Caducidad",
+        "neverExpire": "Nunca caduca",
+        "days": "dias"
+      },
+      "createdModal": {
+        "title": "Clave API creada",
+        "warning": "Guarda esta clave ahora.",
+        "warningDetail": "Esta es la unica vez que veras la clave completa. Guardala de forma segura.",
+        "yourKey": "Tu clave API"
+      }
+    },
+    "usage": {
+      "title": "Estadisticas de uso",
+      "totalRequests": "Solicitudes totales",
+      "successful": "correctas",
+      "failed": "fallidas",
+      "filesProcessed": "Archivos procesados",
+      "totalSize": "tamano total",
+      "tokensUsed": "Tokens usados",
+      "cost": "coste",
+      "startDate": "Fecha inicial",
+      "endDate": "Fecha final",
+      "apply": "Aplicar",
+      "dailyBreakdown": "Desglose diario",
+      "endpointBreakdown": "Desglose por endpoint",
+      "requests": "solicitudes",
+      "tokens": "tokens",
+      "retry": "Reintentar uso",
+      "failureHint": "Reintenta una vez. Si el uso sigue sin cargar, contacta soporte con este codigo.",
+      "loadFailedTitle": "No se pudieron cargar las estadisticas de uso",
+      "loadFailedMessage": "El servicio de uso no devolvio la ventana de reporte seleccionada."
+    },
+    "webhooks": {
+      "title": "Webhooks",
+      "description": "Recibe notificaciones de eventos en tiempo real.",
+      "create": "Crear webhook",
+      "empty": "No hay webhooks configurados",
+      "createFirst": "Crear primer webhook",
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "deliveries": "Entregas",
+      "lastTriggered": "Ultimo disparo",
+      "disable": "Desactivar",
+      "enable": "Activar",
+      "deleteButtonLabel": "Eliminar webhook {url}",
+      "confirmDelete": "Eliminar webhook para {url}?",
+      "retry": "Reintentar webhooks",
+      "failureHint": "Reintenta una vez. Si se repite, contacta soporte con este codigo.",
+      "loadFailedTitle": "No se pudieron cargar los webhooks",
+      "loadFailedMessage": "La lista de webhooks no esta disponible temporalmente. Los endpoints existentes no cambiaron.",
+      "createFailedTitle": "No se pudo crear el webhook",
+      "createFailedMessage": "La solicitud de creacion no se completo. Revisa la URL y los eventos seleccionados, y reintenta.",
+      "updateFailedTitle": "No se pudo actualizar el webhook",
+      "updateFailedMessage": "El cambio de estado no se completo. Reintenta antes de confiar en el nuevo estado.",
+      "deleteFailedTitle": "No se pudo eliminar el webhook",
+      "deleteFailedMessage": "La solicitud de eliminacion no se completo. El webhook puede seguir activo.",
+      "deleteDialog": {
+        "title": "Eliminar webhook?",
+        "summary": "Esto detendra el envio de eventos PDF-Flow a {url}.",
+        "detailDelivery": "Los eventos suscritos futuros ya no se enviaran a este endpoint.",
+        "detailHistory": "Registros de entrega, facturacion o auditoria anteriores pueden conservarse para diagnostico.",
+        "detailRecovery": "Crea un webhook nuevo si este destino debe recibir eventos otra vez.",
+        "confirm": "Eliminar webhook"
+      },
+      "createModal": {
+        "title": "Crear webhook",
+        "url": "URL del webhook",
+        "events": "Eventos a suscribir",
+        "secret": "Secreto (opcional)",
+        "secretPlaceholder": "Para verificar firma HMAC",
+        "secretHelp": "Se usa para verificar la autenticidad del webhook con HMAC-SHA256."
+      }
+    },
+    "billing": {
+      "title": "Facturacion y uso",
+      "currentPeriod": "Periodo actual",
+      "tokenUsage": "Uso de tokens",
+      "used": "Usados",
+      "included": "Incluidos",
+      "overage": "Exceso",
+      "ofIncluded": "de lo incluido",
+      "costBreakdown": "Desglose de coste",
+      "subscription": "Suscripcion",
+      "overageCost": "Exceso",
+      "total": "Total",
+      "nextBilling": "Proxima factura",
+      "nextBillingDate": "Fecha de proxima factura",
+      "estimatedBill": "Factura estimada",
+      "pricingInfo": "Informacion de precios",
+      "includedTokens": "Tokens incluidos",
+      "tokens": "tokens",
+      "overagePrice": "Precio de exceso",
+      "quotaWarning": "Cerca del limite de tokens",
+      "quotaWarningMessage": "Has usado el {percent}% de tus tokens incluidos.",
+      "quotaExceeded": "Cuota de tokens excedida",
+      "quotaExceededMessage": "Superaste los tokens incluidos. Se aplican cargos por exceso.",
+      "retry": "Reintentar facturacion",
+      "failureHint": "Reintenta una vez. Si facturacion sigue sin cargar, contacta soporte con este codigo.",
+      "loadFailedTitle": "No se pudieron cargar los datos de facturacion",
+      "loadFailedMessage": "El servicio de facturacion no devolvio el uso actual ni los precios."
+    },
+    "docs": {
+      "title": "Documentacion API",
+      "eyebrow": "Espacio de desarrolladores",
+      "intro": "Usa la API REST de PDF-Flow para flujos documentales con procesamiento backend, seguimiento asincrono y acceso Enterprise auditable.",
+      "baseUrl": "Base API",
+      "baseUrlValue": "https://api.pdf-flow.com",
+      "apiKey": "Acceso",
+      "apiKeyValue": "Clave API Bearer",
+      "asyncJobs": "Modelo de tarea",
+      "asyncJobsValue": "Subir, consultar, notificar",
+      "authentication": "Autenticacion",
+      "authDescription": "Crea claves API desde el panel Enterprise y envialas en el encabezado Authorization. Las claves completas se muestran una sola vez; uso, auditoria y permisos siguen controlados por el backend.",
+      "endpoints": "Mapa de endpoints",
+      "uploadDescription": "Sube un PDF o archivo compatible y recibe una referencia backend para procesarlo.",
+      "mergeDescription": "Crea una tarea asincrona de union desde referencias de archivo y devuelve un id de tarea.",
+      "splitDescription": "Crea una tarea asincrona de division con rangos de pagina o reglas explicitas.",
+      "ocrDescription": "Ejecuta OCR en la nube sobre PDFs o imagenes cuando la extraccion local no basta.",
+      "jobStatusDescription": "Consulta estado, progreso, codigo diagnostico y metadatos de resultado.",
+      "downloadDescription": "Descarga el archivo generado cuando el backend marque la tarea como completada.",
+      "modeUpload": "Subida",
+      "modeAsync": "Asincrono",
+      "modeCloud": "Nube",
+      "modePoll": "Consulta",
+      "modeDownload": "Resultado",
+      "workflow": "Flujo de tarea asincrona",
+      "workflowUpload": "Sube archivos y conserva las referencias devueltas dentro del estado de tu flujo.",
+      "workflowProcess": "Inicia un endpoint de procesamiento; PDF-Flow devuelve un id de tarea en vez de bloquear la solicitud.",
+      "workflowNotify": "Consulta el endpoint de tarea o suscribete a webhooks para estados de exito y fallo.",
+      "workflowDownload": "Descarga el resultado solo cuando el backend informe que la tarea termino.",
+      "webhooks": "Webhooks",
+      "webhooksDescription": "Suscribe endpoints a eventos operativos para que tus automatizaciones reaccionen sin consulta agresiva.",
+      "signatureDescription": "Los secretos de webhook se verifican con firmas HMAC-SHA256. Rechaza eventos sin firma o con firma incorrecta.",
+      "rateLimits": "Limites de tasa",
+      "rateLimitsDescription": "Los limites API dependen de la configuracion de la clave.",
+      "rateLimitDefault": "Las claves pueden limitarse por hora o quedar sin limite para workers internos confiables.",
+      "rateLimitCustom": "Usa claves separadas para produccion, staging y procesos batch para aislar incidentes.",
+      "rateLimitHeaders": "Las respuestas incluyen contexto de limite cuando aplican controles de cuota o throttling.",
+      "paymentBoundary": "Acceso verificado por backend",
+      "paymentBoundaryDescription": "Plan, cuota y derechos de pago nunca se infieren desde paginas de retorno frontend. El backend verifica callbacks del proveedor y estado de cuenta antes de confiar en acceso API o cambios de cuota.",
+      "errorHandling": "Manejo de errores",
+      "errorHandlingDescription": "Los errores usan JSON con codigos estables y request_id para que soporte pueda rastrear fallos sin pedir contenidos del documento.",
+      "needHelp": "Necesitas ayuda con la integracion?"
+    }
+  },
   "ai": {
-    "title": "Analizador PDF con IA"
+    "title": "Analizador PDF con IA",
+    "pageExtra": "El analisis con IA se ejecuta en la nube y sirve para documentos largos, resumenes, preguntas y extraccion estructurada.",
+    "notice": "Sube un PDF, elige una tarea de IA y revisa el resultado generado antes de reutilizarlo.",
+    "tabs": {
+      "batch": "Analisis por lotes"
+    },
+    "accessLabel": "Acceso",
+    "accessGuestTitle": "Inicia sesion para usar analisis con IA",
+    "accessMemberTitle": "Necesitas Pro",
+    "accessGuestDescription": "El analisis con IA requiere una cuenta para procesar la tarea de forma segura.",
+    "accessMemberDescription": "El analisis con IA es un flujo Pro para entender documentos en servidor.",
+    "goToSignIn": "Iniciar sesion",
+    "goToUpgrade": "Ver Pro",
+    "accessStep1": "Sube PDF",
+    "accessStep2": "Elige modo de analisis",
+    "accessStep3": "Revisa resultado generado",
+    "uploadLabel": "Subida",
+    "uploadTitleIdle": "Sube un PDF",
+    "uploadTitleSelected": "PDF seleccionado",
+    "uploadDescriptionIdle": "Elige un documento para analizar con IA.",
+    "uploadDescriptionSelected": "Elige una tarea y ejecuta el analisis.",
+    "dropSubtitle": "Se admiten archivos PDF.",
+    "suggestedFlowTitle": "Flujo sugerido",
+    "suggestedFlowDescription": "Empieza con un resumen, pregunta detalles y extrae campos estructurados si hace falta.",
+    "batch": {
+      "title": "Analisis por lotes",
+      "description": "Ejecuta varias tareas de analisis a la vez para entender documentos largos mas rapido.",
+      "start": "Iniciar analisis por lotes",
+      "complete": "Analisis completo",
+      "completedCount": "{count} tareas completadas.",
+      "operations": {
+        "summarize": {
+          "label": "Resumen inteligente",
+          "description": "Extrae contenido central y puntos clave."
+        },
+        "extract": {
+          "label": "Extraccion de datos",
+          "description": "Organiza campos importantes y estructura."
+        },
+        "classify": {
+          "label": "Clasificacion de documento",
+          "description": "Identifica tipo y proposito del documento."
+        }
+      }
+    },
+    "errors": {
+      "batchFailed": "No se pudo completar el analisis por lotes. Intentalo mas tarde."
+    }
+  },
+  "footer": {
+    "privacyPolicy": "Politica de privacidad",
+    "termsOfService": "Terminos del servicio",
+    "eyebrow": "Espacio PDF",
+    "brandDescription": "Un espacio PDF practico para herramientas diarias, procesamiento local primero y flujos en la nube cuando hacen falta.",
+    "toolsTitle": "Herramientas",
+    "productTitle": "Producto",
+    "supportTitle": "Soporte",
+    "contactTitle": "Contactar soporte",
+    "contactDescription": "Comparte una captura, hora aproximada y flujo del archivo si necesitas ayuda con carga, conversion o facturacion.",
+    "trustPrivacyTitle": "Local primero",
+    "trustPrivacyDescription": "Las tareas PDF principales permanecen en el navegador siempre que el flujo lo permite.",
+    "trustWorkflowTitle": "Entrada directa",
+    "trustWorkflowDescription": "Las herramientas quedan cerca para empezar tareas repetidas mas rapido.",
+    "trustSupportTitle": "Soporte mas claro",
+    "trustSupportDescription": "Los mensajes piden contexto sin solicitar contenido del documento.",
+    "copyright": "Creado para trabajo documental enfocado.",
+    "bottomLine": "Procesamiento PDF local primero con nube opcional"
+  },
+  "history": {
+    "title": "Historial de procesamiento",
+    "page": {
+      "backHome": "Volver al inicio",
+      "badge": "Historial local",
+      "title": "Historial de procesamiento",
+      "description": "Revisa las acciones PDF recientes guardadas por este navegador. El historial permanece en este dispositivo para volver a ver archivos, herramientas y horas de proceso.",
+      "localTitle": "Guardado localmente",
+      "localDescription": "El historial no se sube. Desaparece cuando borras los datos del navegador.",
+      "reviewTitle": "Revision rapida",
+      "reviewDescription": "Util para confirmar que herramienta usaste y que archivos procesaste.",
+      "continueProcessing": "Seguir procesando PDF"
+    },
+    "panel": {
+      "confirmClear": "Borrar todo el historial de procesamiento?",
+      "confirmTitle": "Borrar el historial local?",
+      "confirmMessage": "Esto elimina el historial guardado en este navegador. No afecta archivos descargados ni documentos en tu dispositivo.",
+      "confirmAction": "Borrar historial",
+      "cancelClear": "Conservar historial",
+      "itemMeta": "{tool} · {time}",
+      "none": "Ninguno",
+      "deleteItem": "Eliminar este elemento del historial",
+      "clearAll": "Borrar todo el historial",
+      "emptyTitle": "Aun no hay historial",
+      "emptyDescription": "Despues de procesar PDFs, las acciones recientes se guardan en este navegador para revisar nombres de archivo, herramientas y hora de proceso.",
+      "groups": {
+        "today": "Hoy",
+        "yesterday": "Ayer",
+        "older": "Anterior"
+      },
+      "stats": {
+        "totalFiles": "Archivos totales",
+        "todayFiles": "Procesados hoy",
+        "mostUsed": "Mas usada",
+        "spaceSaved": "Espacio ahorrado"
+      },
+      "time": {
+        "justNow": "Ahora",
+        "minutesAgo": "Hace {count} min",
+        "hoursAgo": "Hace {count} h",
+        "daysAgo": "Hace {count} dias"
+      }
+    },
+    "tools": {
+      "merge": "Unir PDF",
+      "split": "Dividir PDF",
+      "rotate": "Rotar PDF",
+      "compress": "Comprimir PDF",
+      "imageToPdf": "Imagen a PDF",
+      "pdfToImage": "PDF a imagen",
+      "deletePages": "Eliminar paginas PDF",
+      "organize": "Organizar paginas PDF",
+      "pageNumbers": "Agregar numeros de pagina",
+      "crop": "Recortar PDF",
+      "protect": "Proteger PDF",
+      "unlock": "Desbloquear PDF",
+      "sign": "Firmar PDF",
+      "extractText": "Extraer texto PDF",
+      "extractImages": "Extraer imagenes PDF",
+      "watermark": "Agregar marca de agua",
+      "flatten": "Aplanar PDF",
+      "repair": "Reparar PDF"
+    }
+  },
+  "appShell": {
+    "skipToContent": "Saltar al contenido principal",
+    "announcement": "Aviso del sitio",
+    "configRetry": "Reintentar ajustes",
+    "configRetrying": "Reintentando...",
+    "configUnavailableTitle": "El sitio usa ajustes predeterminados",
+    "configUnavailableMessage": "PDF-Flow no pudo conectar con el servicio de configuracion publica. Las herramientas principales siguen disponibles con ajustes predeterminados.",
+    "configUnavailableHint": "Reintenta una vez o incluye este codigo si contactas soporte.",
+    "maintenanceBadge": "Mantenimiento",
+    "maintenanceTitle": "Mantenimiento del sitio",
+    "maintenanceMessage": "El sitio esta en mantenimiento. Intentalo mas tarde.",
+    "maintenanceAdminHint": "Los administradores aun pueden iniciar sesion y ajustar el estado desde el panel."
+  },
+  "feedbackWidget": {
+    "launcher": "Enviar feedback",
+    "dialogLabel": "Enviar feedback a PDF-Flow",
+    "close": "Cerrar ventana de feedback",
+    "badge": "Rastro de soporte",
+    "title": "Cuentanos que paso",
+    "description": "Adjuntamos la URL, contexto del navegador y un codigo de diagnostico. No pedimos contenido del documento.",
+    "categoryLabel": "Tipo",
+    "severityLabel": "Impacto",
+    "titleLabel": "Titulo breve",
+    "messageLabel": "Detalles",
+    "emailLabel": "Email, opcional",
+    "titlePlaceholder": "Ejemplo: PDF a imagen fallo localmente",
+    "messagePlaceholder": "Escribe que pulsaste, que viste y si vuelve a ocurrir.",
+    "emailPlaceholder": "Util si necesitamos pedir mas contexto",
+    "messageHint": "Hasta {count} caracteres. Prioriza pasos, errores visibles y resultado esperado. No pegues contenido del documento.",
+    "diagnosticTitle": "Contexto de diagnostico",
+    "diagnosticLine": "Codigo: {code} · Pagina: {path}",
+    "privacyHint": "Solo se adjunta contexto de diagnostico; no se incluye el contenido de tus PDFs.",
+    "submit": "Enviar feedback",
+    "submitting": "Enviando...",
+    "submitFailedTitle": "No se pudo enviar el feedback",
+    "submitFailedMessage": "El servicio de feedback no acepto el reporte. Guarda este codigo e intentalo mas tarde.",
+    "successTitle": "Feedback enviado",
+    "successMessage": "Recibimos tu feedback. Referencia #{id}, codigo {code}. Guarda esto si necesitas agregar contexto luego.",
+    "copyReference": "Copiar referencia",
+    "copied": "Copiado",
+    "copyFailed": "No se pudo copiar. Puedes seleccionar la referencia manualmente.",
+    "categories": {
+      "bug": "Problema funcional",
+      "ui": "Problema visual o de layout",
+      "account": "Cuenta o inicio de sesion",
+      "suggestion": "Sugerencia"
+    },
+    "severities": {
+      "normal": "Problema general",
+      "high": "Afecta el flujo",
+      "critical": "No puedo continuar"
+    },
+    "validation": {
+      "requiredTitle": "Titulo y detalles obligatorios",
+      "requiredMessage": "Agrega un titulo breve y pasos o error visible para localizar el problema.",
+      "requiredHint": "Una captura ayuda, pero no pegues contenido del documento.",
+      "tooLongTitle": "Los detalles son demasiado largos",
+      "tooLongMessage": "Mantén la descripcion por debajo de {count} caracteres y enfocate en pasos de reproduccion.",
+      "tooLongHint": "Los reportes breves se revisan mas rapido."
+    },
+    "summary": {
+      "feedbackId": "Feedback #{id}",
+      "diagnosticCode": "Codigo de diagnostico {code}",
+      "page": "Pagina {page}"
+    }
+  },
+  "availability": {
+    "featureDisabledEyebrow": "Disponibilidad",
+    "featureDisabledTitle": "Esta herramienta no esta disponible temporalmente",
+    "featureDisabledMessage": "Este flujo PDF esta desactivado por la configuracion del sitio. Puedes seguir con otras herramientas e intentarlo mas tarde.",
+    "featureDisabledHint": "La entrada de la herramienta se oculta mientras la bandera esta desactivada. Los administradores pueden reactivarla desde el panel.",
+    "notFoundEyebrow": "Ruta no encontrada",
+    "notFoundTitle": "No encontramos esa pagina",
+    "notFoundMessage": "La ruta solicitada \"{path}\" no coincide con una ruta disponible de PDF-Flow.",
+    "notFoundHint": "Usa la navegacion del espacio de trabajo o vuelve al inicio para continuar.",
+    "requestedPath": "Ruta solicitada",
+    "backToTools": "Volver a herramientas",
+    "backHome": "Volver al inicio",
+    "retryTool": "Probar esta herramienta otra vez",
+    "goBack": "Volver"
+  },
+  "legal": {
+    "privacy": {
+      "eyebrow": "Politica de privacidad",
+      "title": "Como protegemos tus archivos y datos de cuenta",
+      "updated": "Ultima actualizacion: 11 de junio de 2026",
+      "description": "PDF-Flow es un espacio PDF en linea para tareas documentales diarias. Las herramientas basicas se ejecutan localmente cuando es posible. Los archivos solo se suben cuando eliges OCR, conversion de Office, analisis con IA o procesamiento en la nube.",
+      "summaryTitle": "Resumen corto",
+      "summary": "No vendemos tu informacion personal ni leemos tus documentos para perfiles publicitarios. Los archivos en la nube se usan solo para completar la tarea solicitada, ofrecer descargas, resolver incidencias y proteger el servicio, y despues se eliminan segun la politica de temporales.",
+      "note": "Si procesas documentos muy sensibles, regulados o legalmente vinculantes, prioriza el procesamiento local y evalua si conviene subirlos a la nube.",
+      "sections": [
+        {
+          "title": "1. Informacion que recopilamos",
+          "paragraphs": [
+            "Al visitar el sitio podemos recibir datos basicos de acceso, como tipo de navegador, hora, ruta de pagina, idioma, informacion de seguridad asociada a IP y registros de error.",
+            "Al crear o usar una cuenta guardamos informacion necesaria para operar el servicio, como correo, nombre visible, contrasena con hash, rol, estado de suscripcion y marcas de inicio de sesion."
+          ],
+          "bullets": [
+            "Cuenta: correo, nombre visible, estado de autenticacion, rol y permisos.",
+            "Operacion: estado de tareas, codigos de error y registros diagnosticos necesarios.",
+            "Pago: los detalles de pago los gestiona el proveedor; PDF-Flow conserva solo el estado de suscripcion necesario."
+          ]
+        },
+        {
+          "title": "2. Como se procesan los archivos",
+          "paragraphs": [
+            "Herramientas como unir, separar, rotar, comprimir, imagen a PDF y PDF a imagen intentan ejecutarse localmente en el navegador siempre que sea posible.",
+            "OCR, Office a PDF, analisis PDF con IA y flujos en la nube requieren procesamiento de servidor. Al enviar estas tareas, los archivos relacionados se suben temporalmente."
+          ],
+          "bullets": [
+            "Procesamiento local: normalmente el servidor no ve el contenido del documento.",
+            "Procesamiento en nube: el servidor recibe archivos temporalmente, genera resultados y registra el estado necesario.",
+            "Soporte: evita enviar archivos sensibles innecesarios o contenido completo en los reportes."
+          ]
+        },
+        {
+          "title": "3. Ciclo de vida de archivos en nube",
+          "paragraphs": [
+            "Las subidas, resultados generados y paquetes temporales de descarga se guardan en directorios temporales controlados. Los archivos vencidos se eliminan con limpieza automatica y herramientas de mantenimiento.",
+            "Los valores actuales son aproximadamente 1 hora para subidas y resultados, y 30 minutos para paquetes de descarga. La eliminacion real puede retrasarse por colas, carga, diagnostico o ventanas de mantenimiento."
+          ],
+          "bullets": [
+            "Alcance: directorios temporales de subida, resultados generados y paquetes de descarga.",
+            "No eliminado por limpieza de archivos: cuentas, auditoria, feedback, resumenes de error y metadatos necesarios.",
+            "Limite de seguridad: la limpieza revisa solo directorios temporales configurados y rutas generadas por el sistema con prefijos conocidos."
+          ]
+        },
+        {
+          "title": "4. Como usamos la informacion",
+          "paragraphs": [
+            "Usamos informacion necesaria para inicio de sesion, procesamiento, progreso de tareas, descargas, permisos, suscripciones, diagnostico y proteccion de seguridad.",
+            "Si contactas soporte, podemos usar capturas, marcas de tiempo, codigos de error, URLs y pasos que aportes para localizar el problema."
+          ]
+        },
+        {
+          "title": "5. Conservacion y eliminacion",
+          "paragraphs": [
+            "Los archivos temporales se eliminan segun la politica anterior. Las caches de archivos y tareas en Redis tambien tienen expiracion.",
+            "Registros de cuenta, suscripcion, auditoria necesaria, resumenes de error y feedback pueden conservarse por motivos razonables de seguridad, facturacion, diagnostico y cumplimiento."
+          ]
+        },
+        {
+          "title": "6. Tus opciones y derechos",
+          "paragraphs": [
+            "Puedes usar algunas funciones basicas sin crear cuenta. Para login, suscripcion o nube, decides si continuar.",
+            "Puedes solicitar acceso, correccion o eliminacion de informacion de cuenta. Algunos registros de seguridad, pago, auditoria o diagnostico pueden conservarse por un periodo razonable."
+          ]
+        },
+        {
+          "title": "7. Seguridad",
+          "paragraphs": [
+            "Usamos contrasenas con hash, inicio de sesion seguro, roles, registros de seguridad y acceso minimo necesario para reducir riesgos.",
+            "Ningun servicio en linea es perfectamente seguro. Para archivos muy sensibles, considera procesamiento local o redaccion antes de subirlos."
+          ]
+        },
+        {
+          "title": "8. Actualizaciones",
+          "paragraphs": [
+            "A medida que crezcan pagos, equipos, API empresarial o funciones de nube, esta politica puede cambiar. Los cambios importantes se reflejaran en esta pagina."
+          ]
+        },
+        {
+          "title": "9. Contacto",
+          "paragraphs": [
+            "Para preguntas de privacidad, procesamiento de archivos o datos de cuenta, contacta por el canal de soporte mostrado en el sitio. Incluye capturas, horas, codigos de error y pasos breves si reportas incidencias."
+          ]
+        }
+      ]
+    },
+    "terms": {
+      "eyebrow": "Terminos del servicio",
+      "title": "Entiende estas reglas antes de usar PDF-Flow",
+      "updated": "Ultima actualizacion: 11 de junio de 2026",
+      "description": "Estos terminos explican derechos, responsabilidades y limites basicos al usar PDF-Flow. Usamos lenguaje claro para que la informacion importante sea facil de entender.",
+      "summaryTitle": "Principio central",
+      "summary": "Puedes usar PDF-Flow para procesar documentos legales que posees o tienes permiso para manejar. No subas contenido ilegal, infractor, malicioso, abusivo o danino. Conserva copias propias y revisa resultados importantes.",
+      "note": "Si no aceptas estos terminos, deja de usar funciones que requieren login, subida, nube o suscripcion.",
+      "sections": [
+        {
+          "title": "1. Aceptacion",
+          "paragraphs": [
+            "Al acceder, registrarte, iniciar sesion o seguir usando PDF-Flow, aceptas los Terminos del servicio y la Politica de privacidad vigentes.",
+            "Podemos actualizar estos terminos por cambios de producto, requisitos legales u operacion. Los terminos actualizados se mostraran en esta pagina."
+          ]
+        },
+        {
+          "title": "2. Cuentas y seguridad",
+          "paragraphs": [
+            "Eres responsable de tu cuenta, credenciales y actividad bajo tu cuenta. Usa una contrasena segura y no compartas acceso con personas no autorizadas.",
+            "Si notas actividad sospechosa, problemas de facturacion o tareas desconocidas, contacta soporte pronto."
+          ],
+          "bullets": [
+            "No suplantes a otra persona al registrarte o usar el servicio.",
+            "No evadas permisos, limites de plan, limites de subida o controles de seguridad.",
+            "No intentes acceder a areas privadas de administracion, APIs privadas o datos de otros usuarios."
+          ]
+        },
+        {
+          "title": "3. Responsabilidad sobre archivos y contenido",
+          "paragraphs": [
+            "Confirmas que tienes derecho legal a subir, convertir, reconocer, analizar o descargar los archivos que usas con PDF-Flow.",
+            "Debes conservar originales y copias propias, y revisar resultados antes de depender de ellos. Conversion, compresion, OCR e IA pueden verse afectados por calidad, formato, idioma, navegador y dependencias externas."
+          ]
+        },
+        {
+          "title": "4. Usos prohibidos",
+          "paragraphs": [
+            "Para proteger el servicio y a otros usuarios, no puedes usar PDF-Flow para actividad ilegal, infractora, fraudulenta, acosadora, maliciosa, abusiva o para evadir controles de acceso.",
+            "Si detectamos solicitudes sospechosas, archivos maliciosos, abuso de recursos o conducta de alto riesgo, podemos limitar subidas, detener tareas, suspender cuentas o rechazar parte del servicio."
+          ],
+          "bullets": [
+            "No subas virus, scripts de ataque o archivos maliciosos disfrazados.",
+            "No hagas scraping masivo de APIs, evadas limites o consumas recursos anormales.",
+            "No proceses contenido con copyright, privado o regulado si no tienes derecho a manejarlo."
+          ]
+        },
+        {
+          "title": "5. Suscripciones y limites",
+          "paragraphs": [
+            "Algunas funciones avanzadas pueden requerir login, Pro o acceso empresarial. Disponibilidad, cuotas, precios, reembolsos y cancelacion siguen el flujo de compra mostrado en cada momento.",
+            "Podemos ajustar limites de planes, cuotas y disponibilidad mientras evoluciona el producto. Los cambios relevantes deben comunicarse con claridad."
+          ]
+        },
+        {
+          "title": "6. Disponibilidad y limites",
+          "paragraphs": [
+            "Trabajamos para mantener el servicio estable, pero no garantizamos que todo archivo, formato, navegador, red o dependencia externa funcione siempre.",
+            "Mantenimiento, actualizaciones, fallos de dependencias, red, eventos de seguridad o fuerza mayor pueden interrumpir o ralentizar el servicio."
+          ]
+        },
+        {
+          "title": "7. Descargo",
+          "paragraphs": [
+            "PDF-Flow es una herramienta de procesamiento documental. No ofrece asesoria legal, financiera, medica ni revision profesional. IA, OCR y conversion pueden contener errores u omisiones.",
+            "Para contratos, facturas, documentos de identidad, materiales de cumplimiento u otros archivos criticos, revisa resultados y busca confirmacion profesional si hace falta."
+          ]
+        },
+        {
+          "title": "8. Cambios, suspension y terminacion",
+          "paragraphs": [
+            "Si una cuenta viola estos terminos, afecta seguridad, infringe derechos o causa abuso claro de recursos, podemos restringir, suspender o terminar cuentas y tareas relacionadas.",
+            "Puedes dejar de usar el servicio o solicitar eliminacion de cuenta donde este soportado. Algunos registros de seguridad, facturacion, auditoria y diagnostico pueden permanecer por un periodo razonable."
+          ]
+        },
+        {
+          "title": "9. Contacto",
+          "paragraphs": [
+            "Para dudas sobre terminos, cuentas, suscripciones o resultados, contacta por el canal de soporte mostrado en el sitio. Incluye capturas, horas, codigos de error y pasos breves para problemas tecnicos."
+          ]
+        }
+      ]
+    }
+  },
+  "home": {
+    "badges": {
+      "fast": "Rapido",
+      "languages": "Varios idiomas"
+    },
+    "workspace": {
+      "eyebrow": "Espacio PDF",
+      "title": "Herramientas PDF, nube avanzada e IA en un espacio claro",
+      "description": "Las tareas diarias se mantienen locales cuando conviene. OCR, Office, IA y formularios usan la nube cuando aporta estabilidad.",
+      "primaryAction": "Empezar con unir PDF",
+      "secondaryAction": "Ver Pro",
+      "searchPlaceholder": "Buscar: comprimir, OCR, marca de agua",
+      "quickTitle": "Inicio rapido",
+      "allTools": "Todas",
+      "noResults": "Sin herramientas coincidentes",
+      "noResultsHint": "Prueba otra busqueda o vuelve a todas las categorias.",
+      "advancedTitle": "Las funciones avanzadas tienen su propio lugar",
+      "advancedDescription": "OCR, IA, Office, formularios y anotaciones se presentan como flujos claros.",
+      "featuredTitle": "Accesos frecuentes",
+      "toolsTitle": "Elegir herramienta",
+      "disabledFallback": "Esta funcion esta en mantenimiento.",
+      "stats": [
+        [
+          "23+",
+          "herramientas"
+        ],
+        [
+          "3",
+          "modos"
+        ],
+        [
+          "1",
+          "espacio"
+        ]
+      ],
+      "trust": [
+        [
+          "Local primero",
+          "Las tareas comunes permanecen en el navegador cuando es posible."
+        ],
+        [
+          "Nube avanzada",
+          "Archivos grandes y tareas largas son mas estables en servidor."
+        ],
+        [
+          "Etiquetas claras",
+          "Pro, IA y nube se distinguen desde la entrada."
+        ]
+      ],
+      "categories": {
+        "organize": "Organizar",
+        "convert": "Convertir",
+        "optimize": "Optimizar",
+        "secure": "Seguridad",
+        "extract": "Extraer",
+        "advanced": "Avanzado"
+      },
+      "modeLabels": {
+        "local": "Local primero",
+        "cloud": "Nube",
+        "ai": "IA"
+      }
+    },
+    "toolsTitle": "Elige una herramienta",
+    "whyTitle": "Un flujo PDF mas claro",
+    "highlights": {
+      "privacy": {
+        "title": "Local primero",
+        "description": "Las tareas comunes permanecen en el navegador cuando es posible."
+      },
+      "speed": {
+        "title": "Entrada rapida",
+        "description": "Las herramientas frecuentes son faciles de encontrar y abrir."
+      },
+      "free": {
+        "title": "Niveles claros",
+        "description": "Herramientas basicas, nube, IA y Pro se distinguen desde el inicio."
+      }
+    },
+    "toolDescriptions": {
+      "ocr": "Reconoce texto desde escaneos, PDFs de imagen y fotos",
+      "aiAnalyzer": "Resume, pregunta y extrae datos estructurados desde PDFs"
+    }
+  },
+  "features": {
+    "page": {
+      "heroEyebrow": "Funciones",
+      "heroTitle": "Trabajo PDF claro desde la carga hasta la exportacion",
+      "heroDescription": "PDF-Flow mantiene ediciones diarias, tareas de nube y el historial de cuenta en un espacio enfocado, para que cada documento empiece en el lugar correcto.",
+      "primaryAction": "Abrir herramientas",
+      "secondaryAction": "Ver precios",
+      "pillars": [
+        {
+          "title": "Acciones PDF diarias",
+          "body": "Une, separa, comprime, rota, convierte, agrega marcas, numera paginas y extrae contenido sin convertir la pagina en otro catalogo."
+        },
+        {
+          "title": "Trabajo avanzado cuando hace falta",
+          "body": "OCR, conversion de Office, IA, formularios y anotacion estan disponibles para tareas que necesitan mas procesamiento o una cuenta."
+        },
+        {
+          "title": "Un flujo, no un directorio",
+          "body": "Las paginas de herramientas se enfocan en la tarea actual, mientras historial, cuenta, plan y exportaciones siguen conectados."
+        }
+      ],
+      "workflowTitle": "Disenado alrededor del flujo documental",
+      "workflowDescription": "El producto separa elegir una herramienta de procesar archivos. Funciones explica el sistema; herramientas es donde se mueven los archivos.",
+      "workflowSteps": [
+        "Elige el tipo de trabajo desde herramientas o continua desde la actividad reciente.",
+        "Usa controles enfocados para el archivo actual en vez de revisar otro catalogo.",
+        "Exporta, descarga o vuelve al historial de cuenta cuando el trabajo termine."
+      ],
+      "trustTitle": "Pensado para manejar documentos reales",
+      "trustItems": [
+        {
+          "title": "Estados de acceso claros",
+          "body": "Gratis, Pro, requiere cuenta y no disponible se muestran donde importan."
+        },
+        {
+          "title": "Local cuando es posible",
+          "body": "Las herramientas locales trabajan en el navegador; las de nube explican cuando se requiere inicio de sesion o carga."
+        },
+        {
+          "title": "Espacio para crecer",
+          "body": "La misma estructura puede sostener archivos grandes, equipos y procesamiento avanzado sin saturar lo basico."
+        }
+      ],
+      "ctaTitle": "Empieza con la herramienta que necesitas",
+      "ctaDescription": "Ve a herramientas para la lista completa de acciones, o revisa precios cuando los flujos avanzados sean parte de tu rutina."
+    }
+  },
+  "pricing": {
+    "page": {
+      "eyebrow": "Precios",
+      "title": "Elige segun el uso real, no por funciones que aun no necesitas",
+      "description": "Gratis cubre trabajo PDF diario y ligero. Pro es para archivos grandes, tareas largas y flujos con OCR, Office, IA, formularios y anotacion en la nube.",
+      "freeName": "Gratis",
+      "freeEyebrow": "Herramientas PDF diarias",
+      "freePeriod": "Empieza siempre",
+      "freeDescription": "Para uso ocasional como unir, separar, rotar y comprimir de forma ligera.",
+      "freeBestFor": "Uso personal ligero",
+      "freeCta": "Empezar gratis",
+      "proName": "Pro",
+      "proEyebrow": "Nube avanzada y herramientas profesionales",
+      "proPeriod": "Suscripcion mensual",
+      "proDescription": "Para trabajo frecuente, OCR / Office / IA, archivos grandes y tareas largas.",
+      "proBestFor": "Trabajo documental frecuente",
+      "proCta": "Subir a Pro",
+      "enterpriseName": "Empresa",
+      "enterpriseEyebrow": "Equipos e integracion",
+      "enterprisePrice": "A medida",
+      "enterprisePeriod": "Contactar",
+      "enterpriseDescription": "Para equipos con acceso compartido, integracion, permisos o soporte de entrega.",
+      "enterpriseBestFor": "Equipos y flujos",
+      "enterpriseCta": "Contactar ventas",
+      "currentPlan": "Plan actual",
+      "popular": "Recomendado",
+      "featuresLabel": "Incluye",
+      "notesLabel": "Ideal para",
+      "cloudTitle": "Por que local puede ser mas rapido para archivos pequenos?",
+      "cloudBody": "El trabajo local evita carga, cola y descarga. La nube Pro aporta mas cuando el navegador no es el mejor lugar: archivos grandes, tareas largas, lotes, OCR, Office, IA y dispositivos debiles.",
+      "promiseTitle": "Que debe hacer Pro",
+      "promiseBody": "Mantenemos locales las tareas simples cuando conviene y usamos nube donde es mas estable y util. Las nuevas funciones Pro deben seguir ese principio.",
+      "faqTitle": "Preguntas",
+      "faqSubtitle": "Respuestas claras antes de subir de plan.",
+      "ctaTitle": "Empieza gratis y sube a Pro cuando aporte valor",
+      "ctaBody": "Si tus archivos son pequenos y el uso es ocasional, gratis puede cubrir mucho. Cuando OCR, Office, IA o archivos grandes sean rutina, Pro aporta mas.",
+      "authHint": "Inicia sesion para subir de plan o ver tu plan actual.",
+      "paymentFailed": "No pudimos abrir el pago. Intentalo mas tarde o envia feedback.",
+      "paymentFailedTitle": "No se pudo abrir el pago",
+      "paymentFailedHint": "Reintenta una vez. Si se repite, envia feedback con este codigo.",
+      "paymentMethodTitle": "Metodo de pago",
+      "paymentMethodSubtitle": "Elige como quieres pagar.",
+      "paymentModalTitle": "Elige metodo de pago",
+      "paymentModalSubtitle": "Selecciona un proveedor y continua. Pro se activa solo despues de confirmar el pago.",
+      "paymentModalConfirm": "Pagar ahora",
+      "paymentModalChange": "Ahora no",
+      "paymentProvidersLoading": "Cargando metodos de pago disponibles...",
+      "paymentProvidersRetry": "Recargar metodos de pago",
+      "paymentProvidersFailedTitle": "Los metodos de pago no estan disponibles",
+      "paymentProvidersFailedMessage": "PDF-Flow no pudo cargar los proveedores habilitados. Reintenta antes de pagar.",
+      "paymentProvidersFailedHint": "Reintenta una vez. Si siguen sin cargar, envia feedback con este codigo.",
+      "paymentNoProviders": "No hay ningun metodo de pago habilitado ahora. Intentalo mas tarde.",
+      "paymentProviderUnavailable": "No disponible",
+      "paymentRedirectBadge": "Redireccion",
+      "paymentQrBadge": "Codigo de pago",
+      "paymentSubscriptionBadge": "Suscripcion",
+      "paymentOneTimeBadge": "Acceso por periodo",
+      "paymentQrTitle": "Codigo de pago listo",
+      "paymentQrMessage": "Abre la pagina del proveedor o copia el codigo. El acceso Pro se actualiza solo despues de confirmar el pago.",
+      "paymentQrCodeLabel": "Codigo de pago",
+      "paymentQrOpen": "Abrir pago",
+      "paymentQrCopy": "Copiar codigo",
+      "paymentQrCopied": "Copiado",
+      "paymentQrCopyFailed": "No se pudo copiar. Selecciona el codigo manualmente.",
+      "viewFeatures": "Ver funciones",
+      "freeFeatures": [
+        "Unir, separar y rotar PDF",
+        "Compresion ligera y exportacion diaria",
+        "Imagen a PDF y PDF a imagenes",
+        "Procesamiento local primero cuando sea posible"
+      ],
+      "freeNotes": [
+        "Trabajo ocasional",
+        "Archivos pequenos donde importa la velocidad",
+        "Probar el producto primero"
+      ],
+      "proFeatures": [
+        "OCR",
+        "Office a PDF",
+        "Analizador PDF con IA",
+        "Rellenar formularios y anotar PDF",
+        "Nube para archivos grandes y tareas largas"
+      ],
+      "proNotes": [
+        "Trabajo frecuente con PDF",
+        "Archivos grandes que fuerzan el navegador",
+        "Tareas profesionales que necesitan servidor"
+      ],
+      "enterpriseFeatures": [
+        "Planificacion de acceso de equipo",
+        "Mas uso y soporte de estabilidad",
+        "Integracion de flujo o API",
+        "Guia de lanzamiento y mantenimiento"
+      ],
+      "enterpriseNotes": [
+        "Equipos multiusuario",
+        "Adopcion en flujos internos",
+        "Expectativas de soporte claras"
+      ],
+      "proofCards": [
+        {
+          "title": "Local primero para archivos pequenos",
+          "body": "Evita esperas de carga en tareas diarias."
+        },
+        {
+          "title": "Nube para trabajo pesado",
+          "body": "Mas estable para archivos grandes y flujos avanzados."
+        },
+        {
+          "title": "Opciones claras",
+          "body": "El usuario entiende la diferencia entre local y nube."
+        }
+      ],
+      "faq": [
+        [
+          "La nube Pro siempre es mas rapida?",
+          "No. Los archivos pequenos suelen ser mas rapidos localmente. Pro nube es mejor para archivos grandes, tareas largas, OCR, Office e IA."
+        ],
+        [
+          "Las herramientas gratis suben mis archivos?",
+          "Las herramientas locales intentan ejecutarse en el navegador. Solo se suben archivos cuando eliges un flujo con nube."
+        ],
+        [
+          "Puedo empezar sin pagar?",
+          "Si. Usa primero las herramientas gratis y sube cuando los flujos avanzados importen."
+        ],
+        [
+          "Para quien es Empresa?",
+          "Equipos que necesitan uso compartido, limites mas altos, planificacion de acceso, integracion o soporte."
+        ]
+      ]
+    }
+  },
+  "toolsCenter": {
+    "eyebrow": "Centro de herramientas",
+    "title": "Todas las herramientas PDF en un solo lugar",
+    "description": "Filtra por tarea, modo de proceso y funciones Pro. Las herramientas basicas siguen directas y las avanzadas tienen entradas claras.",
+    "searchPlaceholder": "Buscar: unir, comprimir, IA",
+    "allCategories": "Todas",
+    "allModes": "Todos los modos",
+    "noResults": "Sin herramientas coincidentes",
+    "noResultsHint": "Limpia la busqueda o cambia de categoria.",
+    "enabled": "Herramientas",
+    "advanced": "Avanzadas",
+    "localFirst": "Local primero",
+    "categoryLabel": "Categoria",
+    "modeLabel": "Modo",
+    "openTool": "Abrir",
+    "localDescription": "Para tareas comunes y archivos pequenos.",
+    "cloudDescription": "Para archivos grandes, Office, OCR y tareas largas.",
+    "aiDescription": "Para resumenes, preguntas y extraccion estructurada.",
+    "categories": {
+      "organize": "Organizar PDF",
+      "convert": "Convertir",
+      "optimize": "Optimizar",
+      "secure": "Seguridad",
+      "extract": "Extraer",
+      "advanced": "Avanzado"
+    },
+    "modes": {
+      "local": "Local primero",
+      "cloud": "Nube",
+      "ai": "IA"
+    }
   }
 }

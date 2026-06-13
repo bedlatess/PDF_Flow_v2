@@ -8,7 +8,13 @@
     "tools": "工具",
     "features": "功能",
     "pricing": "价格",
-    "login": "登录"
+    "login": "登录",
+    "themeToDark": "切换到深色模式",
+    "themeToLight": "切换到浅色模式",
+    "openMenu": "打开菜单",
+    "closeMenu": "关闭菜单",
+    "language": "语言",
+    "primaryNavigation": "主导航"
   },
   "common": {
     "upload": "上传文件",
@@ -20,7 +26,34 @@
     "back": "返回",
     "required": "必填",
     "optional": "可选",
-    "error": "错误"
+    "error": "错误",
+    "close": "关闭",
+    "copy": "复制",
+    "replace": "替换",
+    "create": "创建",
+    "creating": "创建中...",
+    "cloudToggle": {
+      "localTitle": "免费模式",
+      "localDesc": "适合快速处理日常文件。",
+      "cloudTitle": "Pro 模式",
+      "cloudDesc": "Pro 适合大文件、OCR、Office、AI 和较长任务。",
+      "lockedDesc": "Pro 可使用大文件、OCR、Office、AI 和较长任务。",
+      "switchLabel": "切换处理方式"
+    },
+    "dragDropZone": {
+      "helper": {
+        "format": "{types}，最大 {size}MB",
+        "pdfAndImages": "PDF 和图片文件，最大 {size}MB",
+        "files": "文件最大 {size}MB",
+        "single": "选择一个文件",
+        "multiple": "可选择多个文件"
+      },
+      "errors": {
+        "maxFiles": "单次最多可上传 {count} 个文件。",
+        "fileTooLarge": "{file} 超过了 {size}MB 限制。",
+        "unsupportedType": "{file} 的文件类型暂不受支持。"
+      }
+    }
   },
   "auth": {
     "login": "登录",
@@ -40,37 +73,1780 @@
     "loginSubtitle": "登录后继续",
     "registerSubtitle": "创建账号后继续",
     "processingLogin": "正在处理登录...",
-    "pleaseWait": "请稍候，我们正在完成登录"
+    "pleaseWait": "请稍候，我们正在完成登录",
+    "showPassword": "显示密码",
+    "hidePassword": "隐藏密码",
+    "oauthCallback": {
+      "badge": "OAuth 登录",
+      "saving": "正在保存安全会话并刷新账户信息。",
+      "completeTitle": "登录已完成",
+      "redirecting": "账户已准备好，正在返回 PDF-Flow。",
+      "errorTitle": "登录未能完成",
+      "errorMessage": "OAuth 服务商没有返回预期的会话信息，请重新发起登录。",
+      "backToLogin": "返回登录",
+      "goHome": "返回首页"
+    },
+    "registerFailedTitle": "注册失败",
+    "loginNotices": {
+      "registeredTitle": "账号已创建",
+      "registeredMessage": "你的账号已经准备好。登录后即可继续 PDF 工作流。",
+      "registeredHint": "请使用刚刚注册的邮箱和密码登录。",
+      "oauthFailedTitle": "OAuth 登录未完成",
+      "oauthFailedMessage": "服务商在 PDF-Flow 完成登录前返回了错误。",
+      "oauthCallbackTitle": "OAuth 会话不完整",
+      "oauthCallbackMessage": "PDF-Flow 没有从 OAuth 回跳中收到预期的会话信息。",
+      "oauthFailedHint": "可以重新尝试该服务商登录；如果账号已有密码，也可以使用邮箱密码登录。"
+    },
+    "loginMarketing": {
+      "heroTitle": "登录后继续处理你的 PDF 工作",
+      "heroDescription": "打开最近任务，继续 OCR、转换与下载，也能随时查看账号设置。",
+      "panelTitle": "登录后你可以",
+      "panelDescription": "常用工具、近期结果和账号状态会在同一套流程里衔接起来，不用重新寻找入口。",
+      "highlights": [
+        {
+          "title": "最近结果",
+          "description": "更快找回上一次处理过的文档、下载记录和输出结果。"
+        },
+        {
+          "title": "常用工具",
+          "description": "继续 OCR、转换、合并与其他常用 PDF 处理操作。"
+        },
+        {
+          "title": "账号与套餐",
+          "description": "查看当前状态、套餐权限和与你相关的处理配额。"
+        }
+      ]
+    },
+    "registerMarketing": {
+      "heroTitle": "几分钟内开始处理 PDF",
+      "heroDescription": "创建账号后，你可以管理任务、查看结果，并在需要时使用 OCR、Office 转 PDF、AI 等进阶工具。",
+      "panelTitle": "注册后会更顺",
+      "panelDescription": "账号会把工具、记录和套餐状态串在一起，让后续处理更省心。",
+      "highlights": [
+        {
+          "title": "工具更好管理",
+          "description": "将常用 PDF 工具、任务与处理结果放在同一套账号体系里。"
+        },
+        {
+          "title": "保留最近进度",
+          "description": "方便回看最近的下载、历史结果和你当前的处理节奏。"
+        },
+        {
+          "title": "按需使用进阶工具",
+          "description": "当你需要 OCR、Office 转 PDF 或其他进阶功能时，可以再完成升级。"
+        }
+      ]
+    },
+    "passwordRecoveryTitle": "找回密码",
+    "passwordRecoverySubtitle": "输入账号邮箱。如果该账号可以接收邮件，我们会发送重置链接。",
+    "passwordRecoverySubmit": "发送重置链接",
+    "passwordRecoverySending": "发送中...",
+    "passwordRecoverySentTitle": "请查看邮箱",
+    "passwordRecoverySentMessage": "如果该邮箱属于有效账号，重置链接已经发送。",
+    "passwordRecoverySentHint": "请先查看收件箱和垃圾邮件文件夹，再重新请求链接。",
+    "passwordRecoveryFailedTitle": "暂时无法发起找回密码",
+    "passwordRecoveryFailedMessage": "找回密码请求没有完成，请稍后再试。",
+    "resetPasswordTitle": "设置新密码",
+    "resetPasswordSubtitle": "使用邮件里的链接，为账号设置新的登录密码。",
+    "resetPasswordSubmit": "保存新密码",
+    "resetPasswordSaving": "保存中...",
+    "resetPasswordSuccessTitle": "密码已更新",
+    "resetPasswordSuccessMessage": "你的密码已经修改，可以使用新密码登录。",
+    "resetPasswordSuccessHint": "返回登录页后继续使用 PDF-Flow。",
+    "resetPasswordFailedTitle": "暂时无法更新密码",
+    "resetPasswordFailedMessage": "重置链接可能已过期或无效，请重新获取链接后再试。",
+    "resetPasswordMissingTitle": "缺少重置链接",
+    "resetPasswordMissingMessage": "请从最新的重置邮件打开此页面，或重新请求一个新链接。",
+    "newPassword": "新密码",
+    "backToLogin": "返回登录",
+    "requestNewResetLink": "重新获取链接",
+    "recoveryMarketing": {
+      "heroTitle": "安全找回账号访问",
+      "heroDescription": "找回密码只会更新登录密码，不会改动你的文档、下载记录或套餐状态。",
+      "panelTitle": "账号恢复",
+      "panelDescription": "重置链接有时效。无法确认当前链接时，请重新请求一封最新邮件。",
+      "highlights": [
+        {
+          "title": "不暴露账号",
+          "description": "提交后不会提示该邮箱是否已经注册。"
+        },
+        {
+          "title": "清楚的下一步",
+          "description": "提交请求后，请从最新的重置邮件继续操作。"
+        },
+        {
+          "title": "可以安全重试",
+          "description": "过期或较早的链接失效后，可以重新请求新的链接。"
+        }
+      ]
+    }
   },
   "tools": {
-    "merge": { "title": "合并 PDF", "desc": "将多个 PDF 合并为一个文件" },
-    "split": { "title": "拆分 PDF", "desc": "从 PDF 中提取页面或范围" },
-    "rotate": { "title": "旋转 PDF", "desc": "旋转 PDF 页面并导出新副本" },
-    "compress": { "title": "压缩 PDF", "desc": "在可行时减小 PDF 文件大小" },
-    "imageToPdf": { "title": "图片转 PDF", "desc": "将图片转换为 PDF" },
-    "pdfToImage": { "title": "PDF 转图片", "desc": "将 PDF 页面导出为图片" },
-    "deletePages": { "title": "删除 PDF 页面", "desc": "从 PDF 中移除不需要的页面" },
-    "organize": { "title": "整理 PDF 页面", "desc": "导出前重新排列页面" },
-    "pageNumbers": { "title": "添加 PDF 页码", "desc": "为 PDF 文件添加页码" },
-    "crop": { "title": "裁剪 PDF", "desc": "裁掉空白边距和页面边缘" },
-    "flatten": { "title": "扁平化 PDF", "desc": "将表单外观锁定为普通副本" },
-    "repair": { "title": "修复 PDF", "desc": "重建可读取的 PDF 结构" },
-    "protect": { "title": "保护 PDF", "desc": "为 PDF 添加打开密码" },
-    "unlock": { "title": "解锁 PDF", "desc": "使用已知密码创建解锁副本" },
-    "sign": { "title": "签署 PDF", "desc": "为 PDF 添加可视签名" },
-    "extractText": { "title": "提取 PDF 文本", "desc": "从 PDF 中导出可复制文本" },
-    "extractImages": { "title": "提取 PDF 图片", "desc": "从 PDF 中提取嵌入图片" },
-    "ocr": { "title": "OCR PDF", "desc": "识别扫描文件中的文字" },
-    "officeToPdf": { "title": "Office 转 PDF", "desc": "将 Office 文件转换为 PDF" },
-    "watermark": { "title": "PDF 加水印", "desc": "为 PDF 添加文字水印" },
-    "fillForm": { "title": "填写 PDF 表单", "desc": "填写 PDF 表单字段" },
-    "annotate": { "title": "批注 PDF", "desc": "为 PDF 添加备注和高亮" }
+    "merge": {
+      "title": "合并 PDF",
+      "desc": "将多个 PDF 合并为一个文件",
+      "page": {
+        "badge": "免费工具",
+        "queueLabel": "合并队列",
+        "queueTitle": "已选择文件",
+        "queueDesc": "共 {pages} 页。你可以直接拖拽卡片调整最终合并顺序。",
+        "clear": "清空列表",
+        "addMore": "继续添加更多文件",
+        "actionLabel": "输出动作",
+        "actionTitle": "确认顺序后开始合并",
+        "actionDesc": "确认顺序后生成新的合并文件。",
+        "fileCount": "文件数量",
+        "pageCount": "总页数",
+        "merge": "合并 PDF",
+        "successTitle": "合并完成",
+        "successMessage": "已成功合并 {count} 个 PDF 文件，共 {pages} 页。",
+        "mergeMore": "继续合并其他文件",
+        "pagesSuffix": "页",
+        "morePages": "还有 {count} 页...",
+        "errorLoad": "加载 PDF 文件失败。",
+        "errorMinFiles": "请至少选择 2 个 PDF 文件进行合并。",
+        "errorFailed": "合并 PDF 失败。",
+        "errorCloudFailed": "合并失败，请稍后再试。",
+        "statusPreparing": "准备处理...",
+        "statusProcessing": "正在合并 {count} 个文件...",
+        "statusProgress": "处理中... {progress}%",
+        "statusDone": "处理完成"
+      }
+    },
+    "split": {
+      "title": "拆分 PDF",
+      "desc": "从 PDF 中提取页面或范围",
+      "page": {
+        "badge": "免费工具",
+        "setupLabel": "页面提取",
+        "setupTitle": "选择要导出的页面",
+        "setupDesc": "你可以直接输入页码范围，也可以打开可视化选择器，更直观地挑选需要保留的页面。",
+        "rangeLabel": "页面范围，共 {count} 页",
+        "rangePlaceholder": "例如：1-3,5,7-9",
+        "rangeHint": "用逗号分隔单页或范围，例如 1-3,5 表示提取第 1、2、3、5 页。",
+        "visualSelect": "可视化选择",
+        "actionLabel": "输出动作",
+        "actionTitle": "确认范围后生成新文件",
+        "actionTips": [
+          "先确认页码范围，再点击提取。",
+          "页码较多时，建议使用可视化选择以减少输入错误。",
+          "处理完成后会生成一个新的 PDF 文件，不会修改原文件。"
+        ],
+        "extract": "提取页面",
+        "modalTitle": "选择要提取的页面",
+        "successTitle": "提取完成",
+        "successMessage": "选定页面已经准备好，可以立即下载。",
+        "errorLoad": "加载 PDF 失败，请重新选择文件后再试。",
+        "errorNoPages": "请至少选择一个页面。",
+        "errorNoRange": "请输入要提取的页面范围，例如 1-3,5,7-9。",
+        "statusPreparing": "正在准备处理...",
+        "statusProcessing": "正在提取页面...",
+        "statusProgress": "处理中... {progress}%",
+        "statusDone": "处理完成",
+        "errorFailed": "页面提取失败，请稍后重试。",
+        "errorCloudFailed": "提取失败，请稍后再试。"
+      }
+    },
+    "rotate": {
+      "title": "旋转 PDF",
+      "desc": "旋转 PDF 页面并导出新副本",
+      "page": {
+        "badge": "免费工具",
+        "setupLabel": "旋转设置",
+        "setupTitle": "修正页面方向",
+        "setupDesc": "适合处理扫描件、拍照 PDF，或方向不一致的页面内容。",
+        "actionLabel": "输出动作",
+        "actionTitle": "确认角度后生成新文件",
+        "actionTips": [
+          "90° 和 270° 适合修正横竖方向错误。",
+          "180° 适合整页上下颠倒的扫描内容。",
+          "处理完成后会生成新的 PDF，不会覆盖原文件。"
+        ],
+        "action": "旋转 PDF",
+        "successTitle": "旋转完成",
+        "successMessage": "旋转后的 PDF 已准备好，可以立即下载。",
+        "errorFailed": "旋转失败，请稍后重试。",
+        "errorCloudFailed": "旋转失败，请稍后再试。",
+        "statusPreparing": "正在准备处理...",
+        "statusProcessing": "正在旋转页面...",
+        "statusProgress": "处理中... {progress}%",
+        "statusDone": "处理完成",
+        "angleOptions": [
+          {
+            "value": 90,
+            "label": "90°",
+            "hint": "顺时针"
+          },
+          {
+            "value": 180,
+            "label": "180°",
+            "hint": "上下翻转"
+          },
+          {
+            "value": 270,
+            "label": "270°",
+            "hint": "逆时针"
+          }
+        ]
+      }
+    },
+    "compress": {
+      "title": "压缩 PDF",
+      "desc": "在可行时减小 PDF 文件大小",
+      "page": {
+        "badge": "免费工具",
+        "setupLabel": "压缩设置",
+        "setupTitle": "选择压缩强度",
+        "setupDesc": "压缩效果取决于 PDF 是否已经被优化。这里的强度会影响处理方式，但最终节省空间以实际结果为准。",
+        "resultLabel": "参考预估",
+        "resultTitle": "输出前快速确认",
+        "estimateHint": "预估用于帮助选择强度，不代表最终一定节省。实际大小会在处理完成后显示。",
+        "actualLabel": "实际结果",
+        "noSavingsTitle": "文件已接近最优",
+        "noSavingsDesc": "这份 PDF 没有进一步缩小，PDF-Flow 已保留原文件，避免生成更大的“压缩文件”。",
+        "optimizedDesc": "已按当前设置生成更小的 PDF。",
+        "originalSize": "原始大小",
+        "estimatedCompression": "参考压缩",
+        "estimatedSize": "参考大小",
+        "outputSize": "输出大小",
+        "savedSize": "节省空间",
+        "ratio": "实际比例",
+        "action": "压缩 PDF",
+        "successTitle": "压缩完成",
+        "compressMore": "继续压缩其他文件",
+        "errorFailed": "压缩失败，请稍后重试。",
+        "errorCloudFailed": "压缩失败，请稍后再试。",
+        "statusPreparing": "正在准备压缩...",
+        "statusProcessing": "正在压缩 PDF...",
+        "statusDone": "压缩完成",
+        "qualityOptions": [
+          {
+            "value": "high",
+            "label": "高清优先",
+            "description": "轻度优化，优先保留更好的阅读清晰度。"
+          },
+          {
+            "value": "medium",
+            "label": "平衡压缩",
+            "description": "适合多数分享、归档和在线传输场景。"
+          },
+          {
+            "value": "low",
+            "label": "体积优先",
+            "description": "尽可能减小体积，更适合上传和快速分发。"
+          }
+        ]
+      }
+    },
+    "imageToPdf": {
+      "title": "图片转 PDF",
+      "desc": "将图片转换为 PDF",
+      "page": {
+        "badge": "免费工具",
+        "filesLabel": "图片清单",
+        "filesTitle": "已选择 {count} 张图片",
+        "filesDesc": "先整理要放入 PDF 的图片，再统一设置页面尺寸和方向。",
+        "clear": "清空",
+        "addMore": "添加更多图片",
+        "outputLabel": "输出设置",
+        "outputTitle": "调整页面规格",
+        "outputDesc": "设置 PDF 页面尺寸和方向，让结果更适合归档、打印或发送。",
+        "pageSize": "页面尺寸",
+        "orientation": "方向",
+        "portrait": "纵向",
+        "landscape": "横向",
+        "action": "转换为 PDF",
+        "successTitle": "转换完成",
+        "successMessage": "图片已经成功转换为 PDF，可以立即下载。",
+        "errorFailed": "转换失败，请稍后重试。",
+        "errorCloudFailed": "转换失败，请稍后再试。"
+      }
+    },
+    "pdfToImage": {
+      "title": "PDF 转图片",
+      "desc": "将 PDF 页面导出为图片",
+      "page": {
+        "badge": "免费工具",
+        "outputLabel": "输出设置",
+        "outputTitle": "选择图片格式",
+        "outputDesc": "PNG 更适合保留清晰细节，JPEG 更适合更小的分享体积。",
+        "resultLabel": "转换结果",
+        "waitingTitle": "等待开始转换",
+        "readyTitle": "已生成 {count} 张图片",
+        "emptyHint": "选择输出格式后开始转换，结果会在这里按页展示，方便逐页检查和下载。",
+        "downloadAll": "下载全部",
+        "downloadPage": "下载第 {page} 页",
+        "action": "转换为图片",
+        "successCloud": "转换完成，结果已打包下载。解压 ZIP 后即可查看所有图片。",
+        "errorFailed": "PDF 转图片失败，请稍后重试。",
+        "errorCloudFailed": "转换失败，请稍后再试。"
+      }
+    },
+    "deletePages": {
+      "title": "删除 PDF 页面",
+      "desc": "从 PDF 中移除不需要的页面",
+      "page": {
+        "title": "删除 PDF 页面",
+        "subtitle": "移除不需要的页面，生成一份干净的新 PDF。",
+        "badge": "免费工具",
+        "setupLabel": "页面清理",
+        "setupTitle": "选择要删除的页面",
+        "setupDesc": "输入页码范围，或打开可视化选择器直接点选要移除的页面。导出会生成新文件，原文件不会被覆盖。",
+        "rangeLabel": "要删除的页面，共 {count} 页",
+        "rangePlaceholder": "例如：2,4-6,9",
+        "rangeHint": "用逗号分隔单页或范围。示例 2,4-6 表示删除第 2、4、5、6 页。",
+        "visualSelect": "可视化选择",
+        "outputLabel": "输出确认",
+        "outputTitle": "生成移除页面后的新文件",
+        "removeLabel": "将删除",
+        "keepLabel": "将保留",
+        "outputTips": [
+          "适合删除空白页、扫描错误页、重复页或不需要公开的页面。",
+          "不会修改原 PDF，只会生成一份新的结果文件。",
+          "为了避免误操作，不能一次删除全部页面。"
+        ],
+        "delete": "删除选中页面",
+        "modalTitle": "选择要删除的页面",
+        "successTitle": "页面已删除",
+        "successMessage": "新的 PDF 已经生成，可以立即下载。",
+        "download": "下载结果",
+        "errorLoad": "无法读取这份 PDF，请重新选择文件后再试。",
+        "errorNoRange": "请输入要删除的页面，例如 2,4-6,9。",
+        "errorNoPages": "请至少选择一个要删除的页面。",
+        "errorAllPages": "不能删除全部页面，请至少保留一页。",
+        "errorFailed": "删除页面失败，请检查页码后再试。",
+        "statusPreparing": "正在准备文件...",
+        "statusProcessing": "正在删除页面...",
+        "statusDone": "处理完成"
+      }
+    },
+    "organize": {
+      "title": "整理 PDF 页面",
+      "desc": "导出前重新排列页面",
+      "page": {
+        "title": "整理 PDF 页面",
+        "subtitle": "拖拽调整页面顺序，导出排好版的新 PDF。",
+        "badge": "免费工具",
+        "workspaceLabel": "页面排序",
+        "workspaceTitle": "拖拽页面，排好顺序",
+        "workspaceDesc": "适合提交合同、报告、扫描件前调整页面顺序。导出会生成新文件，原文件不会被覆盖。",
+        "outputLabel": "输出确认",
+        "outputTitle": "确认顺序后生成新文件",
+        "outputTips": [
+          "拖拽缩略图可以直接调整页面位置。",
+          "移动端或不方便拖拽时，可以使用上移、下移按钮。",
+          "导出时会包含全部页面，只改变页面顺序。"
+        ],
+        "reverse": "反转顺序",
+        "reset": "恢复原顺序",
+        "moveUp": "上移",
+        "moveDown": "下移",
+        "generate": "生成整理后的 PDF",
+        "successTitle": "页面顺序已整理",
+        "successMessage": "新的 PDF 已经生成，可以立即下载。",
+        "download": "下载结果",
+        "errorLoad": "无法读取这份 PDF，请重新选择文件后再试。",
+        "errorNoChange": "当前页面顺序还没有变化，请先调整顺序后再生成。",
+        "errorFailed": "整理页面失败，请重新选择文件后再试。",
+        "statusPreparing": "正在准备页面...",
+        "statusProcessing": "正在生成新 PDF...",
+        "statusDone": "处理完成",
+        "pageCount": "页面数量",
+        "firstPage": "当前首页",
+        "lastPage": "当前末页",
+        "dragHint": "拖动卡片或使用按钮调整顺序",
+        "page": "第 {page} 页"
+      }
+    },
+    "pageNumbers": {
+      "title": "添加 PDF 页码",
+      "desc": "为 PDF 文件添加页码",
+      "page": {
+        "title": "添加 PDF 页码",
+        "subtitle": "为合同、报告和讲义添加统一页码。",
+        "badge": "免费工具",
+        "setupLabel": "页码样式",
+        "setupTitle": "设置编号格式和位置",
+        "setupDesc": "页码会直接写入新的 PDF 文件，适合归档、打印、提交或分享前统一文档格式。",
+        "outputLabel": "输出确认",
+        "outputTitle": "确认页码后生成新文件",
+        "outputTips": [
+          "可以从指定页面开始添加页码，封面无需编号时很实用。",
+          "支持中文前后缀，例如“第 1 页”。",
+          "导出会生成新文件，原文件不会被覆盖。"
+        ],
+        "position": "页码位置",
+        "startNumber": "起始编号",
+        "startOnPage": "从第几页开始添加",
+        "prefix": "前缀",
+        "suffix": "后缀",
+        "includeTotal": "显示总页数",
+        "fontSize": "字号",
+        "opacity": "透明度",
+        "color": "颜色",
+        "sample": "页码示例",
+        "generate": "添加页码",
+        "successTitle": "页码已添加",
+        "successMessage": "带页码的 PDF 已经生成，可以立即下载。",
+        "download": "下载结果",
+        "errorLoad": "无法读取这份 PDF，请重新选择文件后再试。",
+        "errorStartPage": "开始添加页码的页数不能超过 PDF 总页数。",
+        "errorFailed": "添加页码失败，请检查设置后再试。",
+        "statusPreparing": "正在准备页面...",
+        "statusProcessing": "正在写入页码...",
+        "statusDone": "处理完成",
+        "stampedSummary": "页会添加页码",
+        "placeholders": {
+          "prefix": "例如：第 ",
+          "suffix": "例如： 页",
+          "defaultPrefix": "第 ",
+          "defaultSuffix": " 页"
+        },
+        "positions": [
+          {
+            "value": "bottom-center",
+            "label": "底部居中"
+          },
+          {
+            "value": "bottom-left",
+            "label": "左下角"
+          },
+          {
+            "value": "bottom-right",
+            "label": "右下角"
+          },
+          {
+            "value": "top-center",
+            "label": "顶部居中"
+          },
+          {
+            "value": "top-left",
+            "label": "左上角"
+          },
+          {
+            "value": "top-right",
+            "label": "右上角"
+          }
+        ]
+      }
+    },
+    "crop": {
+      "title": "裁剪 PDF",
+      "desc": "裁掉空白边距和页面边缘",
+      "page": {
+        "title": "裁剪 PDF",
+        "subtitle": "去掉页面边缘空白、扫描黑边或多余留白，让文档阅读、打印和分享更干净。",
+        "badge": "免费工具",
+        "notice": "裁剪只调整 PDF 的可视区域，不等于永久删除敏感信息。不要用它遮盖身份证号、手机号或合同金额；真正脱敏请使用专门的脱敏工具。",
+        "uploadLabel": "PDF 文件",
+        "uploadTitleIdle": "选择需要裁剪的 PDF",
+        "uploadTitleReady": "文件已准备好",
+        "uploadDescriptionIdle": "适合去除白边、扫描边框和页面四周多余区域。原文件不会被修改。",
+        "uploadDescriptionReady": "设置上下左右裁剪比例后，会生成新的裁剪副本。",
+        "dropTitle": "拖放 PDF 到这里",
+        "dropSubtitle": "或点击选择文件",
+        "settingsLabel": "裁剪设置",
+        "settingsTitle": "设置四周裁剪比例",
+        "top": "上边",
+        "right": "右边",
+        "bottom": "下边",
+        "left": "左边",
+        "quick": "快速方案",
+        "small": "轻微去白边",
+        "scan": "扫描黑边",
+        "reset": "重置",
+        "previewLabel": "可视预览",
+        "previewTitle": "保留区域",
+        "previewHint": "预览用于确认大致边距，最终效果以导出的 PDF 为准。",
+        "action": "生成裁剪 PDF",
+        "processing": "正在应用裁剪...",
+        "done": "裁剪副本已生成",
+        "download": "下载裁剪 PDF",
+        "successTitle": "裁剪完成",
+        "successMessage": "新的 PDF 已应用可视区域裁剪，可以下载检查。",
+        "localTitle": "适合整理版面，不适合脱敏",
+        "localDesc": "裁剪能让页面更紧凑，但被裁掉的区域可能仍存在于 PDF 文件结构中。涉及隐私或敏感内容时，请使用真正的脱敏工具。",
+        "pages": "页数",
+        "errorLoad": "无法读取这份 PDF，请重新选择文件后再试。",
+        "errorFailed": "裁剪失败，请检查裁剪比例后再试。"
+      }
+    },
+    "flatten": {
+      "title": "扁平化 PDF",
+      "desc": "将表单外观锁定为普通副本",
+      "page": {
+        "title": "扁平化 PDF",
+        "subtitle": "把可填写表单内容固定到页面上，生成更适合提交、归档和分享的 PDF 副本。",
+        "badge": "免费工具",
+        "notice": "扁平化主要用于锁定表单外观，让字段不再继续编辑。它不是加密、不是权限保护，也不是安全脱敏；敏感内容请使用真正的脱敏工具。",
+        "uploadLabel": "PDF 文件",
+        "uploadTitleIdle": "选择需要扁平化的 PDF",
+        "uploadTitleReady": "文件已准备好",
+        "uploadDescriptionIdle": "适合已经填写完成的表单、申请表、回执和确认文件。原文件不会被修改。",
+        "uploadDescriptionReady": "点击处理后会生成一个新副本，尽量把表单字段固化为普通页面内容。",
+        "dropTitle": "拖放 PDF 到这里",
+        "dropSubtitle": "或点击选择文件",
+        "action": "生成扁平化 PDF",
+        "processing": "正在固化表单字段...",
+        "done": "扁平化副本已生成",
+        "download": "下载扁平化 PDF",
+        "successTitle": "扁平化完成",
+        "successMessage": "新的 PDF 副本已准备好，可以下载检查表单内容是否固定。",
+        "resultLabel": "处理结果",
+        "waitingTitle": "等待处理",
+        "waitingBody": "上传 PDF 后开始扁平化，完成后会生成新的固定版式副本。",
+        "fieldLabel": "可填写字段",
+        "pages": "页数",
+        "outputSize": "输出大小",
+        "noFieldsTitle": "没有检测到可填写表单字段",
+        "noFieldsBody": "这份 PDF 可能已经是普通页面内容。你仍然可以下载整理后的副本，但外观变化可能很小。",
+        "localTitle": "适合提交前锁定表单",
+        "localDesc": "填写完成后扁平化，可以减少对方再次修改表单字段的概率，也能提升不同阅读器打开时的稳定性。",
+        "step1": "上传已填写 PDF",
+        "step2": "固化表单外观",
+        "step3": "下载归档副本",
+        "errorLoad": "无法读取这份 PDF，请重新选择文件后再试。",
+        "errorFailed": "扁平化失败，请确认文件是标准 PDF 后再试。"
+      }
+    },
+    "repair": {
+      "title": "修复 PDF",
+      "desc": "重建可读取的 PDF 结构",
+      "page": {
+        "title": "修复 PDF",
+        "subtitle": "重新整理仍可读取的 PDF 结构，生成更稳定、更适合继续处理的干净副本。",
+        "badge": "登录可用",
+        "notice": "修复 PDF 会重新读取文件结构并导出副本，适合轻微结构异常、打开不稳定或其他工具无法继续处理的文件。",
+        "accessLabel": "需要登录",
+        "accessTitle": "登录后修复可读取的 PDF 文件",
+        "accessDescription": "修复会重新解析 PDF 页面并导出新副本。登录后可查看任务进度并下载结果。",
+        "goToSignIn": "登录后使用",
+        "accessSteps": [
+          "登录账号",
+          "上传需要修复的 PDF",
+          "下载重新整理后的副本"
+        ],
+        "uploadLabel": "待修复文件",
+        "uploadTitleIdle": "选择需要修复的 PDF",
+        "uploadTitleSelected": "文件已准备好",
+        "uploadDescriptionIdle": "适合能上传但打开不稳定、页面结构异常、其他工具无法继续处理的 PDF。",
+        "uploadDescriptionSelected": "系统会尝试读取可用页面并重新导出副本，不会覆盖你的原文件。",
+        "dropTitle": "拖放 PDF 到这里",
+        "dropSubtitle": "或点击选择文件",
+        "noFile": "请先上传一份需要修复的 PDF 文件。",
+        "repair": "开始修复 PDF",
+        "uploading": "正在上传文件...",
+        "processing": "正在重新整理 PDF 结构...",
+        "ready": "修复副本已生成",
+        "successTitle": "修复完成",
+        "successMessage": "新的 PDF 副本已经准备好。建议下载后打开检查页面是否完整。",
+        "download": "下载修复后的 PDF",
+        "workspaceTitle": "适合先修复，再继续处理",
+        "workspaceDescription": "当 PDF 在拆分、压缩、转图片或阅读器中表现异常时，可以先生成一份干净副本，再继续使用其他工具。",
+        "step1": "适合轻微结构问题：交叉引用表异常、阅读器兼容性差、导出后无法继续处理。",
+        "step2": "如果文件已加密，请先使用解锁 PDF；如果页面无法读取，修复工具也无法恢复内容。",
+        "step3": "修复结果是新文件。请下载后检查页数、内容和排版是否符合预期。",
+        "resultSize": "输出大小",
+        "errorFailed": "PDF 修复失败，请换一份可读取的标准 PDF 后重试。"
+      }
+    },
+    "protect": {
+      "title": "保护 PDF",
+      "desc": "为 PDF 添加打开密码",
+      "page": {
+        "title": "保护 PDF",
+        "subtitle": "为合同、资料和交付文件添加打开密码，分享前多一层保护。",
+        "badge": "登录可用",
+        "notice": "此功能会生成真正带打开密码的 PDF。处理完成后请及时下载结果。",
+        "accessLabel": "需要登录",
+        "accessTitle": "登录后生成受密码保护的 PDF",
+        "accessDescription": "密码保护会重新写入 PDF 安全信息。登录后可上传文件并下载加密结果。",
+        "goToSignIn": "登录后使用",
+        "accessSteps": [
+          "登录账号",
+          "上传 PDF 并设置密码",
+          "下载受保护的新文件"
+        ],
+        "uploadLabel": "文件",
+        "uploadTitleIdle": "选择要保护的 PDF",
+        "uploadTitleSelected": "文件已准备好",
+        "uploadDescriptionIdle": "支持标准 PDF 文件。原文件不会被覆盖。",
+        "uploadDescriptionSelected": "确认密码后会生成一个新的加密 PDF。",
+        "dropTitle": "拖放 PDF 到这里",
+        "dropSubtitle": "或点击选择文件",
+        "passwordLabel": "打开密码",
+        "confirmLabel": "确认密码",
+        "passwordPlaceholder": "至少 6 位，建议使用字母和数字",
+        "confirmPlaceholder": "再次输入同一个密码",
+        "strengthLabel": "密码强度",
+        "weak": "较弱",
+        "fair": "可用",
+        "strong": "较强",
+        "mismatch": "两次输入的密码不一致。",
+        "tooShort": "密码至少需要 6 个字符。",
+        "noFile": "请先上传一份 PDF 文件。",
+        "protect": "生成受保护 PDF",
+        "processing": "正在写入密码保护...",
+        "uploading": "正在上传文件...",
+        "ready": "加密文件已生成",
+        "successTitle": "PDF 已受保护",
+        "successMessage": "新的 PDF 已添加打开密码。请用刚才设置的密码打开验证。",
+        "download": "下载加密 PDF",
+        "workspaceTitle": "适合分享前最后一步",
+        "workspaceDescription": "给对外资料、合同草稿、内部文档增加基础访问门槛，减少误发后的直接打开风险。",
+        "step1": "上传 PDF 后，系统会生成独立副本，不会覆盖原文件。",
+        "step2": "密码只用于本次加密请求，请自行保存；平台不会在页面展示明文密码。",
+        "step3": "下载后建议用 PDF 阅读器打开一次，确认密码生效。",
+        "errorFailed": "PDF 加密失败，请换一份标准 PDF 后重试。"
+      }
+    },
+    "unlock": {
+      "title": "解锁 PDF",
+      "desc": "使用已知密码创建解锁副本",
+      "page": {
+        "title": "解锁 PDF",
+        "subtitle": "输入你已知道的打开密码，生成便于整理、合并和归档的无密码副本。",
+        "badge": "登录可用",
+        "notice": "此功能不会破解未知密码。只有在你拥有文件权限并知道当前密码时，才应使用它移除打开密码。",
+        "accessLabel": "需要登录",
+        "accessTitle": "登录后解锁你有权限处理的 PDF",
+        "accessDescription": "解锁会读取加密 PDF 并重新导出副本。请只处理你拥有权限、且知道密码的文件。",
+        "goToSignIn": "登录后使用",
+        "accessSteps": [
+          "登录账号",
+          "上传受密码保护的 PDF",
+          "输入当前密码并下载副本"
+        ],
+        "uploadLabel": "受保护文件",
+        "uploadTitleIdle": "选择要解锁的 PDF",
+        "uploadTitleSelected": "文件已准备好",
+        "uploadDescriptionIdle": "请上传需要打开密码的 PDF。普通 PDF 无需解锁。",
+        "uploadDescriptionSelected": "输入当前打开密码后，会生成新的无密码 PDF 副本。",
+        "dropTitle": "拖放受保护 PDF 到这里",
+        "dropSubtitle": "或点击选择文件",
+        "passwordLabel": "当前打开密码",
+        "passwordPlaceholder": "输入这份 PDF 现在使用的打开密码",
+        "noFile": "请先上传一份受密码保护的 PDF 文件。",
+        "noPassword": "请输入当前 PDF 的打开密码。",
+        "unlock": "生成无密码副本",
+        "processing": "正在移除打开密码...",
+        "uploading": "正在上传文件...",
+        "ready": "无密码副本已生成",
+        "successTitle": "PDF 已解锁",
+        "successMessage": "新的 PDF 副本已不再需要打开密码。建议下载后打开确认。",
+        "download": "下载无密码 PDF",
+        "workspaceTitle": "先解锁，再继续整理",
+        "workspaceDescription": "适合处理你自己的合同、资料包或归档文件，解锁后可以继续合并、拆分、加页码或转换格式。",
+        "step1": "必须输入当前密码。平台不会尝试猜测、绕过或破解密码。",
+        "step2": "导出的文件是新副本，原始受保护文件不会被覆盖。",
+        "step3": "如果密码错误或文件不是标准加密 PDF，页面会提示你检查后再试。",
+        "guardTitle": "权限提醒",
+        "guardBody": "请只解锁你拥有处理权限的文件。对于第三方文件，请先确认授权。",
+        "errorFailed": "PDF 解锁失败，请确认密码后用标准受保护 PDF 重试。"
+      }
+    },
+    "sign": {
+      "title": "签署 PDF",
+      "desc": "为 PDF 添加可视签名",
+      "page": {
+        "title": "签署 PDF",
+        "subtitle": "把签名图片放到 PDF 指定位置，生成适合确认、回传和归档的签署副本。",
+        "badge": "免费工具",
+        "notice": "这是可视签名/签名图片盖章工具，不是证书级数字签名。适合确认、回传和归档前添加签名图片。",
+        "pdfLabel": "PDF 文件",
+        "pdfTitleIdle": "先选择需要签署的 PDF",
+        "pdfTitleReady": "PDF 已准备好",
+        "pdfDescIdle": "原文件不会被覆盖，导出时会生成新的签署副本。",
+        "pdfDescReady": "继续上传签名图片并调整放置位置。",
+        "signLabel": "签名图片",
+        "signTitleIdle": "上传透明签名图效果最好",
+        "signTitleReady": "签名图片已载入",
+        "signDescIdle": "支持 PNG、JPG、WEBP。建议使用透明背景 PNG。",
+        "signDescReady": "你可以在右侧预览区调整签名位置和大小。",
+        "pdfDropTitle": "拖放 PDF 到这里",
+        "imageDropTitle": "拖放签名图片到这里",
+        "dropSubtitle": "或点击选择文件",
+        "settingsLabel": "签署位置",
+        "settingsTitle": "调整签名落点",
+        "page": "签署页码",
+        "x": "横向位置",
+        "y": "纵向位置",
+        "width": "签名宽度",
+        "opacity": "不透明度",
+        "previewLabel": "快速预览",
+        "previewTitle": "签名会放在页面这个区域",
+        "previewHint": "预览用于确认大致位置，最终以导出的 PDF 为准。",
+        "placeholder": "签名",
+        "localTitle": "快速完成",
+        "localDesc": "适合把手写签名图片放到合同、确认单、申请表或回执上。若需要法律级数字证书签名，后续应单独接入证书签署流程。",
+        "action": "生成签署 PDF",
+        "processing": "正在写入签名...",
+        "done": "签署副本已生成",
+        "download": "下载签署 PDF",
+        "remove": "移除",
+        "successTitle": "签署完成",
+        "successMessage": "带可视签名的新 PDF 已准备好，可以下载保存。",
+        "errorPdf": "无法读取这份 PDF，请重新选择文件后再试。",
+        "errorSignature": "请先上传签名图片。",
+        "errorFailed": "签署失败，请检查文件和签名图片后再试。"
+      }
+    },
+    "extractText": {
+      "title": "提取 PDF 文本",
+      "desc": "从 PDF 中导出可复制文本",
+      "page": {
+        "title": "提取 PDF 文字",
+        "subtitle": "从带文本层的 PDF 中快速导出可复制文字，适合合同、报告、资料整理和 AI 分析前的内容准备。",
+        "badge": "免费工具",
+        "notice": "此功能提取 PDF 自带文本层；如果 PDF 是扫描件或图片文字，请使用 OCR 文字识别。",
+        "uploadLabel": "PDF 文件",
+        "uploadTitleIdle": "选择需要提取文字的 PDF",
+        "uploadTitleReady": "文件已准备好",
+        "uploadDescriptionIdle": "适合可以选中文字、复制文字的 PDF。原文件不会被修改。",
+        "uploadDescriptionReady": "点击提取后会在页面展示文字，并可复制或下载 TXT 文件。",
+        "dropTitle": "拖放 PDF 到这里",
+        "dropSubtitle": "或点击选择文件",
+        "action": "提取文字",
+        "processing": "正在读取文字层...",
+        "ready": "文字提取完成",
+        "copied": "已复制",
+        "copyFailed": "复制失败，请手动选择文字复制。",
+        "copyText": "复制文字",
+        "download": "下载 TXT",
+        "remove": "移除",
+        "textPreview": "文字预览",
+        "emptyTitle": "没有读取到可用文字",
+        "emptyBody": "这通常表示 PDF 是扫描件、图片型页面，或文字被特殊编码。请改用 OCR 文字识别。",
+        "resultTitle": "提取结果",
+        "resultBody": "文字已经整理为按页分隔的 TXT 内容。你可以直接复制、下载，或继续用于后续整理。",
+        "pageCount": "页数",
+        "characters": "字符数",
+        "fileSize": "文件大小",
+        "localTitle": "快速提取文本",
+        "localBody": "普通文本型 PDF 通常可以快速导出文字。扫描件和图片文字更适合使用 OCR。",
+        "step1": "上传 PDF",
+        "step2": "读取文字层",
+        "step3": "复制或下载结果",
+        "errorFailed": "无法提取文字。请确认文件是标准 PDF，或尝试使用 OCR 文字识别。",
+        "pageLabel": "第 {page} 页"
+      }
+    },
+    "extractImages": {
+      "title": "提取 PDF 图片",
+      "desc": "从 PDF 中提取嵌入图片",
+      "page": {
+        "title": "提取 PDF 图片",
+        "subtitle": "从 PDF 页面中提取可用的内嵌图片资源，适合整理素材、报告配图和归档原图。",
+        "badge": "免费工具",
+        "notice": "此功能提取 PDF 内嵌图片；如果你想把每一页导出成图片，请使用 PDF 转图片。",
+        "uploadLabel": "PDF 文件",
+        "uploadTitleIdle": "选择需要提取图片的 PDF",
+        "uploadTitleReady": "文件已准备好",
+        "uploadDescriptionIdle": "适合包含照片、插图、图表截图等内嵌图片的 PDF。原文件不会被修改。",
+        "uploadDescriptionReady": "点击提取后会展示可用图片，并可逐张下载。",
+        "dropTitle": "拖放 PDF 到这里",
+        "dropSubtitle": "或点击选择文件",
+        "action": "提取图片",
+        "processing": "正在扫描页面图片...",
+        "ready": "图片提取完成",
+        "remove": "移除",
+        "download": "下载",
+        "downloadAll": "下载全部",
+        "resultLabel": "提取结果",
+        "waitingTitle": "等待开始",
+        "readyTitle": "找到 {count} 张图片",
+        "emptyHint": "上传 PDF 后开始提取。图片会按发现顺序展示，文件名会包含页码。",
+        "emptyTitle": "没有找到可提取图片",
+        "emptyBody": "这份 PDF 可能主要由文字、矢量图形或整页扫描组成。如果你需要把页面变成图片，请使用 PDF 转图片。",
+        "page": "页",
+        "size": "尺寸",
+        "fileSize": "大小",
+        "localTitle": "提取内嵌图片，不生成整页截图",
+        "localBody": "这和 PDF 转图片不同：它尝试拿到页面里真正的图片资源，适合取出配图；如果要导出整页，请使用 PDF 转图片。",
+        "step1": "上传 PDF",
+        "step2": "扫描图片资源",
+        "step3": "预览并下载",
+        "errorFailed": "图片提取失败。请确认文件是标准 PDF，或改用 PDF 转图片导出整页。"
+      }
+    },
+    "ocr": {
+      "title": "OCR 文字识别",
+      "desc": "识别扫描文件中的文字",
+      "subtitle": "从扫描版 PDF 和图片中提取文字",
+      "badge": "Pro 功能",
+      "pageExtra": "适合扫描件、照片和图片型文档。",
+      "notice": "上传 PDF 或图片，选择识别语言，任务完成后下载文字结果。",
+      "accessLabel": "访问权限",
+      "accessGuestTitle": "登录后使用 OCR",
+      "accessMemberTitle": "需要升级 Pro",
+      "accessGuestDescription": "登录后即可保存识别任务和下载结果。",
+      "accessMemberDescription": "OCR 属于 Pro 工具，适合较长或较复杂的文档任务。",
+      "goToSignIn": "去登录",
+      "goToUpgrade": "查看 Pro",
+      "accessStep1": "上传扫描件或图片",
+      "accessStep2": "识别文字",
+      "accessStep3": "下载识别结果",
+      "uploadLabel": "上传",
+      "uploadTitleIdle": "上传 PDF 或图片",
+      "uploadTitleSelected": "已选择文件",
+      "uploadDescriptionIdle": "选择需要识别的文档。",
+      "uploadDescriptionSelected": "确认语言后开始 OCR。",
+      "dropTitle": "将文件拖到这里",
+      "dropSubtitle": "支持 PDF、PNG、JPG 等常见扫描格式",
+      "flowTitle": "建议流程",
+      "flowStep1": "上传",
+      "flowStep2": "识别",
+      "flowStep3": "查看结果",
+      "workspaceTitle": "OCR 工作区",
+      "workspaceDescription": "开始识别前，先选择最适合文档的语言。",
+      "workspaceLanguage": "识别语言",
+      "languageOptions": {
+        "eng": "英语",
+        "chi_sim": "简体中文",
+        "chi_tra": "繁体中文",
+        "spa": "西班牙语",
+        "fra": "法语",
+        "deu": "德语",
+        "jpn": "日语",
+        "kor": "韩语"
+      },
+      "start": "开始 OCR",
+      "signInToUse": "登录后使用",
+      "upgradeToUse": "升级后使用",
+      "submitting": "提交中...",
+      "uploading": "上传中...",
+      "waiting": "等待中...",
+      "running": "识别中...",
+      "recognizing": "正在识别文字...",
+      "preparingResults": "正在准备结果...",
+      "completed": "已完成",
+      "failed": "OCR 失败",
+      "resultTitle": "识别结果",
+      "confidence": "置信度",
+      "pages": "页数",
+      "copy": "复制文字",
+      "copied": "已复制",
+      "copyFailed": "复制失败",
+      "download": "下载 TXT",
+      "recognizeAnother": "识别另一个文件",
+      "defaultLanguage": "chi_sim",
+      "viewFullResult": "查看完整结果"
+    },
+    "officeToPdf": {
+      "title": "Office 转 PDF",
+      "desc": "将 Office 文件转换为 PDF",
+      "badge": "Pro 功能",
+      "formats": {
+        "word": "Word",
+        "excel": "Excel",
+        "powerpoint": "PowerPoint"
+      },
+      "pageNotice": "Office 转换会尽量保留原文档版式。",
+      "accessLabel": "访问权限",
+      "accessGuestTitle": "登录后转换 Office 文件",
+      "accessGuestDescription": "Office 转换需要账号来保存任务进度。",
+      "goToSignIn": "去登录",
+      "accessStep1": "上传 Office 文件",
+      "accessStep2": "转换文件",
+      "accessStep3": "下载 PDF",
+      "uploadLabel": "上传",
+      "uploadTitleIdle": "上传 Office 文件",
+      "uploadTitleSelected": "已选择文件",
+      "uploadDescriptionIdle": "选择 Word、Excel 或 PowerPoint 文件。",
+      "uploadDescriptionSelected": "确认文件后开始转换。",
+      "dropSubtitle": "支持 Word、Excel 和 PowerPoint 文件。",
+      "workspaceTitle": "转换工作区",
+      "workspaceDescription": "转换任务会尽量保持复杂 Office 版式稳定。",
+      "converting": "转换中...",
+      "uploading": "上传中...",
+      "queued": "排队中...",
+      "serverProcessing": "处理中...",
+      "preparingDownload": "正在准备下载...",
+      "resultReady": "结果已准备好",
+      "unsupported": "请选择 Word、Excel 或 PowerPoint 文件。",
+      "conversionFailed": "Office 转换失败，请稍后重试。",
+      "conversionFailedShort": "转换失败"
+    },
+    "watermark": {
+      "title": "PDF 加水印",
+      "desc": "为 PDF 添加文字水印",
+      "page": {
+        "badge": "免费工具",
+        "setupLabel": "水印设置",
+        "setupTitle": "调整文案和样式",
+        "setupDesc": "适合为合同、报告、草稿或对外传阅文件添加清晰但不过分抢眼的标记。",
+        "outputLabel": "导出动作",
+        "outputTitle": "生成带水印的新文件",
+        "outputTips": [
+          "建议使用简短清晰的水印文字，方便识别文件状态。",
+          "透明度高会更醒目，透明度低更适合阅读型文件。",
+          "处理完成后会生成新的 PDF 文件，不会修改原文件。"
+        ],
+        "localTitle": "快速添加",
+        "localDesc": "适合给合同、报告、草稿或对外传阅文件添加状态、版本说明或预览标记。",
+        "action": "添加水印",
+        "successTitle": "水印添加完成",
+        "successMessage": "带水印的 PDF 已准备好，可以立即下载。",
+        "placeholder": "例如：草稿 / 已审核 / 仅供预览",
+        "color": "水印颜色",
+        "text": "水印文字",
+        "position": "位置",
+        "opacity": "透明度",
+        "rotation": "旋转角度",
+        "fontSize": "字体大小",
+        "errorNoText": "请输入水印文字后再继续。",
+        "errorFailed": "添加水印失败，请稍后重试。",
+        "processing": "正在生成水印...",
+        "done": "处理完成",
+        "defaultText": "仅供预览",
+        "positions": [
+          {
+            "value": "center",
+            "label": "居中"
+          },
+          {
+            "value": "tile",
+            "label": "平铺"
+          },
+          {
+            "value": "top",
+            "label": "顶部"
+          },
+          {
+            "value": "bottom",
+            "label": "底部"
+          }
+        ]
+      }
+    },
+    "fillForm": {
+      "title": "填写 PDF 表单",
+      "desc": "填写 PDF 表单字段",
+      "pageExtra": "适合带有可识别字段的结构化 PDF 表单。",
+      "notice": "上传 PDF 表单，检查识别出的字段，然后生成填写后的副本。",
+      "accessLabel": "访问权限",
+      "accessGuestTitle": "登录后填写表单",
+      "accessMemberTitle": "需要升级 Pro",
+      "accessGuestDescription": "登录后可保存表单任务进度并下载结果。",
+      "accessMemberDescription": "表单填写属于 Pro 结构化文档工作流。",
+      "goToSignIn": "去登录",
+      "goToUpgrade": "查看 Pro",
+      "useAfterLogin": "登录后使用",
+      "upgradeAfterLogin": "升级后使用",
+      "accessStep1": "上传表单",
+      "accessStep2": "检查字段",
+      "accessStep3": "生成填写后的 PDF",
+      "uploadLabel": "上传",
+      "uploadTitle": "上传 PDF 表单",
+      "uploadDescription": "选择可填写或结构化的 PDF 表单。",
+      "dropTitle": "将表单拖到这里",
+      "dropSubtitle": "支持 PDF 表单和结构化 PDF。",
+      "flowTitle": "处理流程",
+      "flowStep1": "识别",
+      "flowStep2": "填写",
+      "flowStep3": "下载",
+      "workspaceTitle": "表单工作区",
+      "workspaceDescription": "生成文件前，请检查识别出的字段。",
+      "stepDetecting": "识别字段",
+      "stepReview": "检查字段",
+      "stepGenerating": "生成 PDF",
+      "stepLabel": "步骤 {step}",
+      "preparingResult": "正在准备结果",
+      "ready": "可以下载",
+      "noFieldsHelp": "可以换一个 PDF，或检查表单字段是否已嵌入文档。"
+    },
+    "annotate": {
+      "title": "批注 PDF",
+      "desc": "为 PDF 添加备注和高亮",
+      "pageExtra": "适合需要生成带可见批注或高亮标记的 PDF。",
+      "notice": "上传 PDF，选择标注类型，设置页码和坐标，然后导出标注副本。",
+      "accessLabel": "访问权限",
+      "accessGuestTitle": "登录后标注 PDF",
+      "accessMemberTitle": "需要升级 Pro",
+      "accessGuestDescription": "登录后即可生成并下载标注副本。",
+      "accessMemberDescription": "PDF 标注属于 Pro 文档输出工具。",
+      "goToSignIn": "去登录",
+      "goToUpgrade": "查看 Pro",
+      "useAfterLogin": "登录后使用",
+      "upgradeAfterLogin": "升级后使用",
+      "accessStep1": "上传 PDF",
+      "accessStep2": "添加批注或高亮",
+      "accessStep3": "下载标注后的 PDF",
+      "uploadLabel": "上传",
+      "uploadTitle": "上传 PDF",
+      "uploadDescription": "选择需要标注的 PDF。",
+      "dropTitle": "将 PDF 拖到这里",
+      "dropSubtitle": "支持 PDF 文件。",
+      "flowTitle": "处理流程",
+      "flowStep1": "上传",
+      "flowStep2": "配置",
+      "flowStep3": "导出",
+      "workspaceTitle": "标注工作区",
+      "workspaceDescription": "添加可见文字批注，或高亮一个矩形区域。",
+      "configureTitle": "配置标注",
+      "configureDescription": "设置标注内容、页码、位置和颜色。",
+      "modeLabel": "标注类型",
+      "coordinateHintTitle": "坐标说明",
+      "coordinateHintDescription": "坐标使用 PDF 页面单位。可以先用较小数值测试，再根据结果调整。",
+      "stepGenerating": "生成 PDF",
+      "stepLabel": "步骤 {step}",
+      "textColors": [
+        {
+          "name": "红色",
+          "value": "#FF0000"
+        },
+        {
+          "name": "蓝色",
+          "value": "#2563EB"
+        },
+        {
+          "name": "绿色",
+          "value": "#059669"
+        },
+        {
+          "name": "黑色",
+          "value": "#111827"
+        }
+      ],
+      "highlightColors": [
+        {
+          "name": "黄色",
+          "value": "#FACC15"
+        },
+        {
+          "name": "薄荷绿",
+          "value": "#34D399"
+        },
+        {
+          "name": "天蓝色",
+          "value": "#38BDF8"
+        },
+        {
+          "name": "粉色",
+          "value": "#F472B6"
+        }
+      ],
+      "preparingResult": "正在准备结果",
+      "ready": "可以下载"
+    }
   },
   "cloud": {},
-  "payment": {},
-  "account": {},
+  "payment": {
+    "success": {
+      "badge": "支付流程已完成",
+      "message": "感谢升级。Stripe 已成功返回 PDF-Flow，我们正在刷新你的账户状态。",
+      "checkoutState": "支付状态",
+      "checkoutReturned": "支付已完成，账户状态会很快更新。",
+      "checkoutReturnedWithReference": "支付已完成，并返回了参考号。如果需要客服协助，请保留这个信息。",
+      "referenceLabel": "参考号",
+      "accountPending": "页面准备完成后会刷新你的账户状态。",
+      "accountSyncing": "正在刷新账户信息，以显示最新订阅状态。",
+      "accountSynced": "账户信息已刷新。如果 Pro 没有立刻出现，请稍等片刻后再刷新。",
+      "accountGuest": "当前浏览器尚未登录。请登录支付时使用的账户查看订阅状态。",
+      "step1": "进入账户页确认当前套餐和账单状态。",
+      "step2": "当 Pro 权限可见后，尝试 OCR、Office 转换或 AI 工作流。",
+      "step3": "如果几分钟后权限仍未更新，请带上支付参考号联系支持。"
+    },
+    "cancel": {
+      "badge": "支付未完成",
+      "message": "支付完成前结账流程已关闭。你的当前套餐不会变化，可以随时重新开始。",
+      "noChargeTitle": "套餐未变化",
+      "noChargeDescription": "PDF-Flow 不会因为取消的支付回跳而激活 Pro 订阅。",
+      "checkoutStatus": "支付流程",
+      "checkoutCanceled": "已取消",
+      "currentPlan": "当前套餐",
+      "freePlan": "免费 / 未变化",
+      "benefit4": "优先处理、邮件支持，以及账户级订阅管理。"
+    }
+  },
+  "account": {
+    "profile": "个人资料",
+    "usage": "用量",
+    "myAccount": "我的账号",
+    "totalRequests": "总请求数",
+    "requestsToday": "今日请求",
+    "quotaRemaining": "剩余额度",
+    "unlimited": "不限",
+    "currentPlan": "当前套餐",
+    "upgradeToPro": "升级到 Pro",
+    "editProfile": "编辑资料",
+    "save": "保存",
+    "cancel": "取消",
+    "deleteAccount": "删除账号",
+    "deleteConfirm": "确定删除账号吗？此操作无法撤销。",
+    "updateSuccess": "资料已更新",
+    "workspaceDescription": "回到 PDF 工作前，可以先确认个人资料、套餐和用量状态。",
+    "refresh": "刷新",
+    "loading": "正在加载账户...",
+    "emptyTitle": "暂时无法读取账户信息",
+    "emptyMessage": "当前页面没有加载到已登录账户。",
+    "emptyHint": "如果你本应已登录，请重新登录或刷新页面。",
+    "usageDescription": "用量来自账户服务，刚完成的任务可能会有短暂延迟。",
+    "usageLoading": "正在加载用量...",
+    "usageEmptyTitle": "暂无用量数据",
+    "usageEmptyMessage": "登录后处理文件，用量信息会显示在这里。",
+    "todayQuota": "今日额度使用",
+    "notSet": "未设置",
+    "dangerZone": "危险操作",
+    "deleteDescription": "删除账户会移除该账户的访问权限。必要的安全、账单或审计记录可能会按要求保留。",
+    "deleteDialog": {
+      "title": "确认删除账号？",
+      "summary": "将移除 {email} 的账号访问权限。",
+      "detailAccess": "账号删除后会自动退出登录。",
+      "detailRetention": "必要的安全、账单、支持或审计记录可能会按要求保留。",
+      "detailSignIn": "此操作无法在账号页面直接撤销。",
+      "confirm": "确认删除账号"
+    },
+    "updateFailedTitle": "资料更新失败",
+    "updateFailedMessage": "暂时无法保存资料变更，请检查内容后重试。",
+    "deleteFailedTitle": "账户删除失败",
+    "deleteFailedMessage": "暂时无法删除账户，请稍后重试或联系支持。",
+    "plans": {
+      "free": "免费",
+      "pro": "Pro",
+      "enterprise": "企业版",
+      "admin": "管理员"
+    }
+  },
   "enterprise": {},
   "ai": {
-    "title": "AI PDF 分析器"
+    "title": "AI PDF 分析器",
+    "pageExtra": "适合长文档总结、问答和结构化提取。",
+    "notice": "上传 PDF，选择 AI 任务，复核生成结果后再使用。",
+    "tabs": {
+      "batch": "批量分析"
+    },
+    "accessLabel": "访问权限",
+    "accessGuestTitle": "登录后使用 AI 分析",
+    "accessMemberTitle": "需要升级 Pro",
+    "accessGuestDescription": "AI 分析需要账号来安全处理文档任务。",
+    "accessMemberDescription": "AI 分析属于 Pro 文档理解工具。",
+    "goToSignIn": "去登录",
+    "goToUpgrade": "查看 Pro",
+    "accessStep1": "上传 PDF",
+    "accessStep2": "选择分析模式",
+    "accessStep3": "复核生成结果",
+    "uploadLabel": "上传",
+    "uploadTitleIdle": "上传 PDF",
+    "uploadTitleSelected": "已选择 PDF",
+    "uploadDescriptionIdle": "选择需要 AI 分析的文档。",
+    "uploadDescriptionSelected": "选择任务并开始分析。",
+    "dropSubtitle": "支持 PDF 文件。",
+    "suggestedFlowTitle": "建议流程",
+    "suggestedFlowDescription": "先生成摘要，再继续追问，必要时提取结构化字段。",
+    "batch": {
+      "title": "批量分析",
+      "description": "一次运行多个分析任务，快速了解长文档的摘要、结构化信息和文档类型。",
+      "start": "开始批量分析",
+      "complete": "分析完成",
+      "completedCount": "已完成 {count} 项分析。",
+      "operations": {
+        "summarize": {
+          "label": "智能摘要",
+          "description": "提炼核心内容与要点。"
+        },
+        "extract": {
+          "label": "数据提取",
+          "description": "整理关键字段与结构。"
+        },
+        "classify": {
+          "label": "文档识别",
+          "description": "判断文档类型与用途。"
+        }
+      }
+    },
+    "errors": {
+      "batchFailed": "批量分析暂时无法完成，请稍后重试或联系管理员。"
+    }
+  },
+  "footer": {
+    "privacyPolicy": "隐私政策",
+    "termsOfService": "服务条款",
+    "eyebrow": "PDF 工具",
+    "brandDescription": "常用 PDF 工具，打开工具、添加文件，然后继续完成手头工作。",
+    "toolsTitle": "常用工具",
+    "productTitle": "产品",
+    "supportTitle": "支持",
+    "contactTitle": "联系支持",
+    "contactDescription": "如果上传、转换或支付遇到问题，请附上截图、发生时间和你尝试的操作。除非支持人员要求，不要发送文件内容。",
+    "trustPrivacyTitle": "默认流程清楚",
+    "trustPrivacyDescription": "常用 PDF 操作从第一步开始就容易理解。",
+    "trustWorkflowTitle": "常用工具容易找到",
+    "trustWorkflowDescription": "常用工具保持清晰入口，重复处理不用绕路。",
+    "trustSupportTitle": "联系支持更省事",
+    "trustSupportDescription": "反馈只需要问题上下文，不主动索要文件内容。",
+    "copyright": "为日常 PDF 处理而做。",
+    "bottomLine": "日常工具免费使用，需要更多能力时再升级 Pro。"
+  },
+  "history": {
+    "title": "处理记录",
+    "page": {
+      "backHome": "返回首页",
+      "badge": "本机处理记录",
+      "title": "处理记录",
+      "description": "查看当前浏览器保存的最近 PDF 操作记录。记录只保存在你的设备上，用于快速回看处理过的文件与工具类型。",
+      "localTitle": "此设备保存",
+      "localDescription": "不上传历史数据，清理浏览器数据后记录也会消失。",
+      "reviewTitle": "快速回看",
+      "reviewDescription": "适合确认刚才用了哪个工具、处理了哪些文件。",
+      "continueProcessing": "继续处理 PDF"
+    },
+    "panel": {
+      "confirmClear": "确定要清除所有历史记录吗？",
+      "confirmTitle": "清除本机历史记录？",
+      "confirmMessage": "这只会移除当前浏览器里保存的处理记录，不会影响已经下载的文件或设备上的文档。",
+      "confirmAction": "清除历史",
+      "cancelClear": "保留记录",
+      "itemMeta": "{tool} · {time}",
+      "none": "暂无",
+      "deleteItem": "删除这条历史记录",
+      "clearAll": "清除所有历史记录",
+      "emptyTitle": "暂无历史记录",
+      "emptyDescription": "处理 PDF 文件后，最近操作会保存在当前浏览器里，方便你回看文件名、工具类型和处理时间。",
+      "groups": {
+        "today": "今天",
+        "yesterday": "昨天",
+        "older": "更早"
+      },
+      "stats": {
+        "totalFiles": "总文件",
+        "todayFiles": "今日处理",
+        "mostUsed": "最常用",
+        "spaceSaved": "节省空间"
+      },
+      "time": {
+        "justNow": "刚刚",
+        "minutesAgo": "{count} 分钟前",
+        "hoursAgo": "{count} 小时前",
+        "daysAgo": "{count} 天前"
+      }
+    },
+    "tools": {
+      "merge": "合并 PDF",
+      "split": "拆分 PDF",
+      "rotate": "旋转 PDF",
+      "compress": "压缩 PDF",
+      "imageToPdf": "图片转 PDF",
+      "pdfToImage": "PDF 转图片",
+      "deletePages": "删除 PDF 页面",
+      "organize": "整理 PDF 页面",
+      "pageNumbers": "添加 PDF 页码",
+      "crop": "裁剪 PDF",
+      "protect": "保护 PDF",
+      "unlock": "解锁 PDF",
+      "sign": "签署 PDF",
+      "extractText": "提取 PDF 文字",
+      "extractImages": "提取 PDF 图片",
+      "watermark": "添加水印",
+      "flatten": "扁平化 PDF",
+      "repair": "修复 PDF"
+    }
+  },
+  "appShell": {
+    "skipToContent": "跳到主要内容",
+    "announcement": "站点公告",
+    "configRetry": "重试设置",
+    "configRetrying": "正在重试...",
+    "configUnavailableTitle": "站点设置正使用默认值",
+    "configUnavailableMessage": "PDF-Flow 暂时无法连接公共配置服务。核心工具会继续按默认设置可用。",
+    "configUnavailableHint": "可以重试一次；如需联系支持，请带上此诊断码。",
+    "maintenanceBadge": "维护中",
+    "maintenanceTitle": "站点正在维护中",
+    "maintenanceMessage": "站点正在维护中，请稍后再试。",
+    "maintenanceAdminHint": "管理员仍可登录后访问控制台调整维护状态。"
+  },
+  "feedbackWidget": {
+    "launcher": "反馈问题",
+    "dialogLabel": "向 PDF-Flow 发送反馈",
+    "close": "关闭反馈窗口",
+    "badge": "反馈",
+    "title": "告诉我们发生了什么",
+    "description": "系统会附带页面地址、浏览器上下文和诊断码；不会要求或收集你的文档内容。",
+    "categoryLabel": "类型",
+    "severityLabel": "影响程度",
+    "titleLabel": "问题标题",
+    "messageLabel": "具体描述",
+    "emailLabel": "联系邮箱，可选",
+    "titlePlaceholder": "例如：PDF 转图片导出失败",
+    "messagePlaceholder": "请写下你点击了什么、看到了什么提示、是否可以复现。",
+    "emailPlaceholder": "方便需要补充信息时联系你",
+    "messageHint": "最多 {count} 字。建议优先写复现步骤、实际提示和期望结果，不需要粘贴文件内容。",
+    "diagnosticTitle": "诊断上下文",
+    "diagnosticLine": "诊断码：{code} · 当前页面：{path}",
+    "privacyHint": "只会附带排障上下文，不包含你的 PDF 文件内容。",
+    "submit": "提交反馈",
+    "submitting": "提交中...",
+    "submitFailedTitle": "反馈提交失败",
+    "submitFailedMessage": "反馈服务暂时没有接收报告。请保留诊断码，稍后再试。",
+    "successTitle": "反馈已提交",
+    "successMessage": "我们已收到你的反馈。编号 #{id}，诊断码 {code}。如果后续需要补充信息，可以保留这段信息。",
+    "copyReference": "复制反馈编号",
+    "copied": "已复制",
+    "copyFailed": "复制失败。你仍然可以手动选中并复制这段编号。",
+    "categories": {
+      "bug": "功能异常",
+      "ui": "显示或排版问题",
+      "account": "账号或登录问题",
+      "suggestion": "使用建议"
+    },
+    "severities": {
+      "normal": "一般问题",
+      "high": "影响使用",
+      "critical": "无法继续使用"
+    },
+    "validation": {
+      "requiredTitle": "请填写标题和具体描述",
+      "requiredMessage": "请补充一个简短标题，以及复现步骤或看到的错误提示，方便我们定位。",
+      "requiredHint": "截图会有帮助，但不需要粘贴文档内容。",
+      "tooLongTitle": "描述内容过长",
+      "tooLongMessage": "请将描述控制在 {count} 字以内，优先保留复现步骤。",
+      "tooLongHint": "短报告更容易快速排查。"
+    },
+    "summary": {
+      "feedbackId": "反馈编号 #{id}",
+      "diagnosticCode": "诊断码 {code}",
+      "page": "页面 {page}"
+    }
+  },
+  "availability": {
+    "featureDisabledEyebrow": "功能可用性",
+    "featureDisabledTitle": "这个工具暂时不可用",
+    "featureDisabledMessage": "该 PDF 工作流当前已被站点设置关闭。你可以继续使用其他工具，稍后再试。",
+    "featureDisabledHint": "功能开关关闭时，工具入口会隐藏。管理员可在控制台重新开启。",
+    "notFoundEyebrow": "页面不存在",
+    "notFoundTitle": "没有找到这个页面",
+    "notFoundMessage": "请求路径“{path}”不是当前可用的 PDF-Flow 路由。",
+    "notFoundHint": "可以返回首页，或去工具中心继续使用可用工具。",
+    "requestedPath": "请求路径",
+    "backToTools": "返回工具中心",
+    "backHome": "返回首页",
+    "retryTool": "再次尝试这个工具",
+    "goBack": "返回上一页"
+  },
+  "legal": {
+    "privacy": {
+      "eyebrow": "隐私政策",
+      "title": "我们如何保护你的文件与账户信息",
+      "updated": "最后更新：2026 年 6 月 11 日",
+      "description": "PDF-Flow 是面向日常文档处理的在线 PDF 工作区。基础工具会尽量在浏览器本地完成；只有当你主动使用 OCR、Office 转 PDF、AI 分析或云端处理时，相关文件才会临时上传到服务器。",
+      "summaryTitle": "简短说明",
+      "summary": "我们不会出售你的个人信息，也不会为了广告画像读取你的文件内容。云端处理文件只用于完成你选择的任务、提供下载、排查异常和保障服务安全，并会按临时文件生命周期策略自动清理。",
+      "note": "如果你处理高度敏感、受监管或具有法律效力的文件，请优先使用本地处理能力，并自行评估是否适合上传到云端。",
+      "sections": [
+        {
+          "title": "1. 我们收集的信息",
+          "paragraphs": [
+            "访问网站时，我们可能接收必要的访问数据，例如浏览器类型、访问时间、页面路径、语言设置、IP 相关安全信息和错误日志。",
+            "注册或登录账户时，我们会保存邮箱、显示名称、加密后的密码、账户角色、订阅状态、登录时间等必要信息。我们不会保存你的明文密码。"
+          ],
+          "bullets": [
+            "账户信息：邮箱、显示名称、认证状态、角色权限。",
+            "运行信息：任务状态、错误编号、必要诊断日志。",
+            "支付信息：如启用订阅，付款细节由支付服务商处理，PDF-Flow 只保存必要的订阅状态。"
+          ]
+        },
+        {
+          "title": "2. 文件如何被处理",
+          "paragraphs": [
+            "合并、拆分、旋转、压缩、图片转 PDF、PDF 转图片等基础工具会优先在你的浏览器本地处理。此类本地处理不会把文件内容上传到 PDF-Flow 服务器。",
+            "OCR 文字识别、Office 转 PDF、AI PDF 分析，以及你主动选择云端处理的任务需要服务器参与。提交这些任务时，文件会被临时上传，只用于完成本次处理和下载。"
+          ],
+          "bullets": [
+            "本地处理：服务器通常看不到文件内容，也不会知道文件正文。",
+            "云端处理：服务器会短暂接收文件、生成结果，并记录必要的任务状态。",
+            "反馈排查：请不要在反馈里主动上传不必要的敏感文件或完整文件内容。"
+          ]
+        },
+        {
+          "title": "3. 云端文件生命周期策略",
+          "paragraphs": [
+            "云端上传文件、转换结果和临时下载包都会存放在受控的临时目录中。系统会通过自动清理和必要的维护操作删除过期文件。",
+            "当前默认策略是：上传文件和处理结果通常保留约 1 小时，下载打包文件通常保留约 30 分钟。实际删除时间可能因任务队列、系统负载、异常排查或维护窗口略有延迟。"
+          ],
+          "bullets": [
+            "清理范围：临时上传目录、转换输出目录、下载打包目录。",
+            "不清理内容：账户、审计日志、反馈、错误摘要和必要任务元数据不会被文件清理器删除。",
+            "安全边界：清理器只扫描 PDF-Flow 配置的临时目录，并只删除带固定前缀的系统生成路径。"
+          ]
+        },
+        {
+          "title": "4. 我们如何使用信息",
+          "paragraphs": [
+            "我们使用必要信息提供登录、文件处理、任务进度、结果下载、权限控制、订阅识别、异常排查和安全防护。",
+            "如果你提交问题反馈，我们可能根据截图、时间点、错误编号、页面地址和操作步骤定位问题。反馈内容会尽量限制在排障所需范围内。"
+          ]
+        },
+        {
+          "title": "5. 保留与删除",
+          "paragraphs": [
+            "临时文件会按上述生命周期清理。Redis 中的文件/任务缓存也设置了过期时间，用于避免临时任务长期可访问。",
+            "数据库中的账户信息、订阅状态、必要审计记录、错误摘要和反馈记录可能会按合理期限继续保留，用于安全、账务、排查和合规目的。"
+          ]
+        },
+        {
+          "title": "6. 你的选择与权利",
+          "paragraphs": [
+            "你可以选择不注册账户而使用部分基础功能。对于需要登录、订阅或云端处理的功能，你可以自行决定是否继续。",
+            "你可以请求查看、更正或删除账户相关信息。某些安全、支付、审计或故障排查记录可能需要按合理期限保留。"
+          ]
+        },
+        {
+          "title": "7. 安全措施",
+          "paragraphs": [
+            "我们采用密码哈希、安全登录、角色权限、基础安全日志和最小必要访问原则来降低风险。",
+            "没有任何在线服务能保证绝对安全。处理高度敏感文件前，请优先考虑本地处理或自行脱敏。"
+          ]
+        },
+        {
+          "title": "8. 政策更新",
+          "paragraphs": [
+            "随着支付、团队协作、企业 API 或更多云端能力上线，本政策可能更新。重要变化会尽量通过页面提示、版本记录或站内说明告知。"
+          ]
+        },
+        {
+          "title": "9. 联系我们",
+          "paragraphs": [
+            "如果你对隐私、文件处理或账户数据有疑问，请通过网站展示的支持渠道联系我们。报告问题时，建议提供页面截图、时间点、错误编号和简短复现步骤。"
+          ]
+        }
+      ]
+    },
+    "terms": {
+      "eyebrow": "服务条款",
+      "title": "使用 PDF-Flow 前请了解这些规则",
+      "updated": "最后更新：2026 年 6 月 11 日",
+      "description": "这些条款说明你使用 PDF-Flow 时的基本权利、责任和限制。我们尽量用清晰的语言解释，而不是把重要信息藏在复杂术语里。",
+      "summaryTitle": "核心原则",
+      "summary": "你可以使用 PDF-Flow 处理合法、合规、属于你或你有权处理的文件。请不要上传违法、侵权、恶意、滥用资源或可能伤害他人的内容。重要文件请自行保留备份并核对处理结果。",
+      "note": "如果你不同意这些条款，请停止使用需要登录、上传、云端处理或订阅的功能。",
+      "sections": [
+        {
+          "title": "1. 接受条款",
+          "paragraphs": [
+            "当你访问、注册、登录或继续使用 PDF-Flow，即表示你理解并同意遵守当前服务条款和隐私政策。",
+            "我们可能根据产品变化、法律要求或运营需要更新条款。更新后的条款会展示在本页面，继续使用服务即表示你接受更新后的版本。"
+          ]
+        },
+        {
+          "title": "2. 账户与安全",
+          "paragraphs": [
+            "你需要对自己的账户、登录凭据和账户下发生的操作负责。请使用安全密码，不要共享账户，也不要允许未经授权的人使用你的账户。",
+            "如果你发现账户异常、疑似被盗、订阅异常或未知任务记录，请尽快通过网站展示的支持渠道联系我们。"
+          ],
+          "bullets": [
+            "不得冒用他人身份注册或使用服务。",
+            "不得绕过权限、套餐限制、上传限制或安全控制。",
+            "不得尝试访问非公开管理区域、私有接口或其他用户数据。"
+          ]
+        },
+        {
+          "title": "3. 文件与内容责任",
+          "paragraphs": [
+            "你确认自己拥有上传、转换、识别、分析或下载相关文件所需的合法权利。PDF-Flow 不会替你判断某份文件是否可以处理或传播。",
+            "你应自行保存重要文件的原件和备份，并在使用处理结果前进行核对。转换、压缩、OCR 或 AI 分析可能受到文件质量、格式、语言、浏览器环境或第三方依赖影响。"
+          ]
+        },
+        {
+          "title": "4. 禁止行为",
+          "paragraphs": [
+            "为了保护服务稳定和其他用户体验，你不得将 PDF-Flow 用于违法、侵权、欺诈、骚扰、传播恶意代码、批量滥用资源或规避访问控制的行为。",
+            "如果系统检测到异常请求、恶意文件、资源滥用或高风险行为，我们可能限制上传、暂停任务、冻结账户或拒绝继续提供部分服务。"
+          ],
+          "bullets": [
+            "上传病毒、木马、攻击脚本或伪装文件。",
+            "批量刷接口、绕过速率限制或消耗异常资源。",
+            "处理你无权处理的受版权、隐私或监管保护的内容。"
+          ]
+        },
+        {
+          "title": "5. 订阅、付费与功能限制",
+          "paragraphs": [
+            "部分高级功能可能需要登录、Pro 或企业权限。具体功能、额度、价格、退款和取消规则以购买页面或支付流程展示为准。",
+            "我们可能根据产品阶段调整套餐边界、可用额度或功能开放方式。对于影响较大的调整，会尽量用清楚的页面提示或公告说明。"
+          ]
+        },
+        {
+          "title": "6. 服务可用性与限制",
+          "paragraphs": [
+            "我们会努力保持服务稳定，但不能保证所有文件、格式、浏览器、网络环境和第三方依赖都能始终正常工作。",
+            "服务可能因为维护、升级、依赖故障、网络问题、安全事件或不可抗力而中断、变慢或暂时不可用。我们会尽量缩短影响并恢复服务。"
+          ]
+        },
+        {
+          "title": "7. 免责声明",
+          "paragraphs": [
+            "PDF-Flow 提供的是文档处理工具，不提供法律、财务、医疗或专业审查意见。AI 分析、OCR 识别和格式转换结果可能存在错误或遗漏。",
+            "对于重要合同、发票、证件、合规文件或其他关键资料，请在使用结果前自行复核，必要时寻求专业人士确认。"
+          ]
+        },
+        {
+          "title": "8. 变更、暂停与终止",
+          "paragraphs": [
+            "如果账户违反条款、危害服务安全、侵犯他人权益或造成明显资源滥用，我们可以限制、暂停或终止相关账户和任务。",
+            "你也可以停止使用服务，或在账户功能支持时请求删除账户。某些安全、支付、审计和故障排查记录可能会在合理期限内继续保留。"
+          ]
+        },
+        {
+          "title": "9. 联系与反馈",
+          "paragraphs": [
+            "如果你对条款、账户、订阅或文件处理结果有疑问，请通过网站展示的支持渠道联系我们。反馈技术问题时，请提供截图、时间点、错误编号和简短复现步骤。"
+          ]
+        }
+      ]
+    }
+  },
+  "home": {
+    "workspace": {
+      "eyebrow": "PDF 工具",
+      "title": "常用 PDF 工具，打开就能用",
+      "description": "合并、压缩、拆分、转换、OCR 和 AI 分析都在一个清晰入口里。",
+      "primaryAction": "从合并 PDF 开始",
+      "secondaryAction": "查看定价",
+      "searchPlaceholder": "搜索工具，例如：压缩、OCR、水印",
+      "quickTitle": "常用工具",
+      "allTools": "全部工具",
+      "noResults": "没有找到匹配工具",
+      "noResultsHint": "换一个关键词，或切换到全部分类。",
+      "advancedTitle": "Pro 高级工具",
+      "advancedDescription": "OCR、Office 转 PDF、AI 分析、表单填写和标注适合更高频的文档工作。",
+      "featuredTitle": "常用入口",
+      "toolsTitle": "选择工具",
+      "disabledFallback": "该功能正在维护中，暂时无法使用。",
+      "stats": [
+        [
+          "23+",
+          "工具"
+        ],
+        [
+          "18",
+          "免费工具"
+        ],
+        [
+          "5",
+          "Pro 工具"
+        ]
+      ],
+      "trust": [
+        [
+          "常用工具",
+          "合并、拆分、压缩、旋转和转换可以直接开始。"
+        ],
+        [
+          "Pro 工具",
+          "OCR、Office、AI、表单和标注适合更复杂的文档。"
+        ],
+        [
+          "快速找到",
+          "按任务类型浏览，少解释，多入口。"
+        ]
+      ],
+      "categories": {
+        "organize": "整理",
+        "convert": "转换",
+        "optimize": "优化",
+        "secure": "安全",
+        "extract": "提取",
+        "advanced": "高级"
+      },
+      "modeLabels": {
+        "local": "免费",
+        "cloud": "Pro",
+        "ai": "AI"
+      }
+    }
+  },
+  "features": {
+    "page": {
+      "heroEyebrow": "功能特性",
+      "heroTitle": "从上传到导出都保持清晰的 PDF 工作流",
+      "heroDescription": "PDF-Flow 把日常编辑、更重的云端任务和账号历史放在一个专注的工作区里，让每个文档任务都从合适的位置开始。",
+      "primaryAction": "打开工具中心",
+      "secondaryAction": "查看定价",
+      "pillars": [
+        {
+          "title": "日常 PDF 操作",
+          "body": "合并、拆分、压缩、旋转、转换、水印、页码和内容提取等常用能力，不需要在复杂目录里反复寻找。"
+        },
+        {
+          "title": "需要时再使用高级能力",
+          "body": "OCR、Office 转换、AI 分析、表单和标注适合需要更多处理能力，或需要登录工作区的任务。"
+        },
+        {
+          "title": "这是工作流，不是第二个目录",
+          "body": "工具页面专注当前任务，历史记录、账号状态、套餐权限和导出结果围绕实际工作保持连接。"
+        }
+      ],
+      "workflowTitle": "围绕文档处理过程设计",
+      "workflowDescription": "产品把“选择工具”和“处理文件”分开。功能页解释系统能力，工具页负责真正移动文件。",
+      "workflowSteps": [
+        "从工具中心选择任务类型，或从最近活动继续工作。",
+        "在当前文件对应的页面使用专注控件，而不是再浏览一遍工具目录。",
+        "任务完成后导出、下载，或回到账号历史查看结果。"
+      ],
+      "trustTitle": "面向真实文档处理的设计",
+      "trustItems": [
+        {
+          "title": "清晰的访问状态",
+          "body": "免费、Pro、需要登录和暂不可用状态会出现在最相关的位置。"
+        },
+        {
+          "title": "能本地处理时优先本地",
+          "body": "本地工具在浏览器中完成；云端工具会说明何时需要登录或上传。"
+        },
+        {
+          "title": "为后续扩展留空间",
+          "body": "同一结构可以承载更大文件、团队工作流和高级处理，同时不打扰基础功能。"
+        }
+      ],
+      "ctaTitle": "从你需要的工具开始",
+      "ctaDescription": "前往工具中心查看完整操作列表；当高级工作流成为常用需求时，再查看定价。"
+    }
+  },
+  "pricing": {
+    "page": {
+      "eyebrow": "定价",
+      "title": "选择适合你的 PDF 套餐",
+      "description": "日常操作从免费版开始。需要 OCR、Office 转换、AI 分析、表单填写或标注时，再升级 Pro。",
+      "freeName": "免费",
+      "freeEyebrow": "日常 PDF 工具",
+      "freePeriod": "永久免费",
+      "freeDescription": "适合合并、拆分、压缩、转换和整理 PDF。",
+      "freeBestFor": "个人轻量使用",
+      "freeCta": "开始免费使用",
+      "proName": "Pro",
+      "proEyebrow": "高级文档工具",
+      "proPeriod": "按月订阅",
+      "proDescription": "适合 OCR、Office 转换、AI 分析、表单填写、标注和高频文档工作。",
+      "proBestFor": "高频文档工作",
+      "proCta": "升级 Pro",
+      "enterpriseName": "企业",
+      "enterpriseEyebrow": "团队与集成",
+      "enterprisePrice": "按需",
+      "enterprisePeriod": "联系确认",
+      "enterpriseDescription": "适合团队统一使用、更多额度、权限管理和上线支持。",
+      "enterpriseBestFor": "团队使用",
+      "enterpriseCta": "联系咨询",
+      "currentPlan": "当前套餐",
+      "popular": "推荐",
+      "featuresLabel": "功能对比",
+      "notesLabel": "适合",
+      "faqTitle": "常见问题",
+      "faqSubtitle": "升级前可以先看这里。",
+      "ctaTitle": "先免费使用，需要时再升级 Pro",
+      "ctaBody": "合并、拆分、压缩、转换和整理 PDF 可以直接开始。高级工具成为常用需求后，再升级 Pro。",
+      "authHint": "登录后可继续升级或查看当前套餐。",
+      "paymentFailed": "暂时无法打开支付页面，请稍后重试或通过反馈告诉我们。",
+      "paymentFailedTitle": "暂时无法打开支付页面",
+      "paymentFailedHint": "请先重试一次；如果仍然失败，请带上诊断码提交反馈。",
+      "paymentMethodTitle": "支付方式",
+      "paymentMethodSubtitle": "选择你想使用的支付方式。",
+      "paymentModalTitle": "选择支付方式",
+      "paymentModalSubtitle": "选择支付方式后继续付款。Pro 只会在支付确认后开通。",
+      "paymentModalConfirm": "立即支付",
+      "paymentModalChange": "暂不支付",
+      "paymentProvidersLoading": "正在加载可用支付方式...",
+      "paymentProvidersRetry": "重新加载支付方式",
+      "paymentProvidersFailedTitle": "暂时无法加载支付方式",
+      "paymentProvidersFailedMessage": "暂时无法加载支付方式，请重试后再继续。",
+      "paymentProvidersFailedHint": "请先重试一次；如果仍然失败，请带上诊断码提交反馈。",
+      "paymentNoProviders": "当前没有启用的支付方式，请稍后再试。",
+      "paymentProviderUnavailable": "暂不可用",
+      "paymentRedirectBadge": "在线支付",
+      "paymentQrBadge": "扫码支付",
+      "paymentSubscriptionBadge": "订阅",
+      "paymentOneTimeBadge": "在线支付",
+      "paymentQrTitle": "支付码已生成",
+      "paymentQrMessage": "请打开支付页面或复制支付码完成付款。支付完成后，Pro 会自动开通。",
+      "paymentQrCodeLabel": "支付码",
+      "paymentQrOpen": "打开支付页面",
+      "paymentQrCopy": "复制支付码",
+      "paymentQrCopied": "已复制",
+      "paymentQrCopyFailed": "复制失败，请手动选择支付码。",
+      "viewFeatures": "查看功能",
+      "freeFeatures": [
+        "合并、拆分、旋转 PDF",
+        "压缩与常用导出",
+        "图片转 PDF、PDF 转图片",
+        "水印、页码、裁剪和提取工具"
+      ],
+      "freeNotes": [
+        "偶尔处理文件",
+        "日常 PDF 整理",
+        "快速开始"
+      ],
+      "proFeatures": [
+        "OCR 文字识别",
+        "Office 转 PDF",
+        "AI PDF 分析器",
+        "PDF 表单填写与标注",
+        "更大、更长的文档工作流"
+      ],
+      "proNotes": [
+        "频繁处理 PDF",
+        "高级文档任务",
+        "需要更多容量的工作流"
+      ],
+      "enterpriseFeatures": [
+        "团队使用与权限管理",
+        "更高额度与稳定性支持",
+        "API 接入",
+        "上线与维护建议"
+      ],
+      "enterpriseNotes": [
+        "多人协作",
+        "系统接入",
+        "需要更明确的支持响应"
+      ],
+      "faq": [
+        [
+          "什么时候选择 Pro？",
+          "当 OCR、Office 转换、AI 分析、表单、标注或更高频的 PDF 工作成为日常时，Pro 更合适。"
+        ],
+        [
+          "可以一直用免费版吗？",
+          "可以。免费版适合常见 PDF 操作和偶尔的文档整理。"
+        ],
+        [
+          "我可以先免费试用吗？",
+          "可以。建议先用免费功能确认流程，再根据真实需求决定是否升级。"
+        ],
+        [
+          "企业版适合谁？",
+          "适合团队统一使用、需要更高额度、权限管理、流程接入或稳定支持的用户。"
+        ]
+      ]
+    }
+  },
+  "toolsCenter": {
+    "eyebrow": "工具中心",
+    "title": "所有 PDF 工具，一处选择",
+    "description": "按任务类型浏览工具。常用操作直接打开，OCR、Office、AI、表单和标注归入 Pro。",
+    "searchPlaceholder": "搜索工具，例如：合并、压缩、AI",
+    "allCategories": "全部分类",
+    "allModes": "全部类型",
+    "noResults": "没有匹配的工具",
+    "noResultsHint": "清空搜索或切换分类后再试。",
+    "enabled": "可用工具",
+    "advanced": "Pro 工具",
+    "localFirst": "免费工具",
+    "categoryLabel": "分类",
+    "modeLabel": "类型",
+    "openTool": "打开工具",
+    "localDescription": "适合日常文件和基础 PDF 操作。",
+    "cloudDescription": "适合 OCR、Office 转换、大文件和较长任务。",
+    "aiDescription": "适合总结、问答和结构化信息提取。",
+    "categories": {
+      "organize": "整理 PDF",
+      "convert": "转换格式",
+      "optimize": "优化文件",
+      "secure": "安全与签署",
+      "extract": "提取内容",
+      "advanced": "高级工作流"
+    },
+    "modes": {
+      "local": "免费",
+      "cloud": "Pro",
+      "ai": "AI 分析"
+    }
   }
 }

@@ -9,7 +9,7 @@ This is the internal source of truth for development direction, current progress
 - Official repository: `https://github.com/bedlatess/PDF_Flow_v2.git`
 - Official remote name: `v2`
 - Branch: `main`
-- Last verified runtime commit: `7d975725d939b4b8e5e093def9441c28bf08c2e7`
+- Last verified runtime commit: `e7bb5cb848aa78dd9badac804471948d93326a5f`
 - The server also records the active runtime commit at `.deploy_state/main/current_deployed_commit`.
 - Server path: `/root/data/docker_data/PDF/pdf-flow`
 - Deployment model: single repository, single Docker Compose server
@@ -203,6 +203,12 @@ Deployment:
   - `https://pdf.pawn.eu.org/api/v1/auth/oauth/github` returns HTTP 302 to GitHub with callback `https://pdf.pawn.eu.org/api/v1/auth/oauth/github/callback`
   - `https://pdf.pawn.eu.org/api/v1/auth/oauth/google` returns HTTP 503
   - OAuth session state is now backed by `SessionMiddleware`
+- Fixed admin access login flow on production:
+  - deployment `e7bb5cb848aa78dd9badac804471948d93326a5f` completed successfully at `2026-06-13 21:55:06`
+  - admin access state now renders its own administrator login form instead of linking to a public-app route on the admin domain
+  - the access state includes a real return link to the public homepage
+  - production admin password for `admin@pawn.eu.org` was rotated with `scripts/init-admin.sh`
+  - `https://admin.pawn.eu.org/api/v1/auth/login` returns bearer and refresh tokens for the rotated admin credentials
 
 ## Known Code Issues
 

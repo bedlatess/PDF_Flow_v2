@@ -42,7 +42,7 @@ class EmailService:
             bool: True if sent successfully
         """
         if not self.enabled:
-            logger.info(f"[EMAIL DISABLED] Would send to {to}: {subject}")
+            logger.info(f"[EMAIL DISABLED] Skipped sending email to {to}: {subject}")
             logger.debug(f"HTML content: {html}")
             return True
 
@@ -86,7 +86,7 @@ class EmailService:
         Returns:
             bool: True if sent successfully
         """
-        subject = "Welcome to PDF-Flow! 🎉"
+        subject = "Welcome to PDF-Flow"
 
         html = f"""
         <!DOCTYPE html>
@@ -101,7 +101,7 @@ class EmailService:
                 .button {{ display: inline-block; padding: 12px 24px; background: #667eea; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0; }}
                 .features {{ background: #f6f8fa; padding: 20px; border-radius: 6px; margin: 20px 0; }}
                 .feature-item {{ margin: 10px 0; padding-left: 24px; position: relative; }}
-                .feature-item:before {{ content: "✓"; position: absolute; left: 0; color: #28a745; font-weight: bold; }}
+                .feature-item:before {{ content: "-"; position: absolute; left: 0; color: #28a745; font-weight: bold; }}
                 .footer {{ text-align: center; padding: 20px; color: #586069; font-size: 14px; }}
             </style>
         </head>
@@ -236,7 +236,7 @@ class EmailService:
                     <p style="word-break: break-all; color: #0366d6;">{reset_url}</p>
 
                     <div class="warning">
-                        <strong>⚠️ Security Notice:</strong>
+                        <strong>Security Notice:</strong>
                         <ul style="margin: 10px 0;">
                             <li>This link expires in <strong>1 hour</strong></li>
                             <li>If you didn't request this reset, please ignore this email</li>
@@ -297,7 +297,7 @@ class EmailService:
         Returns:
             bool: True if sent successfully
         """
-        subject = f"We miss you, {username}! Come back to PDF-Flow 💙"
+        subject = f"We miss you, {username}! Come back to PDF-Flow"
 
         html = f"""
         <!DOCTYPE html>
@@ -317,7 +317,7 @@ class EmailService:
         <body>
             <div class="container">
                 <div class="header">
-                    <h1>We Miss You! 💙</h1>
+                    <h1>We Miss You!</h1>
                     <p>Come back and continue working with your PDFs</p>
                 </div>
 
@@ -345,7 +345,7 @@ class EmailService:
                         <li>Merge multiple PDFs into one</li>
                         <li>Split PDFs into individual pages</li>
                         <li>Compress large files</li>
-                        <li>Convert images ↔ PDFs</li>
+                        <li>Convert images to PDFs</li>
                         <li>Add watermarks to protect your documents</li>
                     </ul>
 
@@ -388,7 +388,7 @@ class EmailService:
         - Merge multiple PDFs into one
         - Split PDFs into individual pages
         - Compress large files
-        - Convert images ↔ PDFs
+        - Convert images to PDFs
         - Add watermarks to protect your documents
 
         All basic tools work 100% locally in your browser - your files never leave your device!
@@ -426,7 +426,7 @@ class EmailService:
         Returns:
             bool: True if sent successfully
         """
-        subject = f"Welcome to PDF-Flow {plan}! 🎉"
+        subject = f"Welcome to PDF-Flow {plan}"
 
         html = f"""
         <!DOCTYPE html>
@@ -446,7 +446,7 @@ class EmailService:
         <body>
             <div class="container">
                 <div class="header">
-                    <h1>Welcome to {plan}! 🎉</h1>
+                    <h1>Welcome to {plan}!</h1>
                     <p>Thank you for upgrading</p>
                 </div>
 

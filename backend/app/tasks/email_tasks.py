@@ -1,7 +1,4 @@
-"""
-Celery tasks for automated email sending
-Handles churn prevention and scheduled email campaigns
-"""
+"""Celery tasks for automated email sending."""
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from celery import shared_task
@@ -85,102 +82,6 @@ def send_churn_prevention_emails():
 
     except Exception as e:
         logger.error(f"Error in send_churn_prevention_emails task: {str(e)}")
-        raise
-    finally:
-        db.close()
-
-
-@shared_task(name="send_subscription_expiry_reminders")
-def send_subscription_expiry_reminders():
-    """
-    Send reminders to users whose subscriptions are expiring soon
-
-    Sends emails 7 days before subscription ends
-
-    Returns:
-        dict: Summary of emails sent
-    """
-    db = SessionLocal()
-
-    try:
-        now = datetime.utcnow()
-        reminder_date = now + timedelta(days=7)
-        emails_sent = 0
-
-        # Find users with subscriptions expiring in 7 days
-        expiring_users = db.query(User).filter(
-            User.subscription_end_date >= now,
-            User.subscription_end_date <= reminder_date,
-            User.subscription_status.in_(["active", "trialing"]),
-            User.email.isnot(None)
-        ).all()
-
-        logger.info(f"Found {len(expiring_users)} users with expiring subscriptions")
-
-        for user in expiring_users:
-            try:
-                # TODO: Implement subscription expiry email template
-                # For now, just log
-                logger.info(f"Would send expiry reminder to {user.email}")
-                emails_sent += 1
-
-            except Exception as e:
-                logger.error(f"Error sending expiry reminder to {user.email}: {str(e)}")
-
-        logger.info(f"Subscription expiry reminders sent: {emails_sent}")
-        return {"emails_sent": emails_sent}
-
-    except Exception as e:
-        logger.error(f"Error in send_subscription_expiry_reminders task: {str(e)}")
-        raise
-    finally:
-        db.close()
-
-
-@shared_task(name="send_weekly_digest")
-def send_weekly_digest():
-    """
-    Send weekly digest emails to active users
-
-    Includes:
-    - Usage statistics for the week
-    - New features
-    - Tips and tricks
-
-    Returns:
-        dict: Summary of emails sent
-    """
-    db = SessionLocal()
-
-    try:
-        now = datetime.utcnow()
-        week_ago = now - timedelta(days=7)
-        emails_sent = 0
-
-        # Find active users (logged in within last 30 days)
-        active_users = db.query(User).filter(
-            User.is_active == True,
-            User.last_login_at >= now - timedelta(days=30),
-            User.email.isnot(None)
-        ).all()
-
-        logger.info(f"Found {len(active_users)} active users for weekly digest")
-
-        for user in active_users:
-            try:
-                # TODO: Implement weekly digest email template
-                # For now, just log
-                logger.info(f"Would send weekly digest to {user.email}")
-                emails_sent += 1
-
-            except Exception as e:
-                logger.error(f"Error sending weekly digest to {user.email}: {str(e)}")
-
-        logger.info(f"Weekly digests sent: {emails_sent}")
-        return {"emails_sent": emails_sent}
-
-    except Exception as e:
-        logger.error(f"Error in send_weekly_digest task: {str(e)}")
         raise
     finally:
         db.close()

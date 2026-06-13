@@ -101,6 +101,10 @@ Deployment:
 - Made `v2` the official remote locally and on the server.
 - Cleaned stale generated artifacts and ignored local caches.
 - Cleaned OAuth, backend, and repository docs into the two-document model.
+- Cleaned locale JSON baselines to minimal valid fallbacks; the current UI copy still comes mainly from `src/locales/overrides.ts`.
+- Removed fake scheduled email campaigns that only logged success instead of sending real messages.
+- Cleaned backend Celery/task/email/monitoring text that still carried historical mojibake or fragile console characters.
+- Normalized the PDF fixture generator to a single `.mjs` script and removed the duplicate `.ts` copy.
 - Fixed CI/runtime alignment around Node 22 and current target tests.
 - Fixed an outdated DragDropZone unit test.
 - Verified server health after deploying `c10f65d`:
@@ -117,13 +121,12 @@ Deployment:
 Fix these before large feature work:
 
 1. Repository metadata in `package.json` previously pointed to placeholder GitHub URLs. Keep it aligned with `PDF_Flow_v2`.
-2. Some source comments still contain historical mojibake in frontend router/API comments. These are not usually user-facing, but they should be cleaned during the next refactor pass.
-3. `src/locales/overrides.ts` is too large and acts as an uncontrolled patch layer over JSON locale files.
-4. `ControlRoom.vue` remains too large and mixes orchestration, formatting, clipboard summaries, confirmation flows, and tab-level actions.
-5. Admin UI is embedded in the public app. This is workable for acceptance but not ideal for a formal production admin portal.
-6. Locale handling is manual-only and defaults to `zh`; it does not support locale-prefixed routes or browser-language negotiation.
-7. Public content blocks only normalize `zh*` to `zh` and otherwise fall back to `en`, so future languages need a more formal locale model.
-8. Some internal diagnostic codes are still visible in advanced/account/admin-adjacent flows. They are useful for support, but public user-facing copy should stay calm and hide internal detail unless troubleshooting is needed.
+2. `src/locales/overrides.ts` is too large and acts as an uncontrolled patch layer over JSON locale files.
+3. `ControlRoom.vue` remains too large and mixes orchestration, formatting, clipboard summaries, confirmation flows, and tab-level actions.
+4. Admin UI is embedded in the public app. This is workable for acceptance but not ideal for a formal production admin portal.
+5. Locale handling is manual-only and defaults to `zh`; it does not support locale-prefixed routes or browser-language negotiation.
+6. Public content blocks only normalize `zh*` to `zh` and otherwise fall back to `en`, so future languages need a more formal locale model.
+7. Some internal diagnostic codes are still visible in advanced/account/admin-adjacent flows. They are useful for support, but public user-facing copy should stay calm and hide internal detail unless troubleshooting is needed.
 
 ## Documentation Policy
 
@@ -174,11 +177,13 @@ Do not add all of these immediately. The platform refactor below should come fir
 
 Goal: remove obvious metadata and code hygiene risks before architecture work.
 
-- Fix `package.json` repository, bugs, and homepage fields.
-- Clean mojibake comments in `src/router/guards.ts`, `src/router/index.ts`, and `src/services/api.ts`.
-- Keep docs limited to `README.md` and this file.
-- Keep generated artifacts out of Git.
-- Keep `v2/main` as the only official project line.
+- Completed: `package.json` repository metadata points to `PDF_Flow_v2`.
+- Completed: docs are consolidated to `README.md` and this file.
+- Completed: generated artifacts and duplicate fixture scripts were removed from Git.
+- Completed: `v2/main` is the only official project line.
+- Completed: known mojibake patterns were removed from the scanned source/docs surface.
+- Completed: unfinished scheduled email tasks were removed until real templates and product requirements exist.
+- Ongoing: keep `src/locales/overrides.ts` stable until Phase 2 replaces the i18n model.
 
 Acceptance:
 

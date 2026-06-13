@@ -39,11 +39,11 @@ class MonitoringService:
                     before_send=self._sentry_before_send,
                 )
                 self.sentry_enabled = True
-                print(f"✓ Sentry initialized (env: {settings.ENVIRONMENT})")
+                print(f"Sentry initialized (env: {settings.ENVIRONMENT})")
         except ImportError:
-            print("⚠ Sentry SDK not installed")
+            print("Sentry SDK not installed")
         except Exception as e:
-            print(f"⚠ Failed to initialize Sentry: {e}")
+            print(f"Failed to initialize Sentry: {e}")
 
     def _init_posthog(self):
         """Initialize PostHog for user analytics"""
@@ -57,11 +57,11 @@ class MonitoringService:
                     host='https://app.posthog.com'
                 )
                 self.posthog_enabled = True
-                print("✓ PostHog initialized")
+                print("PostHog initialized")
         except ImportError:
-            print("⚠ PostHog SDK not installed")
+            print("PostHog SDK not installed")
         except Exception as e:
-            print(f"⚠ Failed to initialize PostHog: {e}")
+            print(f"Failed to initialize PostHog: {e}")
 
     def _sentry_before_send(self, event, hint):
         """Filter sensitive data before sending to Sentry"""

@@ -66,8 +66,9 @@ test.describe('Availability and route edge states', () => {
 
     await page.goto('/missing/deep/path?from=test')
 
+    await expect(page).toHaveURL(/\/en\/missing\/deep\/path\?from=test/)
     await expect(page.getByRole('heading', { name: 'We could not find that page' })).toBeVisible()
-    await expect(page.getByText('/missing/deep/path?from=test', { exact: true })).toBeVisible()
+    await expect(page.getByText('/en/missing/deep/path?from=test', { exact: true })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Back home' })).toBeVisible()
     await expectNoHorizontalOverflow(page)
   })

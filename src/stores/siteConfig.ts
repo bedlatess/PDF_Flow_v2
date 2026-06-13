@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { siteConfigAPI, type PublicFeatureFlag, type PublicSiteConfig } from '@/services/api'
 import { formatUserFacingError, type FormattedUserError } from '@/utils/error-messages'
+import { resolveContentLocale } from '@/locales/registry'
 
 type PublicContentBlock = PublicSiteConfig['content_blocks'][string]
 
@@ -77,17 +78,12 @@ export const useSiteConfigStore = defineStore('site-config', () => {
     getBooleanSetting('maintenance_mode', false)
   )
 
-  const resolveLocale = (locale: string) => {
-    if (locale.startsWith('zh')) return 'zh'
-    return 'en'
-  }
-
   const getContentBlock = (
     key: string,
     locale: string,
     fallback?: PublicContentBlock
   ) => {
-    const normalizedLocale = resolveLocale(locale)
+    const normalizedLocale = resolveContentLocale(locale)
     return (
       contentBlocks.value[`${key}:${normalizedLocale}`] ||
       contentBlocks.value[`${key}:zh`] ||

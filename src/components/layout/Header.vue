@@ -17,6 +17,7 @@ import {
 import { useSettingsStore } from '@/stores/settings'
 import { useUserStore } from '@/stores/user'
 import { useSiteConfigStore } from '@/stores/siteConfig'
+import { localeRegistry, withLocalePrefix, type SupportedLocale } from '@/locales/registry'
 import Button from '@/components/common/Button.vue'
 
 const router = useRouter()
@@ -31,11 +32,7 @@ const userMenuOpen = ref(false)
 const mobileMenuId = 'mobile-navigation-menu'
 const accountMenuId = 'account-navigation-menu'
 
-const localeOptions = [
-  { value: 'zh', label: '\u7b80\u4f53\u4e2d\u6587' },
-  { value: 'en', label: 'English' },
-  { value: 'es', label: 'Espa\u00f1ol' },
-] as const
+const localeOptions = localeRegistry
 
 const publicLinks = computed(() => [
   {
@@ -70,16 +67,19 @@ const mobileMenuLabel = computed(() =>
 
 const isRouteActive = (target: string) =>
   target === '/tools'
-    ? route.path === target || route.path.startsWith('/tools/')
-    : route.path === target
+    ? route.path === localizedPath(target) || route.path.startsWith(`${localizedPath(target)}/`)
+    : route.path === localizedPath(target)
+
+const localizedPath = (target: string, targetLocale = settingsStore.locale) =>
+  withLocalePrefix(target, targetLocale)
 
 const navigateHome = () => {
-  router.push('/')
+  router.push(localizedPath('/'))
   mobileMenuOpen.value = false
 }
 
 const navigateTo = (target: string) => {
-  router.push(target)
+  router.push(localizedPath(target))
   mobileMenuOpen.value = false
 }
 
@@ -89,18 +89,18 @@ const closeMenus = () => {
 }
 
 const goToLogin = () => {
-  router.push('/auth/login')
+  router.push(localizedPath('/auth/login'))
   mobileMenuOpen.value = false
 }
 
 const goToProfile = () => {
-  router.push('/auth/profile')
+  router.push(localizedPath('/auth/profile'))
   userMenuOpen.value = false
   mobileMenuOpen.value = false
 }
 
 const goToHistory = () => {
-  router.push('/history')
+  router.push(localizedPath('/history'))
   userMenuOpen.value = false
   mobileMenuOpen.value = false
 }
@@ -109,7 +109,7 @@ const handleLogout = async () => {
   await userStore.logout()
   userMenuOpen.value = false
   mobileMenuOpen.value = false
-  router.push('/')
+  router.push(localizedPath('/'))
 }
 
 const toggleTheme = () => {
@@ -117,8 +117,9 @@ const toggleTheme = () => {
   settingsStore.setTheme(newTheme)
 }
 
-const changeLocale = (newLocale: 'en' | 'zh' | 'es') => {
+const changeLocale = (newLocale: SupportedLocale) => {
   settingsStore.setLocale(newLocale)
+  router.push(localizedPath(route.path, newLocale))
 }
 
 onMounted(() => {
@@ -210,12 +211,12 @@ onMounted(() => {
             :value="locale"
             class="rounded-md border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 outline-none transition hover:border-sky-200 focus:border-sky-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-sky-500/40"
             :aria-label="t('nav.language')"
-            @change="changeLocale(($event.target as HTMLSelectElement).value as 'en' | 'zh' | 'es')"
+            @change="changeLocale(($event.target as HTMLSelectElement).value as SupportedLocale)"
           >
             <option
               v-for="option in localeOptions"
-              :key="option.value"
-              :value="option.value"
+              :key="option.id"
+              :value="option.id"
             >
               {{ option.label }}
             </option>
@@ -362,12 +363,12 @@ onMounted(() => {
               :value="locale"
               class="rounded-md border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-sky-500 dark:border-slate-800 dark:bg-slate-950/60 dark:text-slate-100"
               :aria-label="t('nav.language')"
-              @change="changeLocale(($event.target as HTMLSelectElement).value as 'en' | 'zh' | 'es')"
+              @change="changeLocale(($event.target as HTMLSelectElement).value as SupportedLocale)"
             >
               <option
-                v-for="option in localeOptions"
-                :key="`mobile-${option.value}`"
-                :value="option.value"
+              v-for="option in localeOptions"
+                :key="`mobile-${option.id}`"
+                :value="option.id"
               >
                 {{ option.label }}
               </option>

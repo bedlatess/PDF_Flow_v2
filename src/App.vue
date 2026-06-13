@@ -8,6 +8,7 @@ import DiagnosticAlert from '@/components/common/DiagnosticAlert.vue'
 import { useI18n } from 'vue-i18n'
 import { useSettingsStore } from '@/stores/settings'
 import { useSiteConfigStore } from '@/stores/siteConfig'
+import { splitLocaleFromPath } from '@/locales/registry'
 
 const settingsStore = useSettingsStore()
 const siteConfigStore = useSiteConfigStore()
@@ -17,14 +18,14 @@ const currentLocale = computed(() => settingsStore.locale)
 const maintenanceMessage = computed(() =>
   siteConfigStore.globalAnnouncement || t('appShell.maintenanceMessage')
 )
-const maintenanceBypassPrefixes = ['/auth', '/control-room', '/privacy', '/terms']
+const maintenanceBypassPrefixes = ['/auth', '/privacy', '/terms']
+const routePathWithoutLocale = computed(() => splitLocaleFromPath(route.path).pathWithoutLocale)
 const shouldShowMaintenance = computed(() =>
   siteConfigStore.maintenanceMode &&
-  !maintenanceBypassPrefixes.some((prefix) => route.path.startsWith(prefix))
+  !maintenanceBypassPrefixes.some((prefix) => routePathWithoutLocale.value.startsWith(prefix))
 )
 const shouldShowFeedback = computed(() =>
-  !route.path.startsWith('/control-room') &&
-  !route.path.startsWith('/auth') &&
+  !routePathWithoutLocale.value.startsWith('/auth') &&
   !shouldShowMaintenance.value
 )
 

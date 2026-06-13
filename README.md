@@ -97,6 +97,7 @@ bash scripts/main-smoke-suite.sh
 
 ```text
 src/                    Vue frontend application
+src/admin/              Dedicated admin frontend entry and admin API client
 backend/                FastAPI backend, migrations, services, tasks, and tests
 tests/e2e-playwright/   Playwright browser regression specs
 tests/unit/             Vitest unit tests
@@ -112,11 +113,20 @@ Never commit real credentials. Use local `.env` files and server-side `backend/.
 
 Important backend configuration groups:
 
-- Core: `SECRET_KEY`, `DATABASE_URL`, `REDIS_URL`, `BACKEND_PUBLIC_URL`, `FRONTEND_URL`, `ALLOWED_ORIGINS`, `ALLOWED_HOSTS`
+- Core: `SECRET_KEY`, `DATABASE_URL`, `REDIS_URL`, `BACKEND_PUBLIC_URL`, `FRONTEND_URL`, `ADMIN_FRONTEND_URL`, `ALLOWED_ORIGINS`, `ALLOWED_HOSTS`
 - OAuth: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`
 - Email: `RESEND_API_KEY`, `EMAIL_FROM`, `PASSWORD_RESET_TOKEN_EXPIRE_HOURS`
 - Payments: provider credentials, webhook secrets, signing keys, hosted gateway URLs
 - AI/OCR/Office: provider keys and processing service settings
+
+The public frontend and admin frontend are separate Vite entries. Local Docker exposes them as:
+
+```text
+http://localhost:5173  public app
+http://localhost:5174  admin app
+```
+
+For production, set `FRONTEND_URL` to the public HTTPS origin and `ADMIN_FRONTEND_URL` to the prepared admin HTTPS origin. The backend automatically includes both URLs in CORS, and `ALLOWED_ORIGINS` can list additional trusted origins when needed.
 
 OAuth callback URLs use this pattern:
 
@@ -155,6 +165,8 @@ cd /root/data/docker_data/PDF/pdf-flow
 git pull --ff-only v2 main
 bash scripts/deploy-main.sh
 ```
+
+The frontend image builds both `dist/` and `dist-admin/`. Nginx serves the public app from `PUBLIC_FRONTEND_HOST` and the admin app from `ADMIN_FRONTEND_HOST`; the admin server adds `X-Robots-Tag: noindex, nofollow` and a stricter CSP. For local Compose, ports `5173` and `5174` map to those two entries.
 
 Check status:
 

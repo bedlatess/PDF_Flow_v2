@@ -1,4 +1,10 @@
 import type { Router, RouteLocationNormalizedLoaded } from 'vue-router'
+import {
+  getLocaleByRoutePrefix,
+  resolvePreferredLocale,
+  withLocalePrefix,
+  type SupportedLocale,
+} from '@/locales/registry'
 
 interface FeatureAccessParams {
   router: Router
@@ -8,6 +14,15 @@ interface FeatureAccessParams {
   requiresPro?: boolean
   pricingFeature?: string
 }
+
+const getRouteLocale = (route: RouteLocationNormalizedLoaded): SupportedLocale => {
+  const localeParam = route.params.locale
+  const prefix = Array.isArray(localeParam) ? localeParam[0] : localeParam
+  return (typeof prefix === 'string' && getLocaleByRoutePrefix(prefix)) || resolvePreferredLocale()
+}
+
+const localePath = (path: string, route: RouteLocationNormalizedLoaded) =>
+  withLocalePrefix(path, getRouteLocale(route))
 
 export function redirectForFeatureAccess({
   router,
@@ -19,7 +34,7 @@ export function redirectForFeatureAccess({
 }: FeatureAccessParams) {
   if (!isAuthenticated) {
     router.push({
-      path: '/auth/login',
+      path: localePath('/auth/login', route),
       query: { redirect: route.fullPath },
     })
     return false
@@ -27,7 +42,7 @@ export function redirectForFeatureAccess({
 
   if (requiresPro && !canUseCloudFeatures) {
     router.push({
-      path: '/pricing',
+      path: localePath('/pricing', route),
       query: { feature: pricingFeature || String(route.name || 'pro') },
     })
     return false

@@ -100,9 +100,11 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ReceiptText, RefreshCw, ShieldCheck, XCircle } from 'lucide-vue-next'
 import Button from '@/components/common/Button.vue'
+import { useLocalePath } from '@/composables/useLocalePath'
 
 const router = useRouter()
 const { t } = useI18n()
+const { localePath } = useLocalePath()
 const benefits = computed(() => [
   t('payment.cancel.benefit1'),
   t('payment.cancel.benefit2'),
@@ -120,14 +122,14 @@ const statusItems = computed(() => [
 ])
 
 const tryAgain = () => {
-  router.push('/pricing')
+  router.push(localePath('/pricing'))
 }
 
 const goBack = () => {
-  router.push('/pricing')
+  router.push(localePath('/pricing'))
 }
 
 const continueFree = () => {
-  router.push('/')
+  router.push(localePath('/'))
 }
 </script>

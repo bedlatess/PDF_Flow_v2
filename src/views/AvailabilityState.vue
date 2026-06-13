@@ -5,10 +5,12 @@ import { useRoute, useRouter } from 'vue-router'
 import { AlertTriangle, ArrowLeft, Home, RefreshCw, SearchX, Wrench } from 'lucide-vue-next'
 import { getFirstQueryValue } from '@/utils/route-state'
 import { pdfTools } from '@/data/pdfTools'
+import { useLocalePath } from '@/composables/useLocalePath'
 
 const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
+const { localePath } = useLocalePath()
 
 const state = computed(() => getFirstQueryValue(route.query.state) || 'not-found')
 const featureKey = computed(() => getFirstQueryValue(route.query.feature))
@@ -54,12 +56,12 @@ const retryTarget = computed(() => {
 })
 
 const goPrimary = () => {
-  router.push(isFeatureDisabled.value ? '/tools' : '/')
+  router.push(isFeatureDisabled.value ? localePath('/tools') : localePath('/'))
 }
 
 const retry = () => {
   if (retryTarget.value) {
-    router.push(retryTarget.value)
+    router.push(localePath(retryTarget.value))
   }
 }
 
@@ -69,7 +71,7 @@ const goBack = () => {
     return
   }
 
-  router.push('/')
+  router.push(localePath('/'))
 }
 </script>
 

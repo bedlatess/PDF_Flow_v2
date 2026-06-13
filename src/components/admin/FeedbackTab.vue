@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ClipboardCopy, Save } from 'lucide-vue-next'
-import type { AdminFeedback } from '@/services/api'
+import type { AdminFeedback } from '@/admin/api'
 import AdminActionButton from './AdminActionButton.vue'
 import AdminPanel from './AdminPanel.vue'
 import StatusPill from './StatusPill.vue'

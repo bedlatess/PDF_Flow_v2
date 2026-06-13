@@ -14,12 +14,14 @@ import {
 import ProBadge from '@/components/common/ProBadge.vue'
 import { useSiteConfigStore } from '@/stores/siteConfig'
 import { pdfTools, toolCategories, type PdfToolMeta, type ToolCategory, type ToolMode } from '@/data/pdfTools'
+import { useLocalePath } from '@/composables/useLocalePath'
 
 type ModeFilter = ToolMode | 'all'
 
 const { t } = useI18n()
 const router = useRouter()
 const siteConfigStore = useSiteConfigStore()
+const { localePath } = useLocalePath()
 
 const query = ref('')
 const activeCategory = ref<ToolCategory | 'all'>('all')
@@ -146,7 +148,7 @@ const modeClassMap: Record<ToolMode, string> = {
 const getAccentClass = (tool: PdfToolMeta) => accentClassMap[tool.accent] || accentClassMap.slate
 
 const openTool = (tool: PdfToolMeta) => {
-  router.push(tool.route)
+  router.push(localePath(tool.route))
 }
 
 onMounted(() => {

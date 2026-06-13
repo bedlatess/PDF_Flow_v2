@@ -791,7 +791,7 @@ test.describe('Admin Control Room visual QA', () => {
     test(`renders all admin tabs without overflow on ${viewport.label}`, async ({ page }) => {
       await mockAdminControlRoom(page)
       await page.setViewportSize({ width: viewport.width, height: viewport.height })
-      await page.goto('/control-room')
+      await page.goto('/')
 
       await expect(page.getByRole('heading', { name: 'PDF-Flow Control Room' })).toBeVisible()
       await expect(page.locator('p.text-lg', { hasText: '上线健康报告' })).toBeVisible()
@@ -828,7 +828,7 @@ test.describe('Admin Control Room visual QA', () => {
     }
     await mockAdminControlRoom(page, calls)
 
-    await page.goto('/control-room')
+    await page.goto('/')
     await page.getByRole('button', { name: '维护清理' }).click()
     await expect(page.getByRole('button', { name: '重新统计数量' })).toBeVisible()
 
@@ -874,7 +874,7 @@ test.describe('Admin Control Room visual QA', () => {
       deleteUsers: 0,
     }
     await mockAdminControlRoom(page, calls)
-    await page.goto('/control-room')
+    await page.goto('/')
 
     await page.getByRole('button', { name: '用户管理' }).click()
     const smokeUserRow = page
@@ -909,7 +909,7 @@ test.describe('Admin Control Room visual QA', () => {
       })
     })
     await mockAdminControlRoom(page)
-    await page.goto('/control-room')
+    await page.goto('/')
 
     await page.getByRole('button', { name: '错误观察' }).click()
     await expect(page.getByText('PDF-Flow diagnostic packet')).toBeVisible()
@@ -938,7 +938,7 @@ test.describe('Admin payment reconciliation QA', () => {
       })
     })
     await mockAdminControlRoom(page)
-    await page.goto('/control-room')
+    await page.goto('/')
 
     await page.getByRole('button', { name: '支付对账' }).click()
     await expect(page.getByText('PDF-Flow payment reconciliation packet')).toBeVisible()

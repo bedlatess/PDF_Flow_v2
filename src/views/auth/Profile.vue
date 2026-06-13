@@ -138,7 +138,7 @@
               <button
                 v-if="userStore.isFreeTier"
                 class="inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-400"
-                @click="router.push('/pricing')"
+                @click="router.push(localePath('/pricing'))"
               >
                 {{ t('account.upgradeToPro') }}
               </button>
@@ -241,10 +241,12 @@ import { useI18n } from 'vue-i18n'
 import ConfirmationDialog from '@/components/common/ConfirmationDialog.vue'
 import DiagnosticAlert from '@/components/common/DiagnosticAlert.vue'
 import { formatUserFacingError, type FormattedUserError } from '@/utils/error-messages'
+import { useLocalePath } from '@/composables/useLocalePath'
 
 const router = useRouter()
 const userStore = useUserStore()
 const { t } = useI18n()
+const { localePath } = useLocalePath()
 
 const editing = ref(false)
 const updateMessage = ref('')
@@ -325,7 +327,7 @@ const deleteAccount = async () => {
   try {
     await userStore.deleteAccount()
     showDeleteConfirmation.value = false
-    router.push('/')
+    router.push(localePath('/'))
   } catch (error) {
     accountError.value = formatUserFacingError(error, {
       area: 'AUTH',

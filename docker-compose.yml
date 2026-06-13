@@ -51,9 +51,10 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/1
-      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:3000}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:5174,http://localhost:3000}
       - ALLOWED_HOSTS=${ALLOWED_HOSTS:-*}
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5173}
+      - ADMIN_FRONTEND_URL=${ADMIN_FRONTEND_URL:-http://localhost:5174}
       - OAUTH_REDIRECT_URL=${OAUTH_REDIRECT_URL:-http://localhost:8000}
       - BACKEND_PUBLIC_URL=${BACKEND_PUBLIC_URL:-http://localhost:8000}
       - PAYMENT_ENABLED_PROVIDERS=${PAYMENT_ENABLED_PROVIDERS:-stripe}
@@ -163,6 +164,10 @@ services:
         condition: service_healthy
     ports:
       - "5173:80"
+      - "5174:8080"
+    environment:
+      - PUBLIC_FRONTEND_HOST=${PUBLIC_FRONTEND_HOST:-localhost}
+      - ADMIN_FRONTEND_HOST=${ADMIN_FRONTEND_HOST:-admin.localhost}
 
 volumes:
   postgres_data:

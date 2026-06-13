@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { Cloud, Cpu, LogIn, Sparkles } from 'lucide-vue-next'
 import { useUserStore } from '@/stores/user'
+import { useLocalePath } from '@/composables/useLocalePath'
 
 const props = defineProps<{
   modelValue: boolean
@@ -16,6 +17,7 @@ const emit = defineEmits<{
 const router = useRouter()
 const { t } = useI18n()
 const userStore = useUserStore()
+const { localePath } = useLocalePath()
 
 const canUseCloud = computed(() => userStore.canUseCloudFeatures)
 
@@ -39,7 +41,7 @@ const actionHint = computed(() => {
 
 const toggle = () => {
   if (!canUseCloud.value) {
-    router.push(userStore.isAuthenticated ? '/pricing' : '/auth/login')
+    router.push(localePath(userStore.isAuthenticated ? '/pricing' : '/auth/login'))
     return
   }
   emit('update:modelValue', !props.modelValue)

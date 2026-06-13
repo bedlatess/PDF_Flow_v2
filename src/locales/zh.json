@@ -14,7 +14,7 @@
     "upload": "上传文件",
     "download": "下载",
     "processing": "处理中...",
-    "dragDrop": "拖放文件到这里",
+    "dragDrop": "将文件拖放到这里",
     "or": "或",
     "browse": "浏览",
     "back": "返回",
@@ -42,10 +42,35 @@
     "processingLogin": "正在处理登录...",
     "pleaseWait": "请稍候，我们正在完成登录"
   },
-  "tools": {},
+  "tools": {
+    "merge": { "title": "合并 PDF", "desc": "将多个 PDF 合并为一个文件" },
+    "split": { "title": "拆分 PDF", "desc": "从 PDF 中提取页面或范围" },
+    "rotate": { "title": "旋转 PDF", "desc": "旋转 PDF 页面并导出新副本" },
+    "compress": { "title": "压缩 PDF", "desc": "在可行时减小 PDF 文件大小" },
+    "imageToPdf": { "title": "图片转 PDF", "desc": "将图片转换为 PDF" },
+    "pdfToImage": { "title": "PDF 转图片", "desc": "将 PDF 页面导出为图片" },
+    "deletePages": { "title": "删除 PDF 页面", "desc": "从 PDF 中移除不需要的页面" },
+    "organize": { "title": "整理 PDF 页面", "desc": "导出前重新排列页面" },
+    "pageNumbers": { "title": "添加 PDF 页码", "desc": "为 PDF 文件添加页码" },
+    "crop": { "title": "裁剪 PDF", "desc": "裁掉空白边距和页面边缘" },
+    "flatten": { "title": "扁平化 PDF", "desc": "将表单外观锁定为普通副本" },
+    "repair": { "title": "修复 PDF", "desc": "重建可读取的 PDF 结构" },
+    "protect": { "title": "保护 PDF", "desc": "为 PDF 添加打开密码" },
+    "unlock": { "title": "解锁 PDF", "desc": "使用已知密码创建解锁副本" },
+    "sign": { "title": "签署 PDF", "desc": "为 PDF 添加可视签名" },
+    "extractText": { "title": "提取 PDF 文本", "desc": "从 PDF 中导出可复制文本" },
+    "extractImages": { "title": "提取 PDF 图片", "desc": "从 PDF 中提取嵌入图片" },
+    "ocr": { "title": "OCR PDF", "desc": "识别扫描文件中的文字" },
+    "officeToPdf": { "title": "Office 转 PDF", "desc": "将 Office 文件转换为 PDF" },
+    "watermark": { "title": "PDF 加水印", "desc": "为 PDF 添加文字水印" },
+    "fillForm": { "title": "填写 PDF 表单", "desc": "填写 PDF 表单字段" },
+    "annotate": { "title": "批注 PDF", "desc": "为 PDF 添加备注和高亮" }
+  },
   "cloud": {},
   "payment": {},
   "account": {},
   "enterprise": {},
-  "ai": {}
+  "ai": {
+    "title": "AI PDF 分析器"
+  }
 }

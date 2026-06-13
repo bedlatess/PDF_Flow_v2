@@ -5,7 +5,7 @@ import type {
   AdminDiagnostics,
   AdminOperations,
   AdminOverview,
-} from '@/services/api'
+} from '@/admin/api'
 import AdminActionButton from './AdminActionButton.vue'
 import AdminPanel from './AdminPanel.vue'
 import StatusPill from './StatusPill.vue'

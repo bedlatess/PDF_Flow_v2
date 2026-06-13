@@ -190,10 +190,12 @@ import { useI18n } from 'vue-i18n'
 import DiagnosticAlert from '@/components/common/DiagnosticAlert.vue'
 import AuthWorkspaceShell from '@/components/auth/AuthWorkspaceShell.vue'
 import { formatUserFacingError, type FormattedUserError } from '@/utils/error-messages'
+import { useLocalePath } from '@/composables/useLocalePath'
 
 const router = useRouter()
 const userStore = useUserStore()
 const { t, tm } = useI18n()
+const { localePath } = useLocalePath()
 
 interface AuthMarketingHighlight {
   title: string
@@ -317,7 +319,10 @@ const handleRegister = async () => {
       full_name: form.fullName,
     })
 
-    router.push('/auth/login?registered=true')
+    router.push({
+      path: localePath('/auth/login'),
+      query: { registered: 'true' },
+    })
   } catch (error) {
     errorState.value = formatUserFacingError(error, {
       area: 'AUTH',

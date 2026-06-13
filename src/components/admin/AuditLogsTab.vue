@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { LockKeyhole, ShieldCheck } from 'lucide-vue-next'
-import type { AdminAuditLog } from '@/services/api'
+import type { AdminAuditLog } from '@/admin/api'
 import AdminPanel from './AdminPanel.vue'
 
 defineProps<{

@@ -42,10 +42,35 @@
     "processingLogin": "Procesando inicio de sesion...",
     "pleaseWait": "Espera mientras completamos tu inicio de sesion"
   },
-  "tools": {},
+  "tools": {
+    "merge": { "title": "Unir PDF", "desc": "Combina varios PDF en un archivo" },
+    "split": { "title": "Dividir PDF", "desc": "Extrae paginas o rangos de un PDF" },
+    "rotate": { "title": "Rotar PDF", "desc": "Rota paginas PDF y exporta una copia" },
+    "compress": { "title": "Comprimir PDF", "desc": "Reduce el tamano del PDF cuando sea posible" },
+    "imageToPdf": { "title": "Imagen a PDF", "desc": "Convierte imagenes en PDF" },
+    "pdfToImage": { "title": "PDF a imagen", "desc": "Exporta paginas PDF como imagenes" },
+    "deletePages": { "title": "Eliminar paginas PDF", "desc": "Quita paginas no deseadas de un PDF" },
+    "organize": { "title": "Organizar paginas PDF", "desc": "Reordena paginas antes de exportar" },
+    "pageNumbers": { "title": "Agregar numeros de pagina", "desc": "Agrega numeros de pagina a PDF" },
+    "crop": { "title": "Recortar PDF", "desc": "Recorta margenes y bordes de pagina" },
+    "flatten": { "title": "Aplanar PDF", "desc": "Bloquea la apariencia del formulario" },
+    "repair": { "title": "Reparar PDF", "desc": "Reconstruye la estructura legible del PDF" },
+    "protect": { "title": "Proteger PDF", "desc": "Agrega una contrasena de apertura" },
+    "unlock": { "title": "Desbloquear PDF", "desc": "Crea una copia desbloqueada con la contrasena conocida" },
+    "sign": { "title": "Firmar PDF", "desc": "Agrega una firma visual al PDF" },
+    "extractText": { "title": "Extraer texto PDF", "desc": "Exporta texto copiable desde PDF" },
+    "extractImages": { "title": "Extraer imagenes PDF", "desc": "Extrae imagenes incrustadas de PDF" },
+    "ocr": { "title": "OCR PDF", "desc": "Reconoce texto en archivos escaneados" },
+    "officeToPdf": { "title": "Office a PDF", "desc": "Convierte archivos Office a PDF" },
+    "watermark": { "title": "Marca de agua PDF", "desc": "Agrega una marca de agua de texto" },
+    "fillForm": { "title": "Rellenar formulario PDF", "desc": "Rellena campos de formulario PDF" },
+    "annotate": { "title": "Anotar PDF", "desc": "Agrega notas y resaltados a un PDF" }
+  },
   "cloud": {},
   "payment": {},
   "account": {},
   "enterprise": {},
-  "ai": {}
+  "ai": {
+    "title": "Analizador PDF con IA"
+  }
 }

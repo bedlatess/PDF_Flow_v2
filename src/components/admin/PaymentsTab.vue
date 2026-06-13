@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ClipboardCopy, CreditCard, RefreshCw, ShieldCheck } from 'lucide-vue-next'
-import type { AdminPaymentSummary } from '@/services/api'
+import type { AdminPaymentSummary } from '@/admin/api'
 import AdminActionButton from './AdminActionButton.vue'
 import AdminPanel from './AdminPanel.vue'
 import StatusPill from './StatusPill.vue'

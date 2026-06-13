@@ -14,9 +14,11 @@ import {
 } from 'lucide-vue-next'
 
 import Button from '@/components/common/Button.vue'
+import { useLocalePath } from '@/composables/useLocalePath'
 
 const { tm } = useI18n()
 const router = useRouter()
+const { localePath } = useLocalePath()
 
 interface FeatureCopy {
   heroEyebrow: string
@@ -64,7 +66,7 @@ const trustIcons = [ShieldCheck, LockKeyhole, Sparkles]
             <Button
               size="lg"
               class="gap-2"
-              @click="router.push('/tools')"
+              @click="router.push(localePath('/tools'))"
             >
               {{ page.primaryAction }}
               <ArrowRight class="h-4 w-4" />
@@ -72,7 +74,7 @@ const trustIcons = [ShieldCheck, LockKeyhole, Sparkles]
             <Button
               size="lg"
               variant="outline"
-              @click="router.push('/pricing')"
+              @click="router.push(localePath('/pricing'))"
             >
               {{ page.secondaryAction }}
             </Button>
@@ -164,7 +166,7 @@ const trustIcons = [ShieldCheck, LockKeyhole, Sparkles]
             <Button
               size="lg"
               class="gap-2 md:shrink-0"
-              @click="router.push('/tools')"
+              @click="router.push(localePath('/tools'))"
             >
               {{ page.primaryAction }}
               <ArrowRight class="h-4 w-4" />

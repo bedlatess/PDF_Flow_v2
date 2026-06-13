@@ -41,6 +41,7 @@ class Settings(BaseSettings):
         default="localhost,127.0.0.1",
         alias="ALLOWED_HOSTS"
     )
+    ADMIN_FRONTEND_URL: str = "http://localhost:5174"
 
     # Database (Supabase PostgreSQL)
     DATABASE_URL: str
@@ -155,6 +156,19 @@ class Settings(BaseSettings):
     @property
     def ALLOWED_ORIGINS(self) -> List[str]:
         return self._parse_list_setting(self.ALLOWED_ORIGINS_RAW)
+
+    @property
+    def CORS_ALLOWED_ORIGINS(self) -> List[str]:
+        origins = self.ALLOWED_ORIGINS
+        if "*" in origins:
+            return ["*"]
+
+        for url in (self.FRONTEND_URL, self.ADMIN_FRONTEND_URL):
+            normalized = (url or "").strip().rstrip("/")
+            if normalized and normalized not in origins:
+                origins.append(normalized)
+
+        return origins
 
     @property
     def ALLOWED_HOSTS(self) -> List[str]:

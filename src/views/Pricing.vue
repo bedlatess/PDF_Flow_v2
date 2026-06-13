@@ -19,6 +19,7 @@ import Modal from '@/components/common/Modal.vue'
 import { useUserStore } from '@/stores/user'
 import { formatUserFacingError, type FormattedUserError } from '@/utils/error-messages'
 import type { PaymentProviderKey, PaymentProviderOption } from '@/services/api'
+import { useLocalePath } from '@/composables/useLocalePath'
 
 type PlanId = 'free' | 'pro' | 'enterprise'
 type ButtonVariant = 'primary' | 'outline'
@@ -110,6 +111,7 @@ interface PricingPageCopy {
 const router = useRouter()
 const userStore = useUserStore()
 const { tm } = useI18n()
+const { localePath } = useLocalePath()
 const checkoutLoadingPlan = ref<PlanId | null>(null)
 const checkoutError = ref<FormattedUserError | null>(null)
 const paymentModalOpen = ref(false)
@@ -268,12 +270,12 @@ const handleCTA = async (plan: Plan) => {
   paymentCodeCopyState.value = 'idle'
 
   if (plan.current) {
-    router.push('/auth/profile')
+    router.push(localePath('/auth/profile'))
     return
   }
 
   if (plan.id === 'free') {
-    router.push('/')
+    router.push(localePath('/'))
     return
   }
 
@@ -283,7 +285,10 @@ const handleCTA = async (plan: Plan) => {
   }
 
   if (!userStore.isAuthenticated) {
-    router.push('/auth/login?redirect=/pricing')
+    router.push({
+      path: localePath('/auth/login'),
+      query: { redirect: localePath('/pricing') },
+    })
     return
   }
 
@@ -319,8 +324,8 @@ const startProCheckout = async () => {
     const { paymentAPI } = await import('@/services/api')
     const response = await paymentAPI.createCheckoutSession({
       plan: 'monthly',
-      success_url: `${window.location.origin}/payment/success`,
-      cancel_url: `${window.location.origin}/payment/cancel`,
+      success_url: `${window.location.origin}${localePath('/payment/success')}`,
+      cancel_url: `${window.location.origin}${localePath('/payment/cancel')}`,
       provider: selectedPaymentProvider.value,
     })
 
@@ -497,7 +502,7 @@ watch(
           <Button
             variant="outline"
             class="rounded-md"
-            @click="router.push('/features')"
+            @click="router.push(localePath('/features'))"
           >
             {{ copy.viewFeatures }}
             <ArrowRight class="ml-2 h-4 w-4" />
@@ -542,14 +547,14 @@ watch(
             <Button
               variant="primary"
               class="rounded-md"
-              @click="router.push('/')"
+              @click="router.push(localePath('/'))"
             >
               {{ copy.freeCta }}
             </Button>
             <Button
               variant="outline"
               class="rounded-md"
-              @click="router.push('/features')"
+              @click="router.push(localePath('/features'))"
             >
               {{ copy.viewFeatures }}
             </Button>

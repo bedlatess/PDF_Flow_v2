@@ -42,10 +42,35 @@
     "processingLogin": "Processing login...",
     "pleaseWait": "Please wait while we complete your login"
   },
-  "tools": {},
+  "tools": {
+    "merge": { "title": "Merge PDF", "desc": "Combine multiple PDFs into one file" },
+    "split": { "title": "Split PDF", "desc": "Extract pages or ranges from a PDF" },
+    "rotate": { "title": "Rotate PDF", "desc": "Rotate PDF pages and export a new copy" },
+    "compress": { "title": "Compress PDF", "desc": "Reduce PDF file size when possible" },
+    "imageToPdf": { "title": "Image to PDF", "desc": "Convert images into a PDF" },
+    "pdfToImage": { "title": "PDF to Image", "desc": "Export PDF pages as images" },
+    "deletePages": { "title": "Delete PDF Pages", "desc": "Remove unwanted pages from a PDF" },
+    "organize": { "title": "Organize PDF Pages", "desc": "Reorder pages before exporting" },
+    "pageNumbers": { "title": "Add PDF Page Numbers", "desc": "Add page numbers to PDF files" },
+    "crop": { "title": "Crop PDF", "desc": "Trim whitespace and page edges" },
+    "flatten": { "title": "Flatten PDF", "desc": "Lock form appearance into a flat copy" },
+    "repair": { "title": "Repair PDF", "desc": "Rebuild readable PDF structure" },
+    "protect": { "title": "Protect PDF", "desc": "Add an opening password to a PDF" },
+    "unlock": { "title": "Unlock PDF", "desc": "Create an unlocked copy with the known password" },
+    "sign": { "title": "Sign PDF", "desc": "Add a visual signature to a PDF" },
+    "extractText": { "title": "Extract PDF Text", "desc": "Export copyable text from PDFs" },
+    "extractImages": { "title": "Extract PDF Images", "desc": "Pull embedded images from PDFs" },
+    "ocr": { "title": "OCR PDF", "desc": "Recognize text from scanned files" },
+    "officeToPdf": { "title": "Office to PDF", "desc": "Convert Office files to PDF" },
+    "watermark": { "title": "Watermark PDF", "desc": "Add a text watermark to a PDF" },
+    "fillForm": { "title": "Fill PDF Form", "desc": "Fill PDF form fields" },
+    "annotate": { "title": "Annotate PDF", "desc": "Add notes and highlights to a PDF" }
+  },
   "cloud": {},
   "payment": {},
   "account": {},
   "enterprise": {},
-  "ai": {}
+  "ai": {
+    "title": "AI PDF Analyzer"
+  }
 }

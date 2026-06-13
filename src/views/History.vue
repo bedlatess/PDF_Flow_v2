@@ -4,12 +4,14 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import Button from '@/components/common/Button.vue'
 import HistoryPanel from '@/components/common/HistoryPanel.vue'
+import { useLocalePath } from '@/composables/useLocalePath'
 
 const router = useRouter()
 const { t } = useI18n()
+const { localePath } = useLocalePath()
 
 const goHome = () => {
-  router.push('/')
+  router.push(localePath('/'))
 }
 </script>
 

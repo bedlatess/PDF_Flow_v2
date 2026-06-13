@@ -14,6 +14,7 @@ import {
 import ProBadge from '@/components/common/ProBadge.vue'
 import { useSiteConfigStore } from '@/stores/siteConfig'
 import { pdfTools, toolCategories, type PdfToolMeta, type ToolCategory, type ToolMode } from '@/data/pdfTools'
+import { useLocalePath } from '@/composables/useLocalePath'
 
 type HomeWorkspaceCopy = {
   eyebrow: string
@@ -39,6 +40,7 @@ type HomeWorkspaceCopy = {
 const { t, tm } = useI18n()
 const router = useRouter()
 const siteConfigStore = useSiteConfigStore()
+const { localePath } = useLocalePath()
 
 const searchQuery = ref('')
 const activeCategory = ref<ToolCategory | 'all'>('all')
@@ -106,7 +108,7 @@ const accentClassMap: Record<string, string> = {
 const getAccentClass = (tool: PdfToolMeta) => accentClassMap[tool.accent] || accentClassMap.slate
 
 const navigateToTool = (tool: PdfToolMeta) => {
-  router.push(tool.route)
+  router.push(localePath(tool.route))
 }
 
 onMounted(() => {
@@ -134,7 +136,7 @@ onMounted(() => {
               <button
                 type="button"
                 class="inline-flex min-h-11 items-center gap-2 rounded-md bg-red-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-slate-950"
-                @click="router.push('/tools/merge')"
+                @click="router.push(localePath('/tools/merge'))"
               >
                 {{ workspaceCopy.primaryAction }}
                 <ArrowRight class="h-4 w-4" />
@@ -142,7 +144,7 @@ onMounted(() => {
               <button
                 type="button"
                 class="inline-flex min-h-11 items-center rounded-md border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-800 transition hover:border-slate-400 hover:bg-slate-50 dark:border-white/15 dark:bg-slate-900 dark:text-white dark:hover:bg-slate-800"
-                @click="router.push('/pricing')"
+                @click="router.push(localePath('/pricing'))"
               >
                 {{ workspaceCopy.secondaryAction }}
               </button>

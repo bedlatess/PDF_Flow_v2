@@ -153,10 +153,12 @@ import WebhookManager from '@/components/enterprise/WebhookManager.vue'
 import BillingStats from '@/components/enterprise/BillingStats.vue'
 import APIDocumentation from '@/components/enterprise/APIDocumentation.vue'
 import { formatUserFacingError, type FormattedUserError } from '@/utils/error-messages'
+import { useLocalePath } from '@/composables/useLocalePath'
 
 const { t } = useI18n()
 const router = useRouter()
 const userStore = useUserStore()
+const { localePath } = useLocalePath()
 
 const loading = ref(true)
 const activeTab = ref('api-keys')
@@ -198,7 +200,7 @@ const loadDashboardStats = async () => {
   } catch (error: any) {
     // Redirect if not enterprise user
     if (error.response?.status === 403) {
-      router.push('/pricing')
+      router.push(localePath('/pricing'))
       return
     }
 
@@ -215,7 +217,7 @@ const loadDashboardStats = async () => {
 onMounted(() => {
   // Check if user is enterprise
   if (!userStore.isEnterpriseTier) {
-    router.push('/pricing')
+    router.push(localePath('/pricing'))
     return
   }
 

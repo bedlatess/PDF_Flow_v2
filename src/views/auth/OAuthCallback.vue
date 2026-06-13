@@ -37,6 +37,7 @@ import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-vue-next'
 import Button from '@/components/common/Button.vue'
 import { useUserStore } from '@/stores/user'
 import { getFirstQueryValue, resolveInternalRedirect } from '@/utils/route-state'
+import { useLocalePath } from '@/composables/useLocalePath'
 
 type CallbackStatus = 'checking' | 'saving' | 'complete' | 'error'
 
@@ -44,6 +45,7 @@ const router = useRouter()
 const route = useRoute()
 const { t } = useI18n()
 const userStore = useUserStore()
+const { localePath } = useLocalePath()
 const status = ref<CallbackStatus>('checking')
 
 const clearCallbackUrl = () => {
@@ -95,10 +97,13 @@ onMounted(async () => {
 })
 
 const goToLogin = () => {
-  router.replace('/auth/login?error=oauth_callback_failed')
+  router.replace({
+    path: localePath('/auth/login'),
+    query: { error: 'oauth_callback_failed' },
+  })
 }
 
 const goHome = () => {
-  router.replace('/')
+  router.replace(localePath('/'))
 }
 </script>

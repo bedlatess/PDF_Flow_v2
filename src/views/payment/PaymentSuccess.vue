@@ -126,12 +126,14 @@ import { BadgeCheck, CheckCircle2, Clock3, CreditCard, Mail, Sparkles } from 'lu
 import Button from '@/components/common/Button.vue'
 import { useUserStore } from '@/stores/user'
 import { useSiteConfigStore } from '@/stores/siteConfig'
+import { useLocalePath } from '@/composables/useLocalePath'
 
 const router = useRouter()
 const route = useRoute()
 const { t } = useI18n()
 const userStore = useUserStore()
 const siteConfigStore = useSiteConfigStore()
+const { localePath } = useLocalePath()
 const refreshState = ref<'idle' | 'refreshing' | 'synced' | 'guest'>('idle')
 
 const supportEmail = computed(() => siteConfigStore.getSettingValue('support_email', 'support@pdf-flow.com'))
@@ -170,10 +172,10 @@ onMounted(async () => {
 })
 
 const goToProfile = () => {
-  router.push('/auth/profile')
+  router.push(localePath('/auth/profile'))
 }
 
 const startUsing = () => {
-  router.push('/')
+  router.push(localePath('/'))
 }
 </script>

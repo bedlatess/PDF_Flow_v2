@@ -1,313 +1,179 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import { watch } from 'vue'
 import i18n from '@/i18n'
-import { guestGuard, authGuard, enterpriseGuard, adminGuard, featureFlagGuard } from './guards'
+import { useSettingsStore } from '@/stores/settings'
+import { guestGuard, authGuard, enterpriseGuard } from './guards'
 import { useSiteConfigStore } from '@/stores/siteConfig'
+import { useUserStore } from '@/stores/user'
+import { toolRoutes } from '@/data/pdfTools'
+import {
+  getLocaleByRoutePrefix,
+  localeRoutePattern,
+  resolvePreferredLocale,
+  withLocalePrefix,
+  type SupportedLocale,
+} from '@/locales/registry'
+import { updateRouteSeo } from '@/utils/seo'
+
+const baseRoutes: RouteRecordRaw[] = [
+  {
+    path: '/',
+    name: 'home',
+    component: () => import('@/views/Home.vue'),
+  },
+  {
+    path: '/features',
+    name: 'features',
+    component: () => import('@/views/Features.vue'),
+    meta: { titleKey: 'nav.features' },
+  },
+  {
+    path: '/pricing',
+    name: 'pricing',
+    component: () => import('@/views/Pricing.vue'),
+    meta: { titleKey: 'nav.pricing' },
+  },
+  {
+    path: '/history',
+    name: 'history',
+    component: () => import('@/views/History.vue'),
+    meta: { titleKey: 'history.title' },
+  },
+  {
+    path: '/privacy',
+    name: 'privacy-policy',
+    component: () => import('@/views/legal/PrivacyPolicy.vue'),
+    meta: { titleKey: 'footer.privacyPolicy' },
+  },
+  {
+    path: '/terms',
+    name: 'terms-of-service',
+    component: () => import('@/views/legal/TermsOfService.vue'),
+    meta: { titleKey: 'footer.termsOfService' },
+  },
+  {
+    path: '/auth',
+    children: [
+      {
+        path: 'login',
+        name: 'login',
+        component: () => import('@/views/auth/Login.vue'),
+        beforeEnter: guestGuard,
+        meta: { titleKey: 'auth.login' },
+      },
+      {
+        path: 'register',
+        name: 'register',
+        component: () => import('@/views/auth/Register.vue'),
+        beforeEnter: guestGuard,
+        meta: { titleKey: 'auth.register' },
+      },
+      {
+        path: 'forgot-password',
+        name: 'forgot-password',
+        component: () => import('@/views/auth/ForgotPassword.vue'),
+        beforeEnter: guestGuard,
+        meta: { titleKey: 'auth.passwordRecoveryTitle' },
+      },
+      {
+        path: 'reset-password',
+        name: 'reset-password',
+        component: () => import('@/views/auth/ResetPassword.vue'),
+        beforeEnter: guestGuard,
+        meta: { titleKey: 'auth.resetPasswordTitle' },
+      },
+      {
+        path: 'oauth-callback',
+        name: 'oauth-callback',
+        component: () => import('@/views/auth/OAuthCallback.vue'),
+        meta: { titleKey: 'auth.processingLogin' },
+      },
+      {
+        path: 'profile',
+        name: 'profile',
+        component: () => import('@/views/auth/Profile.vue'),
+        beforeEnter: authGuard,
+        meta: { titleKey: 'account.myAccount' },
+      },
+    ],
+  },
+  {
+    path: '/payment',
+    children: [
+      {
+        path: 'success',
+        name: 'payment-success',
+        component: () => import('@/views/payment/PaymentSuccess.vue'),
+        meta: { titleKey: 'payment.success.title' },
+      },
+      {
+        path: 'cancel',
+        name: 'payment-cancel',
+        component: () => import('@/views/payment/PaymentCancel.vue'),
+        meta: { titleKey: 'payment.cancel.title' },
+      },
+    ],
+  },
+  {
+    path: '/enterprise',
+    children: [
+      {
+        path: 'dashboard',
+        name: 'enterprise-dashboard',
+        component: () => import('@/views/enterprise/Dashboard.vue'),
+        beforeEnter: enterpriseGuard,
+        meta: { titleKey: 'enterprise.dashboard.title' },
+      },
+    ],
+  },
+  {
+    path: '/availability/feature-disabled',
+    name: 'feature-disabled',
+    component: () => import('@/views/AvailabilityState.vue'),
+    meta: { titleKey: 'availability.featureDisabledTitle' },
+  },
+  {
+    path: '/tools',
+    component: () => import('@/views/ToolsLayout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'tools-center',
+        component: () => import('@/views/ToolsCenter.vue'),
+        meta: { titleKey: 'nav.tools' },
+      },
+      ...toolRoutes,
+    ],
+  },
+]
+
+const localeRoutes: RouteRecordRaw[] = [
+  {
+    path: `/:locale(${localeRoutePattern})`,
+    children: [
+      ...baseRoutes.map((route) => ({
+        ...route,
+        path: route.path === '/' ? '' : route.path.replace(/^\//, ''),
+      })),
+      {
+        path: ':pathMatch(.*)*',
+        name: 'not-found',
+        component: () => import('@/views/AvailabilityState.vue'),
+        meta: { titleKey: 'availability.notFoundTitle' },
+      },
+    ],
+  },
+]
 
 const router = createRouter({
   history: createWebHistory('/'),
   routes: [
-    {
-      path: '/',
-      name: 'home',
-      component: () => import('@/views/Home.vue'),
-    },
-    {
-      path: '/features',
-      name: 'features',
-      component: () => import('@/views/Features.vue'),
-      meta: { titleKey: 'nav.features' }
-    },
-    {
-      path: '/pricing',
-      name: 'pricing',
-      component: () => import('@/views/Pricing.vue'),
-      meta: { titleKey: 'nav.pricing' }
-    },
-    {
-      path: '/history',
-      name: 'history',
-      component: () => import('@/views/History.vue'),
-      meta: { titleKey: 'history.title' }
-    },
-    {
-      path: '/privacy',
-      name: 'privacy-policy',
-      component: () => import('@/views/legal/PrivacyPolicy.vue'),
-      meta: { titleKey: 'footer.privacyPolicy' }
-    },
-    {
-      path: '/terms',
-      name: 'terms-of-service',
-      component: () => import('@/views/legal/TermsOfService.vue'),
-      meta: { titleKey: 'footer.termsOfService' }
-    },
-    {
-      path: '/auth',
-      children: [
-        {
-          path: 'login',
-          name: 'login',
-          component: () => import('@/views/auth/Login.vue'),
-          beforeEnter: guestGuard,
-          meta: { titleKey: 'auth.login' }
-        },
-        {
-          path: 'register',
-          name: 'register',
-          component: () => import('@/views/auth/Register.vue'),
-          beforeEnter: guestGuard,
-          meta: { titleKey: 'auth.register' }
-        },
-        {
-          path: 'forgot-password',
-          name: 'forgot-password',
-          component: () => import('@/views/auth/ForgotPassword.vue'),
-          beforeEnter: guestGuard,
-          meta: { titleKey: 'auth.passwordRecoveryTitle' }
-        },
-        {
-          path: 'reset-password',
-          name: 'reset-password',
-          component: () => import('@/views/auth/ResetPassword.vue'),
-          beforeEnter: guestGuard,
-          meta: { titleKey: 'auth.resetPasswordTitle' }
-        },
-        {
-          path: 'oauth-callback',
-          name: 'oauth-callback',
-          component: () => import('@/views/auth/OAuthCallback.vue'),
-          meta: { titleKey: 'auth.processingLogin' }
-        },
-        {
-          path: 'profile',
-          name: 'profile',
-          component: () => import('@/views/auth/Profile.vue'),
-          beforeEnter: authGuard,
-          meta: { titleKey: 'account.myAccount' }
-        }
-      ]
-    },
-    {
-      path: '/payment',
-      children: [
-        {
-          path: 'success',
-          name: 'payment-success',
-          component: () => import('@/views/payment/PaymentSuccess.vue'),
-          meta: { titleKey: 'payment.success.title' }
-        },
-        {
-          path: 'cancel',
-          name: 'payment-cancel',
-          component: () => import('@/views/payment/PaymentCancel.vue'),
-          meta: { titleKey: 'payment.cancel.title' }
-        }
-      ]
-    },
-    {
-      path: '/enterprise',
-      children: [
-        {
-          path: 'dashboard',
-          name: 'enterprise-dashboard',
-          component: () => import('@/views/enterprise/Dashboard.vue'),
-          beforeEnter: enterpriseGuard,
-          meta: { titleKey: 'enterprise.dashboard.title' }
-        }
-      ]
-    },
-    {
-      path: '/control-room',
-      name: 'control-room',
-      component: () => import('@/views/admin/ControlRoom.vue'),
-      beforeEnter: adminGuard,
-      meta: { title: 'Control Room' }
-    },
-    {
-      path: '/availability/feature-disabled',
-      name: 'feature-disabled',
-      component: () => import('@/views/AvailabilityState.vue'),
-      meta: { titleKey: 'availability.featureDisabledTitle' }
-    },
-    {
-      path: '/tools',
-      component: () => import('@/views/ToolsLayout.vue'),
-      children: [
-        {
-          path: '',
-          name: 'tools-center',
-          component: () => import('@/views/ToolsCenter.vue'),
-          meta: { titleKey: 'nav.tools' }
-        },
-        {
-          path: 'merge',
-          name: 'merge-pdf',
-          component: () => import('@/views/tools/MergePDF.vue'),
-          beforeEnter: featureFlagGuard,
-          meta: { titleKey: 'tools.merge.title', featureKey: 'merge_pdf' }
-        },
-        {
-          path: 'split',
-          name: 'split-pdf',
-          component: () => import('@/views/tools/SplitPDF.vue'),
-          beforeEnter: featureFlagGuard,
-          meta: { titleKey: 'tools.split.title', featureKey: 'split_pdf' }
-        },
-        {
-          path: 'rotate',
-          name: 'rotate-pdf',
-          component: () => import('@/views/tools/RotatePDF.vue'),
-          beforeEnter: featureFlagGuard,
-          meta: { titleKey: 'tools.rotate.title', featureKey: 'rotate_pdf' }
-        },
-        {
-          path: 'compress',
-          name: 'compress-pdf',
-          component: () => import('@/views/tools/CompressPDF.vue'),
-          beforeEnter: featureFlagGuard,
-          meta: { titleKey: 'tools.compress.title', featureKey: 'compress_pdf' }
-        },
-        {
-          path: 'image-to-pdf',
-          name: 'image-to-pdf',
-          component: () => import('@/views/tools/ImageToPDF.vue'),
-          beforeEnter: featureFlagGuard,
-          meta: { titleKey: 'tools.imageToPdf.title', featureKey: 'image_to_pdf' }
-        },
-        {
-          path: 'pdf-to-image',
-          name: 'pdf-to-image',
-          component: () => import('@/views/tools/PDFToImage.vue'),
-          beforeEnter: featureFlagGuard,
-          meta: { titleKey: 'tools.pdfToImage.title', featureKey: 'pdf_to_image' }
-        },
-        {
-          path: 'delete-pages',
-          name: 'delete-pages-pdf',
-          component: () => import('@/views/tools/DeletePagesPDF.vue'),
-          beforeEnter: featureFlagGuard,
-          meta: { titleKey: 'tools.deletePages.title', featureKey: 'delete_pages_pdf' }
-        },
-        {
-          path: 'organize',
-          name: 'organize-pdf',
-          component: () => import('@/views/tools/OrganizePDF.vue'),
-          beforeEnter: featureFlagGuard,
-          meta: { titleKey: 'tools.organize.title', featureKey: 'organize_pdf' }
-        },
-        {
-          path: 'page-numbers',
-          name: 'page-numbers-pdf',
-          component: () => import('@/views/tools/PageNumbersPDF.vue'),
-          beforeEnter: featureFlagGuard,
-          meta: { titleKey: 'tools.pageNumbers.title', featureKey: 'page_numbers_pdf' }
-        },
-        {
-          path: 'crop',
-          name: 'crop-pdf',
-          component: () => import('@/views/tools/CropPDF.vue'),
-          beforeEnter: featureFlagGuard,
-          meta: { titleKey: 'tools.crop.title', featureKey: 'crop_pdf' }
-        },
-        {
-          path: 'flatten',
-          name: 'flatten-pdf',
-          component: () => import('@/views/tools/FlattenPDF.vue'),
-          beforeEnter: featureFlagGuard,
-          meta: { titleKey: 'tools.flatten.title', featureKey: 'flatten_pdf' }
-        },
-        {
-          path: 'repair',
-          name: 'repair-pdf',
-          component: () => import('@/views/tools/RepairPDF.vue'),
-          beforeEnter: featureFlagGuard,
-          meta: { titleKey: 'tools.repair.title', featureKey: 'repair_pdf' }
-        },
-        {
-          path: 'protect',
-          name: 'protect-pdf',
-          component: () => import('@/views/tools/ProtectPDF.vue'),
-          beforeEnter: featureFlagGuard,
-          meta: { titleKey: 'tools.protect.title', featureKey: 'protect_pdf' }
-        },
-        {
-          path: 'unlock',
-          name: 'unlock-pdf',
-          component: () => import('@/views/tools/UnlockPDF.vue'),
-          beforeEnter: featureFlagGuard,
-          meta: { titleKey: 'tools.unlock.title', featureKey: 'unlock_pdf' }
-        },
-        {
-          path: 'sign',
-          name: 'sign-pdf',
-          component: () => import('@/views/tools/SignPDF.vue'),
-          beforeEnter: featureFlagGuard,
-          meta: { titleKey: 'tools.sign.title', featureKey: 'sign_pdf' }
-        },
-        {
-          path: 'extract-text',
-          name: 'extract-text-pdf',
-          component: () => import('@/views/tools/ExtractTextPDF.vue'),
-          beforeEnter: featureFlagGuard,
-          meta: { titleKey: 'tools.extractText.title', featureKey: 'extract_text_pdf' }
-        },
-        {
-          path: 'extract-images',
-          name: 'extract-images-pdf',
-          component: () => import('@/views/tools/ExtractImagesPDF.vue'),
-          beforeEnter: featureFlagGuard,
-          meta: { titleKey: 'tools.extractImages.title', featureKey: 'extract_images_pdf' }
-        },
-        {
-          path: 'ocr',
-          name: 'ocr-pdf',
-          component: () => import('@/views/tools/OCRPDF.vue'),
-          beforeEnter: featureFlagGuard,
-          meta: { titleKey: 'tools.ocr.title', featureKey: 'ocr_pdf' }
-        },
-        {
-          path: 'office-to-pdf',
-          name: 'office-to-pdf',
-          component: () => import('@/views/tools/OfficeToPDF.vue'),
-          beforeEnter: featureFlagGuard,
-          meta: { titleKey: 'tools.officeToPdf.title', featureKey: 'office_to_pdf' }
-        },
-        {
-          path: 'ai-analyzer',
-          name: 'ai-analyzer',
-          component: () => import('@/views/tools/AIPDFAnalyzer.vue'),
-          beforeEnter: featureFlagGuard,
-          meta: { titleKey: 'ai.title', featureKey: 'ai_analyzer' }
-        },
-        {
-          path: 'watermark',
-          name: 'watermark-pdf',
-          component: () => import('@/views/tools/WatermarkPDF.vue'),
-          beforeEnter: featureFlagGuard,
-          meta: { titleKey: 'tools.watermark.title', featureKey: 'watermark_pdf' }
-        },
-        {
-          path: 'fill-form',
-          name: 'fill-form-pdf',
-          component: () => import('@/views/tools/FillFormPDF.vue'),
-          beforeEnter: featureFlagGuard,
-          meta: { titleKey: 'tools.fillForm.title', featureKey: 'fill_form', requiresPro: true }
-        },
-        {
-          path: 'annotate',
-          name: 'annotate-pdf',
-          component: () => import('@/views/tools/AnnotatePDF.vue'),
-          beforeEnter: featureFlagGuard,
-          meta: { titleKey: 'tools.annotate.title', featureKey: 'annotate_pdf', requiresPro: true }
-        },
-      ],
-    },
+    ...localeRoutes,
     {
       path: '/:pathMatch(.*)*',
-      name: 'not-found',
+      name: 'legacy-locale-redirect',
       component: () => import('@/views/AvailabilityState.vue'),
-      meta: { titleKey: 'availability.notFoundTitle' },
+      meta: { legacyLocaleRedirect: true },
     },
   ],
 })
@@ -334,28 +200,47 @@ router.onError((error, to) => {
   window.location.assign(to.fullPath)
 })
 
-const resolveDocumentTitle = (route = router.currentRoute.value) => {
-  const titleKey = route.meta.titleKey as string | undefined
-  const fallbackTitle = route.meta.title as string | undefined
-  const title = titleKey ? i18n.global.t(titleKey) : fallbackTitle
-  if (title) {
-    document.title = `${title} - PDF-Flow`
-  } else {
-    document.title = `PDF-Flow - ${i18n.global.t('app.tagline')}`
-  }
+const updateRouteHead = (route = router.currentRoute.value) => {
+  const routeLocale = resolveRouteLocale(route) ?? resolvePreferredLocale()
+  updateRouteSeo(route, routeLocale, i18n.global.t)
 }
 
 // 全局前置守卫 - 设置页面标题
+const resolveRouteLocale = (to: { params: Record<string, unknown> }): SupportedLocale | null => {
+  const localeParam = to.params.locale
+  const prefix = Array.isArray(localeParam) ? localeParam[0] : localeParam
+  return typeof prefix === 'string' ? getLocaleByRoutePrefix(prefix) : null
+}
+
 router.beforeEach(async (to, _from, next) => {
+  const routeLocale = resolveRouteLocale(to)
+
+  if (!routeLocale) {
+    const preferredLocale = resolvePreferredLocale()
+    next({
+      path: withLocalePrefix(to.path, preferredLocale),
+      query: to.query,
+      hash: to.hash,
+      replace: true,
+    })
+    return
+  }
+
+  const settingsStore = useSettingsStore()
+  if (settingsStore.locale !== routeLocale || i18n.global.locale.value !== routeLocale) {
+    settingsStore.setLocale(routeLocale)
+  }
+
   const featureKey = to.meta.featureKey as string | undefined
   if (featureKey) {
     const siteConfigStore = useSiteConfigStore()
+    const userStore = useUserStore()
     await siteConfigStore.fetchPublicConfig(true)
     const flag = siteConfigStore.getFeatureFlag(featureKey, String(to.meta.titleKey || featureKey))
 
     if (!flag.enabled) {
       next({
-        path: '/availability/feature-disabled',
+        path: withLocalePrefix('/availability/feature-disabled', routeLocale),
         query: {
           state: 'feature-disabled',
           feature: featureKey,
@@ -365,16 +250,34 @@ router.beforeEach(async (to, _from, next) => {
       })
       return
     }
+
+    if (flag.requires_login && !userStore.isAuthenticated) {
+      const isLoggedIn = await userStore.checkAuth()
+      if (!isLoggedIn) {
+        next({
+          path: withLocalePrefix('/auth/login', routeLocale),
+          query: { redirect: to.fullPath },
+        })
+        return
+      }
+    }
+
+    if (flag.requires_pro && !userStore.canUseCloudFeatures) {
+      next({
+        path: withLocalePrefix('/pricing', routeLocale),
+        query: { feature: featureKey },
+      })
+      return
+    }
   }
 
-  resolveDocumentTitle(to)
   next()
 })
 
 watch(
   () => i18n.global.locale.value,
   () => {
-    resolveDocumentTitle()
+    updateRouteHead()
   },
 )
 
@@ -384,6 +287,7 @@ router.afterEach((to) => {
   }
 
   sessionStorage.removeItem(`pdf-flow:reload:${to.fullPath}`)
+  updateRouteHead(to)
 })
 
 export default router

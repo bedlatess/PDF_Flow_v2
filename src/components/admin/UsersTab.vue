@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Save, Trash2 } from 'lucide-vue-next'
-import type { AdminUser } from '@/services/api'
+import type { AdminUser } from '@/admin/api'
 import AdminActionButton from './AdminActionButton.vue'
 import AdminPanel from './AdminPanel.vue'
 import StatusPill from './StatusPill.vue'

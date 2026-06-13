@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { CircleDot, ClipboardCopy } from 'lucide-vue-next'
-import type { AdminHealthReport, AdminJob, AdminOperations, AdminOverview } from '@/services/api'
+import type { AdminHealthReport, AdminJob, AdminOperations, AdminOverview } from '@/admin/api'
 import AdminActionButton from './AdminActionButton.vue'
 import AdminPanel from './AdminPanel.vue'
 import StatusPill from './StatusPill.vue'

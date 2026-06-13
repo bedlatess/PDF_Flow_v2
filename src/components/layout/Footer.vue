@@ -10,18 +10,28 @@ import {
   ShieldCheck,
 } from 'lucide-vue-next'
 import { useSiteConfigStore } from '@/stores/siteConfig'
+import { useLocalePath } from '@/composables/useLocalePath'
+import { featuredFooterTools, pdfTools } from '@/data/pdfTools'
 
 const { t } = useI18n()
 const siteConfigStore = useSiteConfigStore()
+const { localePath } = useLocalePath()
 const currentYear = new Date().getFullYear()
 
 const brandName = computed(() => siteConfigStore.getSettingValue('site_name', t('app.title')))
 const supportEmail = computed(() => siteConfigStore.getSettingValue('support_email', 'support@pdf-flow.com'))
+const footerTools = computed(() =>
+  featuredFooterTools
+    .map((toolId) => pdfTools.find((tool) => tool.id === toolId))
+    .filter((tool) => Boolean(tool))
+)
 const toolLinks = computed(() => [
   { label: t('nav.tools'), to: '/tools', featureKey: null },
-  { label: t('tools.merge.title'), to: '/tools/merge', featureKey: 'merge_pdf' },
-  { label: t('tools.compress.title'), to: '/tools/compress', featureKey: 'compress_pdf' },
-  { label: t('tools.ocr.title'), to: '/tools/ocr', featureKey: 'ocr_pdf' },
+  ...footerTools.value.map((tool) => ({
+    label: t(tool.titleKey),
+    to: tool.route,
+    featureKey: tool.featureKey,
+  })),
 ])
 
 const visibleToolLinks = computed(() =>
@@ -53,7 +63,7 @@ onMounted(() => {
       <div class="grid grid-cols-2 gap-x-5 gap-y-7 lg:grid-cols-[1.15fr_1fr_0.9fr] lg:gap-8">
         <section class="col-span-2 lg:col-span-1">
           <RouterLink
-            to="/"
+            :to="localePath('/')"
             class="flex w-fit items-center gap-3"
             aria-label="PDF-Flow home"
           >
@@ -84,7 +94,7 @@ onMounted(() => {
                 :key="link.to"
               >
                 <RouterLink
-                  :to="link.to"
+                  :to="localePath(link.to)"
                   class="group flex min-h-9 items-center justify-between rounded-md px-2 text-sm font-medium text-slate-700 transition hover:bg-red-50 hover:text-red-700 dark:text-slate-700 dark:hover:bg-red-50 dark:hover:text-red-700"
                 >
                   <span>{{ link.label }}</span>
@@ -105,7 +115,7 @@ onMounted(() => {
                 :key="link.to"
               >
                 <RouterLink
-                  :to="link.to"
+                  :to="localePath(link.to)"
                   class="group flex min-h-9 items-center justify-between rounded-md px-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-slate-950 dark:text-slate-700 dark:hover:bg-slate-100 dark:hover:text-slate-950"
                 >
                   <span>{{ link.label }}</span>
@@ -144,7 +154,7 @@ onMounted(() => {
               :key="link.to"
             >
               <RouterLink
-                :to="link.to"
+                :to="localePath(link.to)"
                 class="inline-flex min-h-9 items-center rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-600 transition hover:border-red-200 hover:text-red-700 dark:border-slate-200 dark:text-slate-600 dark:hover:border-red-200 dark:hover:text-red-700"
               >
                 {{ link.label }}

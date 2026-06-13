@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Save } from 'lucide-vue-next'
-import type { FeatureFlag } from '@/services/api'
+import type { FeatureFlag } from '@/admin/api'
 import AdminActionButton from './AdminActionButton.vue'
 import AdminPanel from './AdminPanel.vue'
 

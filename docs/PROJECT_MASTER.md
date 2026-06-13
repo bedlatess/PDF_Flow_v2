@@ -13,7 +13,7 @@ This is the internal source of truth for development direction, current progress
 - Server path: `/root/data/docker_data/PDF/pdf-flow`
 - Deployment model: single repository, single Docker Compose server
 - Runtime services: `frontend`, `backend`, `celery-worker`, `postgres`, `redis`
-- Current stage: production acceptance hardening before a platform refactor
+- Current stage: platform refactor batch prepared for GitHub push; server deployment still pending
 
 ## Product Surface
 
@@ -55,7 +55,7 @@ Implemented login, Pro, and cloud surfaces:
 
 Implemented operations:
 
-- Hidden admin Control Room at `/control-room`
+- Dedicated admin frontend entry for the Control Room
 - Admin bootstrap from trusted shell
 - Feature flags
 - Public site settings
@@ -75,7 +75,7 @@ Frontend:
 
 - Vue 3, TypeScript, Vite, Pinia, Vue Router, Vue I18n, Tailwind CSS.
 - Main source tree is currently `src/`.
-- Admin UI is currently embedded in the main frontend under `src/views/admin` and `src/components/admin`.
+- Admin UI has a dedicated frontend entry under `src/admin` and reuses admin views/components from the main source tree while the project remains a single app repository.
 - Tools are individual route components under `src/views/tools`.
 - Tool metadata lives in `src/data/pdfTools.ts`.
 - i18n currently combines `src/locales/*.json` with a large `src/locales/overrides.ts`.
@@ -123,6 +123,7 @@ Deployment:
   - `redis` healthy
   - `/health` returns production healthy
   - frontend home returns HTTP 200
+- Platform refactor push batch includes Phase 2 i18n v2, Phase 2b i18n SEO, Phase 3 Tool Registry v2, Phase 4 dedicated admin frontend, Phase 4b Control Room extraction, Phase 4c admin API extraction, Phase 4d public API extraction, and Phase 4e admin production-serving boundary. This batch has passed `npm run type-check`, `npm run test:unit:ci`, `npm run build`, `npm run build:admin`, `npm run test:e2e:admin`, public shell E2E, locale SEO E2E, and targeted tool/availability Playwright checks locally. It is being pushed to GitHub; server deployment is still pending.
 
 ## Known Code Issues
 
@@ -130,9 +131,9 @@ Fix these before large feature work:
 
 1. Repository metadata in `package.json` previously pointed to placeholder GitHub URLs. Keep it aligned with `PDF_Flow_v2`.
 2. `src/locales/overrides.ts` is too large and acts as an uncontrolled patch layer over JSON locale files.
-3. `ControlRoom.vue` remains too large and mixes orchestration, formatting, clipboard summaries, confirmation flows, and tab-level actions.
-4. Admin UI is embedded in the public app. This is workable for acceptance but not ideal for a formal production admin portal.
-5. Locale handling is manual-only and defaults to `zh`; it does not support locale-prefixed routes or browser-language negotiation.
+3. The dedicated admin frontend now has local Docker/Nginx/backend CORS wiring, but the prepared real admin domain still needs DNS, TLS, server environment values, and smoke evidence after push/deploy.
+4. Admin UI now has a separate frontend entry, but it still lives in the same repository tree until a future monorepo split is justified.
+5. Locale-prefixed routes, browser-language preference, and basic SEO `hreflang` output exist for the current supported locales, but additional locale rollout and deeper locale-file cleanup still need completion.
 6. Public content blocks only normalize `zh*` to `zh` and otherwise fall back to `en`, so future languages need a more formal locale model.
 7. Some internal diagnostic codes are still visible in advanced/account/admin-adjacent flows. They are useful for support, but public user-facing copy should stay calm and hide internal detail unless troubleshooting is needed.
 
@@ -202,6 +203,26 @@ Acceptance:
 
 Goal: make internationalization a platform capability.
 
+Current local progress:
+
+- Added a locale registry for supported locale ids, route prefixes, html `lang`, aliases, and content-block fallback mapping.
+- Added locale-prefixed public routes for `/zh-cn`, `/en`, and `/es`.
+- Legacy unprefixed paths now normalize to the preferred locale prefix.
+- Header language switching keeps the current page and swaps the URL prefix.
+- Core public navigation, pricing/payment redirects, feature access redirects, and account/payment status pages now preserve the active locale prefix.
+- Rebuilt clean baseline locale JSON files with stable tool title/description keys so route titles do not expose raw i18n keys.
+- Added unit coverage for locale normalization and path rewriting.
+- Cleaned the locale registry labels and added per-locale `hreflang` metadata.
+- Added route-driven `document.title`, meta description, Open Graph basics, canonical URL, alternate `hreflang`, and `x-default` output.
+- Tool detail routes now carry registry `descriptionKey` metadata so tool pages can generate useful descriptions.
+- Added unit coverage for browser language resolution and SEO head-link generation.
+
+Still to finish in this phase:
+
+- Decide when to expose additional locales such as `ja`, `ko`, and `de`; do not expose them until baseline translations exist.
+- Split the large `src/locales/overrides.ts` patch layer into domain locale modules with an encoding-safe migration script. A naive text split exposed historical mojibake/unterminated-string risk, so this must be handled as its own cleanup step.
+- Update Playwright route fixtures to assert locale-prefixed canonical paths directly.
+
 Recommended route model:
 
 ```text
@@ -243,20 +264,37 @@ Acceptance:
 
 Goal: make tools data-driven instead of route-by-route and page-by-page.
 
-Create one registry for:
+Current local progress:
+
+- Expanded `src/data/pdfTools.ts` from a display list into the tool registry source of truth.
+- Each tool now records id, slug, route name, title and description keys, route component loader, category, processing mode, access model, feature flag key, Pro hint, icon, accent, featured flag, and smoke-test tag.
+- Tool detail routes are generated from the registry via `toolRoutes`; existing public paths and route names are preserved.
+- Removed the 23 hand-written tool detail route records from `src/router/index.ts`.
+- Removed duplicate feature availability enforcement from `ToolPageShell`; route-level feature availability is handled by the global router guard.
+- Footer recommended tools now read from the registry instead of duplicating labels, paths, and feature keys.
+- Added `tests/unit/pdf-tools-registry.test.ts` to lock uniqueness, metadata validity, route generation, lookup helpers, and footer tool references.
+- Updated availability E2E expectations for locale-prefixed canonical not-found paths.
+
+Registry now covers:
 
 - Tool id
-- Slug per locale if needed
+- Slug
+- Route name
 - Category
 - Title and description keys
 - Route component
-- Processing mode: local, cloud, hybrid
+- Processing mode: local, cloud, ai
 - Access requirements: guest, login, Pro
-- File types and limits
-- SEO metadata
-- Related tools
 - Feature flag key
 - Smoke test coverage tag
+
+Still to finish in this phase:
+
+- Add accepted file types, output types, size/page limits, and batch support metadata.
+- Add SEO title/description keys and canonical/hreflang metadata once Phase 2 SEO work starts.
+- Add related-tool metadata for tool detail pages.
+- Move E2E tool-page matrix cases to read from a shared registry fixture or generated test data.
+- Add admin feature flag seeding/validation against the same registry.
 
 Benefits:
 
@@ -273,6 +311,35 @@ Acceptance:
 ### Phase 4: Dedicated Admin Frontend
 
 Goal: make admin operations feel formal and isolate them from the public product.
+
+Current local progress:
+
+- Added `admin.html` as a separate admin entry document with noindex metadata and admin-specific mount point.
+- Added `src/admin/main.ts`, `src/admin/router.ts`, `src/admin/AdminApp.vue`, and `src/admin/AdminAccessState.vue`.
+- The admin app runs at its own root route and reuses the existing `ControlRoom.vue` while keeping the build boundary separate.
+- Public app routing no longer includes `/control-room`.
+- Public `App.vue` no longer has control-room-specific maintenance or feedback-widget exceptions.
+- Added `vite.admin.config.ts` with `dist-admin` output so public and admin builds do not overwrite each other.
+- Added `dev:admin`, `build:admin`, `preview:admin`, and `test:e2e:admin` scripts.
+- Added `playwright.admin.config.ts`; admin E2E now runs against the admin entry instead of the public app.
+- Added `tests/unit/admin-router-boundary.test.ts` to lock that the admin app is rooted separately and does not expose `/control-room`.
+- Added `src/admin/control-room/types.ts`, `tabs.ts`, `formatters.ts`, `summaries.ts`, `context.ts`, `clipboard.ts`, `actions.ts`, `actions-meta.ts`, `actions-settings.ts`, `actions-users.ts`, `actions-jobs.ts`, `actions-payments.ts`, `actions-feedback.ts`, `actions-maintenance.ts`, `actions-diagnostics.ts`, and `useControlRoom.ts`.
+- Reduced `src/views/admin/ControlRoom.vue` to a page composition layer that imports tab metadata, admin tab components, and the Control Room composable.
+- Reduced `src/admin/control-room/useControlRoom.ts` to a composition facade over state, clipboard helpers, formatting utilities, and admin actions.
+- Reduced `src/admin/control-room/actions.ts` to a domain action aggregator; user, job, payment, feedback, maintenance, diagnostics, settings/content, and meta loading actions now live in separate files.
+- Added `src/admin/api/types.ts`, `src/admin/api/client.ts`, and `src/admin/api/index.ts` as the admin-facing API module.
+- Moved the shared Axios instance and token refresh interceptors to `src/services/http.ts`.
+- Updated admin components, Control Room modules, and admin utility tests to import admin types/client from `@/admin/api`.
+- Kept `adminAPI` and admin type compatibility exports in `src/services/api.ts` so older imports continue to work while the admin app migrates.
+- Split public API clients by domain under `src/services/api/*`.
+- Reduced `src/services/api.ts` to a compatibility aggregation module that re-exports public APIs, admin compatibility exports, and the default shared `apiClient`.
+- Updated `Dockerfile.frontend` to build both public `dist/` and admin `dist-admin/` artifacts into the production Nginx image.
+- Updated `nginx.conf` to serve the public app and admin app from separate roots, route by `PUBLIC_FRONTEND_HOST` and `ADMIN_FRONTEND_HOST`, expose the admin app on local port `5174`, and add admin noindex/security headers.
+- Added backend `ADMIN_FRONTEND_URL` configuration and `CORS_ALLOWED_ORIGINS` so the public and admin HTTPS origins are both trusted without duplicating them manually in every environment.
+- Updated root and backend Compose files plus `backend/.env.example` for local admin URL defaults.
+- Added backend config tests for the public/admin CORS merge behavior.
+- Restored key admin success and confirmation copy as clean UTF-8 Chinese while leaving unrelated historical admin template copy for a later text cleanup pass.
+- Added `tests/unit/admin-control-room-utils.test.ts` for admin formatting, summary, and tab utility coverage.
 
 Recommended timing:
 
@@ -296,10 +363,15 @@ Admin domain:
 - Configure backend CORS to allow the public domain and admin domain explicitly.
 - Keep `/api/v1/admin/*` protected by admin auth.
 - Add stricter CSP and noindex headers for the admin app.
+- Production environment should set:
+  - `PUBLIC_FRONTEND_HOST` to the public frontend host.
+  - `ADMIN_FRONTEND_HOST` to the prepared admin frontend host.
+  - `FRONTEND_URL` to the public HTTPS origin.
+  - `ADMIN_FRONTEND_URL` to the admin HTTPS origin.
 
 Admin refactor scope:
 
-- Move Control Room into `apps/admin`.
+- Move Control Room into `apps/admin` when the repository is ready for a monorepo layout. The current local step is an entrypoint/build split inside the existing tree.
 - Split data fetching into composables or stores by domain:
   - overview
   - feature flags
@@ -310,6 +382,13 @@ Admin refactor scope:
   - feedback/errors
   - maintenance/audit
 - Keep admin text Chinese-first if that matches operators, but do not mix admin copy into public i18n.
+
+Still to finish in this phase:
+
+- Move admin API clients/types into an admin-facing module or shared package before a full monorepo split.
+- Push/deploy the local serving boundary and set the real prepared admin domain environment values on the server.
+- Verify real DNS/TLS routing so the public domain never serves the admin artifact and the admin domain can reach `/api/v1/admin/*`.
+- Decide whether the future monorepo split is worth doing after production admin usage is stable.
 
 Acceptance:
 
@@ -454,9 +533,8 @@ pytest tests/test_payment_domain.py -q
 
 ## Next Recommended Work
 
-1. Complete Phase 1 foundation cleanup.
-2. Design and implement i18n v2 with locale-prefixed routes.
-3. Build Tool Registry v2.
-4. Split the admin frontend into a dedicated app for the prepared admin domain.
-5. Run production acceptance for OAuth, email, payment callbacks, AI/OCR, and Office conversion.
-6. Add competitor-gap tools only after the platform supports adding tools cleanly.
+1. Deploy the pushed platform refactor batch to the server and record smoke evidence.
+2. Configure the prepared admin domain with DNS, TLS, `ADMIN_FRONTEND_URL`, and `ADMIN_FRONTEND_HOST`.
+3. Split `src/locales/overrides.ts` with an encoding-safe migration script and add missing baseline translations before exposing more locales.
+4. Run production acceptance for OAuth, email, payment callbacks, AI/OCR, and Office conversion.
+5. Add competitor-gap tools only after the pushed platform refactor is stable on the server.

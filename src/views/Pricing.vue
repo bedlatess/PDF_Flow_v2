@@ -3,28 +3,25 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import {
+  ArrowRight,
   Building2,
   CheckCircle2,
   Copy,
   CreditCard,
   Crown,
-  FileText,
-  LockKeyhole,
   QrCode,
-  Receipt,
   RefreshCw,
   ShieldCheck,
 } from 'lucide-vue-next'
 import Button from '@/components/common/Button.vue'
 import DiagnosticAlert from '@/components/common/DiagnosticAlert.vue'
 import Modal from '@/components/common/Modal.vue'
-import ProBadge from '@/components/common/ProBadge.vue'
 import { useUserStore } from '@/stores/user'
 import { formatUserFacingError, type FormattedUserError } from '@/utils/error-messages'
 import type { PaymentProviderKey, PaymentProviderOption } from '@/services/api'
 
 type PlanId = 'free' | 'pro' | 'enterprise'
-type ButtonVariant = 'primary' | 'outline' | 'ghost'
+type ButtonVariant = 'primary' | 'outline'
 
 interface Plan {
   id: PlanId
@@ -40,11 +37,6 @@ interface Plan {
   variant: ButtonVariant
   highlighted?: boolean
   current?: boolean
-}
-
-interface PricingProofCopy {
-  title: string
-  body: string
 }
 
 interface PricingPageCopy {
@@ -74,10 +66,6 @@ interface PricingPageCopy {
   popular: string
   featuresLabel: string
   notesLabel: string
-  cloudTitle: string
-  cloudBody: string
-  promiseTitle: string
-  promiseBody: string
   faqTitle: string
   faqSubtitle: string
   ctaTitle: string
@@ -87,7 +75,6 @@ interface PricingPageCopy {
   paymentFailedTitle: string
   paymentFailedHint: string
   paymentMethodTitle: string
-  paymentMethodSubtitle: string
   paymentModalTitle: string
   paymentModalSubtitle: string
   paymentModalConfirm: string
@@ -117,7 +104,6 @@ interface PricingPageCopy {
   proNotes: string[]
   enterpriseFeatures: string[]
   enterpriseNotes: string[]
-  proofCards: PricingProofCopy[]
   faq: [question: string, answer: string][]
 }
 
@@ -150,7 +136,6 @@ const QR_PAYMENT_PROVIDERS = new Set<PaymentProviderKey>([
 ])
 
 const currentTier = computed(() => userStore.user?.role || 'free')
-
 const copy = computed(() => tm('pricing.page') as PricingPageCopy)
 
 const plans = computed<Plan[]>(() => [
@@ -172,7 +157,7 @@ const plans = computed<Plan[]>(() => [
     id: 'pro',
     name: copy.value.proName,
     eyebrow: copy.value.proEyebrow,
-    price: '$9.9',
+    price: '$9.90',
     period: copy.value.proPeriod,
     description: copy.value.proDescription,
     bestFor: copy.value.proBestFor,
@@ -201,11 +186,26 @@ const plans = computed<Plan[]>(() => [
   },
 ])
 
-const proofIcons = [ShieldCheck, Crown, Building2]
-const proofCards = computed(() => copy.value.proofCards.map((card, index) => ({
-  ...card,
-  icon: proofIcons[index] || ShieldCheck,
-})))
+const planIcon = (planId: PlanId) => {
+  if (planId === 'pro') return Crown
+  if (planId === 'enterprise') return Building2
+  return ShieldCheck
+}
+
+const comparisonRows = computed(() => [
+  {
+    label: copy.value.freeName,
+    values: copy.value.freeFeatures,
+  },
+  {
+    label: copy.value.proName,
+    values: copy.value.proFeatures,
+  },
+  {
+    label: copy.value.enterpriseName,
+    values: copy.value.enterpriseFeatures,
+  },
+])
 
 const enabledPaymentProviders = computed(() =>
   paymentProviders.value.filter((provider) => provider.enabled),
@@ -219,22 +219,14 @@ const paymentActionDisabled = computed(() =>
   paymentProvidersLoading.value || !selectedPaymentProvider.value || enabledPaymentProviders.value.length === 0,
 )
 
-const providerBadge = (provider: PaymentProviderOption) => {
-  if (QR_PAYMENT_PROVIDERS.has(provider.key)) {
-    return copy.value.paymentQrBadge
-  }
-
-  return copy.value.paymentRedirectBadge
-}
+const providerBadge = (provider: PaymentProviderOption) =>
+  QR_PAYMENT_PROVIDERS.has(provider.key) ? copy.value.paymentQrBadge : copy.value.paymentRedirectBadge
 
 const providerSettlementLabel = (provider: PaymentProviderOption) =>
   provider.supports_subscription ? copy.value.paymentSubscriptionBadge : copy.value.paymentOneTimeBadge
 
 const selectPaymentProvider = (provider: PaymentProviderOption) => {
-  if (!provider.enabled) {
-    return
-  }
-
+  if (!provider.enabled) return
   selectedPaymentProvider.value = provider.key
   qrCheckoutResult.value = null
   paymentCodeCopyState.value = 'idle'
@@ -363,9 +355,7 @@ const openQrCheckout = () => {
 }
 
 const copyPaymentCode = async () => {
-  if (!qrCheckoutResult.value?.qrCodeUrl) {
-    return
-  }
+  if (!qrCheckoutResult.value?.qrCodeUrl) return
 
   try {
     await navigator.clipboard.writeText(qrCheckoutResult.value.qrCodeUrl)
@@ -394,67 +384,25 @@ watch(
 <template>
   <div class="min-h-screen bg-[#f6f8fb] px-4 pb-16 pt-10 dark:bg-slate-950 sm:px-6 lg:px-8">
     <div class="mx-auto max-w-7xl">
-      <section class="grid gap-6 lg:grid-cols-[minmax(0,0.96fr)_minmax(340px,0.58fr)] lg:items-end">
-        <div class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-slate-900 dark:shadow-none sm:p-8">
-          <div class="inline-flex items-center gap-2 rounded-md border border-sky-200 bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-200">
-            <Receipt class="h-4 w-4" />
-            {{ copy.eyebrow }}
-          </div>
-          <h1 class="mt-5 max-w-4xl text-3xl font-semibold leading-tight text-slate-950 dark:text-white sm:text-5xl">
-            {{ copy.title }}
-          </h1>
-          <p class="mt-4 max-w-3xl text-base leading-8 text-slate-600 dark:text-slate-300">
-            {{ copy.description }}
-          </p>
-
-          <div class="mt-6 grid gap-3 sm:grid-cols-3">
-            <article
-              v-for="card in proofCards"
-              :key="card.title"
-              class="rounded-md border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/45"
-            >
-              <div class="flex h-10 w-10 items-center justify-center rounded-md bg-white text-sky-700 shadow-sm dark:bg-slate-900 dark:text-sky-300">
-                <component :is="card.icon" class="h-5 w-5" />
-              </div>
-              <h2 class="mt-4 text-sm font-semibold text-slate-950 dark:text-white">
-                {{ card.title }}
-              </h2>
-              <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                {{ card.body }}
-              </p>
-            </article>
-          </div>
+      <section class="text-center">
+        <div class="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-sm dark:border-white/10 dark:bg-slate-900 dark:text-slate-300">
+          <CreditCard class="h-4 w-4" />
+          {{ copy.eyebrow }}
         </div>
-
-        <aside class="rounded-lg border border-amber-200 bg-amber-50/70 p-6 shadow-sm dark:border-amber-300/20 dark:bg-amber-500/10 sm:p-7">
-          <div class="flex h-12 w-12 items-center justify-center rounded-md bg-white text-amber-700 shadow-sm dark:bg-slate-900 dark:text-amber-200">
-            <Crown class="h-6 w-6" />
-          </div>
-          <h2 class="mt-5 text-2xl font-semibold text-slate-950 dark:text-white">
-            {{ copy.promiseTitle }}
-          </h2>
-          <p class="mt-3 text-sm leading-7 text-slate-700 dark:text-slate-200">
-            {{ copy.promiseBody }}
-          </p>
-          <ul class="mt-5 space-y-3">
-            <li
-              v-for="note in copy.proNotes"
-              :key="note"
-              class="flex items-start gap-3 rounded-md border border-amber-200 bg-white px-4 py-3 text-sm leading-6 text-slate-700 dark:border-amber-300/20 dark:bg-slate-900 dark:text-slate-200"
-            >
-              <CheckCircle2 class="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-300" />
-              <span>{{ note }}</span>
-            </li>
-          </ul>
-        </aside>
+        <h1 class="mx-auto mt-5 max-w-4xl text-3xl font-semibold leading-tight text-slate-950 dark:text-white sm:text-5xl">
+          {{ copy.title }}
+        </h1>
+        <p class="mx-auto mt-4 max-w-3xl text-base leading-8 text-slate-600 dark:text-slate-300">
+          {{ copy.description }}
+        </p>
       </section>
 
-      <section class="mt-8 grid gap-5 xl:grid-cols-3">
+      <section class="mt-9 grid gap-5 xl:grid-cols-3">
         <article
           v-for="plan in plans"
           :key="plan.id"
           :class="[
-            'relative overflow-hidden rounded-lg border bg-white p-7 shadow-sm dark:bg-slate-900',
+            'relative flex min-h-[560px] flex-col rounded-lg border bg-white p-7 shadow-sm dark:bg-slate-900',
             plan.highlighted
               ? 'border-amber-300 ring-2 ring-amber-100 dark:border-amber-300/25 dark:ring-amber-300/10'
               : 'border-slate-200 dark:border-white/10 dark:shadow-none',
@@ -468,47 +416,39 @@ watch(
           </div>
 
           <div class="flex h-12 w-12 items-center justify-center rounded-md bg-slate-950 text-white dark:bg-white dark:text-slate-950">
-            <ShieldCheck v-if="plan.id === 'free'" class="h-5 w-5" />
-            <Crown v-else-if="plan.id === 'pro'" class="h-5 w-5" />
-            <Building2 v-else class="h-5 w-5" />
+            <component
+              :is="planIcon(plan.id)"
+              class="h-5 w-5"
+            />
           </div>
 
           <div class="mt-5 flex flex-wrap items-center gap-2">
             <h2 class="text-2xl font-semibold text-slate-950 dark:text-white">
               {{ plan.name }}
             </h2>
-            <ProBadge v-if="plan.id === 'pro'" tone="ivory" />
           </div>
-          <p class="mt-2 text-xs font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
+          <p class="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
             {{ plan.eyebrow }}
           </p>
-          <p class="mt-4 min-h-[72px] text-sm leading-7 text-slate-600 dark:text-slate-300">
+
+          <div class="mt-6">
+            <span class="text-4xl font-semibold tracking-tight text-slate-950 dark:text-white">
+              {{ plan.price }}
+            </span>
+            <span class="ml-2 text-sm text-slate-500 dark:text-slate-400">
+              {{ plan.period }}
+            </span>
+          </div>
+
+          <p class="mt-5 min-h-[72px] text-sm leading-7 text-slate-600 dark:text-slate-300">
             {{ plan.description }}
           </p>
-
-          <div class="mt-6 rounded-md bg-slate-50/90 p-5 dark:bg-slate-950/50">
-            <div class="flex items-end gap-2">
-              <span class="text-4xl font-semibold tracking-tight text-slate-950 dark:text-white">
-                {{ plan.price }}
-              </span>
-            </div>
-            <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
-              {{ plan.period }}
-            </p>
-          </div>
-
-          <div
-            v-if="plan.current"
-            class="mt-5 rounded-md bg-emerald-50 px-4 py-3 text-center text-sm font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300"
-          >
-            {{ copy.currentPlan }}
-          </div>
 
           <Button
             :variant="plan.variant"
             size="lg"
             full-width
-            class="mt-5 rounded-md"
+            class="mt-6 rounded-md"
             :loading="checkoutLoadingPlan === plan.id"
             @click="handleCTA(plan)"
           >
@@ -525,75 +465,118 @@ watch(
             tone="warning"
           />
 
-          <div class="mt-7">
-            <h3 class="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-              {{ copy.featuresLabel }}
-            </h3>
-            <ul class="mt-4 space-y-3">
-              <li
-                v-for="feature in plan.features"
-                :key="feature"
-                class="flex items-start gap-3"
-              >
-                <CheckCircle2 class="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
-                <span class="text-sm leading-6 text-slate-600 dark:text-slate-300">
-                  {{ feature }}
-                </span>
-              </li>
-            </ul>
-          </div>
+          <ul class="mt-7 space-y-3">
+            <li
+              v-for="feature in plan.features"
+              :key="feature"
+              class="flex items-start gap-3"
+            >
+              <CheckCircle2 class="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
+              <span class="text-sm leading-6 text-slate-600 dark:text-slate-300">
+                {{ feature }}
+              </span>
+            </li>
+          </ul>
 
-          <div class="mt-6 rounded-md border border-slate-200/80 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-950/40">
-            <h3 class="text-sm font-semibold text-slate-950 dark:text-white">
-              {{ copy.notesLabel }}: {{ plan.bestFor }}
-            </h3>
-            <ul class="mt-3 space-y-2">
-              <li
-                v-for="note in plan.notes"
-                :key="note"
-                class="text-xs leading-6 text-slate-500 dark:text-slate-400"
-              >
-                {{ note }}
-              </li>
-            </ul>
-          </div>
+          <p class="mt-auto pt-7 text-sm font-semibold text-slate-500 dark:text-slate-400">
+            {{ copy.notesLabel }}: {{ plan.bestFor }}
+          </p>
         </article>
       </section>
 
+      <section class="mt-10 rounded-lg border border-slate-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-slate-900 sm:p-8">
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p class="text-sm font-semibold text-slate-500 dark:text-slate-400">
+              {{ copy.eyebrow }}
+            </p>
+            <h2 class="mt-1 text-2xl font-semibold text-slate-950 dark:text-white">
+              {{ copy.featuresLabel }}
+            </h2>
+          </div>
+          <Button
+            variant="outline"
+            class="rounded-md"
+            @click="router.push('/features')"
+          >
+            {{ copy.viewFeatures }}
+            <ArrowRight class="ml-2 h-4 w-4" />
+          </Button>
+        </div>
+
+        <div class="mt-6 grid gap-4 lg:grid-cols-3">
+          <div
+            v-for="row in comparisonRows"
+            :key="row.label"
+            class="rounded-md border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-950/45"
+          >
+            <h3 class="font-semibold text-slate-950 dark:text-white">
+              {{ row.label }}
+            </h3>
+            <ul class="mt-4 space-y-2">
+              <li
+                v-for="value in row.values"
+                :key="value"
+                class="flex gap-2 text-sm leading-6 text-slate-600 dark:text-slate-300"
+              >
+                <CheckCircle2 class="mt-1 h-4 w-4 shrink-0 text-emerald-500" />
+                <span>{{ value }}</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
       <section class="mt-10 grid gap-5 lg:grid-cols-[0.85fr_1.15fr]">
-        <article class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-slate-900 dark:shadow-none sm:p-8">
+        <article class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-slate-900 sm:p-8">
           <div class="flex h-12 w-12 items-center justify-center rounded-md bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-            <FileText class="h-5 w-5" />
+            <ShieldCheck class="h-5 w-5" />
           </div>
           <h2 class="mt-5 text-2xl font-semibold text-slate-950 dark:text-white">
-            {{ copy.cloudTitle }}
+            {{ copy.ctaTitle }}
           </h2>
           <p class="mt-4 text-sm leading-7 text-slate-600 dark:text-slate-300">
-            {{ copy.cloudBody }}
+            {{ copy.ctaBody }}
           </p>
+          <div class="mt-6 flex flex-wrap gap-3">
+            <Button
+              variant="primary"
+              class="rounded-md"
+              @click="router.push('/')"
+            >
+              {{ copy.freeCta }}
+            </Button>
+            <Button
+              variant="outline"
+              class="rounded-md"
+              @click="router.push('/features')"
+            >
+              {{ copy.viewFeatures }}
+            </Button>
+          </div>
         </article>
 
-        <article class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-slate-900 dark:shadow-none sm:p-8">
+        <article class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-slate-900 sm:p-8">
           <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
+              <p class="text-sm font-semibold text-slate-500 dark:text-slate-400">
                 {{ copy.faqTitle }}
               </p>
-              <h2 class="mt-3 text-2xl font-semibold text-slate-950 dark:text-white">
+              <h2 class="mt-1 text-2xl font-semibold text-slate-950 dark:text-white">
                 {{ copy.faqSubtitle }}
               </h2>
             </div>
-            <div class="flex items-center gap-2 rounded-md bg-slate-50 px-4 py-2 text-sm text-slate-600 dark:bg-slate-950/50 dark:text-slate-300">
-              <LockKeyhole class="h-4 w-4" />
+            <div class="inline-flex items-center gap-2 rounded-md bg-slate-50 px-4 py-2 text-sm text-slate-600 dark:bg-slate-950/50 dark:text-slate-300">
+              <ShieldCheck class="h-4 w-4" />
               {{ copy.authHint }}
             </div>
           </div>
 
-          <div class="mt-7 grid gap-4 md:grid-cols-2">
+          <div class="mt-6 grid gap-4 md:grid-cols-2">
             <div
               v-for="[question, answer] in copy.faq"
               :key="question"
-              class="rounded-md border border-slate-200/80 bg-slate-50/78 p-5 dark:border-slate-800 dark:bg-slate-950/45"
+              class="rounded-md border border-slate-200 bg-slate-50/80 p-5 dark:border-slate-800 dark:bg-slate-950/45"
             >
               <h3 class="font-semibold text-slate-950 dark:text-white">
                 {{ question }}
@@ -605,39 +588,17 @@ watch(
           </div>
         </article>
       </section>
-
-      <section class="mt-10 rounded-lg border border-red-200 bg-red-50/75 p-6 shadow-sm dark:border-red-500/20 dark:bg-red-500/10 sm:p-8">
-        <div class="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-          <div>
-            <div class="inline-flex items-center gap-2 rounded-md bg-white px-3 py-1.5 text-sm font-semibold text-red-700 shadow-sm dark:bg-slate-900 dark:text-red-200">
-              <Receipt class="h-4 w-4" />
-              {{ copy.eyebrow }}
-            </div>
-            <h2 class="mt-5 text-2xl font-semibold text-slate-950 dark:text-white sm:text-3xl">
-              {{ copy.ctaTitle }}
-            </h2>
-            <p class="mt-3 max-w-3xl text-sm leading-7 text-slate-700 dark:text-slate-200 sm:text-base">
-              {{ copy.ctaBody }}
-            </p>
-          </div>
-          <div class="flex flex-wrap gap-3 lg:justify-end">
-            <Button variant="primary" size="lg" class="rounded-md" @click="router.push('/')">
-              {{ copy.freeCta }}
-            </Button>
-            <Button variant="outline" size="lg" class="rounded-md bg-white" @click="router.push('/features')">
-              <FileText class="mr-2 h-4 w-4" />
-              {{ copy.viewFeatures }}
-            </Button>
-          </div>
-        </div>
-      </section>
     </div>
 
-    <Modal v-model="paymentModalOpen" size="lg" :title="copy.paymentModalTitle">
+    <Modal
+      v-model="paymentModalOpen"
+      size="lg"
+      :title="copy.paymentModalTitle"
+    >
       <div class="space-y-5">
-        <div class="rounded-md border border-amber-200 bg-amber-50/70 p-4 dark:border-amber-300/20 dark:bg-amber-500/10">
+        <div class="rounded-md border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/45">
           <div class="flex items-start gap-3">
-            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-white text-amber-700 shadow-sm dark:bg-slate-950 dark:text-amber-200">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-white text-slate-700 shadow-sm dark:bg-slate-900 dark:text-slate-200">
               <CreditCard class="h-5 w-5" />
             </div>
             <div>
@@ -713,8 +674,14 @@ watch(
           >
             <span class="flex min-w-0 items-center gap-3">
               <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-slate-950 text-white dark:bg-white dark:text-slate-950">
-                <QrCode v-if="QR_PAYMENT_PROVIDERS.has(provider.key)" class="h-4 w-4" />
-                <CreditCard v-else class="h-4 w-4" />
+                <QrCode
+                  v-if="QR_PAYMENT_PROVIDERS.has(provider.key)"
+                  class="h-4 w-4"
+                />
+                <CreditCard
+                  v-else
+                  class="h-4 w-4"
+                />
               </span>
               <span class="min-w-0">
                 <span class="block truncate text-sm font-semibold">
@@ -760,7 +727,7 @@ watch(
 
           <div class="mt-4 rounded-md border border-emerald-200/80 bg-white p-3 dark:border-emerald-400/20 dark:bg-slate-950/70">
             <p class="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700 dark:text-emerald-300">
-              {{ copy.paymentQrCodeLabel }} · {{ qrCheckoutResult.displayName }}
+              {{ copy.paymentQrCodeLabel }} - {{ qrCheckoutResult.displayName }}
             </p>
             <p class="mt-2 break-all font-mono text-xs leading-5 text-slate-700 dark:text-slate-200">
               {{ qrCheckoutResult.qrCodeUrl }}

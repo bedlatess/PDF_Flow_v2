@@ -78,6 +78,8 @@ curl http://localhost:8000/health
 
 ## Latest Progress
 
+- Public page polish: Features and Pricing now use denser, tool-first layouts with clearer plan comparison, quieter Pro treatment, and fewer oversized promotional sections.
+- Tool pages: shared tool headers and upload zones were tightened, and each tool page now shows concise next-step guidance below the upload area so empty states feel intentional instead of unfinished.
 - Public tools: tightened Home and Tools Center spacing so free tool cards use less empty vertical space.
 - Copy cleanup: public tool and pricing pages now avoid internal phrases such as local-first/cloud-processing in ordinary user flows. Legal and admin diagnostics keep precise processing terms where needed.
 - Pro presentation: Pro badge styling is smaller and quieter, with Pro used as the main visual differentiator instead of repeated upgrade copy.

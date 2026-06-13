@@ -207,10 +207,12 @@ const openFileDialog = () => {
 <template>
   <div
     data-testid="drag-drop-zone"
+    role="button"
+    tabindex="0"
     :class="[
-      'group relative flex min-h-[220px] flex-col items-center justify-center overflow-hidden rounded-lg border border-dashed px-5 py-7 text-center transition-all duration-200',
-      'cursor-pointer border-slate-300 bg-white shadow-sm hover:border-primary hover:bg-primary/5',
-      'dark:border-slate-300 dark:bg-white',
+      'group relative grid min-h-[184px] cursor-pointer overflow-hidden rounded-lg border px-5 py-5 text-left transition-all duration-200 md:grid-cols-[1fr_auto] md:items-center md:gap-5',
+      'border-slate-200 bg-white shadow-sm hover:border-primary/50 hover:shadow-md',
+      'dark:border-slate-200 dark:bg-white',
       {
         'border-primary bg-primary/5 shadow-lg shadow-primary/10': isDragging,
       },
@@ -220,61 +222,70 @@ const openFileDialog = () => {
     @dragover="handleDragOver"
     @drop="handleDrop"
     @click="openFileDialog"
+    @keydown.enter.prevent="openFileDialog"
+    @keydown.space.prevent="openFileDialog"
   >
-    <div
-      :class="[
-        'mb-4 rounded-md p-3 transition-all duration-200',
-        isDragging
-          ? 'scale-105 bg-primary/15 text-primary'
-          : 'bg-slate-100 text-slate-500 group-hover:bg-primary/10 group-hover:text-primary dark:bg-slate-100 dark:text-slate-500',
-      ]"
-    >
-      <slot name="icon">
-        <svg
-          class="h-9 w-9"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-          />
-        </svg>
-      </slot>
-    </div>
-
-    <div class="max-w-xl">
-      <p class="text-base font-semibold text-slate-900 dark:text-slate-900">
-        <slot
-          v-if="slots.title"
-          name="title"
-        />
-        <slot
-          v-else-if="slots.text"
-          name="text"
-        />
-        <template v-else>
-          {{ t('common.dragDrop') }}
-        </template>
-      </p>
-
-      <p class="mt-1 text-sm text-slate-500 dark:text-slate-500">
-        <slot name="subtitle">
-          {{ t('common.or') }} {{ t('common.browse') }}
+    <div class="flex items-start gap-4">
+      <div
+        :class="[
+          'flex h-12 w-12 shrink-0 items-center justify-center rounded-md transition-all duration-200',
+          isDragging
+            ? 'scale-105 bg-primary/15 text-primary'
+            : 'bg-slate-100 text-slate-500 group-hover:bg-primary/10 group-hover:text-primary dark:bg-slate-100 dark:text-slate-500',
+        ]"
+      >
+        <slot name="icon">
+          <svg
+            class="h-7 w-7"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+            />
+          </svg>
         </slot>
-      </p>
+      </div>
 
-      <p class="mt-2 text-xs font-medium text-slate-400 dark:text-slate-400">
-        {{ helperText }}
-      </p>
+      <div class="min-w-0">
+        <p class="text-base font-semibold text-slate-950 dark:text-slate-950 sm:text-lg">
+          <slot
+            v-if="slots.title"
+            name="title"
+          />
+          <slot
+            v-else-if="slots.text"
+            name="text"
+          />
+          <template v-else>
+            {{ t('common.dragDrop') }}
+          </template>
+        </p>
+
+        <p class="mt-1.5 text-sm leading-6 text-slate-500 dark:text-slate-500">
+          <slot name="subtitle">
+            {{ t('common.or') }} {{ t('common.browse') }}
+          </slot>
+        </p>
+
+        <p class="mt-2 text-xs font-medium text-slate-400 dark:text-slate-400">
+          {{ helperText }}
+        </p>
+      </div>
     </div>
 
-    <div class="mt-4">
-      <span class="inline-flex items-center rounded-md bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-        {{ t('common.privacyBadge') }}
+    <div class="mt-5 flex flex-col gap-2 md:mt-0 md:min-w-44 md:items-end">
+      <span
+        class="inline-flex min-h-11 items-center justify-center rounded-md bg-slate-950 px-5 text-sm font-semibold text-white shadow-sm transition-colors group-hover:bg-primary focus:outline-none focus:ring-2 focus:ring-primary/40"
+      >
+        {{ t('common.browse') }}
+      </span>
+      <span class="text-xs text-slate-400">
+        {{ multiple ? t('common.dragDropZone.helper.multiple') : t('common.dragDropZone.helper.single') }}
       </span>
     </div>
 

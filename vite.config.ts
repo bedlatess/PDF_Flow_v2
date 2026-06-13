@@ -39,7 +39,7 @@ export default defineConfig({
     'import.meta.env': 'import.meta.env',
   },
   optimizeDeps: {
-    exclude: ['pdf-lib'],
+    include: ['pdf-lib', 'pako'],
   },
   build: {
     target: 'esnext',

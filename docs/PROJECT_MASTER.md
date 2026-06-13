@@ -9,7 +9,7 @@ This is the internal source of truth for development direction, current progress
 - Official repository: `https://github.com/bedlatess/PDF_Flow_v2.git`
 - Official remote name: `v2`
 - Branch: `main`
-- Last verified runtime commit: `426a890919265af00ce972a90a2df764b53756b5`
+- Last verified runtime commit: `0bc64a96d9a45f75fbf4d49dc4e544b5fbec7a68`
 - The server also records the active runtime commit at `.deploy_state/main/current_deployed_commit`.
 - Server path: `/root/data/docker_data/PDF/pdf-flow`
 - Deployment model: single repository, single Docker Compose server
@@ -305,7 +305,8 @@ Deployment:
   - `https://admin.pawn.eu.org/` returns HTTP 200 with title `PDF-Flow Admin`
   - `https://admin.pawn.eu.org/assets/ControlRoom-DVPqbD5G.js` returns HTTP 200
   - Playwright production unauthenticated admin smoke returned HTTP 200, title `PDF-Flow Admin`, no document-level horizontal overflow at `1440x1000`, and no console/page errors
-- Migrated locale override copy into baseline locale JSON files locally:
+- Deployed locale override copy migration into baseline locale JSON files:
+  - commit `0bc64a96d9a45f75fbf4d49dc4e544b5fbec7a68`
   - `src/locales/en.json`, `src/locales/zh.json`, and `src/locales/es.json` now contain the public copy that previously lived in `src/locales/overrides.ts`
   - filled the missing Chinese `home.toolsTitle` baseline so the homepage no longer exposes the raw `home.toolsTitle` key
   - `src/locales/overrides.ts` is reduced to the compatibility merge helper plus empty per-locale override objects
@@ -320,6 +321,12 @@ Deployment:
   - verified with `npm run build:admin`
   - verified with Playwright locale/public checks: `locale-seo`, `public-shell`, and `public-marketing`
   - verified with `npm run test:e2e:admin`
+  - server `.deploy_state/main/current_deployed_commit` records `0bc64a96d9a45f75fbf4d49dc4e544b5fbec7a68`
+  - production containers `backend`, `celery-worker`, and `frontend` are healthy after deploy
+  - production `/health` returns `{"status":"healthy","version":"2.0.0","environment":"production"}`
+  - `https://pdf.pawn.eu.org/zh-cn/`, `/en/tools/merge`, and `/es/tools/merge` return HTTP 200
+  - `https://admin.pawn.eu.org/` returns HTTP 200 and the active admin bundle returns HTTP 200
+  - Playwright production render smoke for `zh`, `en`, `es`, and `admin` returned HTTP 200, no console/page errors, no document-level horizontal overflow at `1366x900`, and no raw `home.toolsTitle`/`home.tools` key exposure
 
 ## Known Code Issues
 

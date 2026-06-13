@@ -180,6 +180,14 @@ Deployment:
   - payment provider credentials are not configured; `PAYMENT_ENABLED_PROVIDERS` was hotfixed on the server to `[]` so public checkout providers are disabled until real merchant credentials are added
   - Stripe checkout creation now returns HTTP 503 `Stripe payment is not enabled` instead of exposing a broken half-configured checkout path
   - post-hotfix production acceptance passed for public/admin read-only checks
+- Fixed payment provider default safety after the production hotfix:
+  - backend `Settings` now defaults `PAYMENT_ENABLED_PROVIDERS` to `[]`
+  - root and backend Docker Compose files now default `PAYMENT_ENABLED_PROVIDERS` to `[]`
+  - payment provider registry order is preserved, but no provider is enabled until explicitly configured
+  - default Stripe checkout now returns HTTP 503 instead of starting a half-configured payment flow
+  - verified with `pytest backend/tests/test_config.py backend/tests/test_payment_domain.py -q`
+  - verified with `pytest backend/tests/test_admin_payment_domain.py -q`
+  - verified with `pytest backend/tests/test_admin.py::test_admin_payment_operations_returns_provider_health_and_reconciliation backend/tests/test_admin.py::test_admin_payment_operations_requires_admin -q`
 
 ## Known Code Issues
 
@@ -188,11 +196,10 @@ Fix these before large feature work:
 1. Repository metadata in `package.json` previously pointed to placeholder GitHub URLs. Keep it aligned with `PDF_Flow_v2`.
 2. `src/locales/overrides.ts` is too large and acts as an uncontrolled patch layer over JSON locale files.
 3. The dedicated admin frontend is live at `https://admin.pawn.eu.org` with DNS, TLS through Nginx Proxy Manager, server environment values, CORS, read-only smoke evidence, and protected admin acceptance evidence.
-4. `docker-compose.yml` still defaults `PAYMENT_ENABLED_PROVIDERS` to `stripe`, which can expose Stripe as enabled when merchant secrets are absent. The production server is hotfixed with `PAYMENT_ENABLED_PROVIDERS=[]`; make this safer in code before enabling payment work.
-5. Admin UI now has a separate frontend entry, but it still lives in the same repository tree until a future monorepo split is justified.
-6. Locale-prefixed routes, browser-language preference, and basic SEO `hreflang` output exist for the current supported locales, but additional locale rollout and deeper locale-file cleanup still need completion.
-7. Public content blocks only normalize `zh*` to `zh` and otherwise fall back to `en`, so future languages need a more formal locale model.
-8. Some internal diagnostic codes are still visible in advanced/account/admin-adjacent flows. They are useful for support, but public user-facing copy should stay calm and hide internal detail unless troubleshooting is needed.
+4. Admin UI now has a separate frontend entry, but it still lives in the same repository tree until a future monorepo split is justified.
+5. Locale-prefixed routes, browser-language preference, and basic SEO `hreflang` output exist for the current supported locales, but additional locale rollout and deeper locale-file cleanup still need completion.
+6. Public content blocks only normalize `zh*` to `zh` and otherwise fall back to `en`, so future languages need a more formal locale model.
+7. Some internal diagnostic codes are still visible in advanced/account/admin-adjacent flows. They are useful for support, but public user-facing copy should stay calm and hide internal detail unless troubleshooting is needed.
 
 ## Documentation Policy
 
@@ -616,8 +623,7 @@ pytest tests/test_payment_domain.py -q
 
 ## Next Recommended Work
 
-1. Make payment provider enablement safer in code so missing merchant credentials cannot expose a provider as enabled by default.
-2. Configure real OAuth, email, payment, and Gemini credentials, then run provider-specific production acceptance.
-3. Split `src/locales/overrides.ts` with an encoding-safe migration script and add missing baseline translations before exposing more locales.
-4. Add competitor-gap tools only after the platform refactor remains stable under production traffic.
-5. Decide whether to split the admin frontend into its own repository after the dedicated admin domain is live and daily operation is stable.
+1. Configure real OAuth, email, payment, and Gemini credentials, then run provider-specific production acceptance.
+2. Split `src/locales/overrides.ts` with an encoding-safe migration script and add missing baseline translations before exposing more locales.
+3. Add competitor-gap tools only after the platform refactor remains stable under production traffic.
+4. Decide whether to split the admin frontend into its own repository after the dedicated admin domain is live and daily operation is stable.

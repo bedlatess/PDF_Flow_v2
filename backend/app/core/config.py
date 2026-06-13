@@ -72,7 +72,7 @@ class Settings(BaseSettings):
     OCR_LANGUAGES: List[str] = ["eng", "chi_sim", "spa"]
 
     # Payment provider registry
-    PAYMENT_ENABLED_PROVIDERS_RAW: str = Field(default="stripe", alias="PAYMENT_ENABLED_PROVIDERS")
+    PAYMENT_ENABLED_PROVIDERS_RAW: str = Field(default="[]", alias="PAYMENT_ENABLED_PROVIDERS")
     PAYMENT_PROVIDER_ORDER_RAW: str = Field(
         default="stripe,paypal,epay,alipay,wechat,tokenpay,bepusdt,epusdt,okpay",
         alias="PAYMENT_PROVIDER_ORDER",

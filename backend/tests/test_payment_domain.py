@@ -171,7 +171,25 @@ class TestPaymentProviders:
         assert keys[:4] == ["stripe", "paypal", "epay", "alipay"]
         assert any(item["key"] == "wechat" for item in providers)
         assert any(item["key"] == "epusdt" for item in providers)
-        assert providers[0]["enabled"] is True
+        assert providers[0]["enabled"] is False
+        assert not any(item["enabled"] for item in providers)
+
+    def test_stripe_checkout_is_disabled_by_default(self, client):
+        headers = _auth_headers(client)
+
+        r = client.post(
+            "/api/v1/payment/create-checkout-session",
+            headers=headers,
+            json={
+                "provider": "stripe",
+                "plan": "monthly",
+                "success_url": "http://localhost:5173/payment/success",
+                "cancel_url": "http://localhost:5173/payment/cancel",
+            },
+        )
+
+        assert r.status_code == 503
+        assert r.json()["detail"] == "Stripe payment is not enabled"
 
     def test_checkout_rejects_disabled_provider(self, client):
         headers = _auth_headers(client)

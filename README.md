@@ -152,6 +152,7 @@ https://github.com/bedlatess/PDF_Flow_v2.git
 ```
 
 This workspace and the production server use the remote name `v2`.
+The latest verified production deployment is commit `77f939199a97634d48f1768bc5e297783942cedb` at `https://pdf.pawn.eu.org`.
 
 ```bash
 git remote -v

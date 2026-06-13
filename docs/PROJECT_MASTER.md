@@ -9,11 +9,13 @@ This is the internal source of truth for development direction, current progress
 - Official repository: `https://github.com/bedlatess/PDF_Flow_v2.git`
 - Official remote name: `v2`
 - Branch: `main`
-- Current deployed commit after the last verified server run is recorded on the server at `.deploy_state/main/current_deployed_commit`.
+- Last verified runtime commit: `77f939199a97634d48f1768bc5e297783942cedb`
+- The server also records the active runtime commit at `.deploy_state/main/current_deployed_commit`.
 - Server path: `/root/data/docker_data/PDF/pdf-flow`
 - Deployment model: single repository, single Docker Compose server
 - Runtime services: `frontend`, `backend`, `celery-worker`, `postgres`, `redis`
-- Current stage: platform refactor batch prepared for GitHub push; server deployment still pending
+- Current production endpoints: public frontend `https://pdf.pawn.eu.org`, local public container port `5173`, temporary admin container port `5174`, backend API port `8000`
+- Current stage: platform refactor batch deployed and smoke verified on the server; prepared admin domain routing is still pending
 
 ## Product Surface
 
@@ -123,7 +125,18 @@ Deployment:
   - `redis` healthy
   - `/health` returns production healthy
   - frontend home returns HTTP 200
-- Platform refactor push batch includes Phase 2 i18n v2, Phase 2b i18n SEO, Phase 3 Tool Registry v2, Phase 4 dedicated admin frontend, Phase 4b Control Room extraction, Phase 4c admin API extraction, Phase 4d public API extraction, and Phase 4e admin production-serving boundary. This batch has passed `npm run type-check`, `npm run test:unit:ci`, `npm run build`, `npm run build:admin`, `npm run test:e2e:admin`, public shell E2E, locale SEO E2E, and targeted tool/availability Playwright checks locally. It is being pushed to GitHub; server deployment is still pending.
+- Platform refactor push batch includes Phase 2 i18n v2, Phase 2b i18n SEO, Phase 3 Tool Registry v2, Phase 4 dedicated admin frontend, Phase 4b Control Room extraction, Phase 4c admin API extraction, Phase 4d public API extraction, and Phase 4e admin production-serving boundary. This batch passed `npm run type-check`, `npm run test:unit:ci`, `npm run build`, `npm run build:admin`, `npm run test:e2e:admin`, public shell E2E, locale SEO E2E, and targeted tool/availability Playwright checks locally.
+- Verified server health after deploying `77f939199a97634d48f1768bc5e297783942cedb` on 2026-06-13:
+  - `frontend` healthy
+  - `backend` healthy
+  - `celery-worker` healthy
+  - `postgres` healthy
+  - `redis` healthy
+  - `/health` returns `{"status":"healthy","version":"2.0.0","environment":"production"}`
+  - public frontend `http://localhost:5173/` returns HTTP 200
+  - admin frontend `http://localhost:5174/` returns HTTP 200 with noindex/security headers
+  - public domain `https://pdf.pawn.eu.org/` returns HTTP 200
+  - localized route `https://pdf.pawn.eu.org/en/tools/merge` returns HTTP 200
 
 ## Known Code Issues
 
@@ -131,7 +144,7 @@ Fix these before large feature work:
 
 1. Repository metadata in `package.json` previously pointed to placeholder GitHub URLs. Keep it aligned with `PDF_Flow_v2`.
 2. `src/locales/overrides.ts` is too large and acts as an uncontrolled patch layer over JSON locale files.
-3. The dedicated admin frontend now has local Docker/Nginx/backend CORS wiring, but the prepared real admin domain still needs DNS, TLS, server environment values, and smoke evidence after push/deploy.
+3. The dedicated admin frontend now has Docker/Nginx/backend CORS wiring and temporary server access on port `5174`, but the prepared real admin domain still needs DNS, TLS, server environment values, and smoke evidence.
 4. Admin UI now has a separate frontend entry, but it still lives in the same repository tree until a future monorepo split is justified.
 5. Locale-prefixed routes, browser-language preference, and basic SEO `hreflang` output exist for the current supported locales, but additional locale rollout and deeper locale-file cleanup still need completion.
 6. Public content blocks only normalize `zh*` to `zh` and otherwise fall back to `en`, so future languages need a more formal locale model.
@@ -533,8 +546,8 @@ pytest tests/test_payment_domain.py -q
 
 ## Next Recommended Work
 
-1. Deploy the pushed platform refactor batch to the server and record smoke evidence.
-2. Configure the prepared admin domain with DNS, TLS, `ADMIN_FRONTEND_URL`, and `ADMIN_FRONTEND_HOST`.
+1. Configure the prepared admin domain with DNS, TLS, `ADMIN_FRONTEND_URL`, and `ADMIN_FRONTEND_HOST`.
+2. Run production acceptance for OAuth, email, payment callbacks, AI/OCR, and Office conversion.
 3. Split `src/locales/overrides.ts` with an encoding-safe migration script and add missing baseline translations before exposing more locales.
-4. Run production acceptance for OAuth, email, payment callbacks, AI/OCR, and Office conversion.
-5. Add competitor-gap tools only after the pushed platform refactor is stable on the server.
+4. Add competitor-gap tools only after the platform refactor remains stable under production traffic.
+5. Decide whether to split the admin frontend into its own repository after the dedicated admin domain is live and daily operation is stable.

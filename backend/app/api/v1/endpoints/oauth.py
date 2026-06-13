@@ -27,6 +27,16 @@ logger = logging.getLogger(__name__)
 # Initialize OAuth client
 oauth = OAuth()
 
+
+def oauth_provider_callback_url(provider: str, *, link: bool = False) -> str:
+    base_url = settings.BACKEND_PUBLIC_URL.rstrip("/")
+    callback_path = (
+        f"/api/v1/auth/oauth/link/{provider}/callback"
+        if link
+        else f"/api/v1/auth/oauth/{provider}/callback"
+    )
+    return f"{base_url}{callback_path}"
+
 # Register Google OAuth
 if settings.GOOGLE_CLIENT_ID and settings.GOOGLE_CLIENT_SECRET:
     oauth.register(
@@ -81,7 +91,7 @@ async def oauth_login(provider: str, request: Request):
         )
 
     # Build callback URL
-    redirect_uri = request.url_for('oauth_callback', provider=provider)
+    redirect_uri = oauth_provider_callback_url(provider)
 
     # Redirect to OAuth provider
     return await oauth.create_client(provider).authorize_redirect(request, redirect_uri)
@@ -200,7 +210,7 @@ async def link_oauth_account(
         )
 
     # Similar OAuth flow but for linking
-    redirect_uri = request.url_for('link_oauth_callback', provider=provider)
+    redirect_uri = oauth_provider_callback_url(provider, link=True)
     return await oauth.create_client(provider).authorize_redirect(request, redirect_uri)
 
 

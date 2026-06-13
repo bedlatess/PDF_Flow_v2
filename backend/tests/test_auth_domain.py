@@ -224,3 +224,19 @@ def test_auth_domain_oauth_user_creation_linking_and_redirects(client):
         ) == "https://app.pdf-flow.test/profile?oauth_linked=success"
     finally:
         db.close()
+
+
+def test_oauth_provider_callback_url_uses_public_backend_url(client, monkeypatch):
+    from app.api.v1.endpoints.oauth import oauth_provider_callback_url
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "BACKEND_PUBLIC_URL", "https://pdf.pawn.eu.org/")
+
+    assert (
+        oauth_provider_callback_url("github")
+        == "https://pdf.pawn.eu.org/api/v1/auth/oauth/github/callback"
+    )
+    assert (
+        oauth_provider_callback_url("github", link=True)
+        == "https://pdf.pawn.eu.org/api/v1/auth/oauth/link/github/callback"
+    )

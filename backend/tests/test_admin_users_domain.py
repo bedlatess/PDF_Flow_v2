@@ -20,6 +20,8 @@ def _request_stub():
 
 
 def test_admin_users_domain_lists_updates_and_protects_admin_self(client):
+    from datetime import datetime, timedelta
+
     from app.core.database import get_db
     from app.domains.admin.users import (
         list_users,
@@ -48,12 +50,19 @@ def test_admin_users_domain_lists_updates_and_protects_admin_self(client):
         updated = update_user(
             db,
             user_id=customer.id,
-            payload=AdminUserUpdate(role="pro", is_verified=True),
+            payload=AdminUserUpdate(
+                role="pro",
+                is_verified=True,
+                subscription_status="manual",
+                subscription_end_date=datetime.utcnow() + timedelta(days=365),
+            ),
             request=_request_stub(),
             admin=admin,
         )
         assert updated["role"] == "pro"
         assert updated["is_verified"] is True
+        assert updated["subscription_status"] == "manual"
+        assert updated["subscription_end_date"] is not None
 
         with pytest.raises(HTTPException) as demote_error:
             update_user(
@@ -82,7 +91,7 @@ def test_admin_users_domain_lists_updates_and_protects_admin_self(client):
         audits = db.query(AdminAuditLog).order_by(AdminAuditLog.created_at).all()
         assert audits[-1].target_type == "user"
         assert audits[-1].target_key == "customer-users-domain@example.com"
-        assert audits[-1].detail == "is_verified, role"
+        assert audits[-1].detail == "is_verified, role, subscription_end_date, subscription_status"
     finally:
         db.close()
 

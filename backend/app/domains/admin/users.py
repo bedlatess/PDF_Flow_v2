@@ -1,5 +1,7 @@
 """Admin user management and test-account cleanup."""
 
+from datetime import timezone
+
 from fastapi import HTTPException, Request, status
 from sqlalchemy.orm import Session
 
@@ -17,6 +19,15 @@ from app.models.user import (
 )
 from app.schemas.admin import AdminUserUpdate
 
+ALLOWED_SUBSCRIPTION_STATUSES = {
+    "active",
+    "manual",
+    "trialing",
+    "cancel_at_period_end",
+    "expired",
+    "canceled",
+}
+
 
 def role_value(user: User) -> str:
     return user.role.value if hasattr(user.role, "value") else str(user.role)
@@ -32,6 +43,12 @@ def is_test_account(user: User) -> bool:
     )
 
 
+def normalize_datetime(value):
+    if value is None or value.tzinfo is None:
+        return value
+    return value.astimezone(timezone.utc).replace(tzinfo=None)
+
+
 def serialize_admin_user(user: User) -> dict:
     return {
         "id": user.id,
@@ -41,6 +58,9 @@ def serialize_admin_user(user: User) -> dict:
         "is_active": user.is_active,
         "is_verified": user.is_verified,
         "is_test_account": is_test_account(user),
+        "subscription_id": user.subscription_id,
+        "subscription_status": user.subscription_status,
+        "subscription_end_date": user.subscription_end_date,
         "created_at": user.created_at,
         "last_login_at": user.last_login_at,
     }
@@ -99,9 +119,11 @@ def update_user(
             detail="You cannot remove your own admin access.",
         )
 
+    new_role: UserRole | None = None
     if "role" in data:
         try:
-            user.role = UserRole(data["role"])
+            new_role = UserRole(data["role"])
+            user.role = new_role
         except ValueError as exc:
             allowed = ", ".join(role.value for role in UserRole)
             raise HTTPException(
@@ -112,6 +134,25 @@ def update_user(
         user.is_active = data["is_active"]
     if "is_verified" in data:
         user.is_verified = data["is_verified"]
+    if "subscription_id" in data:
+        user.subscription_id = data["subscription_id"] or None
+    if "subscription_status" in data:
+        next_status = (data["subscription_status"] or "").strip().lower()
+        if next_status and next_status not in ALLOWED_SUBSCRIPTION_STATUSES:
+            allowed = ", ".join(sorted(ALLOWED_SUBSCRIPTION_STATUSES))
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Invalid subscription status. Allowed values: {allowed}",
+            )
+        user.subscription_status = next_status or None
+    if "subscription_end_date" in data:
+        user.subscription_end_date = normalize_datetime(data["subscription_end_date"])
+    if (
+        new_role in {UserRole.PRO, UserRole.ENTERPRISE}
+        and "subscription_status" not in data
+        and not user.subscription_status
+    ):
+        user.subscription_status = "manual"
 
     write_admin_audit(
         db,

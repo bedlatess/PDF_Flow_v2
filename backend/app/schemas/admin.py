@@ -87,6 +87,9 @@ class AdminUserResponse(BaseModel):
     is_active: bool
     is_verified: bool
     is_test_account: bool = False
+    subscription_id: Optional[str] = None
+    subscription_status: Optional[str] = None
+    subscription_end_date: Optional[datetime] = None
     created_at: datetime
     last_login_at: Optional[datetime]
 
@@ -95,6 +98,9 @@ class AdminUserUpdate(BaseModel):
     role: Optional[str] = Field(default=None, max_length=40)
     is_active: Optional[bool] = None
     is_verified: Optional[bool] = None
+    subscription_id: Optional[str] = Field(default=None, max_length=255)
+    subscription_status: Optional[str] = Field(default=None, max_length=40)
+    subscription_end_date: Optional[datetime] = None
 
 
 class AdminPasswordResetLinkResponse(BaseModel):

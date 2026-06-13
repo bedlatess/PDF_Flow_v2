@@ -2,6 +2,7 @@
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.domains.account.entitlements import has_active_subscription, role_value
 from app.models.user import FeatureFlag, User, UserRole
 from app.services.site_state import get_maintenance_message, is_maintenance_mode_enabled
 
@@ -33,18 +34,8 @@ DEFAULT_FEATURE_FLAGS = [
 ]
 
 
-def role_value(user: User | None) -> str | None:
-    if user is None:
-        return None
-    return user.role.value if hasattr(user.role, "value") else str(user.role)
-
-
 def can_use_pro_feature(user: User | None) -> bool:
-    return role_value(user) in {
-        UserRole.PRO.value,
-        UserRole.ENTERPRISE.value,
-        UserRole.ADMIN.value,
-    }
+    return has_active_subscription(user)
 
 
 def seed_default_feature_flags(db: Session) -> None:

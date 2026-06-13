@@ -67,6 +67,9 @@ export interface AdminUser {
   is_active: boolean
   is_verified: boolean
   is_test_account: boolean
+  subscription_id: string | null
+  subscription_status: string | null
+  subscription_end_date: string | null
   created_at: string
   last_login_at: string | null
 }
@@ -75,6 +78,9 @@ export interface AdminUserUpdate {
   role?: AdminUser['role']
   is_active?: boolean
   is_verified?: boolean
+  subscription_id?: string | null
+  subscription_status?: string | null
+  subscription_end_date?: string | null
 }
 
 export interface AdminPasswordResetLink {

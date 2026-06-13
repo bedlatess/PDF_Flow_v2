@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File,
 from fastapi.responses import FileResponse
 from starlette.background import BackgroundTask
 
-from app.models.user import User, UserRole
+from app.models.user import User
 from app.core.database import get_db
 from app.schemas.advanced_pdf import (
     WatermarkRequest,
@@ -21,7 +21,7 @@ from app.schemas.advanced_pdf import (
 )
 from app.api.v1.endpoints.auth import get_current_user
 from app.services.advanced_pdf_service import get_advanced_pdf_service
-from app.services.feature_gate import require_feature_access
+from app.services.feature_gate import can_use_pro_feature, require_feature_access
 from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/advanced", tags=["advanced-pdf"])
@@ -35,7 +35,7 @@ async def require_pro_user(
     current_user: User = Depends(get_current_user),
 ) -> User:
     """Ensure user has Pro or Enterprise subscription"""
-    if current_user.role not in [UserRole.PRO, UserRole.ENTERPRISE, UserRole.ADMIN]:
+    if not can_use_pro_feature(current_user):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Pro or Enterprise subscription required for advanced PDF features",

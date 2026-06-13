@@ -25,6 +25,49 @@ const emit = defineEmits<{
 const updateUserSearch = (event: Event) => {
   emit('update:userSearch', (event.target as HTMLInputElement).value)
 }
+
+const subscriptionStatuses = [
+  { value: '', label: 'No subscription' },
+  { value: 'manual', label: 'Manual' },
+  { value: 'active', label: 'Active' },
+  { value: 'trialing', label: 'Trialing' },
+  { value: 'cancel_at_period_end', label: 'Cancel at period end' },
+  { value: 'expired', label: 'Expired' },
+  { value: 'canceled', label: 'Canceled' },
+]
+
+const toDateTimeLocal = (value: string | null) => {
+  if (!value) return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000)
+  return local.toISOString().slice(0, 16)
+}
+
+const setSubscriptionEndDate = (user: AdminUser, value: string) => {
+  user.subscription_end_date = value ? new Date(value).toISOString() : null
+}
+
+const updateSubscriptionEndDate = (user: AdminUser, event: Event) => {
+  setSubscriptionEndDate(user, (event.target as HTMLInputElement).value)
+}
+
+const grantManualPro = (user: AdminUser, days: number) => {
+  const currentEnd = user.subscription_end_date ? new Date(user.subscription_end_date) : null
+  const base =
+    currentEnd && currentEnd.getTime() > Date.now() && !Number.isNaN(currentEnd.getTime())
+      ? currentEnd
+      : new Date()
+  base.setDate(base.getDate() + days)
+  user.role = 'pro'
+  user.subscription_status = 'manual'
+  user.subscription_end_date = base.toISOString()
+}
+
+const expireSubscription = (user: AdminUser) => {
+  user.subscription_status = 'expired'
+  user.subscription_end_date = new Date().toISOString()
+}
 </script>
 
 <template>
@@ -151,6 +194,58 @@ const updateUserSearch = (event: Event) => {
               </template>
               删除
             </AdminActionButton>
+          </div>
+
+          <div
+            class="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950/35 sm:grid-cols-[0.9fr_1fr_auto] lg:col-span-4"
+          >
+            <label class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
+              Entitlement
+              <select
+                v-model="user.subscription_status"
+                class="mt-2 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm normal-case tracking-normal text-slate-950 outline-none focus:border-sky-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:focus:border-sky-400"
+              >
+                <option
+                  v-for="status in subscriptionStatuses"
+                  :key="status.value || 'none'"
+                  :value="status.value || null"
+                >
+                  {{ status.label }}
+                </option>
+              </select>
+            </label>
+            <label class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
+              Ends At
+              <input
+                :value="toDateTimeLocal(user.subscription_end_date)"
+                type="datetime-local"
+                class="mt-2 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm normal-case tracking-normal text-slate-950 outline-none focus:border-sky-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:focus:border-sky-400"
+                @input="updateSubscriptionEndDate(user, $event)"
+              />
+            </label>
+            <div class="flex flex-wrap items-end gap-2">
+              <button
+                type="button"
+                class="rounded-md border border-sky-200 bg-white px-3 py-2 text-xs font-semibold text-sky-700 hover:border-sky-300 hover:bg-sky-50 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-100"
+                @click="grantManualPro(user, 30)"
+              >
+                Pro +30d
+              </button>
+              <button
+                type="button"
+                class="rounded-md border border-sky-200 bg-white px-3 py-2 text-xs font-semibold text-sky-700 hover:border-sky-300 hover:bg-sky-50 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-100"
+                @click="grantManualPro(user, 365)"
+              >
+                Pro +365d
+              </button>
+              <button
+                type="button"
+                class="rounded-md border border-amber-200 bg-white px-3 py-2 text-xs font-semibold text-amber-700 hover:border-amber-300 hover:bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100"
+                @click="expireSubscription(user)"
+              >
+                Expire
+              </button>
+            </div>
           </div>
 
           <div

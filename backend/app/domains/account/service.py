@@ -11,12 +11,9 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.security import get_password_hash
+from app.domains.account.entitlements import effective_role
 from app.models.user import UsageLog, User
 from app.schemas.user import UserUpdate
-
-
-def _role_value(user: User) -> str:
-    return user.role.value if hasattr(user.role, "value") else str(user.role)
 
 
 def get_usage_stats(db: Session, user: User) -> dict[str, int | str]:
@@ -37,7 +34,7 @@ def get_usage_stats(db: Session, user: User) -> dict[str, int | str]:
         UsageLog.file_size.isnot(None),
     ).scalar() or 0
 
-    role = _role_value(user)
+    role = effective_role(user) or "free"
     if role == "free":
         quota_limit = settings.RATE_LIMIT_FREE
         quota_remaining = max(0, quota_limit - int(requests_today))

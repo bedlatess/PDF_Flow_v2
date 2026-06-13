@@ -26,6 +26,8 @@ class UserResponse(UserBase):
     role: str
     is_active: bool
     is_verified: bool
+    subscription_status: Optional[str] = None
+    subscription_end_date: Optional[datetime] = None
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

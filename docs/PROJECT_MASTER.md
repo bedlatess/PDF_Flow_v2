@@ -63,6 +63,7 @@ Implemented operations:
 - Public site settings
 - Content blocks
 - User management
+- Manual user entitlement grants and expiration management
 - Job observation
 - Feedback triage
 - API error summaries
@@ -237,6 +238,16 @@ Deployment:
   - login after reset returned bearer tokens
   - production `password_reset_tokens` table has a used-token record
   - test user cleanup deleted the generated account
+- Implemented manual admin entitlement grants:
+  - Control Room user management can set subscription status and end date
+  - admins can quickly grant Pro for 30 or 365 days or mark a subscription expired
+  - admin user API now returns and updates `subscription_id`, `subscription_status`, and `subscription_end_date`
+  - Pro/Enterprise access now respects active/manual/trialing/cancel-at-period-end status and future expiry; expired or canceled users are treated as Free
+  - backend feature gates, AI endpoints, advanced PDF endpoints, upload tiering, and usage stats now share the same entitlement rules
+  - current user API returns subscription status and end date so the frontend can hide paid cloud features after expiry
+  - verified with `pytest backend/tests/test_entitlements.py backend/tests/test_account_domain.py backend/tests/test_admin_users_domain.py backend/tests/test_admin.py -q`
+  - verified with `npm run type-check`
+  - verified with `npm run build`
 
 ## Known Code Issues
 
@@ -675,7 +686,7 @@ pytest tests/test_payment_domain.py -q
 
 ## Next Recommended Work
 
-1. Finish production acceptance for GitHub OAuth, then configure email, payment, and Gemini credentials when real provider accounts are ready.
+1. Deploy and production-verify manual admin entitlement grants, then configure payment and Gemini credentials when real provider accounts are ready.
 2. Split `src/locales/overrides.ts` with an encoding-safe migration script and add missing baseline translations before exposing more locales.
 3. Add competitor-gap tools only after the platform refactor remains stable under production traffic.
 4. Decide whether to split the admin frontend into its own repository after the dedicated admin domain is live and daily operation is stable.

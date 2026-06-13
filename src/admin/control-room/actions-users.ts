@@ -33,6 +33,9 @@ export const createControlRoomUsersActions = (
         role: user.role,
         is_active: user.is_active,
         is_verified: user.is_verified,
+        subscription_id: user.subscription_id || null,
+        subscription_status: user.subscription_status || null,
+        subscription_end_date: user.subscription_end_date || null,
       })
       const index = ctx.users.value.findIndex((item) => item.id === updated.id)
       if (index >= 0) ctx.users.value[index] = updated

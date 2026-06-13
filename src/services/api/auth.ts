@@ -38,6 +38,8 @@ export interface User {
   role: string
   is_active: boolean
   is_verified: boolean
+  subscription_status: string | null
+  subscription_end_date: string | null
   created_at: string
 }
 

@@ -10,6 +10,7 @@ from typing import Awaitable, Callable
 from fastapi import HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
+from app.domains.account.entitlements import effective_role
 from app.models.user import ProcessingJob, User, UserRole
 from app.services.feature_gate import require_feature_access
 
@@ -21,7 +22,7 @@ def user_upload_tier(user: User | None) -> str:
     if user is None:
         return UserRole.FREE.value
 
-    role_value = user.role.value if hasattr(user.role, "value") else str(user.role)
+    role_value = effective_role(user) or UserRole.FREE.value
     if role_value == UserRole.ADMIN.value:
         return UserRole.ENTERPRISE.value
     return role_value

@@ -218,6 +218,8 @@ def test_maintenance_mode_blocks_processing_for_non_admin(client):
 
 
 def test_admin_can_list_and_update_users(client):
+    from datetime import datetime, timedelta
+
     _register(client)
     _promote_to_admin(client)
     _register(client, email="customer@example.com")
@@ -232,17 +234,26 @@ def test_admin_can_list_and_update_users(client):
     updated = client.patch(
         f"/api/v1/admin/users/{customer['id']}",
         headers=headers,
-        json={"role": "pro", "is_verified": True},
+        json={
+            "role": "pro",
+            "is_verified": True,
+            "subscription_status": "manual",
+            "subscription_end_date": (datetime.utcnow() + timedelta(days=30)).isoformat(),
+        },
     )
 
     assert updated.status_code == 200
-    assert updated.json()["role"] == "pro"
-    assert updated.json()["is_verified"] is True
+    body = updated.json()
+    assert body["role"] == "pro"
+    assert body["is_verified"] is True
+    assert body["subscription_status"] == "manual"
+    assert body["subscription_end_date"] is not None
 
     logs = client.get("/api/v1/admin/audit-logs", headers=headers)
     assert logs.status_code == 200
     assert logs.json()[0]["target_type"] == "user"
     assert logs.json()[0]["target_key"] == "customer@example.com"
+    assert "subscription_end_date" in logs.json()[0]["detail"]
 
 
 def test_admin_can_create_user_password_reset_link(client, monkeypatch):

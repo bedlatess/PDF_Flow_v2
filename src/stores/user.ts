@@ -7,6 +7,25 @@ import { ref, computed } from 'vue'
 import { authAPI, userAPI, type User, type UserStats, type LoginData, type RegisterData } from '@/services/api'
 import { formatUserFacingError, toUserStoreErrorMessage, type FormattedUserError } from '@/utils/error-messages'
 
+const ACTIVE_SUBSCRIPTION_STATUSES = new Set([
+  'active',
+  'manual',
+  'trialing',
+  'cancel_at_period_end',
+])
+
+const hasActiveEntitlement = (account: User | null) => {
+  if (!account) return false
+  if (account.role === 'admin') return true
+  if (account.role !== 'pro' && account.role !== 'enterprise') return false
+
+  const status = account.subscription_status?.trim().toLowerCase()
+  if (status && !ACTIVE_SUBSCRIPTION_STATUSES.has(status)) return false
+  if (!account.subscription_end_date) return true
+
+  return new Date(account.subscription_end_date).getTime() > Date.now()
+}
+
 export const useUserStore = defineStore('user', () => {
   // State
   const user = ref<User | null>(null)
@@ -19,14 +38,16 @@ export const useUserStore = defineStore('user', () => {
 
   // Computed
   const isFreeTier = computed(() => user.value?.role === 'free')
-  const isProTier = computed(() => user.value?.role === 'pro')
+  const isProTier = computed(() => user.value?.role === 'pro' && hasActiveEntitlement(user.value))
   const isEnterpriseTier = computed(
-    () => user.value?.role === 'enterprise' || user.value?.role === 'admin'
+    () =>
+      user.value?.role === 'admin' ||
+      (user.value?.role === 'enterprise' && hasActiveEntitlement(user.value))
   )
   const isAdmin = computed(() => user.value?.role === 'admin')
 
   const canUseCloudFeatures = computed(() => {
-    return isProTier.value || isEnterpriseTier.value
+    return hasActiveEntitlement(user.value)
   })
 
   const quotaUsagePercentage = computed(() => {

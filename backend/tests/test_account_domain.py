@@ -94,6 +94,8 @@ def test_account_stats_treats_non_free_plans_as_unlimited(client):
     try:
         user = db.query(User).filter(User.email == email).first()
         user.role = UserRole.PRO
+        user.subscription_status = "manual"
+        user.subscription_end_date = datetime.utcnow() + timedelta(days=30)
         db.commit()
     finally:
         db.close()
@@ -104,6 +106,31 @@ def test_account_stats_treats_non_free_plans_as_unlimited(client):
     assert response.json()["quota_limit"] == -1
     assert response.json()["quota_remaining"] == -1
     assert response.json()["role"] == "pro"
+
+
+def test_account_stats_treats_expired_pro_as_free(client):
+    from app.core.database import get_db
+    from app.core.config import settings
+    from app.models.user import User, UserRole
+
+    email = "expired-pro-stats@example.com"
+    headers = _auth_headers(client, email=email)
+
+    db = next(client.app.dependency_overrides[get_db]())
+    try:
+        user = db.query(User).filter(User.email == email).first()
+        user.role = UserRole.PRO
+        user.subscription_status = "expired"
+        user.subscription_end_date = datetime.utcnow() - timedelta(days=1)
+        db.commit()
+    finally:
+        db.close()
+
+    response = client.get("/api/v1/users/me/stats", headers=headers)
+
+    assert response.status_code == 200
+    assert response.json()["quota_limit"] == settings.RATE_LIMIT_FREE
+    assert response.json()["role"] == "free"
 
 
 def test_account_update_changes_name_and_password(client):

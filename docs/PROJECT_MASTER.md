@@ -9,7 +9,7 @@ This is the internal source of truth for development direction, current progress
 - Official repository: `https://github.com/bedlatess/PDF_Flow_v2.git`
 - Official remote name: `v2`
 - Branch: `main`
-- Last verified runtime commit: `985efb3bb82065baf395c0af626bd661aa61dce3`
+- Last verified runtime commit: `426a890919265af00ce972a90a2df764b53756b5`
 - The server also records the active runtime commit at `.deploy_state/main/current_deployed_commit`.
 - Server path: `/root/data/docker_data/PDF/pdf-flow`
 - Deployment model: single repository, single Docker Compose server
@@ -222,6 +222,20 @@ Deployment:
   - generated link pointed to `https://pdf.pawn.eu.org/zh-cn/auth/reset-password`
   - reset token successfully changed the test user's password and subsequent login returned bearer tokens
   - latest audit log recorded `target_type=password_reset_link`
+  - test user cleanup deleted the generated account
+- Upgraded password reset links to true one-time tokens:
+  - migration `add_password_reset_tokens` creates `password_reset_tokens`
+  - reset links now store only SHA-256 token hashes, source, creator, expiry, and `used_at`
+  - admin-generated and user-requested reset links are marked used after successful password reset
+  - legacy JWT reset tokens remain accepted for backward compatibility
+  - verified with `pytest backend/tests/test_admin.py::test_admin_can_create_user_password_reset_link backend/tests/test_admin.py::test_admin_password_reset_link_requires_admin_and_active_user backend/tests/test_auth_domain.py::test_auth_domain_password_reset_and_inactive_user_guards -q`
+  - verified with `npm run type-check`
+- Deployed and verified one-time reset links on production:
+  - deployment `426a890919265af00ce972a90a2df764b53756b5` completed successfully at `2026-06-13 22:45:29`
+  - migration ran `add_payment_events -> add_password_reset_tokens`
+  - live reset link for `reset-onetime-20260613224612@example.com` returned HTTP 200 on first use and HTTP 400 on second use
+  - login after reset returned bearer tokens
+  - production `password_reset_tokens` table has a used-token record
   - test user cleanup deleted the generated account
 
 ## Known Code Issues

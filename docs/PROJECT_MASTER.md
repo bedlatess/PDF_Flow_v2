@@ -279,6 +279,13 @@ Deployment:
   - verified with `npm run type-check`
   - verified with `npm run test:unit:ci -- tests/unit/entitlements.test.ts`
   - verified with `npm run build`
+- Deployed and verified pricing entitlement consistency on production:
+  - deployment `1ead8b0262ab643fb1b01a73131dc6e63ffcddb0` completed successfully at `2026-06-14 06:43:04`
+  - deploy script rebuilt public/admin frontend artifacts and backend images, ran migrations, and passed health/API-doc smoke checks
+  - production runtime records `.deploy_state/main/current_deployed_commit=1ead8b0262ab643fb1b01a73131dc6e63ffcddb0`
+  - production `/health` returns `{"status":"healthy","version":"2.0.0","environment":"production"}`
+  - `https://pdf.pawn.eu.org/zh-cn/pricing` returns HTTP 200
+  - `https://admin.pawn.eu.org/` returns HTTP 200
 
 ## Known Code Issues
 

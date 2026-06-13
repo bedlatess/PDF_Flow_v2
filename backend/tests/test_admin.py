@@ -278,6 +278,11 @@ def test_admin_can_create_user_password_reset_link(client, monkeypatch):
         json={"token": reset_token, "new_password": "NewSecure123!"},
     )
     assert reset.status_code == 200
+    reused = client.post(
+        "/api/v1/auth/reset-password",
+        json={"token": reset_token, "new_password": "AnotherSecure123!"},
+    )
+    assert reused.status_code == 400
     assert _login(
         client,
         email="reset-customer@example.com",

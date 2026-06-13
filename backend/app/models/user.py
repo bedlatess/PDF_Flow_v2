@@ -101,6 +101,33 @@ class APIKey(Base):
     )
 
 
+class PasswordResetToken(Base):
+    """One-time password reset token record.
+
+    Plain reset tokens are only shown in links. The database stores a hash so a
+    database leak cannot be used directly to reset accounts.
+    """
+    __tablename__ = "password_reset_tokens"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    token_hash = Column(String, unique=True, nullable=False)
+    source = Column(String, default="user_request", nullable=False)
+    created_by_admin_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    expires_at = Column(DateTime, nullable=False, index=True)
+    used_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    user = relationship("User", foreign_keys=[user_id])
+    created_by_admin = relationship("User", foreign_keys=[created_by_admin_id])
+
+    __table_args__ = (
+        Index("idx_password_reset_token_hash", "token_hash"),
+        Index("idx_password_reset_token_user", "user_id"),
+        Index("idx_password_reset_token_expires", "expires_at"),
+    )
+
+
 class UsageLog(Base):
     """
     Usage tracking for rate limiting and billing

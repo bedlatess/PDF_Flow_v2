@@ -1,13 +1,11 @@
 """Admin user management and test-account cleanup."""
 
-from datetime import datetime, timedelta
-
 from fastapi import HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.security import create_access_token
 from app.domains.admin.audit import write_admin_audit
+from app.domains.auth.service import create_password_reset_link_token
 from app.models.user import (
     AdminAuditLog,
     ApiErrorLog,
@@ -145,15 +143,15 @@ def create_user_password_reset_link(
             detail="Cannot create a reset link for an inactive user.",
         )
 
-    expires_delta = timedelta(hours=settings.PASSWORD_RESET_TOKEN_EXPIRE_HOURS)
-    token = create_access_token(
-        data={"sub": user.id, "type": "password_reset"},
-        expires_delta=expires_delta,
+    token, expires_at = create_password_reset_link_token(
+        db,
+        user=user,
+        source="admin_generated",
+        admin=admin,
     )
     reset_url = (
         f"{settings.FRONTEND_URL.rstrip('/')}/zh-cn/auth/reset-password?token={token}"
     )
-    expires_at = datetime.utcnow() + expires_delta
 
     write_admin_audit(
         db,

@@ -86,6 +86,13 @@ def test_auth_domain_password_reset_and_inactive_user_guards(client):
             background_tasks=BackgroundTasks(),
         )
         assert "password reset link" in response["message"]
+        from app.models.user import PasswordResetToken
+
+        reset_record = db.query(PasswordResetToken).filter(
+            PasswordResetToken.user_id == user.id
+        ).first()
+        assert reset_record is not None
+        assert reset_record.used_at is None
 
         token = create_access_token(data={"sub": user.id, "type": "password_reset"})
         reset_password(

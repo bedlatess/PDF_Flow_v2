@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+import hashlib
 import secrets
 from urllib.parse import urlencode
 
@@ -17,7 +18,7 @@ from app.core.security import (
     get_password_hash,
     verify_password,
 )
-from app.models.user import User, UserRole
+from app.models.user import PasswordResetToken, User, UserRole
 from app.schemas.user import PasswordResetConfirm, PasswordResetRequest, UserCreate
 from app.services.email_service import email_service
 
@@ -80,6 +81,59 @@ def token_pair_for_user(user: User) -> dict:
         "refresh_token": create_refresh_token(data={"sub": user.id}),
         "token_type": "bearer",
     }
+
+
+def hash_password_reset_token(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def create_password_reset_link_token(
+    db: Session,
+    *,
+    user: User,
+    source: str = "user_request",
+    admin: User | None = None,
+) -> tuple[str, datetime]:
+    expires_at = datetime.utcnow() + timedelta(
+        hours=settings.PASSWORD_RESET_TOKEN_EXPIRE_HOURS
+    )
+    token = secrets.token_urlsafe(48)
+    db.add(
+        PasswordResetToken(
+            user_id=user.id,
+            token_hash=hash_password_reset_token(token),
+            source=source,
+            created_by_admin_id=admin.id if admin else None,
+            expires_at=expires_at,
+        )
+    )
+    return token, expires_at
+
+
+def consume_password_reset_link_token(db: Session, *, token: str) -> User | None:
+    token_hash = hash_password_reset_token(token)
+    record = (
+        db.query(PasswordResetToken)
+        .filter(PasswordResetToken.token_hash == token_hash)
+        .first()
+    )
+    if record is None:
+        return None
+    if record.used_at is not None or record.expires_at < datetime.utcnow():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired reset token",
+        )
+
+    user = db.query(User).filter(User.id == record.user_id).first()
+    if not user or not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid reset token",
+        )
+
+    record.used_at = datetime.utcnow()
+    return user
 
 
 def oauth_callback_redirect_url(*, frontend_url: str, token_pair: dict) -> str:
@@ -259,10 +313,8 @@ def request_password_reset(
     user = db.query(User).filter(User.email == request.email).first()
 
     if user and user.is_active:
-        reset_token = create_access_token(
-            data={"sub": user.id, "type": "password_reset"},
-            expires_delta=timedelta(hours=settings.PASSWORD_RESET_TOKEN_EXPIRE_HOURS),
-        )
+        reset_token, _expires_at = create_password_reset_link_token(db, user=user)
+        db.commit()
 
         background_tasks.add_task(
             email_service.send_password_reset_email,
@@ -277,19 +329,21 @@ def request_password_reset(
 
 
 def reset_password(db: Session, *, request: PasswordResetConfirm) -> dict:
-    user_id = parse_token_user_id(request.token, expected_type="password_reset")
-    if user_id is None:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid or expired reset token",
-        )
+    user = consume_password_reset_link_token(db, token=request.token)
+    if user is None:
+        user_id = parse_token_user_id(request.token, expected_type="password_reset")
+        if user_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or expired reset token",
+            )
 
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user or not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid reset token",
-        )
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user or not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid reset token",
+            )
 
     user.hashed_password = get_password_hash(request.new_password)
     db.commit()

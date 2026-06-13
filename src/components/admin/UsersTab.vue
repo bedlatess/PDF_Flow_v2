@@ -138,7 +138,7 @@ const updateUserSearch = (event: Event) => {
               <template #icon>
                 <KeyRound class="h-4 w-4" />
               </template>
-              生成限时重置链接
+              生成一次性重置链接
             </AdminActionButton>
             <AdminActionButton
               tone="danger"
@@ -158,7 +158,7 @@ const updateUserSearch = (event: Event) => {
             class="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-xs leading-5 text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-100 lg:col-span-4"
           >
             <p class="font-semibold">
-              已生成限时重置链接，过期时间：{{ formatDate(passwordResetLinks[user.id].expires_at) }}
+              已生成一次性重置链接，过期时间：{{ formatDate(passwordResetLinks[user.id].expires_at) }}
             </p>
             <p class="mt-2 break-all font-mono text-[11px]">
               {{ passwordResetLinks[user.id].reset_url }}

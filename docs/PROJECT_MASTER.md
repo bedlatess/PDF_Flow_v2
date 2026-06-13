@@ -210,10 +210,11 @@ Deployment:
   - production admin password for `admin@pawn.eu.org` was rotated with `scripts/init-admin.sh`
   - `https://admin.pawn.eu.org/api/v1/auth/login` returns bearer and refresh tokens for the rotated admin credentials
 - Added no-SMTP account recovery support:
-  - admins can generate a copyable, time-limited password reset link from the Control Room user list
-  - generated links reuse the existing password-reset token flow and do not store or expose temporary plaintext passwords
+  - admins can generate a copyable, one-time password reset link from the Control Room user list
+  - generated links store only a token hash in `password_reset_tokens` and do not store or expose temporary plaintext passwords
+  - successful reset marks the token used so the same link cannot reset the account again
   - reset-link generation is admin-only, blocked for inactive users, and recorded in admin audit logs without storing the token
-  - verified with `pytest backend/tests/test_admin.py::test_admin_can_create_user_password_reset_link backend/tests/test_admin.py::test_admin_password_reset_link_requires_admin_and_active_user -q`
+  - verified with `pytest backend/tests/test_admin.py::test_admin_can_create_user_password_reset_link backend/tests/test_admin.py::test_admin_password_reset_link_requires_admin_and_active_user backend/tests/test_auth_domain.py::test_auth_domain_password_reset_and_inactive_user_guards -q`
   - verified with `npm run type-check`
 - Deployed and verified no-SMTP account recovery on production:
   - deployment `985efb3bb82065baf395c0af626bd661aa61dce3` completed successfully at `2026-06-13 22:14:48`

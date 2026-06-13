@@ -265,6 +265,14 @@ Deployment:
   - verified with `npm run test:unit:ci -- tests/unit/entitlements.test.ts`
   - verified with `npm run build`
   - verified with `npm run build:admin`
+- Deployed and verified account/admin entitlement visibility on production:
+  - deployment `bad5145bde1d8af23f00862263dd1f74cd0b32f6` completed successfully at `2026-06-14 06:37:32`
+  - deploy script rebuilt public/admin frontend artifacts and backend images, ran migrations, and passed health/API-doc smoke checks
+  - production runtime records `.deploy_state/main/current_deployed_commit=bad5145bde1d8af23f00862263dd1f74cd0b32f6`
+  - production `/health` returns `{"status":"healthy","version":"2.0.0","environment":"production"}`
+  - `https://pdf.pawn.eu.org/zh-cn/profile` returns HTTP 200
+  - `https://admin.pawn.eu.org/` returns HTTP 200
+  - all Compose services are healthy: `frontend`, `backend`, `celery-worker`, `postgres`, and `redis`
 
 ## Known Code Issues
 

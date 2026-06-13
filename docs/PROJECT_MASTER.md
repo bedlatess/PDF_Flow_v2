@@ -157,6 +157,16 @@ Deployment:
   - `https://admin.pawn.eu.org/api/v1/admin/public-config` returns HTTP 200
   - CORS preflight from `https://admin.pawn.eu.org` is allowed for both `https://pdf.pawn.eu.org/api/` and `https://admin.pawn.eu.org/api/`
   - read-only production acceptance passed with `PUBLIC_URL=https://pdf.pawn.eu.org` and `ADMIN_URL=https://admin.pawn.eu.org`
+- Created the first production admin account from the trusted server shell on 2026-06-13:
+  - admin user id `8`, email `admin@pawn.eu.org`, role `admin`, active and verified
+  - bootstrap audit log recorded `bootstrap_admin`
+- Verified protected production admin acceptance on 2026-06-13:
+  - ran `PUBLIC_URL=https://pdf.pawn.eu.org ADMIN_URL=https://admin.pawn.eu.org RUN_WRITE_PROBE=1 LIVE_ADMIN_EMAIL=admin@pawn.eu.org bash scripts/production-acceptance.sh`
+  - public homepage, localized tool route, backend health, public config, admin frontend, and admin access route passed
+  - admin login passed
+  - protected admin health report passed and returned migration/service data
+  - write probe submitted a live feedback report and admin cleanup closed it successfully
+  - cleanup audit log recorded `cleanup` for `live_acceptance`
 
 ## Known Code Issues
 
@@ -164,7 +174,7 @@ Fix these before large feature work:
 
 1. Repository metadata in `package.json` previously pointed to placeholder GitHub URLs. Keep it aligned with `PDF_Flow_v2`.
 2. `src/locales/overrides.ts` is too large and acts as an uncontrolled patch layer over JSON locale files.
-3. The dedicated admin frontend is live at `https://admin.pawn.eu.org` with DNS, TLS through Nginx Proxy Manager, server environment values, CORS, and read-only smoke evidence. Protected admin API checks still require live admin credentials.
+3. The dedicated admin frontend is live at `https://admin.pawn.eu.org` with DNS, TLS through Nginx Proxy Manager, server environment values, CORS, read-only smoke evidence, and protected admin acceptance evidence.
 4. Admin UI now has a separate frontend entry, but it still lives in the same repository tree until a future monorepo split is justified.
 5. Locale-prefixed routes, browser-language preference, and basic SEO `hreflang` output exist for the current supported locales, but additional locale rollout and deeper locale-file cleanup still need completion.
 6. Public content blocks only normalize `zh*` to `zh` and otherwise fall back to `en`, so future languages need a more formal locale model.
@@ -589,8 +599,7 @@ pytest tests/test_payment_domain.py -q
 
 ## Next Recommended Work
 
-1. Run protected admin acceptance with `LIVE_ADMIN_EMAIL` and `LIVE_ADMIN_PASSWORD`, and optionally `RUN_WRITE_PROBE=1`, when production admin credentials are ready for scripted checks.
-2. Run production acceptance for OAuth, email, payment callbacks, AI/OCR, and Office conversion.
-3. Split `src/locales/overrides.ts` with an encoding-safe migration script and add missing baseline translations before exposing more locales.
-4. Add competitor-gap tools only after the platform refactor remains stable under production traffic.
-5. Decide whether to split the admin frontend into its own repository after the dedicated admin domain is live and daily operation is stable.
+1. Run production acceptance for OAuth, email, payment callbacks, AI/OCR, and Office conversion.
+2. Split `src/locales/overrides.ts` with an encoding-safe migration script and add missing baseline translations before exposing more locales.
+3. Add competitor-gap tools only after the platform refactor remains stable under production traffic.
+4. Decide whether to split the admin frontend into its own repository after the dedicated admin domain is live and daily operation is stable.

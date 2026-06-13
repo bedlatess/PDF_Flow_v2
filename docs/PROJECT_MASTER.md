@@ -137,6 +137,15 @@ Deployment:
   - admin frontend `http://localhost:5174/` returns HTTP 200 with noindex/security headers
   - public domain `https://pdf.pawn.eu.org/` returns HTTP 200
   - localized route `https://pdf.pawn.eu.org/en/tools/merge` returns HTTP 200
+- Added and verified the read-only production acceptance workflow on the server:
+  - repository head `43f1835`
+  - running runtime image still records `77f939199a97634d48f1768bc5e297783942cedb`
+  - `https://pdf.pawn.eu.org/` returns the public app shell
+  - `https://pdf.pawn.eu.org/en/tools/merge` returns the public app shell
+  - `https://pdf.pawn.eu.org/health` returns healthy
+  - `https://pdf.pawn.eu.org/api/v1/admin/public-config` returns public config
+  - temporary admin URL `http://155.248.195.94:5174/` returns the admin app shell and noindex header
+  - no write probe or protected admin API probe was run because production admin credentials were not supplied to the acceptance script
 
 ## Known Code Issues
 

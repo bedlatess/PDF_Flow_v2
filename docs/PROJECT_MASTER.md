@@ -16,7 +16,7 @@ This file keeps the project state short and current. Historical rewrite logs wer
 
 ```bash
 cd /root/data/docker_data/PDF/pdf-flow
-git pull --ff-only origin main
+git pull --ff-only v2 main
 bash scripts/deploy-main.sh
 ```
 

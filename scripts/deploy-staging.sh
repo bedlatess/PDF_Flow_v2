@@ -4,7 +4,7 @@ set -Eeuo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BRANCH="${DEPLOY_BRANCH:-staging}"
-REMOTE="${DEPLOY_REMOTE:-origin}"
+REMOTE="${DEPLOY_REMOTE:-v2}"
 COMPOSE_FILE_PATH="${COMPOSE_FILE_PATH:-$ROOT_DIR/docker-compose.yml}"
 STATE_DIR="${DEPLOY_STATE_DIR:-$ROOT_DIR/.deploy_state/$BRANCH}"
 BACKUP_DIR="${DEPLOY_BACKUP_DIR:-$ROOT_DIR/.deploy_backups/$BRANCH}"

@@ -75,9 +75,11 @@ The current server deployment uses the `main` branch from `PDF_Flow_v2`.
 ```bash
 ssh root@155.248.195.94
 cd /root/data/docker_data/PDF/pdf-flow
-git pull --ff-only origin main
+git pull --ff-only v2 main
 bash scripts/deploy-main.sh
 ```
+
+If an older checkout still names the `PDF_Flow_v2` remote `origin`, rename it with `git remote rename origin v2` before deploying.
 
 Check the result:
 

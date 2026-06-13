@@ -9,16 +9,23 @@ ssh root@155.248.195.94
 cd /root/data/docker_data/PDF/pdf-flow
 ```
 
-The server remote named `origin` points to:
+The official Git remote is named `v2` and points to:
 
 ```text
 https://github.com/bedlatess/PDF_Flow_v2.git
 ```
 
+If an older checkout still names this remote `origin`, rename it once:
+
+```bash
+git remote rename origin v2
+git remote -v
+```
+
 ## Deploy Main
 
 ```bash
-git pull --ff-only origin main
+git pull --ff-only v2 main
 bash scripts/deploy-main.sh
 ```
 

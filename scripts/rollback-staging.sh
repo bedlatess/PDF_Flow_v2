@@ -4,6 +4,7 @@ set -Eeuo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BRANCH="${DEPLOY_BRANCH:-staging}"
+REMOTE="${DEPLOY_REMOTE:-v2}"
 COMPOSE_FILE_PATH="${COMPOSE_FILE_PATH:-$ROOT_DIR/docker-compose.yml}"
 STATE_DIR="${DEPLOY_STATE_DIR:-$ROOT_DIR/.deploy_state/$BRANCH}"
 LAST_SUCCESSFUL_COMMIT_FILE="$STATE_DIR/last_successful_commit"
@@ -83,7 +84,7 @@ main() {
 
   log "Rolling back to $rollback_commit"
 
-  git -C "$ROOT_DIR" fetch --prune origin
+  git -C "$ROOT_DIR" fetch --prune "$REMOTE"
   git -C "$ROOT_DIR" switch --detach "$rollback_commit"
 
   compose_run up -d --build

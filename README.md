@@ -173,7 +173,7 @@ For production, keep backend-only values in `backend/.env`. Put Compose/frontend
 
 ```text
 PUBLIC_FRONTEND_HOST=pdf.pawn.eu.org
-ADMIN_FRONTEND_HOST=admin.example.com
+ADMIN_FRONTEND_HOST=admin.pawn.eu.org
 ```
 
 Check status:
@@ -188,7 +188,7 @@ Production acceptance:
 
 ```bash
 PUBLIC_URL=https://pdf.pawn.eu.org \
-ADMIN_URL=https://admin.example.com \
+ADMIN_URL=https://admin.pawn.eu.org \
 bash scripts/production-acceptance.sh
 ```
 

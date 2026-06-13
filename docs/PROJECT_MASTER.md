@@ -14,8 +14,8 @@ This is the internal source of truth for development direction, current progress
 - Server path: `/root/data/docker_data/PDF/pdf-flow`
 - Deployment model: single repository, single Docker Compose server
 - Runtime services: `frontend`, `backend`, `celery-worker`, `postgres`, `redis`
-- Current production endpoints: public frontend `https://pdf.pawn.eu.org`, local public container port `5173`, temporary admin container port `5174`, backend API port `8000`
-- Current stage: platform refactor batch deployed and smoke verified on the server; prepared admin domain routing is still pending
+- Current production endpoints: public frontend `https://pdf.pawn.eu.org`, admin frontend `https://admin.pawn.eu.org`, local public container port `5173`, local admin container port `5174`, backend API port `8000`
+- Current stage: platform refactor batch deployed and smoke verified on the server; dedicated admin domain routing is live
 
 ## Product Surface
 
@@ -146,6 +146,17 @@ Deployment:
   - `https://pdf.pawn.eu.org/api/v1/admin/public-config` returns public config
   - temporary admin URL `http://155.248.195.94:5174/` returns the admin app shell and noindex header
   - no write probe or protected admin API probe was run because production admin credentials were not supplied to the acceptance script
+- Configured and verified the dedicated admin domain on 2026-06-13:
+  - Cloudflare DNS `admin.pawn.eu.org` resolves to `155.248.195.94`
+  - Nginx Proxy Manager proxy host id `25` forwards `admin.pawn.eu.org` to `155.248.195.94:5174`
+  - Nginx Proxy Manager reuses certificate id `1`, the existing `*.pawn.eu.org` Let's Encrypt certificate
+  - server `.deploy.env` sets `PUBLIC_FRONTEND_HOST=pdf.pawn.eu.org` and `ADMIN_FRONTEND_HOST=admin.pawn.eu.org`
+  - server `backend/.env` sets `ADMIN_FRONTEND_URL=https://admin.pawn.eu.org` and includes the admin origin in CORS and allowed hosts
+  - deployment `1db2646e714d22723845da06c7d044669f23973f` completed successfully at `2026-06-13 20:04:56`
+  - `https://admin.pawn.eu.org/` returns HTTP 200 with the admin app shell and noindex/security headers
+  - `https://admin.pawn.eu.org/api/v1/admin/public-config` returns HTTP 200
+  - CORS preflight from `https://admin.pawn.eu.org` is allowed for both `https://pdf.pawn.eu.org/api/` and `https://admin.pawn.eu.org/api/`
+  - read-only production acceptance passed with `PUBLIC_URL=https://pdf.pawn.eu.org` and `ADMIN_URL=https://admin.pawn.eu.org`
 
 ## Known Code Issues
 
@@ -153,7 +164,7 @@ Fix these before large feature work:
 
 1. Repository metadata in `package.json` previously pointed to placeholder GitHub URLs. Keep it aligned with `PDF_Flow_v2`.
 2. `src/locales/overrides.ts` is too large and acts as an uncontrolled patch layer over JSON locale files.
-3. The dedicated admin frontend now has Docker/Nginx/backend CORS wiring and temporary server access on port `5174`, but the prepared real admin domain still needs DNS, TLS, server environment values, and smoke evidence.
+3. The dedicated admin frontend is live at `https://admin.pawn.eu.org` with DNS, TLS through Nginx Proxy Manager, server environment values, CORS, and read-only smoke evidence. Protected admin API checks still require live admin credentials.
 4. Admin UI now has a separate frontend entry, but it still lives in the same repository tree until a future monorepo split is justified.
 5. Locale-prefixed routes, browser-language preference, and basic SEO `hreflang` output exist for the current supported locales, but additional locale rollout and deeper locale-file cleanup still need completion.
 6. Public content blocks only normalize `zh*` to `zh` and otherwise fall back to `en`, so future languages need a more formal locale model.
@@ -409,11 +420,11 @@ Admin refactor scope:
 Still to finish in this phase:
 
 - Move admin API clients/types into an admin-facing module or shared package before a full monorepo split.
-- Add a Nginx Proxy Manager host for the prepared admin domain that forwards to server port `5174`.
-- Set the real prepared admin domain environment values on the server:
-  - `backend/.env`: `ADMIN_FRONTEND_URL=https://<admin-domain>`
-  - `.deploy.env`: `PUBLIC_FRONTEND_HOST=pdf.pawn.eu.org` and `ADMIN_FRONTEND_HOST=<admin-domain>`
-- Verify real DNS/TLS routing so the public domain never serves the admin artifact and the admin domain can reach `/api/v1/admin/*`.
+- Keep the Nginx Proxy Manager host for `admin.pawn.eu.org` forwarding to server port `5174`.
+- Keep the real admin domain environment values on the server:
+  - `backend/.env`: `ADMIN_FRONTEND_URL=https://admin.pawn.eu.org`
+  - `.deploy.env`: `PUBLIC_FRONTEND_HOST=pdf.pawn.eu.org` and `ADMIN_FRONTEND_HOST=admin.pawn.eu.org`
+- Re-verify DNS/TLS routing after future proxy changes so the public domain never serves the admin artifact and the admin domain can reach `/api/v1/admin/*`.
 - Decide whether the future monorepo split is worth doing after production admin usage is stable.
 
 Acceptance:
@@ -503,7 +514,7 @@ Server deploy env:
 ```bash
 cat > .deploy.env <<'EOF'
 PUBLIC_FRONTEND_HOST=pdf.pawn.eu.org
-ADMIN_FRONTEND_HOST=<admin-domain>
+ADMIN_FRONTEND_HOST=admin.pawn.eu.org
 EOF
 ```
 
@@ -525,7 +536,7 @@ Production acceptance:
 
 ```bash
 PUBLIC_URL=https://pdf.pawn.eu.org \
-ADMIN_URL=https://<admin-domain> \
+ADMIN_URL=https://admin.pawn.eu.org \
 bash scripts/production-acceptance.sh
 ```
 
@@ -578,7 +589,7 @@ pytest tests/test_payment_domain.py -q
 
 ## Next Recommended Work
 
-1. Configure the prepared admin domain with DNS, TLS, `ADMIN_FRONTEND_URL`, and `ADMIN_FRONTEND_HOST`.
+1. Run protected admin acceptance with `LIVE_ADMIN_EMAIL` and `LIVE_ADMIN_PASSWORD`, and optionally `RUN_WRITE_PROBE=1`, when production admin credentials are ready for scripted checks.
 2. Run production acceptance for OAuth, email, payment callbacks, AI/OCR, and Office conversion.
 3. Split `src/locales/overrides.ts` with an encoding-safe migration script and add missing baseline translations before exposing more locales.
 4. Add competitor-gap tools only after the platform refactor remains stable under production traffic.

@@ -14,7 +14,7 @@
       class="mt-6"
       :title="notice.title"
       :message="notice.message"
-      :diagnostic-code="notice.diagnosticCode"
+      :diagnostic-code="notice.status ? notice.diagnosticCode : ''"
       :support-hint="notice.supportHint"
       :tone="notice.tone"
     />
@@ -123,7 +123,7 @@ onMounted(() => {
     notice.value = {
       title: t('auth.resetPasswordMissingTitle'),
       message: t('auth.resetPasswordMissingMessage'),
-      diagnosticCode: 'PF-AUTH-RESET-TOKEN',
+      diagnosticCode: '',
       supportHint: t('auth.requestNewResetLink'),
       tone: 'warning',
     }

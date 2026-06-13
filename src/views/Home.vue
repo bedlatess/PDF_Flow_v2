@@ -194,7 +194,7 @@ onMounted(() => {
           </h2>
         </div>
 
-        <div class="flex gap-2 overflow-x-auto pb-1 md:flex-wrap md:justify-end md:overflow-visible md:pb-0">
+        <div class="flex min-w-0 max-w-full gap-2 overflow-x-auto pb-1 md:flex-wrap md:justify-end md:overflow-visible md:pb-0">
           <button
             v-for="category in categoryOptions"
             :key="category.id"
@@ -257,8 +257,8 @@ onMounted(() => {
       </div>
     </section>
 
-    <section class="mx-auto grid max-w-7xl gap-4 px-4 pb-10 sm:px-6 lg:grid-cols-[0.82fr_1.18fr] lg:px-8">
-      <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-slate-900">
+    <section class="mx-auto grid max-w-7xl min-w-0 gap-4 px-4 pb-10 sm:px-6 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:px-8">
+      <div class="min-w-0 rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-slate-900">
         <div class="grid gap-3 sm:grid-cols-3">
           <article
             v-for="[value, label] in workspaceCopy.stats"
@@ -284,7 +284,7 @@ onMounted(() => {
         </div>
       </div>
 
-      <div class="rounded-lg border border-amber-200 bg-amber-50/70 p-5 shadow-sm dark:border-amber-300/20 dark:bg-amber-500/10">
+      <div class="min-w-0 rounded-lg border border-amber-200 bg-amber-50/70 p-5 shadow-sm dark:border-amber-300/20 dark:bg-amber-500/10">
         <div class="flex items-start justify-between gap-4">
           <div>
             <div class="flex h-10 w-10 items-center justify-center rounded-md bg-white text-amber-700 shadow-sm dark:bg-slate-900 dark:text-amber-200">
@@ -305,7 +305,7 @@ onMounted(() => {
             v-for="tool in advancedTools"
             :key="tool.id"
             type="button"
-            class="group flex min-h-[78px] items-center gap-3 rounded-md border border-amber-200 bg-white p-3 text-left transition hover:border-amber-300 hover:bg-amber-50 dark:border-amber-300/20 dark:bg-slate-900 dark:hover:bg-amber-500/10"
+            class="group flex min-h-[78px] w-full min-w-0 items-center gap-3 rounded-md border border-amber-200 bg-white p-3 text-left transition hover:border-amber-300 hover:bg-amber-50 dark:border-amber-300/20 dark:bg-slate-900 dark:hover:bg-amber-500/10"
             @click="navigateToTool(tool)"
           >
             <span :class="['flex h-10 w-10 shrink-0 items-center justify-center rounded-md ring-1 ring-inset', getAccentClass(tool)]">

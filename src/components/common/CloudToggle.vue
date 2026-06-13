@@ -30,7 +30,7 @@ const copy = computed(() => ({
 
 const title = computed(() => (props.modelValue && canUseCloud.value ? copy.value.cloudTitle : copy.value.localTitle))
 const description = computed(() => {
-  return props.modelValue ? copy.value.cloudDesc : copy.value.localDesc
+  return props.modelValue && canUseCloud.value ? copy.value.cloudDesc : copy.value.localDesc
 })
 const actionHint = computed(() => {
   if (canUseCloud.value) return ''

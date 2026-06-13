@@ -1,13 +1,29 @@
 # PDF-Flow
 
-PDF-Flow is a Vue and FastAPI PDF workspace with free browser tools, Pro document workflows, account management, admin operations, and payment infrastructure.
+PDF-Flow is a Vue 3 and FastAPI workspace for everyday PDF work. It combines browser-based tools, account workflows, Pro cloud processing, payment infrastructure, and operational APIs in one repository.
 
-## What Is Included
+## Features
 
-- Vue 3 frontend with public pages, PDF tools, account pages, pricing, enterprise dashboard, and admin Control Room.
-- FastAPI backend with authentication, file APIs, advanced PDF jobs, AI/OCR/Office workflows, payments, feedback, admin diagnostics, and Alembic migrations.
-- Docker Compose production path for the current single-server deployment.
-- Playwright, Vitest, and backend pytest coverage for the main product surfaces.
+- Browser PDF tools: merge, split, rotate, compress, image to PDF, PDF to image, delete pages, organize pages, page numbers, crop, watermark, extract text, extract images, flatten, unlock, protect, repair, and visual signing.
+- Pro and cloud workflows: OCR, Office to PDF, AI PDF analysis, form filling, annotation, larger processing jobs, and account-level history.
+- Account system: email/password auth, OAuth entry points for Google and GitHub, password reset, profile and usage pages.
+- Backend operations: file jobs, payment orders and webhooks, feedback diagnostics, feature flags, site settings, content blocks, audit logs, and admin APIs.
+- Test coverage: Vitest unit tests, Playwright browser regression tests, pytest backend tests, and server smoke scripts.
+
+## Tech Stack
+
+- Frontend: Vue 3, TypeScript, Vite, Pinia, Vue Router, Vue I18n, Tailwind CSS, Lucide icons.
+- PDF processing: pdf-lib, pdfjs-dist, jsPDF, browser workers, and backend PDF services.
+- Backend: FastAPI, SQLAlchemy, Alembic, PostgreSQL, Redis, Celery, Pydantic.
+- Integrations: OAuth providers, Resend-style transactional email, payment provider abstraction, AI/OCR/Office processing hooks.
+- Deployment: Docker Compose single-server path with deploy, rollback, and smoke scripts.
+
+## Requirements
+
+- Node.js 22
+- npm 10+
+- Python 3.11
+- Docker and Docker Compose for the full backend stack
 
 ## Quick Start
 
@@ -17,20 +33,34 @@ Install frontend dependencies:
 npm install
 ```
 
-Run the frontend dev server:
+Run the frontend:
 
 ```bash
 npm run dev
 ```
 
-Run the backend locally:
+Set up the backend:
 
 ```bash
 cd backend
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-copy .env.example .env
+cp .env.example .env
 alembic upgrade head
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+For local dependencies through Docker:
+
+```bash
+docker compose up -d postgres redis
+```
+
+For the full Docker stack from the repository root:
+
+```bash
+docker compose --env-file backend/.env up -d --build
 ```
 
 ## Verification
@@ -38,9 +68,9 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 Frontend:
 
 ```bash
+npm run test:unit:ci
 npm run type-check
 npm run build
-npm run test:e2e:core
 ```
 
 Backend:
@@ -50,7 +80,13 @@ cd backend
 pytest tests -q
 ```
 
-Useful server smoke checks:
+Core browser regression suite:
+
+```bash
+npm run test:e2e:core
+```
+
+Server smoke checks:
 
 ```bash
 bash scripts/smoke-test.sh
@@ -61,46 +97,103 @@ bash scripts/main-smoke-suite.sh
 
 ```text
 src/                    Vue frontend application
-backend/                FastAPI backend, migrations, services, tests
-tests/e2e-playwright/   Browser regression specs
-scripts/                Deploy, rollback, smoke, and test helpers
-docs/                   Operations and setup notes
+backend/                FastAPI backend, migrations, services, tasks, and tests
+tests/e2e-playwright/   Playwright browser regression specs
+tests/unit/             Vitest unit tests
+tests/fixtures/         Test PDF fixtures and fixture generators
+scripts/                Deploy, rollback, smoke, and Playwright helpers
+docs/PROJECT_MASTER.md  Internal development direction and progress tracker
 public/                 Static manifest, service worker, and icons
 ```
-
-## Deployment
-
-The current server deployment uses the `main` branch from `PDF_Flow_v2`.
-
-```bash
-ssh root@155.248.195.94
-cd /root/data/docker_data/PDF/pdf-flow
-git pull --ff-only v2 main
-bash scripts/deploy-main.sh
-```
-
-If an older checkout still names the `PDF_Flow_v2` remote `origin`, rename it with `git remote rename origin v2` before deploying.
-
-Check the result:
-
-```bash
-docker compose --env-file backend/.env -f docker-compose.yml ps
-curl http://localhost:8000/health
-```
-
-See [docs/STAGING_DEPLOY_GUIDE.md](./docs/STAGING_DEPLOY_GUIDE.md) for the full runbook.
 
 ## Configuration
 
 Never commit real credentials. Use local `.env` files and server-side `backend/.env`.
 
-Useful setup docs:
+Important backend configuration groups:
 
-- [docs/STAGING_DEPLOY_GUIDE.md](./docs/STAGING_DEPLOY_GUIDE.md)
-- [docs/OAUTH_SETUP.md](./docs/OAUTH_SETUP.md)
-- [docs/DOCS_AUDIT.md](./docs/DOCS_AUDIT.md)
-- [backend/README.md](./backend/README.md)
-- [backend/docs/EMAIL_SERVICE.md](./backend/docs/EMAIL_SERVICE.md)
+- Core: `SECRET_KEY`, `DATABASE_URL`, `REDIS_URL`, `BACKEND_PUBLIC_URL`, `FRONTEND_URL`, `ALLOWED_ORIGINS`, `ALLOWED_HOSTS`
+- OAuth: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`
+- Email: `RESEND_API_KEY`, `EMAIL_FROM`, `PASSWORD_RESET_TOKEN_EXPIRE_HOURS`
+- Payments: provider credentials, webhook secrets, signing keys, hosted gateway URLs
+- AI/OCR/Office: provider keys and processing service settings
+
+OAuth callback URLs use this pattern:
+
+```text
+{BACKEND_PUBLIC_URL}/api/v1/auth/oauth/google/callback
+{BACKEND_PUBLIC_URL}/api/v1/auth/oauth/github/callback
+```
+
+Payment providers should call:
+
+```text
+{BACKEND_PUBLIC_URL}/api/v1/payment/webhooks/{provider}
+```
+
+Frontend payment success and cancel pages are return pages only. Backend-verified provider events are the payment trust boundary.
+
+## Deployment
+
+The active repository is:
+
+```text
+https://github.com/bedlatess/PDF_Flow_v2.git
+```
+
+This workspace and the production server use the remote name `v2`.
+
+```bash
+git remote -v
+git pull --ff-only v2 main
+```
+
+Current single-server deployment:
+
+```bash
+cd /root/data/docker_data/PDF/pdf-flow
+git pull --ff-only v2 main
+bash scripts/deploy-main.sh
+```
+
+Check status:
+
+```bash
+docker compose --env-file backend/.env -f docker-compose.yml ps
+curl http://localhost:8000/health
+cat .deploy_state/main/current_deployed_commit
+```
+
+Rollback:
+
+```bash
+bash scripts/rollback-main.sh
+```
+
+Rollback uses the last successful commit recorded in `.deploy_state/`. Database schema rollback is not automatic, so back up data before risky migrations.
+
+## Contributing
+
+1. Create a focused branch from `main`.
+2. Keep changes scoped and follow the existing frontend/backend boundaries.
+3. Add or update tests for touched behavior.
+4. Run the relevant verification commands.
+5. Open a pull request against `bedlatess/PDF_Flow_v2`.
+
+Use concise conventional-style commit messages:
+
+```text
+feat: add new PDF tool
+fix: resolve file upload timeout
+docs: update project direction
+refactor: simplify auth service
+test: add coverage for merge PDF
+chore: update dependencies
+```
+
+## Development Direction
+
+For internal progress, architecture decisions, known risks, and the next refactor plan, read [docs/PROJECT_MASTER.md](./docs/PROJECT_MASTER.md).
 
 ## License
 

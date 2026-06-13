@@ -21,12 +21,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-username/pdf-flow"
+    "url": "https://github.com/bedlatess/PDF_Flow_v2.git"
   },
   "bugs": {
-    "url": "https://github.com/your-username/pdf-flow/issues"
+    "url": "https://github.com/bedlatess/PDF_Flow_v2/issues"
   },
-  "homepage": "https://github.com/your-username/pdf-flow#readme",
+  "homepage": "https://github.com/bedlatess/PDF_Flow_v2#readme",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

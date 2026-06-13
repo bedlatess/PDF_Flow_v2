@@ -36,6 +36,7 @@ const {
   contentBlocks,
   auditLogs,
   users,
+  userPasswordResetLinks,
   jobs,
   feedbackReports,
   apiErrors,
@@ -79,6 +80,7 @@ const {
   searchUsers,
   saveUser,
   toggleUserBan,
+  createPasswordResetLink,
   deleteUser,
   loadJobs,
   loadPayments,
@@ -240,6 +242,7 @@ onMounted(loadAdminData)
           <UsersTab
             v-else-if="activeTab === 'users'"
             :users="users"
+            :password-reset-links="userPasswordResetLinks"
             :user-search="userSearch"
             :saving-key="savingKey"
             :format-date="formatDate"
@@ -247,6 +250,7 @@ onMounted(loadAdminData)
             @search="searchUsers"
             @save="saveUser"
             @toggle-ban="toggleUserBan"
+            @create-password-reset-link="createPasswordResetLink"
             @delete="deleteUser"
           />
 

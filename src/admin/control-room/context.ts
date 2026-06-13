@@ -8,6 +8,7 @@ import {
   type AdminJob,
   type AdminMaintenance,
   type AdminOperations,
+  type AdminPasswordResetLink,
   type AdminOverview,
   type AdminPaymentSummary,
   type AdminUser,
@@ -35,6 +36,7 @@ export const createControlRoomContext = () => {
   const contentBlocks = ref<ContentBlock[]>([])
   const auditLogs = ref<AdminAuditLog[]>([])
   const users = ref<AdminUser[]>([])
+  const userPasswordResetLinks = ref<Record<number, AdminPasswordResetLink>>({})
   const jobs = ref<AdminJob[]>([])
   const feedbackReports = ref<AdminFeedback[]>([])
   const apiErrors = ref<AdminApiError[]>([])
@@ -123,6 +125,7 @@ export const createControlRoomContext = () => {
     contentBlocks,
     auditLogs,
     users,
+    userPasswordResetLinks,
     jobs,
     feedbackReports,
     apiErrors,

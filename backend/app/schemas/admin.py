@@ -97,6 +97,13 @@ class AdminUserUpdate(BaseModel):
     is_verified: Optional[bool] = None
 
 
+class AdminPasswordResetLinkResponse(BaseModel):
+    user_id: int
+    email: str
+    reset_url: str
+    expires_at: datetime
+
+
 class AdminJobResponse(BaseModel):
     id: Optional[int]
     job_id: str

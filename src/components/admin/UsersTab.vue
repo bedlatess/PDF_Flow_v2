@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { Save, Trash2 } from 'lucide-vue-next'
-import type { AdminUser } from '@/admin/api'
+import { KeyRound, Save, Trash2 } from 'lucide-vue-next'
+import type { AdminPasswordResetLink, AdminUser } from '@/admin/api'
 import AdminActionButton from './AdminActionButton.vue'
 import AdminPanel from './AdminPanel.vue'
 import StatusPill from './StatusPill.vue'
 
 defineProps<{
   users: AdminUser[]
+  passwordResetLinks: Record<number, AdminPasswordResetLink>
   userSearch: string
   savingKey: string | null
   formatDate: (value: string) => string
@@ -17,6 +18,7 @@ const emit = defineEmits<{
   search: []
   save: [user: AdminUser]
   toggleBan: [user: AdminUser]
+  createPasswordResetLink: [user: AdminUser]
   delete: [user: AdminUser]
 }>()
 
@@ -58,7 +60,7 @@ const updateUserSearch = (event: Event) => {
 
       <div class="mt-5 overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800">
         <div
-          class="hidden grid-cols-[1.5fr_0.8fr_0.9fr_1.2fr] gap-3 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:bg-slate-800 dark:text-slate-400 lg:grid"
+          class="hidden grid-cols-[1.35fr_0.7fr_0.85fr_1.45fr] gap-3 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:bg-slate-800 dark:text-slate-400 lg:grid"
         >
           <span>用户</span>
           <span>角色</span>
@@ -69,7 +71,7 @@ const updateUserSearch = (event: Event) => {
         <div
           v-for="user in users"
           :key="user.id"
-          class="grid gap-4 border-t border-slate-200 px-4 py-4 dark:border-slate-800 lg:grid-cols-[1.5fr_0.8fr_0.9fr_1.2fr] lg:items-center"
+          class="grid gap-4 border-t border-slate-200 px-4 py-4 dark:border-slate-800 lg:grid-cols-[1.35fr_0.7fr_0.85fr_1.45fr] lg:items-center"
         >
           <div>
             <div class="flex flex-wrap items-center gap-2">
@@ -128,6 +130,17 @@ const updateUserSearch = (event: Event) => {
               {{ user.is_active ? '封禁' : '解封' }}
             </AdminActionButton>
             <AdminActionButton
+              tone="success"
+              :disabled="!user.is_active || savingKey === `reset-link:${user.id}`"
+              :loading="savingKey === `reset-link:${user.id}`"
+              @click="emit('createPasswordResetLink', user)"
+            >
+              <template #icon>
+                <KeyRound class="h-4 w-4" />
+              </template>
+              生成限时重置链接
+            </AdminActionButton>
+            <AdminActionButton
               tone="danger"
               :disabled="savingKey === `delete:${user.id}`"
               :loading="savingKey === `delete:${user.id}`"
@@ -138,6 +151,18 @@ const updateUserSearch = (event: Event) => {
               </template>
               删除
             </AdminActionButton>
+          </div>
+
+          <div
+            v-if="passwordResetLinks[user.id]"
+            class="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-xs leading-5 text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-100 lg:col-span-4"
+          >
+            <p class="font-semibold">
+              已生成限时重置链接，过期时间：{{ formatDate(passwordResetLinks[user.id].expires_at) }}
+            </p>
+            <p class="mt-2 break-all font-mono text-[11px]">
+              {{ passwordResetLinks[user.id].reset_url }}
+            </p>
           </div>
         </div>
 

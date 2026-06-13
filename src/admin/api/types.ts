@@ -77,6 +77,13 @@ export interface AdminUserUpdate {
   is_verified?: boolean
 }
 
+export interface AdminPasswordResetLink {
+  user_id: number
+  email: string
+  reset_url: string
+  expires_at: string
+}
+
 export interface AdminJob {
   id: number | null
   job_id: string

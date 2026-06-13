@@ -33,6 +33,7 @@ from app.domains.admin.operations import (
 )
 from app.domains.admin.users import (
     cleanup_test_users as cleanup_test_users_service,
+    create_user_password_reset_link as create_user_password_reset_link_service,
     delete_user as delete_user_service,
     list_users as list_users_service,
     role_value,
@@ -51,6 +52,7 @@ from app.schemas.admin import (
     AdminOperationsResponse,
     AdminPaymentSummaryResponse,
     AdminOverviewResponse,
+    AdminPasswordResetLinkResponse,
     AdminUserResponse,
     AdminUserUpdate,
     ContentBlockResponse,
@@ -226,6 +228,22 @@ async def update_user(
         db,
         user_id=user_id,
         payload=payload,
+        request=request,
+        admin=admin,
+    )
+
+
+@router.post("/users/{user_id}/password-reset-link", response_model=AdminPasswordResetLinkResponse)
+async def create_user_password_reset_link(
+    user_id: int,
+    request: Request,
+    admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    """Create a copyable password reset link for a user without sending email."""
+    return create_user_password_reset_link_service(
+        db,
+        user_id=user_id,
         request=request,
         admin=admin,
     )

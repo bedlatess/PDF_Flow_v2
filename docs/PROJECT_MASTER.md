@@ -209,6 +209,12 @@ Deployment:
   - the access state includes a real return link to the public homepage
   - production admin password for `admin@pawn.eu.org` was rotated with `scripts/init-admin.sh`
   - `https://admin.pawn.eu.org/api/v1/auth/login` returns bearer and refresh tokens for the rotated admin credentials
+- Added no-SMTP account recovery support:
+  - admins can generate a copyable, time-limited password reset link from the Control Room user list
+  - generated links reuse the existing password-reset token flow and do not store or expose temporary plaintext passwords
+  - reset-link generation is admin-only, blocked for inactive users, and recorded in admin audit logs without storing the token
+  - verified with `pytest backend/tests/test_admin.py::test_admin_can_create_user_password_reset_link backend/tests/test_admin.py::test_admin_password_reset_link_requires_admin_and_active_user -q`
+  - verified with `npm run type-check`
 
 ## Known Code Issues
 

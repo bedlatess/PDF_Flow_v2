@@ -71,6 +71,29 @@ export const createControlRoomUsersActions = (
     }
   }
 
+  const createPasswordResetLink = async (user: AdminUser) => {
+    ctx.savingKey.value = `reset-link:${user.id}`
+    ctx.error.value = ''
+
+    try {
+      const result = await adminAPI.createUserPasswordResetLink(user.id)
+      ctx.userPasswordResetLinks.value[user.id] = result
+
+      try {
+        await navigator.clipboard?.writeText(result.reset_url)
+        ctx.setMessage(`Reset link copied for ${result.email}`)
+      } catch {
+        ctx.setMessage(`Reset link generated for ${result.email}`)
+      }
+    } catch (err: any) {
+      ctx.error.value =
+        err?.response?.data?.detail ||
+        'Password reset link could not be generated. Please check the user status.'
+    } finally {
+      ctx.savingKey.value = null
+    }
+  }
+
   const deleteUser = async (user: AdminUser) => {
     ctx.openAdminConfirmation({
       title: '确认删除用户',
@@ -108,6 +131,7 @@ export const createControlRoomUsersActions = (
     searchUsers,
     saveUser,
     toggleUserBan,
+    createPasswordResetLink,
     deleteUser,
   }
 }

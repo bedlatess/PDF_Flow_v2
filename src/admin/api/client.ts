@@ -12,6 +12,7 @@ import type {
   AdminJob,
   AdminMaintenance,
   AdminOperations,
+  AdminPasswordResetLink,
   AdminOverview,
   AdminPaymentSummary,
   AdminUser,
@@ -88,6 +89,13 @@ export const adminAPI = {
 
   async updateUser(userId: number, data: AdminUserUpdate): Promise<AdminUser> {
     const response = await apiClient.patch<AdminUser>(`/api/v1/admin/users/${userId}`, data)
+    return response.data
+  },
+
+  async createUserPasswordResetLink(userId: number): Promise<AdminPasswordResetLink> {
+    const response = await apiClient.post<AdminPasswordResetLink>(
+      `/api/v1/admin/users/${userId}/password-reset-link`,
+    )
     return response.data
   },
 

@@ -33,6 +33,7 @@ export const createControlRoomActions = (ctx: ControlRoomContext) => {
     searchUsers: users.searchUsers,
     saveUser: users.saveUser,
     toggleUserBan: users.toggleUserBan,
+    createPasswordResetLink: users.createPasswordResetLink,
     deleteUser: users.deleteUser,
     loadJobs: jobs.loadJobs,
     loadPayments: payments.loadPayments,

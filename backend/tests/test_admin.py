@@ -245,6 +245,83 @@ def test_admin_can_list_and_update_users(client):
     assert logs.json()[0]["target_key"] == "customer@example.com"
 
 
+def test_admin_can_create_user_password_reset_link(client, monkeypatch):
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "FRONTEND_URL", "https://pdf.pawn.eu.org/")
+    monkeypatch.setattr(settings, "PASSWORD_RESET_TOKEN_EXPIRE_HOURS", 2)
+
+    _register(client)
+    _promote_to_admin(client)
+    _register(client, email="reset-customer@example.com", password="OldSecure123!")
+    token = _login(client).json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    users = client.get("/api/v1/admin/users", headers=headers).json()
+    customer = next(user for user in users if user["email"] == "reset-customer@example.com")
+
+    response = client.post(
+        f"/api/v1/admin/users/{customer['id']}/password-reset-link",
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["email"] == "reset-customer@example.com"
+    assert body["reset_url"].startswith(
+        "https://pdf.pawn.eu.org/zh-cn/auth/reset-password?token="
+    )
+
+    reset_token = body["reset_url"].split("token=", 1)[1]
+    reset = client.post(
+        "/api/v1/auth/reset-password",
+        json={"token": reset_token, "new_password": "NewSecure123!"},
+    )
+    assert reset.status_code == 200
+    assert _login(
+        client,
+        email="reset-customer@example.com",
+        password="NewSecure123!",
+    ).status_code == 200
+
+    logs = client.get("/api/v1/admin/audit-logs", headers=headers)
+    assert logs.status_code == 200
+    assert logs.json()[0]["target_type"] == "password_reset_link"
+    assert logs.json()[0]["target_key"] == "reset-customer@example.com"
+
+
+def test_admin_password_reset_link_requires_admin_and_active_user(client):
+    _register(client)
+    _promote_to_admin(client)
+    _register(client, email="inactive-reset@example.com")
+    admin_token = _login(client).json()["access_token"]
+    free_token = _login(client, email="inactive-reset@example.com").json()["access_token"]
+    admin_headers = {"Authorization": f"Bearer {admin_token}"}
+    free_headers = {"Authorization": f"Bearer {free_token}"}
+
+    users = client.get("/api/v1/admin/users", headers=admin_headers).json()
+    target = next(user for user in users if user["email"] == "inactive-reset@example.com")
+
+    forbidden = client.post(
+        f"/api/v1/admin/users/{target['id']}/password-reset-link",
+        headers=free_headers,
+    )
+    assert forbidden.status_code == 403
+
+    disabled = client.patch(
+        f"/api/v1/admin/users/{target['id']}",
+        headers=admin_headers,
+        json={"is_active": False},
+    )
+    assert disabled.status_code == 200
+
+    response = client.post(
+        f"/api/v1/admin/users/{target['id']}/password-reset-link",
+        headers=admin_headers,
+    )
+    assert response.status_code == 400
+
+
 def test_admin_cannot_remove_own_admin_access(client):
     _register(client)
     _promote_to_admin(client)

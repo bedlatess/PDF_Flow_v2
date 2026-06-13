@@ -1596,6 +1596,30 @@
     }
   },
   "home": {
+    "badges": {
+      "fast": "快速处理",
+      "languages": "多语言"
+    },
+    "toolsTitle": "常用 PDF 工具",
+    "whyTitle": "更清晰的 PDF 工作流",
+    "highlights": {
+      "privacy": {
+        "title": "免费工具",
+        "description": "常用 PDF 任务容易找到，也能快速打开。"
+      },
+      "speed": {
+        "title": "更快入口",
+        "description": "高频工具保持清晰排列，重复处理更省时间。"
+      },
+      "free": {
+        "title": "清楚的套餐层级",
+        "description": "高级工具集中展示，不在每个位置反复打扰。"
+      }
+    },
+    "toolDescriptions": {
+      "ocr": "识别扫描件和图片型 PDF 中的文字。",
+      "aiAnalyzer": "用 AI 总结、提问和提取文档信息。"
+    },
     "workspace": {
       "eyebrow": "PDF 工具",
       "title": "常用 PDF 工具，打开就能用",

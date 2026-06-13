@@ -307,6 +307,7 @@ Deployment:
   - Playwright production unauthenticated admin smoke returned HTTP 200, title `PDF-Flow Admin`, no document-level horizontal overflow at `1440x1000`, and no console/page errors
 - Migrated locale override copy into baseline locale JSON files locally:
   - `src/locales/en.json`, `src/locales/zh.json`, and `src/locales/es.json` now contain the public copy that previously lived in `src/locales/overrides.ts`
+  - filled the missing Chinese `home.toolsTitle` baseline so the homepage no longer exposes the raw `home.toolsTitle` key
   - `src/locales/overrides.ts` is reduced to the compatibility merge helper plus empty per-locale override objects
   - added `scripts/migrate-locale-overrides.mjs` for encoding-safe legacy override migration and post-migration JSON validation
   - added unit coverage in `tests/unit/locale-overrides.test.ts`

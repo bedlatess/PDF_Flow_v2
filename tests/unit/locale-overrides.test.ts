@@ -29,6 +29,7 @@ describe('locale baseline messages', () => {
     }
 
     expect(zh.footer.brandDescription).toContain('PDF 工具')
+    expect(zh.home.toolsTitle).toBe('常用 PDF 工具')
     expect(es.nav.features).toBe('Funciones')
     expect(en.history.panel.itemMeta).toBe('{tool} · {time}')
   })

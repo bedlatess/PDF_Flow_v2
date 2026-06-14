@@ -266,6 +266,52 @@ export interface AdminPaymentSummary {
   integration_evidence_packet: string
 }
 
+export interface AdminPaymentSecretFieldStatus {
+  configured: boolean
+  tail: string
+}
+
+export interface AdminPaymentProviderConfig {
+  provider_key: string
+  display_name: string
+  enabled: boolean
+  configured: boolean
+  public_config: {
+    api_base_url?: string
+    pid?: string
+    currency?: string
+    token?: string
+    network?: string
+    monthly_amount_cents?: number
+    yearly_amount_cents?: number
+    order_ttl_minutes?: number
+    return_url?: string
+    [key: string]: string | number | boolean | undefined
+  }
+  secret_fields: Record<string, AdminPaymentSecretFieldStatus>
+  required_public_fields: string[]
+  required_secret_fields: string[]
+  missing_config_keys: string[]
+  webhook_url: string
+  updated_at: string | null
+  encryption_available: boolean
+  webhook_status: string
+}
+
+export interface AdminPaymentProviderConfigUpdate {
+  enabled: boolean
+  public_config: AdminPaymentProviderConfig['public_config']
+  secrets: Record<string, string>
+}
+
+export interface AdminPaymentProviderConfigValidation {
+  provider_key: string
+  valid: boolean
+  errors: string[]
+  checks: string[]
+  signature_preview_tail: string | null
+}
+
 export interface AdminFeedback {
   id: number
   user_id: number | null

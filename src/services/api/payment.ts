@@ -27,6 +27,7 @@ export type PaymentProviderKey =
   | 'bepusdt'
   | 'epusdt'
   | 'okpay'
+  | 'gmpay'
 
 export interface PaymentProviderOption {
   key: PaymentProviderKey

@@ -14,6 +14,9 @@ import type {
   AdminOperations,
   AdminPasswordResetLink,
   AdminOverview,
+  AdminPaymentProviderConfig,
+  AdminPaymentProviderConfigUpdate,
+  AdminPaymentProviderConfigValidation,
   AdminPaymentSummary,
   AdminUser,
   AdminUserUpdate,
@@ -150,6 +153,35 @@ export const adminAPI = {
     const response = await apiClient.get<AdminPaymentSummary>('/api/v1/admin/payments', {
       params,
     })
+    return response.data
+  },
+
+  async listPaymentConfigs(): Promise<AdminPaymentProviderConfig[]> {
+    const response = await apiClient.get<AdminPaymentProviderConfig[]>(
+      '/api/v1/admin/payment-configs',
+    )
+    return response.data
+  },
+
+  async updatePaymentConfig(
+    providerKey: string,
+    data: AdminPaymentProviderConfigUpdate,
+  ): Promise<AdminPaymentProviderConfig> {
+    const response = await apiClient.put<AdminPaymentProviderConfig>(
+      `/api/v1/admin/payment-configs/${encodeURIComponent(providerKey)}`,
+      data,
+    )
+    return response.data
+  },
+
+  async validatePaymentConfig(
+    providerKey: string,
+    data: AdminPaymentProviderConfigUpdate,
+  ): Promise<AdminPaymentProviderConfigValidation> {
+    const response = await apiClient.post<AdminPaymentProviderConfigValidation>(
+      `/api/v1/admin/payment-configs/${encodeURIComponent(providerKey)}/validate`,
+      data,
+    )
     return response.data
   },
 

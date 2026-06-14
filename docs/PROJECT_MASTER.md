@@ -379,6 +379,18 @@ Deployment:
   - production `/health` returns `{"status":"healthy","version":"2.0.0","environment":"production"}`
   - production `PATCH /api/v1/users/me` with a `password` field returns success for the profile update path but does not change the password
   - verified the known admin password still logs in and the attempted profile-patch password is rejected with HTTP 401
+- Implemented Payment Configuration Center Phase 1 locally:
+  - added `payment_provider_configs` with encrypted secret storage and admin-safe responses
+  - added `PAYMENT_CONFIG_ENCRYPTION_KEY` as the environment-only master key for database-stored payment secrets
+  - added admin endpoints for listing, saving, and locally validating managed payment provider configs
+  - added `gmpay` as a standalone provider, separate from EPUSDT and other hosted gateways
+  - `PaymentService` now prefers enabled, complete database config for GM Pay and falls back to existing environment-driven providers for all legacy providers
+  - GM Pay checkout creates a `PaymentOrder`, calls the GM Pay create-transaction endpoint, and returns `payment_url`
+  - GM Pay webhook endpoint exists and records accepted callbacks, but it does not mark orders paid or grant Pro until a real webhook sample, signature verification, amount/currency checks, and idempotency checks are completed
+  - admin Payment Setup now has a GM Pay configuration form with write-only secret handling, local validation, webhook status, and clearer readiness layout
+  - Pricing can expose GM Pay when the backend reports it enabled and configured
+  - verified with `pytest backend/tests/test_payment_config_gmpay.py backend/tests/test_payment_domain.py backend/tests/test_admin_payment_domain.py -q`
+  - verified with `npm run type-check`
 
 ## Known Code Issues
 
@@ -683,7 +695,9 @@ Payments:
   - `{BACKEND_PUBLIC_URL}/api/v1/payment/webhooks/{provider}`
 - Frontend return pages are not entitlement proof.
 - Backend provider callbacks, amount/currency checks, and idempotent payment events are the trust boundary.
-- Current status: payment providers are disabled in production because merchant credentials are absent.
+- Current production status: payment providers are disabled because merchant credentials are absent.
+- Local Phase 1 status: GM Pay can now be configured from the admin backend, encrypted secrets are write-only, Pricing can select GM Pay when configured, and checkout can redirect to the GM Pay cashier.
+- GM Pay automatic Pro activation remains blocked until a real webhook sample is available and strict signature, amount, currency, and idempotency verification are implemented.
 
 AI/OCR/Office:
 
@@ -814,8 +828,9 @@ pytest tests/test_payment_domain.py -q
 
 ## Next Recommended Work
 
-1. Configure real payment provider credentials when merchant accounts are ready, then run sandbox and low-value live smoke tests from the Admin `Payment Setup` checklist.
-2. Configure Gemini credentials when the AI quota/account is ready and rerun AI feature smoke tests.
-3. Decide when to expose additional locales such as `ja`, `ko`, and `de`; do not expose them until baseline translations exist.
-4. Add competitor-gap tools only after the platform refactor remains stable under production traffic.
-5. Decide whether to split the admin frontend into its own repository after the dedicated admin domain is live and daily operation is stable.
+1. Set `PAYMENT_CONFIG_ENCRYPTION_KEY` on production, enter GM Pay merchant config in Admin `Payment Setup`, and run the checkout-to-cashier smoke test.
+2. Collect a real GM Pay webhook sample, then implement strict webhook verification, amount/currency checks, idempotency checks, and only then enable automatic Pro activation.
+3. Configure Gemini credentials when the AI quota/account is ready and rerun AI feature smoke tests.
+4. Decide when to expose additional locales such as `ja`, `ko`, and `de`; do not expose them until baseline translations exist.
+5. Add competitor-gap tools only after the platform refactor remains stable under production traffic.
+6. Decide whether to split the admin frontend into its own repository after the dedicated admin domain is live and daily operation is stable.

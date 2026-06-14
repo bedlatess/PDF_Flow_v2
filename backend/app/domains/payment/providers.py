@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import time
+import hashlib
 from datetime import datetime
 from dataclasses import dataclass
 from typing import Mapping, Protocol
@@ -44,10 +45,11 @@ SUPPORTED_PAYMENT_PROVIDERS = (
     "bepusdt",
     "epusdt",
     "okpay",
+    "gmpay",
 )
 
 REDIRECT_PROVIDERS = {"stripe", "paypal", "epay", "alipay"}
-QR_PROVIDERS = {"wechat", "tokenpay", "bepusdt", "epusdt", "okpay"}
+QR_PROVIDERS = {"wechat", "tokenpay", "bepusdt", "epusdt", "okpay", "gmpay"}
 
 
 @dataclass(frozen=True)
@@ -174,6 +176,142 @@ class ConfigurableHostedPaymentProvider:
 
     def capture_order(self, *, provider_order_id: str) -> NormalizedPaymentEvent:
         raise NotImplementedError(f"{self.key} capture is not configured")
+
+
+def build_gmpay_signature(params: Mapping[str, object], secret_key: str) -> str:
+    signature_fields = [
+        "amount",
+        "currency",
+        "name",
+        "network",
+        "notify_url",
+        "order_id",
+        "pid",
+        "token",
+    ]
+    canonical = "&".join(
+        f"{field}={params.get(field, '')}"
+        for field in signature_fields
+    )
+    return hashlib.md5(f"{canonical}{secret_key}".encode("utf-8")).hexdigest().lower()
+
+
+class GMPayPaymentProvider:
+    """GM Pay hosted checkout adapter.
+
+    Phase 1 intentionally does not apply webhook-paid events until a real GM Pay
+    callback sample is available and strict verification is implemented.
+    """
+
+    key = "gmpay"
+    http_client_factory = httpx.Client
+
+    def __init__(self, *, public_config: dict, secrets: dict):
+        self.public_config = dict(public_config)
+        self.secrets = dict(secrets)
+
+    def create_order(
+        self,
+        *,
+        merchant_order_id: str,
+        plan: str,
+        amount_cents: int,
+        currency: str,
+        user_email: str,
+        success_url: str,
+        cancel_url: str,
+        notification_url: str,
+    ) -> PaymentCreateResult:
+        api_base_url = str(self.public_config.get("api_base_url") or "").rstrip("/")
+        pid = str(self.public_config.get("pid") or "").strip()
+        secret_key = str(self.secrets.get("secret_key") or "").strip()
+        if not api_base_url or not pid or not secret_key:
+            raise RuntimeError("GM Pay gateway is not configured")
+
+        name = f"PDF-Flow Pro {plan}"
+        amount = self._money_value(amount_cents)
+        payload = {
+            "pid": pid,
+            "order_id": merchant_order_id,
+            "currency": str(currency or self.public_config.get("currency") or "cny").lower(),
+            "token": str(self.public_config.get("token") or "usdt").lower(),
+            "network": str(self.public_config.get("network") or "tron").lower(),
+            "amount": amount,
+            "notify_url": notification_url,
+            "name": name,
+        }
+        payload["signature"] = build_gmpay_signature(payload, secret_key)
+
+        with self.http_client_factory(timeout=15.0) as client:
+            response = client.post(
+                f"{api_base_url}/payments/gmpay/v1/order/create-transaction",
+                json=payload,
+                headers={"Content-Type": "application/json"},
+            )
+            response.raise_for_status()
+            data = response.json()
+
+        transaction = data.get("data") if isinstance(data.get("data"), dict) else data
+        payment_url = (
+            transaction.get("payment_url")
+            or transaction.get("checkout_url")
+            or transaction.get("pay_url")
+        )
+        provider_order_id = (
+            transaction.get("trade_id")
+            or transaction.get("transaction_id")
+            or transaction.get("id")
+            or merchant_order_id
+        )
+        if not payment_url:
+            raise RuntimeError("GM Pay did not return payment_url")
+
+        return PaymentCreateResult(
+            provider_order_id=str(provider_order_id),
+            checkout_url=str(payment_url),
+            qr_code_url=str(payment_url),
+            raw_payload={"provider": "gmpay", "mode": "hosted_checkout"},
+        )
+
+    def verify_webhook(
+        self,
+        *,
+        headers: Mapping[str, str],
+        body: bytes,
+        query: Mapping[str, str],
+    ) -> NormalizedPaymentEvent:
+        payload = self._parse_payload(body, query)
+        merchant_order_id = str(payload.get("order_id") or payload.get("merchant_order_id") or "")
+        provider_order_id = str(payload.get("trade_id") or payload.get("transaction_id") or "")
+        event_id = provider_order_id or merchant_order_id or f"gmpay_unverified_{uuid4().hex[:16]}"
+        return NormalizedPaymentEvent(
+            provider="gmpay",
+            provider_event_id=event_id,
+            merchant_order_id=merchant_order_id,
+            provider_order_id=provider_order_id or None,
+            status="accepted",
+            paid_amount_cents=None,
+            currency=str(payload.get("currency") or self.public_config.get("currency") or "").upper() or None,
+            raw_payload={"status": "webhook_skeleton_no_entitlement"},
+        )
+
+    def capture_order(self, *, provider_order_id: str) -> NormalizedPaymentEvent:
+        raise NotImplementedError("GM Pay orders are completed by webhook after strict verification")
+
+    @staticmethod
+    def _money_value(amount_cents: int) -> str:
+        return f"{amount_cents / 100:.2f}"
+
+    @staticmethod
+    def _parse_payload(body: bytes, query: Mapping[str, str]) -> dict:
+        from urllib.parse import parse_qsl
+
+        if body:
+            text = body.decode("utf-8")
+            if text.strip().startswith("{"):
+                return json.loads(text)
+            return dict(parse_qsl(text, keep_blank_values=True))
+        return dict(query)
 
 
 class SignedHostedGatewayProvider:
@@ -820,4 +958,5 @@ def provider_display_name(provider: str) -> str:
         "bepusdt": "BEPUSDT",
         "epusdt": "EPUSDT",
         "okpay": "OKPay",
+        "gmpay": "GM Pay",
     }.get(provider, provider)

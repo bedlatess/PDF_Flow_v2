@@ -261,6 +261,33 @@ class PaymentProviderAccount(Base):
     )
 
 
+class PaymentProviderConfig(Base):
+    """Admin-managed payment provider configuration.
+
+    Secret values are encrypted with PAYMENT_CONFIG_ENCRYPTION_KEY and are never
+    returned through API responses.
+    """
+    __tablename__ = "payment_provider_configs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    provider_key = Column(String, unique=True, nullable=False)
+    display_name = Column(String, nullable=False)
+    enabled = Column(Boolean, default=False, nullable=False)
+    public_config_json = Column(Text, nullable=False, default="{}")
+    encrypted_secret_json = Column(Text, nullable=True)
+    secret_fingerprint_json = Column(Text, nullable=True)
+    updated_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    updated_by = relationship("User")
+
+    __table_args__ = (
+        Index("idx_payment_provider_config_key", "provider_key"),
+        Index("idx_payment_provider_config_enabled", "enabled"),
+    )
+
+
 class PaymentOrder(Base):
     """Trusted payment order state across all payment providers."""
     __tablename__ = "payment_orders"

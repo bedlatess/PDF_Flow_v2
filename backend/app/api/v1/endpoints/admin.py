@@ -22,6 +22,7 @@ from app.domains.admin.feedback import (
     update_feedback as update_feedback_service,
 )
 from app.domains.admin.payment_ops import get_payment_operations_summary
+from app.domains.admin.audit import write_admin_audit
 from app.domains.admin.operations import (
     cleanup_expired_files as cleanup_expired_files_service,
     get_diagnostics as get_diagnostics_service,
@@ -51,6 +52,9 @@ from app.schemas.admin import (
     AdminMaintenanceResponse,
     AdminOperationsResponse,
     AdminPaymentSummaryResponse,
+    AdminPaymentProviderConfigResponse,
+    AdminPaymentProviderConfigUpdate,
+    AdminPaymentProviderConfigValidation,
     AdminOverviewResponse,
     AdminPasswordResetLinkResponse,
     AdminUserResponse,
@@ -61,6 +65,12 @@ from app.schemas.admin import (
     FeatureFlagUpdate,
     SiteSettingResponse,
     SiteSettingUpdate,
+)
+from app.domains.payment.config_store import (
+    build_safe_provider_config,
+    list_safe_provider_configs,
+    update_provider_config as update_payment_provider_config_service,
+    validate_provider_config_payload,
 )
 from app.schemas.feedback import AdminFeedbackResponse, AdminFeedbackUpdate
 
@@ -119,6 +129,75 @@ async def get_payment_operations(
         status_filter=status_filter,
         limit=limit,
     )
+
+
+@router.get("/payment-configs", response_model=list[AdminPaymentProviderConfigResponse])
+async def list_payment_provider_configs(
+    _admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    """Return safe admin-managed provider config state."""
+    return list_safe_provider_configs(db)
+
+
+@router.get("/payment-configs/{provider_key}", response_model=AdminPaymentProviderConfigResponse)
+async def get_payment_provider_config(
+    provider_key: str,
+    _admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    """Return one provider config without secret plaintext."""
+    return build_safe_provider_config(db, provider_key)
+
+
+@router.put("/payment-configs/{provider_key}", response_model=AdminPaymentProviderConfigResponse)
+async def update_payment_provider_config(
+    provider_key: str,
+    payload: AdminPaymentProviderConfigUpdate,
+    request: Request,
+    admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    """Save admin-managed provider config. Secret fields are write-only."""
+    result, changed_fields = update_payment_provider_config_service(
+        db,
+        provider_key=provider_key,
+        enabled=payload.enabled,
+        public_config=payload.public_config,
+        secret_values=payload.secrets,
+        admin_user_id=admin.id,
+    )
+    write_admin_audit(
+        db,
+        request,
+        admin,
+        action="payment_config.update",
+        target_type="payment_provider_config",
+        target_key=provider_key,
+        detail=(
+            f"provider={provider_key}; enabled={payload.enabled}; "
+            f"changed_fields={','.join(changed_fields) or 'none'}"
+        ),
+    )
+    db.commit()
+    return result
+
+
+@router.post("/payment-configs/{provider_key}/validate", response_model=AdminPaymentProviderConfigValidation)
+async def validate_payment_provider_config(
+    provider_key: str,
+    payload: AdminPaymentProviderConfigUpdate,
+    _admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    """Validate config locally without creating a real payment."""
+    result = validate_provider_config_payload(
+        provider_key=provider_key,
+        public_config=payload.public_config,
+        secret_values=payload.secrets,
+        existing_safe_config=build_safe_provider_config(db, provider_key),
+    )
+    return {"provider_key": provider_key, **result}
 
 
 @router.get("/public-config")

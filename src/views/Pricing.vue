@@ -136,6 +136,7 @@ const QR_PAYMENT_PROVIDERS = new Set<PaymentProviderKey>([
   'bepusdt',
   'epusdt',
   'okpay',
+  'gmpay',
 ])
 
 const currentEntitlement = computed(() =>

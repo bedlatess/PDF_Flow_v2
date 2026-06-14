@@ -321,3 +321,38 @@ class AdminPaymentSummaryResponse(BaseModel):
     recent_events: list[AdminPaymentEventResponse]
     reconciliation_summary: str
     integration_evidence_packet: str
+
+
+class AdminPaymentSecretFieldStatus(BaseModel):
+    configured: bool
+    tail: str = ""
+
+
+class AdminPaymentProviderConfigResponse(BaseModel):
+    provider_key: str
+    display_name: str
+    enabled: bool
+    configured: bool
+    public_config: dict
+    secret_fields: dict[str, AdminPaymentSecretFieldStatus]
+    required_public_fields: list[str]
+    required_secret_fields: list[str]
+    missing_config_keys: list[str]
+    webhook_url: str
+    updated_at: Optional[datetime] = None
+    encryption_available: bool
+    webhook_status: str
+
+
+class AdminPaymentProviderConfigUpdate(BaseModel):
+    enabled: bool = False
+    public_config: dict = Field(default_factory=dict)
+    secrets: dict[str, str] = Field(default_factory=dict)
+
+
+class AdminPaymentProviderConfigValidation(BaseModel):
+    provider_key: str
+    valid: bool
+    errors: list[str]
+    checks: list[str]
+    signature_preview_tail: Optional[str] = None

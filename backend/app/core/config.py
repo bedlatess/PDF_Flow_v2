@@ -79,6 +79,7 @@ class Settings(BaseSettings):
     )
     PAYMENT_PROVIDER_CHECKOUT_URLS_RAW: str = Field(default="{}", alias="PAYMENT_PROVIDER_CHECKOUT_URLS")
     PAYMENT_ORDER_TTL_MINUTES: int = 30
+    PAYMENT_CONFIG_ENCRYPTION_KEY: Optional[str] = None
 
     # Stripe Configuration (legacy compatibility; will move behind provider adapter)
     STRIPE_SECRET_KEY: Optional[str] = None

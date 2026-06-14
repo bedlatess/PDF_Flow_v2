@@ -8,7 +8,8 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.domains.payment import PaymentService
-from app.domains.payment.providers import provider_display_name
+from app.domains.payment.config_store import list_safe_provider_configs
+from app.domains.payment.providers import PaymentProviderConfig, provider_display_name
 from app.models.user import PaymentEvent, PaymentOrder, User
 
 
@@ -108,6 +109,12 @@ def _payment_provider_required_config(provider: str) -> list[str]:
             f"PAYMENT_GATEWAY_CONFIGS.{provider}.secret",
             f"PAYMENT_GATEWAY_CONFIGS.{provider}.create_url",
         ]
+    if provider == "gmpay":
+        return [
+            "payment_provider_configs.gmpay.api_base_url",
+            "payment_provider_configs.gmpay.pid",
+            "payment_provider_configs.gmpay.secret_key",
+        ]
     return [f"PAYMENT_PROVIDER_CHECKOUT_URLS.{provider}"]
 
 
@@ -152,6 +159,7 @@ def _payment_provider_console_hint(provider: str) -> str:
         "bepusdt": "BEPUSDT 管理后台 > 异步通知地址",
         "epusdt": "EPUSDT 管理后台 > 异步通知地址",
         "okpay": "OKPay 商户后台 > 回调/通知地址",
+        "gmpay": "GM Pay merchant console > notify URL / checkout settings",
     }
     return hints.get(provider, "Provider merchant console > webhook or notification URL")
 
@@ -168,6 +176,8 @@ def _payment_provider_setup_notes(provider: str) -> list[str]:
         notes.append("WeChat Pay notifications require API v3 key, merchant private key, and platform certificate verification.")
     if provider in HOSTED_GATEWAY_PROVIDERS:
         notes.append("If the gateway supports a custom notify_url, leave it unset to use the backend default unless the merchant console requires an override.")
+    if provider == "gmpay":
+        notes.append("GM Pay webhook is Phase 1 skeleton-only; do not treat return or success pages as payment proof.")
     return notes
 
 
@@ -210,6 +220,10 @@ def _payment_provider_sandbox_runbook(provider: str) -> list[str]:
         "okpay": [
             "Use the OKPay sandbox or a low-value live test and verify the callback signature.",
         ],
+        "gmpay": [
+            "Create a GM Pay checkout and confirm the returned payment_url opens the GM Pay cashier.",
+            "Do not verify automatic Pro activation until a real GM Pay webhook sample is available.",
+        ],
     }
     return common + provider_steps.get(provider, [])
 
@@ -232,6 +246,8 @@ def _payment_provider_go_live_checklist(provider: str) -> list[str]:
         checklist.append("WeChat Pay merchant serial, private key, platform certificate, and API v3 key all match the live merchant.")
     if provider in HOSTED_GATEWAY_PROVIDERS:
         checklist.append("Gateway create_url, merchant id, secret, and sign_type match the live gateway documentation.")
+    if provider == "gmpay":
+        checklist.append("GM Pay webhook sample, signature verification, amount/currency checks, and idempotency are implemented before entitlement automation.")
     return checklist
 
 
@@ -250,6 +266,13 @@ def _payment_provider_expected_event_flow(provider: str) -> list[str]:
             "checkout.session.completed webhook received",
             "PaymentEvent processing_status=applied",
             "PaymentOrder status=paid and entitlement/subscription state updated once",
+        ]
+    if provider == "gmpay":
+        return [
+            "checkout_created -> GM Pay cashier payment_url",
+            "GM Pay webhook endpoint receives callbacks",
+            "Phase 1 records callbacks without marking orders paid",
+            "Entitlement remains unchanged until strict webhook verification is implemented",
         ]
     if provider in {"alipay", "wechat", *HOSTED_GATEWAY_PROVIDERS}:
         return [
@@ -281,6 +304,8 @@ def _payment_provider_troubleshooting_steps(provider: str) -> list[str]:
         steps.append("For PayPal webhook failures, confirm PAYPAL_WEBHOOK_ID belongs to the same app as PAYPAL_CLIENT_ID.")
     if provider in HOSTED_GATEWAY_PROVIDERS:
         steps.append("For hosted gateway failures, verify sign_type and parameter ordering against the gateway documentation.")
+    if provider == "gmpay":
+        steps.append("For GM Pay, collect the real webhook sample before enabling paid status or Pro entitlement automation.")
     return steps
 
 
@@ -305,6 +330,8 @@ def _payment_provider_evidence_fields(provider: str) -> list[str]:
         fields.extend(["Alipay trade_no", "Alipay out_trade_no", "Alipay trade_status"])
     if provider in HOSTED_GATEWAY_PROVIDERS:
         fields.extend(["gateway trade id", "gateway sign_type", "gateway callback timestamp"])
+    if provider == "gmpay":
+        fields.extend(["GM Pay trade_id", "GM Pay payment_url", "webhook sample reference"])
     return fields
 
 
@@ -559,6 +586,21 @@ def get_payment_operations_summary(
     safe_limit = min(max(limit, 1), 100)
     service = PaymentService(db)
     provider_options = service.list_providers()
+    managed_config_rows = {
+        item["provider_key"]: item
+        for item in list_safe_provider_configs(db)
+    }
+    existing_provider_keys = {option.key for option in provider_options}
+    for provider_key, safe_config in managed_config_rows.items():
+        if provider_key not in existing_provider_keys:
+            provider_options.append(PaymentProviderConfig(
+                key=provider_key,
+                enabled=bool(safe_config["enabled"] and safe_config["configured"]),
+                display_name=safe_config["display_name"],
+                settlement="one_time_entitlement",
+                supports_subscription=False,
+                supports_one_time=True,
+            ))
 
     query = db.query(PaymentOrder, User.email).outerjoin(User, PaymentOrder.user_id == User.id)
     if provider:
@@ -608,8 +650,12 @@ def get_payment_operations_summary(
         provider_orders = [order for order in all_orders if order.provider == option.key]
         provider_events = [event for event in all_events if event.provider == option.key]
         latest_order = max(provider_orders, key=lambda item: item.created_at) if provider_orders else None
-        configured = _provider_configured(option.key)
-        missing_config_keys = _payment_provider_missing_config(option.key)
+        if option.key in managed_config_rows:
+            configured = bool(managed_config_rows[option.key]["configured"])
+            missing_config_keys = list(managed_config_rows[option.key]["missing_config_keys"])
+        else:
+            configured = _provider_configured(option.key)
+            missing_config_keys = _payment_provider_missing_config(option.key)
         acceptance_state = _payment_provider_acceptance_state(
             option,
             configured,
@@ -682,4 +728,3 @@ def get_payment_operations_summary(
             provider_rows,
         ),
     }
-

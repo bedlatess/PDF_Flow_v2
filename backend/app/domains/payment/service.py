@@ -16,9 +16,14 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.domains.payment.config_store import (
+    get_provider_runtime_config,
+    list_managed_payment_provider_keys,
+)
 from app.domains.payment.providers import (
     AlipayPaymentProvider,
     ConfigurableHostedPaymentProvider,
+    GMPayPaymentProvider,
     PayPalPaymentProvider,
     PaymentProviderConfig,
     PaymentProviderRegistry,
@@ -44,13 +49,32 @@ PROVIDER_CURRENCY = {
 class PaymentService:
     def __init__(self, db: Session):
         self.db = db
+        self._runtime_configs = self._load_runtime_configs()
         self.registry = PaymentProviderRegistry(self._build_providers())
 
-    @staticmethod
-    def _build_providers() -> dict:
+    def _load_runtime_configs(self) -> dict:
+        configs = {}
+        for key in list_managed_payment_provider_keys():
+            try:
+                runtime_config = get_provider_runtime_config(self.db, key)
+            except HTTPException:
+                runtime_config = None
+            if runtime_config:
+                configs[key] = runtime_config
+        return configs
+
+    def _build_providers(self) -> dict:
         gateway_urls = settings.PAYMENT_PROVIDER_CHECKOUT_URLS
         providers = {}
+        gmpay_config = self._runtime_configs.get("gmpay")
+        if gmpay_config:
+            providers["gmpay"] = GMPayPaymentProvider(
+                public_config=gmpay_config["public_config"],
+                secrets=gmpay_config["secrets"],
+            )
         for key in settings.PAYMENT_ENABLED_PROVIDERS:
+            if key in providers:
+                continue
             if key == "stripe":
                 providers[key] = StripePaymentProvider()
             elif key == "paypal":
@@ -70,17 +94,22 @@ class PaymentService:
 
     def list_providers(self) -> list[PaymentProviderConfig]:
         enabled = set(settings.PAYMENT_ENABLED_PROVIDERS)
-        return [
+        provider_order = list(settings.PAYMENT_PROVIDER_ORDER)
+        for key in self._runtime_configs:
+            if key not in provider_order:
+                provider_order.append(key)
+        providers = [
             PaymentProviderConfig(
                 key=key,
-                enabled=key in enabled,
+                enabled=key in enabled or key in self._runtime_configs,
                 display_name=provider_display_name(key),
                 settlement="subscription" if key == "stripe" else "one_time_entitlement",
                 supports_subscription=key == "stripe",
                 supports_one_time=True,
             )
-            for key in settings.PAYMENT_PROVIDER_ORDER
+            for key in provider_order
         ]
+        return providers
 
     def create_checkout_order(
         self,
@@ -91,7 +120,7 @@ class PaymentService:
         success_url: str,
         cancel_url: str,
     ) -> PaymentOrder:
-        if provider not in settings.PAYMENT_ENABLED_PROVIDERS:
+        if provider not in self.registry.available():
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail=f"{provider_display_name(provider)} payment is not enabled",
@@ -104,6 +133,17 @@ class PaymentService:
             )
 
         catalog_item = PLAN_CATALOG[plan]
+        order_ttl_minutes = settings.PAYMENT_ORDER_TTL_MINUTES
+        if provider == "gmpay":
+            runtime_config = self._runtime_configs.get("gmpay")
+            public_config = runtime_config["public_config"] if runtime_config else {}
+            amount_key = "monthly_amount_cents" if plan == "monthly" else "yearly_amount_cents"
+            catalog_item = {
+                "amount_cents": int(public_config.get(amount_key) or catalog_item["amount_cents"]),
+                "currency": str(public_config.get("currency") or catalog_item["currency"]).upper(),
+                "period_days": PLAN_CATALOG[plan]["period_days"],
+            }
+            order_ttl_minutes = int(public_config.get("order_ttl_minutes") or order_ttl_minutes)
         gateway_config = settings.PAYMENT_GATEWAY_CONFIGS.get(provider, {})
         currency = PROVIDER_CURRENCY.get(provider, gateway_config.get("currency", catalog_item["currency"]))
         merchant_order_id = f"pf_{datetime.utcnow():%Y%m%d}_{uuid4().hex[:18]}"
@@ -137,7 +177,7 @@ class PaymentService:
             status="pending",
             checkout_url=provider_result.checkout_url,
             qr_code_url=provider_result.qr_code_url,
-            expires_at=datetime.utcnow() + timedelta(minutes=settings.PAYMENT_ORDER_TTL_MINUTES),
+            expires_at=datetime.utcnow() + timedelta(minutes=order_ttl_minutes),
         )
         self.db.add(order)
         self._ensure_provider_account(user, provider)
@@ -225,7 +265,8 @@ class PaymentService:
                 detail=f"{provider_display_name(provider)} webhook verification failed",
             ) from exc
         if event.status != "paid":
-            self._record_payment_event(event, None, "ignored")
+            self._record_payment_event(event, "ignored")
+            self.db.commit()
             raise HTTPException(status_code=status.HTTP_202_ACCEPTED, detail="Payment event accepted")
         return self._apply_paid_event(event)
 
@@ -319,7 +360,7 @@ class PaymentService:
         safe_items = {
             key: value
             for key, value in raw_payload.items()
-            if key in {"type", "status", "capture_status", "trade_status", "trade_state", "mode", "sign_type"}
+            if key in {"type", "status", "capture_status", "trade_status", "trade_state", "mode", "sign_type", "provider"}
         }
         if not safe_items:
             return None

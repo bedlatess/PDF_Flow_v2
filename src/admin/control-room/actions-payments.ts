@@ -1,4 +1,5 @@
 import { adminAPI } from '@/admin/api'
+import type { AdminPricingPlan } from '@/admin/api'
 import type { ControlRoomContext } from './context'
 
 export const createControlRoomPaymentsActions = (ctx: ControlRoomContext) => {
@@ -18,7 +19,51 @@ export const createControlRoomPaymentsActions = (ctx: ControlRoomContext) => {
     }
   }
 
+  const savePricingPlan = async (plan: AdminPricingPlan) => {
+    ctx.savingKey.value = `pricing:${plan.plan_key}`
+    ctx.error.value = ''
+
+    try {
+      const updated = await adminAPI.updatePricingPlan(plan.plan_key, {
+        plan_key: plan.plan_key,
+        display_name: plan.display_name,
+        is_public: plan.is_public,
+        price_amount_cents: Number(plan.price_amount_cents || 0),
+        display_price: plan.display_price,
+        currency: plan.currency,
+        billing_interval: plan.billing_interval,
+        description: plan.description,
+        provider_mappings: {
+          stripe: {
+            price_id: plan.provider_mappings.stripe.price_id || '',
+          },
+          paypal: {
+            plan_id: plan.provider_mappings.paypal.plan_id || '',
+            product_id: plan.provider_mappings.paypal.product_id || '',
+          },
+          gmpay: {
+            amount_cents: Number(plan.provider_mappings.gmpay.amount_cents || 0),
+            currency: plan.provider_mappings.gmpay.currency || 'CNY',
+            token: plan.provider_mappings.gmpay.token || 'usdt',
+            network: plan.provider_mappings.gmpay.network || 'tron',
+          },
+        },
+        sort_order: Number(plan.sort_order || 0),
+        highlighted: plan.highlighted,
+      })
+      const index = ctx.pricingPlans.value.findIndex((item) => item.plan_key === updated.plan_key)
+      if (index >= 0) ctx.pricingPlans.value[index] = updated
+      ctx.auditLogs.value = await adminAPI.listAuditLogs()
+      ctx.setMessage(`已保存套餐：${updated.display_name}`)
+    } catch {
+      ctx.error.value = '套餐配置保存失败，请检查价格、币种和 provider mapping 后重试。'
+    } finally {
+      ctx.savingKey.value = null
+    }
+  }
+
   return {
     loadPayments,
+    savePricingPlan,
   }
 }

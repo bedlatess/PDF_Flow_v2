@@ -18,6 +18,7 @@ import type {
   AdminPaymentProviderConfigUpdate,
   AdminPaymentProviderConfigValidation,
   AdminPaymentSummary,
+  AdminPricingPlan,
   AdminUser,
   AdminUserUpdate,
   ContentBlock,
@@ -153,6 +154,22 @@ export const adminAPI = {
     const response = await apiClient.get<AdminPaymentSummary>('/api/v1/admin/payments', {
       params,
     })
+    return response.data
+  },
+
+  async listPricingPlans(): Promise<AdminPricingPlan[]> {
+    const response = await apiClient.get<AdminPricingPlan[]>('/api/v1/admin/pricing-plans')
+    return response.data
+  },
+
+  async updatePricingPlan(
+    planKey: string,
+    data: Omit<AdminPricingPlan, 'id' | 'updated_at'>,
+  ): Promise<AdminPricingPlan> {
+    const response = await apiClient.put<AdminPricingPlan>(
+      `/api/v1/admin/pricing-plans/${encodeURIComponent(planKey)}`,
+      data,
+    )
     return response.data
   },
 

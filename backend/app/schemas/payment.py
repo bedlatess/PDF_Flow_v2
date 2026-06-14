@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 
 class CheckoutSessionCreate(BaseModel):
     """创建结账会话的请求。旧字段名保留给当前前端兼容。"""
-    plan: str = Field(..., description="订阅计划: monthly 或 yearly")
+    plan: str = Field(..., description="订阅计划: pro_monthly/pro_yearly，兼容 monthly/yearly")
     success_url: str = Field(..., description="支付成功后的回调URL")
     cancel_url: str = Field(..., description="取消支付后的回调URL")
     provider: str = Field(default="stripe", description="支付通道")

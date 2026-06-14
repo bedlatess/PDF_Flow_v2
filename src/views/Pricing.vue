@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import {
@@ -18,11 +18,13 @@ import DiagnosticAlert from '@/components/common/DiagnosticAlert.vue'
 import Modal from '@/components/common/Modal.vue'
 import { useUserStore } from '@/stores/user'
 import { formatUserFacingError, type FormattedUserError } from '@/utils/error-messages'
-import type { PaymentProviderKey, PaymentProviderOption } from '@/services/api'
+import type { PaymentProviderKey, PaymentProviderOption, PublicPricingPlan } from '@/services/api'
 import { useLocalePath } from '@/composables/useLocalePath'
 import { getEntitlementSummary } from '@/utils/entitlements'
 
-type PlanId = 'free' | 'pro' | 'enterprise'
+type PlanId = 'free' | 'pro_monthly' | 'pro_yearly' | 'enterprise'
+type CheckoutPlanId = 'pro_monthly' | 'pro_yearly'
+type CurrentTier = 'free' | 'pro' | 'enterprise' | 'admin'
 type ButtonVariant = 'primary' | 'outline'
 
 interface Plan {
@@ -116,6 +118,8 @@ const { localePath } = useLocalePath()
 const checkoutLoadingPlan = ref<PlanId | null>(null)
 const checkoutError = ref<FormattedUserError | null>(null)
 const paymentModalOpen = ref(false)
+const dbPricingPlans = ref<PublicPricingPlan[]>([])
+const selectedCheckoutPlan = ref<CheckoutPlanId>('pro_monthly')
 const paymentProviders = ref<PaymentProviderOption[]>([])
 const paymentProvidersLoading = ref(false)
 const paymentProvidersError = ref<FormattedUserError | null>(null)
@@ -142,7 +146,7 @@ const currentEntitlement = computed(() =>
   }),
 )
 
-const currentTier = computed<PlanId | 'admin'>(() => {
+const currentTier = computed<CurrentTier>(() => {
   const role = userStore.user?.role
   if (role === 'admin') return 'admin'
   if (!currentEntitlement.value.isActive) return 'free'
@@ -150,7 +154,7 @@ const currentTier = computed<PlanId | 'admin'>(() => {
 })
 const copy = computed(() => tm('pricing.page') as PricingPageCopy)
 
-const plans = computed<Plan[]>(() => [
+const fallbackPlans = computed<Plan[]>(() => [
   {
     id: 'free',
     name: copy.value.freeName,
@@ -166,7 +170,7 @@ const plans = computed<Plan[]>(() => [
     current: currentTier.value === 'free',
   },
   {
-    id: 'pro',
+    id: 'pro_monthly',
     name: copy.value.proName,
     eyebrow: copy.value.proEyebrow,
     price: '$9.90',
@@ -178,6 +182,20 @@ const plans = computed<Plan[]>(() => [
     cta: currentTier.value === 'pro' ? copy.value.currentPlan : copy.value.proCta,
     variant: 'primary',
     highlighted: true,
+    current: currentTier.value === 'pro',
+  },
+  {
+    id: 'pro_yearly',
+    name: `${copy.value.proName} Annual`,
+    eyebrow: copy.value.proEyebrow,
+    price: '$79',
+    period: '/ year',
+    description: copy.value.proDescription,
+    bestFor: copy.value.proBestFor,
+    features: copy.value.proFeatures,
+    notes: copy.value.proNotes,
+    cta: currentTier.value === 'pro' ? copy.value.currentPlan : copy.value.proCta,
+    variant: 'outline',
     current: currentTier.value === 'pro',
   },
   {
@@ -198,8 +216,79 @@ const plans = computed<Plan[]>(() => [
   },
 ])
 
+const planCopy = (planKey: PlanId) => {
+  if (planKey === 'free') {
+    return {
+      features: copy.value.freeFeatures,
+      notes: copy.value.freeNotes,
+      bestFor: copy.value.freeBestFor,
+      cta: currentTier.value === 'free' ? copy.value.currentPlan : copy.value.freeCta,
+      variant: 'outline' as ButtonVariant,
+      current: currentTier.value === 'free',
+      eyebrow: copy.value.freeEyebrow,
+    }
+  }
+  if (planKey === 'enterprise') {
+    return {
+      features: copy.value.enterpriseFeatures,
+      notes: copy.value.enterpriseNotes,
+      bestFor: copy.value.enterpriseBestFor,
+      cta: currentTier.value === 'enterprise' || currentTier.value === 'admin'
+        ? copy.value.currentPlan
+        : copy.value.enterpriseCta,
+      variant: 'outline' as ButtonVariant,
+      current: currentTier.value === 'enterprise' || currentTier.value === 'admin',
+      eyebrow: copy.value.enterpriseEyebrow,
+    }
+  }
+  return {
+    features: copy.value.proFeatures,
+    notes: copy.value.proNotes,
+    bestFor: copy.value.proBestFor,
+    cta: currentTier.value === 'pro' ? copy.value.currentPlan : copy.value.proCta,
+    variant: planKey === 'pro_monthly' ? 'primary' as ButtonVariant : 'outline' as ButtonVariant,
+    current: currentTier.value === 'pro',
+    eyebrow: copy.value.proEyebrow,
+  }
+}
+
+const plans = computed<Plan[]>(() => {
+  const publicPlans = dbPricingPlans.value.filter((plan) => plan.is_public)
+  if (!publicPlans.length) {
+    return fallbackPlans.value
+  }
+  return publicPlans
+    .slice()
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .map((plan) => {
+      const localCopy = planCopy(plan.plan_key)
+      const fallbackPlan = fallbackPlans.value.find((item) => item.id === plan.plan_key)
+      return {
+        id: plan.plan_key,
+        name: plan.display_name,
+        eyebrow: localCopy.eyebrow,
+        price: plan.display_price || fallbackPlan?.price || '',
+        period: plan.billing_interval === 'month'
+          ? copy.value.proPeriod
+          : plan.billing_interval === 'year'
+            ? '/ year'
+            : plan.billing_interval === 'custom'
+              ? copy.value.enterprisePeriod
+              : fallbackPlan?.period || '',
+        description: plan.description || fallbackPlan?.description || '',
+        bestFor: localCopy.bestFor,
+        features: localCopy.features,
+        notes: localCopy.notes,
+        cta: localCopy.cta,
+        variant: localCopy.variant,
+        highlighted: plan.highlighted,
+        current: localCopy.current,
+      }
+    })
+})
+
 const planIcon = (planId: PlanId) => {
-  if (planId === 'pro') return Crown
+  if (planId === 'pro_monthly' || planId === 'pro_yearly') return Crown
   if (planId === 'enterprise') return Building2
   return ShieldCheck
 }
@@ -275,6 +364,16 @@ const loadPaymentProviders = async () => {
   }
 }
 
+const loadPricingPlans = async () => {
+  try {
+    const { pricingAPI } = await import('@/services/api')
+    const response = await pricingAPI.listPlans()
+    dbPricingPlans.value = response.plans
+  } catch {
+    dbPricingPlans.value = []
+  }
+}
+
 const handleCTA = async (plan: Plan) => {
   checkoutError.value = null
   paymentCodeCopyState.value = 'idle'
@@ -302,6 +401,7 @@ const handleCTA = async (plan: Plan) => {
     return
   }
 
+  selectedCheckoutPlan.value = plan.id as CheckoutPlanId
   paymentModalOpen.value = true
   if (paymentProviders.value.length === 0) {
     await loadPaymentProviders()
@@ -313,7 +413,7 @@ const startProCheckout = async () => {
   paymentCodeCopyState.value = 'idle'
 
   try {
-    checkoutLoadingPlan.value = 'pro'
+    checkoutLoadingPlan.value = selectedCheckoutPlan.value
     qrCheckoutResult.value = null
 
     if (!selectedPaymentProvider.value) {
@@ -333,7 +433,7 @@ const startProCheckout = async () => {
 
     const { paymentAPI } = await import('@/services/api')
     const response = await paymentAPI.createCheckoutSession({
-      plan: 'monthly',
+      plan: selectedCheckoutPlan.value,
       success_url: `${window.location.origin}${localePath('/payment/success')}`,
       cancel_url: `${window.location.origin}${localePath('/payment/cancel')}`,
       provider: selectedPaymentProvider.value,
@@ -394,6 +494,8 @@ watch(
   },
   { immediate: true },
 )
+
+onMounted(loadPricingPlans)
 </script>
 
 <template>
@@ -470,8 +572,8 @@ watch(
             {{ plan.cta }}
           </Button>
 
-          <DiagnosticAlert
-            v-if="plan.id === 'pro' && checkoutError"
+            <DiagnosticAlert
+            v-if="(plan.id === 'pro_monthly' || plan.id === 'pro_yearly') && checkoutError"
             class="mt-4"
             :title="checkoutError.title"
             :message="checkoutError.message"
@@ -791,7 +893,7 @@ watch(
           <Button
             variant="primary"
             class="rounded-md"
-            :loading="checkoutLoadingPlan === 'pro'"
+            :loading="checkoutLoadingPlan === selectedCheckoutPlan"
             :disabled="paymentActionDisabled"
             @click="startProCheckout"
           >

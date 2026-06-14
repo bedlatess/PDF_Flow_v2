@@ -313,6 +313,40 @@ export interface AdminPaymentProviderConfigValidation {
   signature_preview_tail: string | null
 }
 
+export type AdminPricingPlanKey = 'free' | 'pro_monthly' | 'pro_yearly' | 'enterprise'
+
+export interface AdminPricingProviderMappings {
+  stripe: {
+    price_id: string
+  }
+  paypal: {
+    plan_id: string
+    product_id: string
+  }
+  gmpay: {
+    amount_cents: number
+    currency: string
+    token: string
+    network: string
+  }
+}
+
+export interface AdminPricingPlan {
+  id: number
+  plan_key: AdminPricingPlanKey
+  display_name: string
+  is_public: boolean
+  price_amount_cents: number
+  display_price: string
+  currency: string
+  billing_interval: 'none' | 'month' | 'year' | 'custom'
+  description: string | null
+  provider_mappings: AdminPricingProviderMappings
+  sort_order: number
+  highlighted: boolean
+  updated_at: string
+}
+
 export interface AdminFeedback {
   id: number
   user_id: number | null

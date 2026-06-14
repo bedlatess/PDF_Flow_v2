@@ -22,6 +22,7 @@ describe('admin control room utilities', () => {
     expect(controlRoomTabs.map((tab) => tab.id)).toEqual([
       'overview',
       'users',
+      'plans',
       'paymentSetup',
       'payments',
       'flags',
@@ -36,6 +37,7 @@ describe('admin control room utilities', () => {
     ])
     expect(controlRoomTabs.filter((tab) => tab.id !== 'security').map((tab) => tab.group)).toEqual([
       '概览',
+      '客户与收入',
       '客户与收入',
       '客户与收入',
       '客户与收入',

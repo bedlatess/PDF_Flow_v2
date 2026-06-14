@@ -413,6 +413,33 @@ class ContentBlock(Base):
     )
 
 
+class PricingPlan(Base):
+    """Admin-managed public plan catalog and provider price mapping."""
+    __tablename__ = "pricing_plans"
+
+    id = Column(Integer, primary_key=True, index=True)
+    plan_key = Column(String, unique=True, nullable=False)
+    display_name = Column(String, nullable=False)
+    is_public = Column(Boolean, default=True, nullable=False)
+    price_amount_cents = Column(Integer, default=0, nullable=False)
+    display_price = Column(String, nullable=False, default="")
+    currency = Column(String, default="USD", nullable=False)
+    billing_interval = Column(String, default="none", nullable=False)
+    description = Column(Text, nullable=True)
+    provider_mappings_json = Column(Text, nullable=False, default="{}")
+    sort_order = Column(Integer, default=0, nullable=False)
+    highlighted = Column(Boolean, default=False, nullable=False)
+    updated_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    __table_args__ = (
+        Index("idx_pricing_plan_key", "plan_key"),
+        Index("idx_pricing_plan_public", "is_public"),
+        Index("idx_pricing_plan_sort", "sort_order"),
+    )
+
+
 class AdminAuditLog(Base):
     """Audit trail for hidden admin operations."""
     __tablename__ = "admin_audit_logs"

@@ -37,6 +37,7 @@ export const createControlRoomActions = (ctx: ControlRoomContext) => {
     deleteUser: users.deleteUser,
     loadJobs: jobs.loadJobs,
     loadPayments: payments.loadPayments,
+    savePricingPlan: payments.savePricingPlan,
     loadFeedback: feedback.loadFeedback,
     saveFeedback: feedback.saveFeedback,
     cleanupLiveAcceptanceFeedback: feedback.cleanupLiveAcceptanceFeedback,

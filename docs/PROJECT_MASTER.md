@@ -1192,6 +1192,42 @@ Admin Tools & Features Phase B production result:
   - No Payment Providers v2 work was started.
   - Payment behavior was not changed.
 
+Admin Plans & Pricing Phase C local result:
+
+- Scope: admin-managed plan catalog and DB-first pricing/checkout mapping only. Payment Providers v2, webhook entitlement automation, AI/OCR/Office provider configuration, and real-payment validation were not changed.
+- Data model:
+  - Added `pricing_plans` with migration `add_pricing_plans`.
+  - First-version fields are intentionally minimal: `plan_key`, `display_name`, `is_public`, `price_amount_cents`, `display_price`, `currency`, `billing_interval`, `description`, `provider_mappings_json`, `sort_order`, `highlighted`, and `updated_by_id`.
+  - Fixed plan keys: `free`, `pro_monthly`, `pro_yearly`, `enterprise`.
+  - Provider mapping shape is fixed to Stripe `price_id`, PayPal `plan_id`/`product_id`, and GM Pay `amount_cents`/`currency`/`token`/`network`.
+- Backend/admin:
+  - Added admin endpoints under `/api/v1/admin/pricing-plans`.
+  - Added public endpoint `/api/v1/pricing/plans`.
+  - Admin list seeds the default catalog; public pricing reads DB first but returns `source=fallback` with an empty list if no public DB plans exist.
+  - Saves write `admin_audit_logs` with `target_type=pricing_plan` and `changed_fields=...`.
+- Frontend/admin:
+  - Added Admin `套餐与价格` module in the revenue group.
+  - The module edits public display, price/currency/interval, description, sort/highlight, and Stripe/PayPal/GM Pay mapping.
+- Pricing page:
+  - Reads `/api/v1/pricing/plans` and uses DB public plans when available.
+  - Keeps the existing local hardcoded plans as fallback if the DB catalog is empty or the public API fails.
+  - Purchasable Pro buttons now send `pro_monthly` or `pro_yearly`; backend remains compatible with old `monthly`/`yearly`.
+- Checkout:
+  - `PaymentService` resolves checkout plans DB-first.
+  - Missing DB plan/mapping falls back to existing `PLAN_CATALOG`, provider config, and environment fallback.
+  - Stripe DB `price_id` mapping is used for checkout session creation when configured.
+  - GM Pay DB mapping can override amount/currency/token/network for checkout creation.
+  - PayPal `plan_id`/`product_id` is stored for configuration consistency; existing PayPal order creation still uses amount/currency and does not start subscription-plan validation in this phase.
+- Local checks:
+  - `pytest backend/tests/test_admin.py backend/tests/test_payment_domain.py backend/tests/test_payment_config_stripe.py backend/tests/test_pricing_plans.py -q`
+  - `npm run test:unit:ci`
+  - `npm run type-check`
+  - `npm run build`
+  - `npm run build:admin`
+  - Alembic single-step check from `ff_public_visibility` to `add_pricing_plans`
+- Notes:
+  - A full empty SQLite Alembic upgrade is still blocked by the pre-existing `001_initial` SQLite `now()` default syntax; the new migration itself was verified by upgrading from the current production base revision.
+
 Admin bootstrap:
 
 ```bash

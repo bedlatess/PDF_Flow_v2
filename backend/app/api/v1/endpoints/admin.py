@@ -23,6 +23,10 @@ from app.domains.admin.feedback import (
 )
 from app.domains.admin.payment_ops import get_payment_operations_summary
 from app.domains.admin.audit import write_admin_audit
+from app.domains.pricing import (
+    list_pricing_plans as list_pricing_plans_service,
+    update_pricing_plan as update_pricing_plan_service,
+)
 from app.domains.admin.operations import (
     cleanup_expired_files as cleanup_expired_files_service,
     get_diagnostics as get_diagnostics_service,
@@ -63,6 +67,8 @@ from app.schemas.admin import (
     ContentBlockUpdate,
     FeatureFlagResponse,
     FeatureFlagUpdate,
+    PricingPlanResponse,
+    PricingPlanUpdate,
     SiteSettingResponse,
     SiteSettingUpdate,
 )
@@ -128,6 +134,33 @@ async def get_payment_operations(
         provider=provider,
         status_filter=status_filter,
         limit=limit,
+    )
+
+
+@router.get("/pricing-plans", response_model=list[PricingPlanResponse])
+async def list_pricing_plans(
+    _admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    """Return admin-managed pricing plans."""
+    return list_pricing_plans_service(db)
+
+
+@router.put("/pricing-plans/{plan_key}", response_model=PricingPlanResponse)
+async def update_pricing_plan(
+    plan_key: str,
+    payload: PricingPlanUpdate,
+    request: Request,
+    admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    """Update one pricing plan and provider mapping."""
+    return update_pricing_plan_service(
+        db,
+        plan_key=plan_key,
+        payload=payload,
+        request=request,
+        admin=admin,
     )
 
 

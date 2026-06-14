@@ -4,6 +4,7 @@ import type { ControlRoomDomainDeps } from './types'
 export const createRevenueDomain = ({ ctx, actions, clipboard }: ControlRoomDomainDeps) => ({
   state: {
     paymentSummary: ctx.paymentSummary,
+    pricingPlans: ctx.pricingPlans,
     paymentProviderFilter: ctx.paymentProviderFilter,
     paymentStatusFilter: ctx.paymentStatusFilter,
     reconciliationCopied: ctx.reconciliationCopied,
@@ -12,6 +13,7 @@ export const createRevenueDomain = ({ ctx, actions, clipboard }: ControlRoomDoma
   },
   actions: {
     loadPayments: actions.loadPayments,
+    savePricingPlan: actions.savePricingPlan,
     copyReconciliationSummary: clipboard.copyReconciliationSummary,
     copyPaymentEvidencePacket: clipboard.copyPaymentEvidencePacket,
   },

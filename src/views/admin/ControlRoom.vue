@@ -18,6 +18,7 @@ import FeedbackTab from '@/components/admin/FeedbackTab.vue'
 import JobsTab from '@/components/admin/JobsTab.vue'
 import MaintenanceTab from '@/components/admin/MaintenanceTab.vue'
 import OverviewTab from '@/components/admin/OverviewTab.vue'
+import PlansPricingTab from '@/components/admin/PlansPricingTab.vue'
 import PaymentSetupTab from '@/components/admin/PaymentSetupTab.vue'
 import PaymentsTab from '@/components/admin/PaymentsTab.vue'
 import SecurityTab from '@/components/admin/SecurityTab.vue'
@@ -47,6 +48,7 @@ const {
   healthReport,
   maintenance,
   paymentSummary,
+  pricingPlans,
   userSearch,
   jobStatusFilter,
   jobSearch,
@@ -85,6 +87,7 @@ const {
   deleteUser,
   loadJobs,
   loadPayments,
+  savePricingPlan,
   loadFeedback,
   saveFeedback,
   cleanupLiveAcceptanceFeedback,
@@ -411,6 +414,13 @@ onMounted(loadAdminData)
             :saving-key="savingKey"
             @refresh="loadPayments"
             @copy-evidence="copyPaymentEvidencePacket"
+          />
+
+          <PlansPricingTab
+            v-else-if="activeTab === 'plans'"
+            :plans="pricingPlans"
+            :saving-key="savingKey"
+            @save="savePricingPlan"
           />
 
           <PaymentsTab

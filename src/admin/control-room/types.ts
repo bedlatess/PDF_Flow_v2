@@ -1,6 +1,7 @@
 export type ControlRoomTabId =
   | 'overview'
   | 'users'
+  | 'plans'
   | 'paymentSetup'
   | 'payments'
   | 'flags'

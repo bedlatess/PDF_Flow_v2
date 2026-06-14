@@ -1,6 +1,6 @@
 """Schemas for hidden admin console APIs."""
 from datetime import datetime
-from typing import Optional
+from typing import Literal, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -62,6 +62,57 @@ class ContentBlockUpdate(ContentBlockBase):
 class ContentBlockResponse(ContentBlockBase):
     id: int
     key: str
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+PlanKey = Literal["free", "pro_monthly", "pro_yearly", "enterprise"]
+BillingInterval = Literal["none", "month", "year", "custom"]
+
+
+class StripePlanMapping(BaseModel):
+    price_id: str = ""
+
+
+class PayPalPlanMapping(BaseModel):
+    plan_id: str = ""
+    product_id: str = ""
+
+
+class GMPayPlanMapping(BaseModel):
+    amount_cents: int = Field(default=0, ge=0)
+    currency: str = "CNY"
+    token: str = "usdt"
+    network: str = "tron"
+
+
+class PricingProviderMappings(BaseModel):
+    stripe: StripePlanMapping = Field(default_factory=StripePlanMapping)
+    paypal: PayPalPlanMapping = Field(default_factory=PayPalPlanMapping)
+    gmpay: GMPayPlanMapping = Field(default_factory=GMPayPlanMapping)
+
+
+class PricingPlanBase(BaseModel):
+    plan_key: PlanKey
+    display_name: str = Field(..., min_length=1, max_length=120)
+    is_public: bool = True
+    price_amount_cents: int = Field(default=0, ge=0)
+    display_price: str = Field(default="", max_length=80)
+    currency: str = Field(default="USD", min_length=3, max_length=12)
+    billing_interval: BillingInterval = "none"
+    description: Optional[str] = None
+    provider_mappings: PricingProviderMappings = Field(default_factory=PricingProviderMappings)
+    sort_order: int = 0
+    highlighted: bool = False
+
+
+class PricingPlanUpdate(PricingPlanBase):
+    pass
+
+
+class PricingPlanResponse(PricingPlanBase):
+    id: int
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

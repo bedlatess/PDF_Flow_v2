@@ -20,6 +20,7 @@ from app.domains.payment.config_store import (
     get_provider_runtime_config,
     list_managed_payment_provider_keys,
 )
+from app.domains.pricing import CHECKOUT_PERIOD_DAYS, get_checkout_plan, normalize_plan_key
 from app.domains.payment.providers import (
     AlipayPaymentProvider,
     ConfigurableHostedPaymentProvider,
@@ -38,6 +39,8 @@ from app.models.user import PaymentEvent, PaymentOrder, PaymentProviderAccount, 
 PLAN_CATALOG = {
     "monthly": {"amount_cents": 990, "currency": "USD", "period_days": 30},
     "yearly": {"amount_cents": 7900, "currency": "USD", "period_days": 365},
+    "pro_monthly": {"amount_cents": 990, "currency": "USD", "period_days": 30},
+    "pro_yearly": {"amount_cents": 7900, "currency": "USD", "period_days": 365},
 }
 
 PROVIDER_CURRENCY = {
@@ -145,22 +148,39 @@ class PaymentService:
                 detail=f"{provider_display_name(provider)} payment is not enabled",
             )
 
-        if plan not in PLAN_CATALOG:
+        checkout_plan = get_checkout_plan(self.db, plan)
+        normalized_plan = normalize_plan_key(plan)
+        if not checkout_plan or normalized_plan not in PLAN_CATALOG:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid plan. Must be 'monthly' or 'yearly'",
+                detail="Invalid plan. Must be 'pro_monthly' or 'pro_yearly'",
             )
 
-        catalog_item = PLAN_CATALOG[plan]
+        catalog_item = {
+            "amount_cents": int(checkout_plan.get("price_amount_cents") or PLAN_CATALOG[normalized_plan]["amount_cents"]),
+            "currency": str(checkout_plan.get("currency") or PLAN_CATALOG[normalized_plan]["currency"]).upper(),
+            "period_days": int(checkout_plan.get("period_days") or PLAN_CATALOG[normalized_plan]["period_days"]),
+        }
+        provider_mappings = checkout_plan.get("provider_mappings") or {}
+        self._apply_checkout_provider_mapping(provider, normalized_plan, provider_mappings)
         order_ttl_minutes = settings.PAYMENT_ORDER_TTL_MINUTES
         if provider == "gmpay":
             runtime_config = self._runtime_configs.get("gmpay")
             public_config = runtime_config["public_config"] if runtime_config else {}
-            amount_key = "monthly_amount_cents" if plan == "monthly" else "yearly_amount_cents"
+            amount_key = "monthly_amount_cents" if normalized_plan == "pro_monthly" else "yearly_amount_cents"
+            gmpay_mapping = provider_mappings.get("gmpay") or {}
             catalog_item = {
-                "amount_cents": int(public_config.get(amount_key) or catalog_item["amount_cents"]),
-                "currency": str(public_config.get("currency") or catalog_item["currency"]).upper(),
-                "period_days": PLAN_CATALOG[plan]["period_days"],
+                "amount_cents": int(
+                    gmpay_mapping.get("amount_cents")
+                    or public_config.get(amount_key)
+                    or catalog_item["amount_cents"]
+                ),
+                "currency": str(
+                    gmpay_mapping.get("currency")
+                    or public_config.get("currency")
+                    or catalog_item["currency"]
+                ).upper(),
+                "period_days": catalog_item["period_days"],
             }
             order_ttl_minutes = int(public_config.get("order_ttl_minutes") or order_ttl_minutes)
         gateway_config = settings.PAYMENT_GATEWAY_CONFIGS.get(provider, {})
@@ -171,7 +191,7 @@ class PaymentService:
         try:
             provider_result = provider_adapter.create_order(
                 merchant_order_id=merchant_order_id,
-                plan=plan,
+                plan=normalized_plan,
                 amount_cents=catalog_item["amount_cents"],
                 currency=currency,
                 user_email=user.email,
@@ -190,7 +210,7 @@ class PaymentService:
             provider=provider,
             merchant_order_id=merchant_order_id,
             provider_order_id=provider_result.provider_order_id,
-            plan=plan,
+            plan=normalized_plan,
             amount_cents=catalog_item["amount_cents"],
             currency=currency,
             status="pending",
@@ -318,7 +338,7 @@ class PaymentService:
         if not user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Payment user not found")
 
-        period_days = PLAN_CATALOG[order.plan]["period_days"]
+        period_days = CHECKOUT_PERIOD_DAYS.get(order.plan, PLAN_CATALOG.get(order.plan, {}).get("period_days", 30))
         now = datetime.utcnow()
         current_end = user.subscription_end_date if user.subscription_end_date and user.subscription_end_date > now else now
         user.role = UserRole.PRO
@@ -371,6 +391,27 @@ class PaymentService:
                 duplicate_order = order
             return existing_event, duplicate_order
         return event_record, None
+
+    def _apply_checkout_provider_mapping(
+        self,
+        provider: str,
+        plan: str,
+        provider_mappings: Mapping[str, Mapping[str, object]],
+    ) -> None:
+        provider_adapter = self.registry.get(provider)
+        mapping = provider_mappings.get(provider) or {}
+        if provider == "stripe":
+            price_id = str(mapping.get("price_id") or "").strip()
+            if price_id and hasattr(provider_adapter, "public_config"):
+                key = "price_id_monthly" if plan == "pro_monthly" else "price_id_yearly"
+                provider_adapter.public_config[key] = price_id
+        elif provider == "gmpay":
+            gmpay_mapping = provider_mappings.get("gmpay") or {}
+            if hasattr(provider_adapter, "public_config"):
+                for key in ("currency", "token", "network"):
+                    value = gmpay_mapping.get(key)
+                    if value:
+                        provider_adapter.public_config[key] = value
 
     @staticmethod
     def _payment_event_summary(raw_payload: dict | None) -> str | None:

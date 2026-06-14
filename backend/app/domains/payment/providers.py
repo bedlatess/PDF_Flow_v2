@@ -427,10 +427,14 @@ class StripePaymentProvider:
         if not secret_key:
             raise RuntimeError("Stripe secret key is not configured")
 
+        plan_alias = {
+            "pro_monthly": "monthly",
+            "pro_yearly": "yearly",
+        }.get(plan, plan)
         price_id = {
             "monthly": self.public_config.get("price_id_monthly") or settings.STRIPE_PRICE_ID_MONTHLY,
             "yearly": self.public_config.get("price_id_yearly") or settings.STRIPE_PRICE_ID_YEARLY,
-        }.get(plan)
+        }.get(plan_alias)
         if not price_id:
             raise RuntimeError(f"Stripe price ID for {plan} is not configured")
 

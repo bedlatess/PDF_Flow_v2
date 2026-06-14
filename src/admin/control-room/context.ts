@@ -11,6 +11,7 @@ import {
   type AdminPasswordResetLink,
   type AdminOverview,
   type AdminPaymentSummary,
+  type AdminPricingPlan,
   type AdminUser,
   type ContentBlock,
   type FeatureFlag,
@@ -44,6 +45,7 @@ export const createControlRoomContext = () => {
   const healthReport = ref<AdminHealthReport | null>(null)
   const maintenance = ref<AdminMaintenance | null>(null)
   const paymentSummary = ref<AdminPaymentSummary | null>(null)
+  const pricingPlans = ref<AdminPricingPlan[]>([])
   const userSearch = ref('')
   const jobStatusFilter = ref('')
   const jobSearch = ref('')
@@ -133,6 +135,7 @@ export const createControlRoomContext = () => {
     healthReport,
     maintenance,
     paymentSummary,
+    pricingPlans,
     userSearch,
     jobStatusFilter,
     jobSearch,

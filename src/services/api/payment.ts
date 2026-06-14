@@ -1,7 +1,7 @@
 import apiClient from '../http'
 
 export interface CheckoutSessionRequest {
-  plan: 'monthly' | 'yearly'
+  plan: 'monthly' | 'yearly' | 'pro_monthly' | 'pro_yearly'
   success_url: string
   cancel_url: string
   provider?: PaymentProviderKey

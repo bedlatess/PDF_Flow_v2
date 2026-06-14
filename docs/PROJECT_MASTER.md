@@ -1453,6 +1453,49 @@ Admin Service Provider Phase E2 local result:
     - `npm run build:admin`
     - `npm run build`
 
+Admin Service Provider Phase E2 production result:
+
+- Deployed commit: `47f1439e68ed353325cdca3adda6f62fefba1646`.
+- Production deployment:
+  - `scripts/deploy-main.sh` completed successfully on the server.
+  - Database migrations ran successfully; no new migration was required beyond existing `service_provider_configs`.
+  - Production smoke passed: health endpoint and API docs reachable.
+  - Deployment state file records the deployed commit as `47f1439e68ed353325cdca3adda6f62fefba1646`.
+  - Compose services are healthy: backend, celery-worker, frontend, postgres, redis.
+- Public/admin health:
+  - `https://pdf.pawn.eu.org/health` returns HTTP 200 with `healthy`.
+  - `https://admin.pawn.eu.org/` returns HTTP 200.
+- Admin API verification:
+  - `/api/v1/admin/service-provider-configs/ai` returns exactly one E2 provider: `google_gemini`.
+  - Public fields are rendered as:
+    - `api_base_url`
+    - `model`
+    - `timeout_seconds`
+  - Secret fields are rendered as:
+    - `api_key`
+  - Saving enabled state, priority, public config, and write-only `api_key` succeeds.
+  - Validation succeeds with checks:
+    - `required_fields`
+    - `api_key_configured`
+    - `local_sdk_available`
+- Secret behavior:
+  - Admin API responses do not include a plaintext `secrets` payload.
+  - Returned secret state is limited to configured state plus tail metadata.
+  - The production smoke used a generated fake Gemini key and verified the full value did not appear in API responses or audit details.
+  - The generated fake key was removed when the original production AI provider row was restored.
+- Runtime verification:
+  - Missing DB row returns no runtime config, allowing the existing environment fallback path.
+  - Complete enabled DB config resolves through DB-first runtime lookup.
+  - `get_gemini_service(db)` used the DB source, DB model, DB timeout, and DB secret in the instrumented smoke path.
+  - Disabled DB config returns no runtime config and `get_gemini_service(db)` falls back to env source with `gemini-1.5-pro`.
+  - Incomplete DB config returns no runtime config and preserves fallback behavior.
+- Safety/cleanup:
+  - No real Gemini generation request was sent.
+  - No AI workflow, task model, payment logic, or new PDF/AI feature was changed.
+  - Temporary production admin account `e2-ai-smoke-admin@pawn.eu.org` was removed.
+  - Temporary verification script was removed from the server.
+  - Original production `ai:google_gemini` DB row was restored after verification.
+
 Admin bootstrap:
 
 ```bash

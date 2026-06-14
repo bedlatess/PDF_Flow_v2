@@ -23,13 +23,13 @@ def test_ocr_lifecycle_helper_updates_durable_job_on_success(client, monkeypatch
         )
         service = JobService(ProcessingJobRepository(db))
         monkeypatch.setattr(
-            ocr_tasks,
-            "best_effort_mark_processing",
+            ocr_tasks.job_lifecycle,
+            "mark_processing",
             lambda job_id, progress=None: service.mark_processing(job_id, progress=progress),
         )
         monkeypatch.setattr(
-            ocr_tasks,
-            "best_effort_mark_completed",
+            ocr_tasks.job_lifecycle,
+            "mark_completed",
             lambda job_id, result_data=None, output_file_url=None: service.mark_completed(
                 job_id,
                 result_data=result_data,
@@ -76,13 +76,13 @@ def test_ocr_lifecycle_helper_marks_failed_before_retry(client, monkeypatch):
         )
         service = JobService(ProcessingJobRepository(db))
         monkeypatch.setattr(
-            ocr_tasks,
-            "best_effort_mark_processing",
+            ocr_tasks.job_lifecycle,
+            "mark_processing",
             lambda job_id, progress=None: service.mark_processing(job_id, progress=progress),
         )
         monkeypatch.setattr(
-            ocr_tasks,
-            "best_effort_mark_failed",
+            ocr_tasks.job_lifecycle,
+            "mark_failed",
             lambda job_id, error_message: service.mark_failed(job_id, error_message),
         )
 
@@ -124,13 +124,13 @@ def test_office_lifecycle_helper_updates_durable_job_on_success(client, monkeypa
         )
         service = JobService(ProcessingJobRepository(db))
         monkeypatch.setattr(
-            office_tasks,
-            "best_effort_mark_processing",
+            office_tasks.job_lifecycle,
+            "mark_processing",
             lambda job_id, progress=None: service.mark_processing(job_id, progress=progress),
         )
         monkeypatch.setattr(
-            office_tasks,
-            "best_effort_mark_completed",
+            office_tasks.job_lifecycle,
+            "mark_completed",
             lambda job_id, result_data=None, output_file_url=None: service.mark_completed(
                 job_id,
                 result_data=result_data,
@@ -177,13 +177,13 @@ def test_office_lifecycle_helper_marks_failed_for_false_result(client, monkeypat
         )
         service = JobService(ProcessingJobRepository(db))
         monkeypatch.setattr(
-            office_tasks,
-            "best_effort_mark_processing",
+            office_tasks.job_lifecycle,
+            "mark_processing",
             lambda job_id, progress=None: service.mark_processing(job_id, progress=progress),
         )
         monkeypatch.setattr(
-            office_tasks,
-            "best_effort_mark_failed",
+            office_tasks.job_lifecycle,
+            "mark_failed",
             lambda job_id, error_message: service.mark_failed(job_id, error_message),
         )
 

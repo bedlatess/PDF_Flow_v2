@@ -9,7 +9,7 @@ This is the internal source of truth for development direction, current progress
 - Official repository: `https://github.com/bedlatess/PDF_Flow_v2.git`
 - Official remote name: `v2`
 - Branch: `main`
-- Last verified runtime commit: `0bc64a96d9a45f75fbf4d49dc4e544b5fbec7a68`
+- Last verified runtime commit: `72740393019227d7565461c687efacb0786f3ff7`
 - The server also records the active runtime commit at `.deploy_state/main/current_deployed_commit`.
 - Server path: `/root/data/docker_data/PDF/pdf-flow`
 - Deployment model: single repository, single Docker Compose server
@@ -1750,6 +1750,39 @@ Backend refactor R7 local checkpoint:
 - Local verification:
   - `python -m compileall -q backend/app backend/tests`
   - `python -m pytest backend/tests/test_jobs_domain.py backend/tests/test_admin_operations_domain.py backend/tests/test_files.py -q` (`39 passed, 1 warning`)
+  - `python -m pytest backend/tests -q` (`182 passed, 1 warning`)
+
+Backend refactor R7 production result:
+
+- Committed and pushed R7 as `72740393019227d7565461c687efacb0786f3ff7`.
+- Deployed R7 to production with the existing remote `scripts/deploy-main.sh` flow.
+- Production `.deploy_state/main/current_deployed_commit` records `72740393019227d7565461c687efacb0786f3ff7`.
+- Deployment rebuilt backend, celery-worker, public frontend, and admin frontend images; migrations ran with no new R7 migration.
+- Production smoke verified:
+  - Admin Job Center remained normal with DB durable jobs preferred over Redis rows for the same `job_id`.
+  - Redis-only jobs remained visible.
+  - DB-only durable history jobs remained visible.
+  - Duplicate `job_id` entries were de-duplicated.
+  - `/api/v1/files/jobs/{job_id}` remained Redis-first when Redis state existed.
+  - `/api/v1/files/jobs/{job_id}` fell back to DB durable status when Redis was missing and DB had a durable job.
+  - Status response keys stayed unchanged.
+  - compress, merge, OCR, and Office representative paths remained compatible.
+  - backend, celery-worker, frontend, postgres, and redis containers were healthy.
+  - Recent backend/celery logs showed no traceback, SQLAlchemy exception, or critical entries during the smoke window.
+- Cleanup:
+  - Removed R7 smoke DB jobs, Redis `job:*` keys, and temporary smoke data.
+
+Backend refactor R8 local checkpoint:
+
+- R8 keeps the R7 runtime behavior unchanged while tightening durable job lifecycle write boundaries.
+- Added `JobLifecycleWriter` and exported the singleton `job_lifecycle` from `domains/jobs`.
+- `job_lifecycle.create_pending()` is now the file-service entrypoint for best-effort durable job creation.
+- `job_lifecycle.mark_processing()`, `mark_completed()`, and `mark_failed()` are now the PDF/OCR/Office task entrypoints for best-effort durable lifecycle updates.
+- Backward-compatible `best_effort_*` wrappers remain in `domains/jobs.service` and delegate to `job_lifecycle`.
+- Redis writes, Celery behavior, API response shape, downloads/artifacts, frontend behavior, payment, AI, and feature behavior were not changed.
+- Local verification:
+  - `python -m pytest backend/tests/test_jobs_domain.py backend/tests/test_pdf_tasks.py backend/tests/test_ocr_office_tasks.py backend/tests/test_files.py backend/tests/test_admin_operations_domain.py -q` (`47 passed, 1 warning`)
+  - `python -m compileall -q backend/app backend/tests`
   - `python -m pytest backend/tests -q` (`182 passed, 1 warning`)
 
 Admin bootstrap:

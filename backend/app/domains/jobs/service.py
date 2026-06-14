@@ -150,6 +150,76 @@ class JobService:
         )
 
 
+class JobLifecycleWriter:
+    """Best-effort durable lifecycle writer used by file services and tasks."""
+
+    def create_pending(
+        self,
+        *,
+        job_id: str,
+        user_id: int | None,
+        job_type: str,
+        input_file_name: str,
+        input_file_size: int,
+        db: Session | None = None,
+    ) -> ProcessingJob | None:
+        return _with_optional_session(
+            db,
+            lambda session: JobService(ProcessingJobRepository(session)).create_pending(
+                job_id=job_id,
+                user_id=user_id,
+                job_type=job_type,
+                input_file_name=input_file_name,
+                input_file_size=input_file_size,
+            ),
+            "create processing job",
+            job_id,
+        )
+
+    def mark_processing(self, job_id: str, *, progress: int | None = None) -> ProcessingJob | None:
+        return _with_optional_session(
+            None,
+            lambda session: JobService(ProcessingJobRepository(session)).mark_processing(
+                job_id,
+                progress=progress,
+            ),
+            "mark processing job processing",
+            job_id,
+        )
+
+    def mark_completed(
+        self,
+        job_id: str,
+        *,
+        result_data: Mapping[str, Any] | None = None,
+        output_file_url: str | None = None,
+    ) -> ProcessingJob | None:
+        return _with_optional_session(
+            None,
+            lambda session: JobService(ProcessingJobRepository(session)).mark_completed(
+                job_id,
+                result_data=result_data,
+                output_file_url=output_file_url,
+            ),
+            "mark processing job completed",
+            job_id,
+        )
+
+    def mark_failed(self, job_id: str, *, error_message: str) -> ProcessingJob | None:
+        return _with_optional_session(
+            None,
+            lambda session: JobService(ProcessingJobRepository(session)).mark_failed(
+                job_id,
+                error_message,
+            ),
+            "mark processing job failed",
+            job_id,
+        )
+
+
+job_lifecycle = JobLifecycleWriter()
+
+
 def build_pending_job_status(job_id: str, *, now: float | None = None) -> dict[str, Any]:
     timestamp = time.time() if now is None else now
     return {
@@ -169,30 +239,18 @@ def best_effort_create_processing_job(
     input_file_size: int,
     db: Session | None = None,
 ) -> ProcessingJob | None:
-    return _with_optional_session(
-        db,
-        lambda session: JobService(ProcessingJobRepository(session)).create_pending(
-            job_id=job_id,
-            user_id=user_id,
-            job_type=job_type,
-            input_file_name=input_file_name,
-            input_file_size=input_file_size,
-        ),
-        "create processing job",
-        job_id,
+    return job_lifecycle.create_pending(
+        job_id=job_id,
+        user_id=user_id,
+        job_type=job_type,
+        input_file_name=input_file_name,
+        input_file_size=input_file_size,
+        db=db,
     )
 
 
 def best_effort_mark_processing(job_id: str, *, progress: int | None = None) -> ProcessingJob | None:
-    return _with_optional_session(
-        None,
-        lambda session: JobService(ProcessingJobRepository(session)).mark_processing(
-            job_id,
-            progress=progress,
-        ),
-        "mark processing job processing",
-        job_id,
-    )
+    return job_lifecycle.mark_processing(job_id, progress=progress)
 
 
 def best_effort_mark_completed(
@@ -201,28 +259,15 @@ def best_effort_mark_completed(
     result_data: Mapping[str, Any] | None = None,
     output_file_url: str | None = None,
 ) -> ProcessingJob | None:
-    return _with_optional_session(
-        None,
-        lambda session: JobService(ProcessingJobRepository(session)).mark_completed(
-            job_id,
-            result_data=result_data,
-            output_file_url=output_file_url,
-        ),
-        "mark processing job completed",
+    return job_lifecycle.mark_completed(
         job_id,
+        result_data=result_data,
+        output_file_url=output_file_url,
     )
 
 
 def best_effort_mark_failed(job_id: str, *, error_message: str) -> ProcessingJob | None:
-    return _with_optional_session(
-        None,
-        lambda session: JobService(ProcessingJobRepository(session)).mark_failed(
-            job_id,
-            error_message,
-        ),
-        "mark processing job failed",
-        job_id,
-    )
+    return job_lifecycle.mark_failed(job_id, error_message=error_message)
 
 
 def best_effort_get_route_status(

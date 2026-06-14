@@ -25,9 +25,9 @@ from app.tasks.pdf_tasks import (
 )
 from app.domains.service_provider.config_store import get_service_provider_runtime_config
 from app.domains.jobs.service import (
-    best_effort_create_processing_job,
     best_effort_get_route_status,
     build_pending_job_status,
+    job_lifecycle,
     merge_celery_state_into_status,
 )
 from app.domains.jobs.types import is_terminal_job_status
@@ -201,7 +201,7 @@ class FileProcessingService:
         if len(names) > 3:
             input_file_name = f"{input_file_name}, +{len(names) - 3} more"
 
-        best_effort_create_processing_job(
+        job_lifecycle.create_pending(
             job_id=job_id,
             user_id=None,
             job_type=job_type,

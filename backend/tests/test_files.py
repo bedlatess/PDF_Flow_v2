@@ -459,8 +459,8 @@ class TestOfficeToPdfFlow:
         )
         monkeypatch.setattr(file_service_module, "compress_pdf_task", FakeTask())
         monkeypatch.setattr(
-            file_service_module,
-            "best_effort_create_processing_job",
+            file_service_module.job_lifecycle,
+            "create_pending",
             lambda **_kwargs: None,
         )
 

@@ -50,8 +50,8 @@ def test_compress_task_updates_durable_job_on_success(client, monkeypatch, tmp_p
                 output_file_url=output_file_url,
             )
 
-        monkeypatch.setattr(pdf_tasks, "best_effort_mark_processing", mark_processing)
-        monkeypatch.setattr(pdf_tasks, "best_effort_mark_completed", mark_completed)
+        monkeypatch.setattr(pdf_tasks.job_lifecycle, "mark_processing", mark_processing)
+        monkeypatch.setattr(pdf_tasks.job_lifecycle, "mark_completed", mark_completed)
 
         result = pdf_tasks._run_compress_pdf_with_job_lifecycle(
             job_id="job_task_success",
@@ -100,8 +100,8 @@ def test_compress_task_marks_durable_job_failed_before_retry(client, monkeypatch
         def mark_failed(job_id, error_message):
             return service.mark_failed(job_id, error_message)
 
-        monkeypatch.setattr(pdf_tasks, "best_effort_mark_processing", mark_processing)
-        monkeypatch.setattr(pdf_tasks, "best_effort_mark_failed", mark_failed)
+        monkeypatch.setattr(pdf_tasks.job_lifecycle, "mark_processing", mark_processing)
+        monkeypatch.setattr(pdf_tasks.job_lifecycle, "mark_failed", mark_failed)
 
         def raise_original(exc):
             raise exc
@@ -143,13 +143,13 @@ def test_pdf_task_lifecycle_helper_updates_durable_job_for_output_files(client, 
         service = JobService(ProcessingJobRepository(db))
 
         monkeypatch.setattr(
-            pdf_tasks,
-            "best_effort_mark_processing",
+            pdf_tasks.job_lifecycle,
+            "mark_processing",
             lambda job_id, progress=None: service.mark_processing(job_id, progress=progress),
         )
         monkeypatch.setattr(
-            pdf_tasks,
-            "best_effort_mark_completed",
+            pdf_tasks.job_lifecycle,
+            "mark_completed",
             lambda job_id, result_data=None, output_file_url=None: service.mark_completed(
                 job_id,
                 result_data=result_data,
@@ -196,13 +196,13 @@ def test_pdf_task_lifecycle_helper_marks_failure_before_retry(client, monkeypatc
         service = JobService(ProcessingJobRepository(db))
 
         monkeypatch.setattr(
-            pdf_tasks,
-            "best_effort_mark_processing",
+            pdf_tasks.job_lifecycle,
+            "mark_processing",
             lambda job_id, progress=None: service.mark_processing(job_id, progress=progress),
         )
         monkeypatch.setattr(
-            pdf_tasks,
-            "best_effort_mark_failed",
+            pdf_tasks.job_lifecycle,
+            "mark_failed",
             lambda job_id, error_message: service.mark_failed(job_id, error_message),
         )
 

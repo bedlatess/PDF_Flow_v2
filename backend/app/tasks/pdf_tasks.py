@@ -8,11 +8,7 @@ from PIL import Image
 from pypdf import PdfReader, PdfWriter
 
 from app.celery_worker import celery_app
-from app.domains.jobs.service import (
-    best_effort_mark_completed,
-    best_effort_mark_failed,
-    best_effort_mark_processing,
-)
+from app.domains.jobs.service import job_lifecycle
 
 logger = logging.getLogger(__name__)
 
@@ -296,12 +292,12 @@ def _run_pdf_task_with_job_lifecycle(
     retry=None,
 ) -> dict:
     if job_id:
-        best_effort_mark_processing(job_id, progress=0)
+        job_lifecycle.mark_processing(job_id, progress=0)
 
     try:
         result = operation()
         if job_id:
-            best_effort_mark_completed(
+            job_lifecycle.mark_completed(
                 job_id,
                 result_data=result,
                 output_file_url=_result_output_url(result),
@@ -310,7 +306,7 @@ def _run_pdf_task_with_job_lifecycle(
     except Exception as exc:
         logger.error("%s failed: %s", operation_label, exc)
         if job_id:
-            best_effort_mark_failed(job_id, error_message=str(exc))
+            job_lifecycle.mark_failed(job_id, error_message=str(exc))
         if retry is not None:
             raise retry(exc)
         raise

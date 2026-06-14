@@ -1,21 +1,23 @@
 <script setup lang="ts">
 import { ref, computed, watch, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { FileText } from 'lucide-vue-next'
+import { FileText, GripVertical, Trash2 } from 'lucide-vue-next'
 import DragDropZone from '@/components/pdf/DragDropZone.vue'
 import PageThumbnail from '@/components/pdf/PageThumbnail.vue'
 import Button from '@/components/common/Button.vue'
-import Card from '@/components/common/Card.vue'
-import Modal from '@/components/common/Modal.vue'
-import ProgressBar from '@/components/common/ProgressBar.vue'
 import CloudToggle from '@/components/common/CloudToggle.vue'
 import ToolPageShell from '@/components/tools/ToolPageShell.vue'
+import ToolWorkspace from '@/components/tools/ToolWorkspace.vue'
+import ToolActionPanel from '@/components/tools/ToolActionPanel.vue'
+import ToolResultPanel from '@/components/tools/ToolResultPanel.vue'
 import { getPDFPageCount } from '@/utils/pdf/merge'
 import { memoryManager } from '@/utils/memory-manager'
 import { useDragSort } from '@/composables/useDragSort'
 import { usePDFThumbnail } from '@/composables/usePDFThumbnail'
 import { usePDFWorker } from '@/composables/usePDFWorker'
 import { useCloudProcessing } from '@/composables/useCloudProcessing'
+import { useToolFileSelection } from '@/composables/useToolFileSelection'
+import { useToolProcessingState } from '@/composables/useToolProcessingState'
 import { fileAPI } from '@/services/api'
 import { historyManager } from '@/utils/history-manager'
 import { useUserStore } from '@/stores/user'
@@ -32,15 +34,28 @@ interface FileWithPages {
   pages: number[]
 }
 
-const selectedFiles = ref<FileWithPages[]>([])
+const {
+  selectedItems: selectedFiles,
+  fileError,
+  appendItems: appendSelectedFiles,
+  clearSelection,
+  setFileError,
+  clearFileError,
+} = useToolFileSelection<FileWithPages>()
 const useCloud = ref(false)
-const isProcessing = ref(false)
-const processingProgress = ref(0)
-const processingStatus = ref('')
 const showSuccessModal = ref(false)
 const resultUrl = ref('')
 const resultFileName = ref('')
-const errorMessage = ref('')
+const {
+  isProcessing,
+  processingProgress,
+  processingStatus,
+  processingError,
+  startProcessing,
+  updateProcessing,
+  resetProcessing,
+  failProcessing,
+} = useToolProcessingState()
 
 const {
   items: sortedFiles,
@@ -71,19 +86,20 @@ const handleFilesSelected = async (files: File[]) => {
       generateMultipleThumbnails(file, pages.slice(0, 5), { width: 200 })
     }
 
-    selectedFiles.value.push(...filesWithPages)
+    appendSelectedFiles(filesWithPages)
     useCloud.value = shouldPreferCloudProcessing(
       selectedFiles.value.map((item) => item.file),
       userStore.canUseCloudFeatures,
     )
-    errorMessage.value = ''
+    clearFileError()
+    resetProcessing()
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : copy.value.errorLoad
+    setFileError(error instanceof Error ? error.message : copy.value.errorLoad)
   }
 }
 
 const handleError = (message: string) => {
-  errorMessage.value = message
+  setFileError(message)
 }
 
 const removeFile = (index: number) => {
@@ -97,9 +113,9 @@ const removeFile = (index: number) => {
 
 const clearAll = () => {
   sortedFiles.value.forEach((item) => clearThumbnails(item.file))
-  selectedFiles.value = []
+  clearSelection()
   useCloud.value = false
-  errorMessage.value = ''
+  resetProcessing()
 
   if (resultUrl.value) {
     memoryManager.revokeObjectURL(resultUrl.value)
@@ -109,7 +125,7 @@ const clearAll = () => {
 
 const mergePDFFiles = async () => {
   if (sortedFiles.value.length < 2) {
-    errorMessage.value = copy.value.errorMinFiles
+    failProcessing(copy.value.errorMinFiles)
     return
   }
 
@@ -118,14 +134,11 @@ const mergePDFFiles = async () => {
     return
   }
 
-  isProcessing.value = true
-  processingProgress.value = 0
-  processingStatus.value = copy.value.statusPreparing
-  errorMessage.value = ''
+  startProcessing(copy.value.statusPreparing)
 
   try {
     const filesToMerge = sortedFiles.value.map((item) => item.file)
-    processingStatus.value = t('tools.merge.page.statusProcessing', { count: filesToMerge.length })
+    updateProcessing(0, t('tools.merge.page.statusProcessing', { count: filesToMerge.length }))
     const taskId = await submitTask('merge', { files: filesToMerge })
 
     const progressInterval = setInterval(() => {
@@ -141,8 +154,7 @@ const mergePDFFiles = async () => {
     const mergedBlob = await waitForTask(taskId) as Blob
     clearInterval(progressInterval)
 
-    processingProgress.value = 100
-    processingStatus.value = copy.value.statusDone
+    updateProcessing(100, copy.value.statusDone)
 
     resultUrl.value = memoryManager.createTemporaryURL(mergedBlob)
     const timestamp = new Date().toISOString().slice(0, 10)
@@ -157,18 +169,15 @@ const mergePDFFiles = async () => {
 
     showSuccessModal.value = true
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : copy.value.errorFailed
+    failProcessing(error instanceof Error ? error.message : copy.value.errorFailed)
   } finally {
     isProcessing.value = false
-    processingProgress.value = 0
-    processingStatus.value = ''
   }
 }
 
 const mergeInCloud = async () => {
   if (sortedFiles.value.length < 2) return
-  isProcessing.value = true
-  errorMessage.value = ''
+  startProcessing(copy.value.statusPreparing)
 
   try {
     const fileIds: string[] = []
@@ -194,7 +203,7 @@ const mergeInCloud = async () => {
 
     showSuccessModal.value = true
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : copy.value.errorCloudFailed
+    failProcessing(error instanceof Error ? error.message : copy.value.errorCloudFailed)
   } finally {
     isProcessing.value = false
   }
@@ -217,6 +226,13 @@ const startNew = () => {
 const totalPages = computed(() => {
   return sortedFiles.value.reduce((sum, item) => sum + item.pageCount, 0)
 })
+
+const actionStats = computed(() => [
+  { label: copy.value.fileCount, value: sortedFiles.value.length },
+  { label: copy.value.pageCount, value: totalPages.value },
+])
+
+const workspaceError = computed(() => fileError.value || processingError.value)
 
 const copy = computed<ToolPageCopy>(() => ({
   ...(tm('tools.merge.page') as ToolPageCopy),
@@ -243,34 +259,35 @@ onUnmounted(() => {
       <template #badgeIcon>
         <FileText class="h-4 w-4" />
       </template>
-      <div
-        v-if="errorMessage"
-        class="mb-4 rounded-lg bg-error-light p-4 text-error-dark dark:bg-error/20 dark:text-error"
-      >
-        {{ errorMessage }}
-      </div>
 
-      <DragDropZone
-        v-if="selectedFiles.length === 0"
-        accept="pdf"
-        :multiple="true"
-        :max-files="20"
-        @files-selected="handleFilesSelected"
-        @error="handleError"
-      />
-
-      <div
-        v-else
-        class="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]"
+      <ToolWorkspace
+        :error-message="workspaceError"
+        layout="wide-primary"
       >
-        <Card class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
-          <div class="space-y-6">
-            <div class="flex items-start justify-between gap-4">
+        <template
+          v-if="selectedFiles.length === 0"
+          #upload
+        >
+          <DragDropZone
+            accept="pdf"
+            :multiple="true"
+            :max-files="20"
+            @files-selected="handleFilesSelected"
+            @error="handleError"
+          />
+        </template>
+
+        <template
+          v-if="selectedFiles.length > 0"
+          #primary
+        >
+          <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/90 sm:p-5">
+            <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-blue-500">
+                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-blue-600 dark:text-blue-300">
                   {{ copy.queueLabel }}
                 </p>
-                <h2 class="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">
+                <h2 class="mt-2 text-xl font-semibold text-slate-950 dark:text-white">
                   {{ copy.queueTitle }}
                 </h2>
                 <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
@@ -280,6 +297,7 @@ onUnmounted(() => {
               <Button
                 variant="ghost"
                 size="sm"
+                class="self-start"
                 @click="clearAll"
               >
                 {{ copy.clear }}
@@ -306,18 +324,10 @@ onUnmounted(() => {
               >
                 <div class="flex items-center gap-4">
                   <div class="cursor-move text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-                    <svg
-                      class="h-6 w-6"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        d="M7 2a2 2 0 00-2 2v12a2 2 0 002 2h6a2 2 0 002-2V4a2 2 0 00-2-2H7zm3 14a1 1 0 100-2 1 1 0 000 2zm0-4a1 1 0 100-2 1 1 0 000 2zm0-4a1 1 0 100-2 1 1 0 000 2z"
-                      />
-                    </svg>
+                    <GripVertical class="h-5 w-5" />
                   </div>
 
-                  <div class="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white shadow-sm shadow-blue-200">
+                  <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-blue-600 text-sm font-bold text-white shadow-sm shadow-blue-200">
                     {{ index + 1 }}
                   </div>
 
@@ -331,23 +341,11 @@ onUnmounted(() => {
                   </div>
 
                   <button
-                    class="rounded-xl p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-error dark:hover:bg-slate-800"
+                    class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-slate-100 hover:text-error dark:hover:bg-slate-800"
                     :aria-label="`Remove ${item.file.name}`"
                     @click="removeFile(index)"
                   >
-                    <svg
-                      class="h-5 w-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                      />
-                    </svg>
+                    <Trash2 class="h-4 w-4" />
                   </button>
                 </div>
 
@@ -377,7 +375,6 @@ onUnmounted(() => {
               accept="pdf"
               :multiple="true"
               :max-files="20"
-              class="min-h-[150px]"
               @files-selected="handleFilesSelected"
               @error="handleError"
             >
@@ -385,91 +382,42 @@ onUnmounted(() => {
                 {{ copy.addMore }}
               </p>
             </DragDropZone>
-          </div>
-        </Card>
+          </section>
+        </template>
 
-        <Card class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
-          <div class="space-y-5">
-            <div>
-              <p class="text-xs font-semibold uppercase tracking-[0.22em] text-blue-500">
-                {{ copy.actionLabel }}
-              </p>
-              <h3 class="mt-2 text-xl font-semibold text-slate-900 dark:text-white">
-                {{ copy.actionTitle }}
-              </h3>
-              <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                {{ copy.actionDesc }}
-              </p>
-            </div>
-
+        <template
+          v-if="selectedFiles.length > 0"
+          #secondary
+        >
+          <ToolActionPanel
+            :label="copy.actionLabel"
+            :title="copy.actionTitle"
+            :description="copy.actionDesc"
+            accent="blue"
+            :stats="actionStats"
+            :show-progress="isProcessing"
+            :progress="processingProgress"
+            :progress-label="processingStatus"
+            :action-label="isProcessing ? t('common.processing') : copy.merge"
+            :loading="isProcessing"
+            :disabled="sortedFiles.length < 2"
+            @action="mergePDFFiles"
+          >
             <CloudToggle v-model="useCloud" />
+          </ToolActionPanel>
+        </template>
+      </ToolWorkspace>
 
-            <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-              <div class="rounded-[22px] border border-slate-200 bg-slate-50/80 px-4 py-4 dark:border-slate-800 dark:bg-slate-950/40">
-                <p class="text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">{{ copy.fileCount }}</p>
-                <p class="mt-2 text-lg font-semibold text-slate-900 dark:text-white">
-                  {{ sortedFiles.length }}
-                </p>
-              </div>
-              <div class="rounded-[22px] border border-slate-200 bg-slate-50/80 px-4 py-4 dark:border-slate-800 dark:bg-slate-950/40">
-                <p class="text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">{{ copy.pageCount }}</p>
-                <p class="mt-2 text-lg font-semibold text-slate-900 dark:text-white">
-                  {{ totalPages }}
-                </p>
-              </div>
-            </div>
-
-            <ProgressBar
-              v-if="isProcessing"
-              :progress="processingProgress"
-              :label="processingStatus"
-              variant="primary"
-              size="md"
-            />
-
-            <Button
-              variant="primary"
-              size="lg"
-              :loading="isProcessing"
-              :disabled="sortedFiles.length < 2"
-              full-width
-              @click="mergePDFFiles"
-            >
-              {{ isProcessing ? t('common.processing') : copy.merge }}
-            </Button>
-          </div>
-        </Card>
-      </div>
-
-      <Modal
+      <ToolResultPanel
         v-model="showSuccessModal"
         :title="copy.successTitle"
+        :message="copy.successMessage.replace('{count}', String(sortedFiles.length)).replace('{pages}', String(totalPages))"
+        :primary-label="t('common.download')"
+        :secondary-label="copy.mergeMore"
         size="md"
+        @primary="downloadResult"
+        @secondary="startNew"
       >
-        <div class="text-center">
-          <p class="mb-6 text-gray-600 dark:text-gray-300">
-            {{ copy.successMessage.replace('{count}', String(sortedFiles.length)).replace('{pages}', String(totalPages)) }}
-          </p>
-
-          <div class="flex flex-col gap-3">
-            <Button
-              variant="primary"
-              size="lg"
-              full-width
-              @click="downloadResult"
-            >
-              {{ t('common.download') }}
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              full-width
-              @click="startNew"
-            >
-              {{ copy.mergeMore }}
-            </Button>
-          </div>
-        </div>
-      </Modal>
+      </ToolResultPanel>
   </ToolPageShell>
 </template>

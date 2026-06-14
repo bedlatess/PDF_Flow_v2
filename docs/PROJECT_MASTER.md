@@ -963,6 +963,47 @@ Rollback:
 bash scripts/rollback-main.sh
 ```
 
+Tool workspace Phase 2 local result:
+
+- Scope: migrated structure-similar local tool pages to the shared tool workspace layer without touching payment logic or adding new PDF features.
+- Migrated pages:
+  - Rotate PDF
+  - Split PDF
+  - PDF to Image
+  - Image to PDF
+  - Delete pages
+  - Organize pages
+  - Crop PDF
+  - Page numbers
+- Shared UI/state now reused by the migrated pages:
+  - `ToolWorkspace`
+  - `ToolActionPanel`
+  - `ToolResultPanel`
+  - `ToolErrorAlert`
+  - `useToolFileSelection`
+  - `useToolProcessingState`
+- Deliberately not touched in this batch:
+  - OCR PDF
+  - Office to PDF
+  - AI PDF Analyzer
+  - Sign PDF
+  - Fill Form PDF
+  - Annotate PDF
+- Notes:
+  - PDF to Image keeps its page image result grid local to the page.
+  - Organize PDF keeps the thumbnail drag-and-drop grid local to the page.
+  - Crop PDF keeps its visual crop preview and redaction warning local to the page.
+  - Image to PDF now normalizes images through canvas before passing them to jsPDF, fixing PNG CRC failures from tiny/edge-case PNG files.
+  - Delete pages E2E locator was scoped to the main tool surface to avoid footer copy collisions.
+- Local checks:
+  - `npm run type-check`
+  - `npm run test:unit:ci`
+  - `npm run build`
+  - `npm run build:admin`
+  - `npx playwright test tests/e2e-playwright/local-pdf-workflows.spec.ts tests/e2e-playwright/advanced-pdf-workflows.spec.ts --project=chromium --reporter=line`
+  - `npx playwright test tests/e2e-playwright/merge-pdf.spec.ts tests/e2e-playwright/compress-pdf.spec.ts tests/e2e-playwright/tool-pages-matrix.spec.ts --project=chromium --reporter=line`
+- Production acceptance target for this batch: public tool pages render consistently on desktop/mobile and the migrated workflows have no functional regression. Do not start the next special-tool migration batch until this production batch is accepted.
+
 Admin bootstrap:
 
 ```bash

@@ -5,18 +5,21 @@ import { FileText } from 'lucide-vue-next'
 import DragDropZone from '@/components/pdf/DragDropZone.vue'
 import FilePreview from '@/components/pdf/FilePreview.vue'
 import Button from '@/components/common/Button.vue'
-import Card from '@/components/common/Card.vue'
 import Modal from '@/components/common/Modal.vue'
-import ProgressBar from '@/components/common/ProgressBar.vue'
 import PageSelector from '@/components/pdf/PageSelector.vue'
 import PDFViewer from '@/components/pdf/PDFViewer.vue'
 import CloudToggle from '@/components/common/CloudToggle.vue'
 import ToolPageShell from '@/components/tools/ToolPageShell.vue'
+import ToolWorkspace from '@/components/tools/ToolWorkspace.vue'
+import ToolActionPanel from '@/components/tools/ToolActionPanel.vue'
+import ToolResultPanel from '@/components/tools/ToolResultPanel.vue'
 import { getPDFPageCount } from '@/utils/pdf/merge'
 import { extractPDFPages } from '@/utils/pdf/split'
 import { memoryManager } from '@/utils/memory-manager'
 import { usePDFWorker } from '@/composables/usePDFWorker'
 import { useCloudProcessing } from '@/composables/useCloudProcessing'
+import { useToolFileSelection } from '@/composables/useToolFileSelection'
+import { useToolProcessingState } from '@/composables/useToolProcessingState'
 import { fileAPI } from '@/services/api'
 import { historyManager } from '@/utils/history-manager'
 import { useUserStore } from '@/stores/user'
@@ -27,51 +30,68 @@ const userStore = useUserStore()
 
 type ToolPageCopy = Record<string, any>
 
-const selectedFile = ref<File | null>(null)
+const {
+  selectedItems: selectedFiles,
+  fileError,
+  setItems: setSelectedFiles,
+  clearSelection,
+  setFileError,
+  clearFileError,
+} = useToolFileSelection<File>()
 const totalPages = ref(0)
 const pageRanges = ref('')
 const useVisualSelector = ref(false)
 const useCloud = ref(false)
 const showPageSelector = ref(false)
 const showPDFViewer = ref(false)
-const isProcessing = ref(false)
-const processingProgress = ref(0)
-const processingStatus = ref('')
 const showSuccessModal = ref(false)
 const resultUrl = ref('')
-const errorMessage = ref('')
 
 const { destroyWorker } = usePDFWorker()
 const { processInCloud } = useCloudProcessing()
+const {
+  isProcessing,
+  processingProgress,
+  processingStatus,
+  processingError,
+  startProcessing,
+  updateProcessing,
+  resetProcessing,
+  failProcessing,
+} = useToolProcessingState()
 
 const copy = computed<ToolPageCopy>(() => ({
   ...(tm('tools.split.page') as ToolPageCopy),
   rangeLabel: t('tools.split.page.rangeLabel', { count: totalPages.value }),
 }))
+const selectedFile = computed(() => selectedFiles.value[0] || null)
+const workspaceError = computed(() => fileError.value || processingError.value)
 
 const handleFilesSelected = async (files: File[]) => {
   try {
-    selectedFile.value = files[0]
+    setSelectedFiles(files.slice(0, 1))
     useCloud.value = shouldPreferCloudProcessing(files.slice(0, 1), userStore.canUseCloudFeatures)
     totalPages.value = await getPDFPageCount(files[0])
-    errorMessage.value = ''
+    clearFileError()
+    resetProcessing()
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : copy.value.errorLoad
+    clearSelection()
+    setFileError(error instanceof Error ? error.message : copy.value.errorLoad)
   }
 }
 
 const handleError = (message: string) => {
-  errorMessage.value = message
+  setFileError(message)
 }
 
 const clearAll = () => {
-  selectedFile.value = null
+  clearSelection()
   useCloud.value = false
   totalPages.value = 0
   pageRanges.value = ''
   useVisualSelector.value = false
   showPageSelector.value = false
-  errorMessage.value = ''
+  resetProcessing()
   if (resultUrl.value) {
     memoryManager.revokeObjectURL(resultUrl.value)
     resultUrl.value = ''
@@ -114,7 +134,7 @@ const formatPagesAsRanges = (pages: number[]): string => {
 
 const handlePageSelect = (pages: number[]) => {
   if (pages.length === 0) {
-    errorMessage.value = copy.value.errorNoPages
+    failProcessing(copy.value.errorNoPages)
     return
   }
 
@@ -139,7 +159,7 @@ const extractPages = async () => {
   if (!selectedFile.value) return
 
   if (!pageRanges.value.trim()) {
-    errorMessage.value = copy.value.errorNoRange
+    failProcessing(copy.value.errorNoRange)
     return
   }
 
@@ -148,18 +168,13 @@ const extractPages = async () => {
     return
   }
 
-  isProcessing.value = true
-  processingProgress.value = 0
-  processingStatus.value = copy.value.statusPreparing
-  errorMessage.value = ''
+  startProcessing(copy.value.statusPreparing)
 
   try {
-    processingProgress.value = 35
-    processingStatus.value = copy.value.statusProcessing
+    updateProcessing(35, copy.value.statusProcessing)
     const blob = await extractPDFPages(selectedFile.value, pageRanges.value)
 
-    processingProgress.value = 100
-    processingStatus.value = copy.value.statusDone
+    updateProcessing(100, copy.value.statusDone)
     resultUrl.value = memoryManager.createTemporaryURL(blob)
 
     historyManager.addHistory({
@@ -171,19 +186,16 @@ const extractPages = async () => {
 
     showSuccessModal.value = true
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : copy.value.errorFailed
+    failProcessing(error instanceof Error ? error.message : copy.value.errorFailed)
   } finally {
     isProcessing.value = false
-    processingProgress.value = 0
-    processingStatus.value = ''
   }
 }
 
 const splitInCloud = async () => {
   if (!selectedFile.value) return
 
-  isProcessing.value = true
-  errorMessage.value = ''
+  startProcessing(copy.value.statusPreparing)
 
   try {
     const ranges = pageRanges.value.split(',').map((range) => {
@@ -206,7 +218,7 @@ const splitInCloud = async () => {
 
     showSuccessModal.value = true
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : copy.value.errorCloudFailed
+    failProcessing(error instanceof Error ? error.message : copy.value.errorCloudFailed)
   } finally {
     isProcessing.value = false
   }
@@ -241,39 +253,40 @@ onUnmounted(() => {
       <template #badgeIcon>
         <FileText class="h-4 w-4" />
       </template>
-      <div
-        v-if="errorMessage"
-        class="mb-4 rounded-lg bg-error-light p-4 text-error-dark dark:bg-error/20 dark:text-error"
-      >
-        {{ errorMessage }}
-      </div>
 
-      <DragDropZone
-        v-if="!selectedFile"
-        accept="pdf"
-        :multiple="false"
-        @files-selected="handleFilesSelected"
-        @error="handleError"
-      />
-
-      <div
-        v-else
-        class="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]"
+      <ToolWorkspace
+        :error-message="workspaceError"
+        layout="wide-secondary"
       >
-        <div class="space-y-6">
+        <template
+          v-if="!selectedFile"
+          #upload
+        >
+          <DragDropZone
+            accept="pdf"
+            :multiple="false"
+            @files-selected="handleFilesSelected"
+            @error="handleError"
+          />
+        </template>
+
+        <template
+          v-if="selectedFile"
+          #primary
+        >
           <FilePreview
             :file="selectedFile"
             @remove="clearAll"
             @preview="handlePreview"
           />
 
-          <Card class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
+          <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/90 sm:p-5">
             <div class="space-y-5">
               <div>
-                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-500">
+                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-600 dark:text-cyan-300">
                   {{ copy.setupLabel }}
                 </p>
-                <h2 class="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">
+                <h2 class="mt-2 text-xl font-semibold text-slate-950 dark:text-white">
                   {{ copy.setupTitle }}
                 </h2>
                 <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
@@ -310,20 +323,26 @@ onUnmounted(() => {
                 </p>
               </div>
             </div>
-          </Card>
-        </div>
+          </section>
+        </template>
 
-        <Card class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
-          <div class="space-y-5">
-            <div>
-              <p class="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-500">
-                {{ copy.actionLabel }}
-              </p>
-              <h3 class="mt-2 text-xl font-semibold text-slate-900 dark:text-white">
-                {{ copy.actionTitle }}
-              </h3>
-            </div>
-
+        <template
+          v-if="selectedFile"
+          #secondary
+        >
+          <ToolActionPanel
+            :label="copy.actionLabel"
+            :title="copy.actionTitle"
+            accent="blue"
+            :show-progress="isProcessing"
+            :progress="processingProgress"
+            :progress-label="processingStatus"
+            :action-label="isProcessing ? t('common.processing') : copy.extract"
+            :loading="isProcessing"
+            @action="extractPages"
+          >
+            <CloudToggle v-model="useCloud" />
+            <template #details>
             <div class="rounded-md border border-slate-200 bg-slate-50/80 p-5 dark:border-slate-800 dark:bg-slate-950/40">
               <ul class="space-y-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
                 <li
@@ -334,27 +353,10 @@ onUnmounted(() => {
                 </li>
               </ul>
             </div>
-
-            <ProgressBar
-              v-if="isProcessing"
-              :progress="processingProgress"
-              :label="processingStatus"
-              variant="primary"
-              size="md"
-            />
-
-            <Button
-              variant="primary"
-              size="lg"
-              :loading="isProcessing"
-              full-width
-              @click="extractPages"
-            >
-              {{ isProcessing ? t('common.processing') : copy.extract }}
-            </Button>
-          </div>
-        </Card>
-      </div>
+            </template>
+          </ToolActionPanel>
+        </template>
+      </ToolWorkspace>
 
       <Modal
         v-model="showPageSelector"
@@ -382,24 +384,14 @@ onUnmounted(() => {
         />
       </Modal>
 
-      <Modal
+      <ToolResultPanel
         v-model="showSuccessModal"
         :title="copy.successTitle"
+        :message="copy.successMessage"
+        :primary-label="t('common.download')"
         size="md"
+        @primary="downloadResult"
       >
-        <div class="text-center">
-          <p class="mb-6 text-gray-600 dark:text-gray-300">
-            {{ copy.successMessage }}
-          </p>
-          <Button
-            variant="primary"
-            size="lg"
-            full-width
-            @click="downloadResult"
-          >
-            {{ t('common.download') }}
-          </Button>
-        </div>
-      </Modal>
+      </ToolResultPanel>
   </ToolPageShell>
 </template>

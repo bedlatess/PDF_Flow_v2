@@ -5,9 +5,12 @@ import { FileText } from 'lucide-vue-next'
 import DragDropZone from '@/components/pdf/DragDropZone.vue'
 import FilePreview from '@/components/pdf/FilePreview.vue'
 import Button from '@/components/common/Button.vue'
-import Card from '@/components/common/Card.vue'
 import CloudToggle from '@/components/common/CloudToggle.vue'
+import ToolWorkspace from '@/components/tools/ToolWorkspace.vue'
+import ToolActionPanel from '@/components/tools/ToolActionPanel.vue'
 import { useCloudProcessing } from '@/composables/useCloudProcessing'
+import { useToolFileSelection } from '@/composables/useToolFileSelection'
+import { useToolProcessingState } from '@/composables/useToolProcessingState'
 import { fileAPI } from '@/services/api'
 import { historyManager } from '@/utils/history-manager'
 import ToolPageShell from '@/components/tools/ToolPageShell.vue'
@@ -19,30 +22,45 @@ const userStore = useUserStore()
 
 type ToolPageCopy = Record<string, any>
 
-const selectedFile = ref<File | null>(null)
+const {
+  selectedItems: selectedFiles,
+  fileError,
+  setItems: setSelectedFiles,
+  clearSelection,
+  setFileError,
+  clearFileError,
+} = useToolFileSelection<File>()
 const imageFormat = ref<'png' | 'jpeg'>('png')
 const useCloud = ref(false)
-const isProcessing = ref(false)
 const resultImages = ref<{ url: string; blob: Blob }[]>([])
-const errorMessage = ref('')
 const successMessage = ref('')
 
 const { processInCloud } = useCloudProcessing()
+const {
+  isProcessing,
+  processingError,
+  startProcessing,
+  resetProcessing,
+  failProcessing,
+} = useToolProcessingState()
 
 const copy = computed<ToolPageCopy>(() => ({
   ...(tm('tools.pdfToImage.page') as ToolPageCopy),
   readyTitle: t('tools.pdfToImage.page.readyTitle', { count: resultImages.value.length }),
 }))
+const selectedFile = computed(() => selectedFiles.value[0] || null)
+const workspaceError = computed(() => fileError.value || processingError.value)
 
 const handleFilesSelected = (files: File[]) => {
-  selectedFile.value = files[0]
+  setSelectedFiles(files.slice(0, 1))
   useCloud.value = shouldPreferCloudProcessing(files.slice(0, 1), userStore.canUseCloudFeatures)
-  errorMessage.value = ''
+  clearFileError()
+  resetProcessing()
   successMessage.value = ''
 }
 
 const handleError = (message: string) => {
-  errorMessage.value = message
+  setFileError(message)
 }
 
 const revokeImageUrls = () => {
@@ -51,9 +69,9 @@ const revokeImageUrls = () => {
 }
 
 const clearAll = () => {
-  selectedFile.value = null
+  clearSelection()
   useCloud.value = false
-  errorMessage.value = ''
+  resetProcessing()
   successMessage.value = ''
   revokeImageUrls()
 }
@@ -66,8 +84,7 @@ const convertToImages = async () => {
     return
   }
 
-  isProcessing.value = true
-  errorMessage.value = ''
+  startProcessing()
   successMessage.value = ''
   revokeImageUrls()
 
@@ -86,7 +103,7 @@ const convertToImages = async () => {
       resultSize: blobs.reduce((sum, blob) => sum + blob.size, 0),
     })
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : copy.value.errorFailed
+    failProcessing(error instanceof Error ? error.message : copy.value.errorFailed)
   } finally {
     isProcessing.value = false
   }
@@ -95,8 +112,7 @@ const convertToImages = async () => {
 const convertInCloud = async () => {
   if (!selectedFile.value) return
 
-  isProcessing.value = true
-  errorMessage.value = ''
+  startProcessing()
   successMessage.value = ''
   revokeImageUrls()
 
@@ -121,7 +137,7 @@ const convertInCloud = async () => {
 
     successMessage.value = copy.value.successCloud
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : copy.value.errorCloudFailed
+    failProcessing(error instanceof Error ? error.message : copy.value.errorCloudFailed)
   } finally {
     isProcessing.value = false
   }
@@ -157,12 +173,6 @@ onUnmounted(() => {
       <template #badgeIcon>
         <FileText class="h-4 w-4" />
       </template>
-      <div
-        v-if="errorMessage"
-        class="mb-4 rounded-lg bg-error-light p-4 text-error-dark dark:bg-error/20 dark:text-error"
-      >
-        {{ errorMessage }}
-      </div>
 
       <div
         v-if="successMessage"
@@ -171,31 +181,38 @@ onUnmounted(() => {
         {{ successMessage }}
       </div>
 
-      <DragDropZone
-        v-if="!selectedFile"
-        accept="pdf"
-        :multiple="false"
-        @files-selected="handleFilesSelected"
-        @error="handleError"
-      />
-
-      <div
-        v-else
-        class="grid gap-6 xl:grid-cols-[0.88fr_1.12fr]"
+      <ToolWorkspace
+        :error-message="workspaceError"
+        layout="wide-secondary"
       >
-        <div class="space-y-6">
+        <template
+          v-if="!selectedFile"
+          #upload
+        >
+          <DragDropZone
+            accept="pdf"
+            :multiple="false"
+            @files-selected="handleFilesSelected"
+            @error="handleError"
+          />
+        </template>
+
+        <template
+          v-if="selectedFile"
+          #primary
+        >
           <FilePreview
             :file="selectedFile"
             @remove="clearAll"
           />
 
-          <Card class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
+          <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/90 sm:p-5">
             <div class="space-y-5">
               <div>
-                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-sky-500">
+                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-sky-600 dark:text-sky-300">
                   {{ copy.outputLabel }}
                 </p>
-                <h2 class="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">
+                <h2 class="mt-2 text-xl font-semibold text-slate-950 dark:text-white">
                   {{ copy.outputTitle }}
                 </h2>
                 <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
@@ -220,31 +237,24 @@ onUnmounted(() => {
                   {{ fmt }}
                 </button>
               </div>
-
-              <Button
-                v-if="resultImages.length === 0"
-                variant="primary"
-                size="lg"
-                :loading="isProcessing"
-                full-width
-                @click="convertToImages"
-              >
-                {{ isProcessing ? t('common.processing') : copy.action }}
-              </Button>
             </div>
-          </Card>
-        </div>
+          </section>
+        </template>
 
-        <Card class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
-          <div class="space-y-5">
+        <template
+          v-if="selectedFile"
+          #secondary
+        >
+          <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/90 sm:p-5">
+            <div class="space-y-5">
             <div class="flex items-center justify-between gap-4">
               <div>
-                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-sky-500">
+                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-sky-600 dark:text-sky-300">
                   {{ copy.resultLabel }}
                 </p>
-                <h3 class="mt-2 text-xl font-semibold text-slate-900 dark:text-white">
+                <h2 class="mt-2 text-xl font-semibold text-slate-950 dark:text-white">
                   {{ resultImages.length > 0 ? copy.readyTitle : copy.waitingTitle }}
-                </h3>
+                </h2>
               </div>
 
               <Button
@@ -256,6 +266,18 @@ onUnmounted(() => {
                 {{ copy.downloadAll }}
               </Button>
             </div>
+
+            <ToolActionPanel
+              v-if="resultImages.length === 0"
+              :title="copy.action"
+              :description="copy.outputDesc"
+              accent="blue"
+              :action-label="isProcessing ? t('common.processing') : copy.action"
+              :loading="isProcessing"
+              @action="convertToImages"
+            >
+              <CloudToggle v-model="useCloud" />
+            </ToolActionPanel>
 
             <div
               v-if="resultImages.length === 0"
@@ -286,8 +308,9 @@ onUnmounted(() => {
                 </div>
               </div>
             </div>
-          </div>
-        </Card>
-      </div>
+            </div>
+          </section>
+        </template>
+      </ToolWorkspace>
   </ToolPageShell>
 </template>

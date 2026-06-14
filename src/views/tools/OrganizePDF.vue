@@ -7,10 +7,13 @@ import FilePreview from '@/components/pdf/FilePreview.vue'
 import PageThumbnail from '@/components/pdf/PageThumbnail.vue'
 import PDFViewer from '@/components/pdf/PDFViewer.vue'
 import Button from '@/components/common/Button.vue'
-import Card from '@/components/common/Card.vue'
 import Modal from '@/components/common/Modal.vue'
-import ProgressBar from '@/components/common/ProgressBar.vue'
 import ToolPageShell from '@/components/tools/ToolPageShell.vue'
+import ToolWorkspace from '@/components/tools/ToolWorkspace.vue'
+import ToolActionPanel from '@/components/tools/ToolActionPanel.vue'
+import ToolResultPanel from '@/components/tools/ToolResultPanel.vue'
+import { useToolFileSelection } from '@/composables/useToolFileSelection'
+import { useToolProcessingState } from '@/composables/useToolProcessingState'
 import { getPDFPageCount } from '@/utils/pdf/merge'
 import { reorderPDFPages } from '@/utils/pdf/split'
 import { memoryManager } from '@/utils/memory-manager'
@@ -24,25 +27,47 @@ const { tm } = useI18n()
 
 type ToolPageCopy = Record<string, any>
 
-const selectedFile = ref<File | null>(null)
+const {
+  selectedItems: selectedFiles,
+  fileError,
+  setItems: setSelectedFiles,
+  clearSelection,
+  setFileError,
+  clearFileError,
+} = useToolFileSelection<File>()
 const pageItems = ref<PageItem[]>([])
 const draggingIndex = ref<number | null>(null)
 const dragOverIndex = ref<number | null>(null)
 const showPDFViewer = ref(false)
 const showSuccessModal = ref(false)
-const isProcessing = ref(false)
-const processingProgress = ref(0)
-const processingStatus = ref('')
 const resultUrl = ref('')
-const errorMessage = ref('')
+
+const {
+  isProcessing,
+  processingProgress,
+  processingStatus,
+  processingError,
+  startProcessing,
+  updateProcessing,
+  resetProcessing,
+  failProcessing,
+  clearProcessingError,
+} = useToolProcessingState()
 
 const copy = computed<ToolPageCopy>(() => tm('tools.organize.page') as ToolPageCopy)
 
+const selectedFile = computed(() => selectedFiles.value[0] || null)
+const workspaceError = computed(() => fileError.value || processingError.value)
 const totalPages = computed(() => pageItems.value.length)
 const orderedPages = computed(() => pageItems.value.map((item) => item.pageNumber))
 const hasOrderChanged = computed(() =>
   orderedPages.value.some((pageNumber, index) => pageNumber !== index + 1)
 )
+const actionStats = computed(() => [
+  { label: copy.value.pageCount, value: totalPages.value },
+  { label: copy.value.firstPage, value: orderedPages.value[0] || '-' },
+  { label: copy.value.lastPage, value: orderedPages.value[orderedPages.value.length - 1] || '-' },
+])
 
 const clearResult = () => {
   if (resultUrl.value) {
@@ -54,28 +79,29 @@ const clearResult = () => {
 const handleFilesSelected = async (files: File[]) => {
   try {
     clearResult()
-    selectedFile.value = files[0]
+    setSelectedFiles(files.slice(0, 1))
     const count = await getPDFPageCount(files[0])
     pageItems.value = Array.from({ length: count }, (_, index) => ({ pageNumber: index + 1 }))
-    errorMessage.value = ''
+    clearFileError()
+    resetProcessing()
   } catch (error) {
-    selectedFile.value = null
+    clearSelection()
     pageItems.value = []
-    errorMessage.value = error instanceof Error ? error.message : copy.value.errorLoad
+    setFileError(error instanceof Error ? error.message : copy.value.errorLoad)
   }
 }
 
 const handleError = (message: string) => {
-  errorMessage.value = message
+  setFileError(message)
 }
 
 const clearAll = () => {
-  selectedFile.value = null
+  clearSelection()
   pageItems.value = []
   draggingIndex.value = null
   dragOverIndex.value = null
   showPDFViewer.value = false
-  errorMessage.value = ''
+  resetProcessing()
   clearResult()
 }
 
@@ -86,7 +112,7 @@ const moveItem = (fromIndex: number, toIndex: number) => {
   const [item] = nextItems.splice(fromIndex, 1)
   nextItems.splice(toIndex, 0, item)
   pageItems.value = nextItems
-  errorMessage.value = ''
+  clearProcessingError()
 }
 
 const handleDragStart = (event: DragEvent, index: number) => {
@@ -127,7 +153,7 @@ const handleDragEnd = () => {
 
 const reverseOrder = () => {
   pageItems.value = [...pageItems.value].reverse()
-  errorMessage.value = ''
+  clearProcessingError()
 }
 
 const resetOrder = () => {
@@ -135,30 +161,25 @@ const resetOrder = () => {
     .map((item) => item.pageNumber)
     .sort((a, b) => a - b)
     .map((pageNumber) => ({ pageNumber }))
-  errorMessage.value = ''
+  clearProcessingError()
 }
 
 const organizePages = async () => {
   if (!selectedFile.value) return
 
   if (!hasOrderChanged.value) {
-    errorMessage.value = copy.value.errorNoChange
+    failProcessing(copy.value.errorNoChange)
     return
   }
 
-  isProcessing.value = true
-  processingProgress.value = 10
-  processingStatus.value = copy.value.statusPreparing
-  errorMessage.value = ''
+  startProcessing(copy.value.statusPreparing)
   clearResult()
 
   try {
-    processingProgress.value = 45
-    processingStatus.value = copy.value.statusProcessing
+    updateProcessing(45, copy.value.statusProcessing)
     const blob = await reorderPDFPages(selectedFile.value, orderedPages.value)
 
-    processingProgress.value = 100
-    processingStatus.value = copy.value.statusDone
+    updateProcessing(100, copy.value.statusDone)
     resultUrl.value = memoryManager.createTemporaryURL(blob)
 
     historyManager.addHistory({
@@ -170,11 +191,9 @@ const organizePages = async () => {
 
     showSuccessModal.value = true
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : copy.value.errorFailed
+    failProcessing(error instanceof Error ? error.message : copy.value.errorFailed)
   } finally {
     isProcessing.value = false
-    processingProgress.value = 0
-    processingStatus.value = ''
   }
 }
 
@@ -202,110 +221,40 @@ onUnmounted(clearResult)
       <template #badgeIcon>
         <Layers3 class="h-4 w-4" />
       </template>
-      <div
-        v-if="errorMessage"
-        class="mb-4 rounded-md border border-red-200 bg-red-50 p-4 text-sm leading-6 text-red-700 shadow-sm dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-100"
+      <ToolWorkspace
+        :error-message="workspaceError"
+        layout="wide-secondary"
       >
-        {{ errorMessage }}
-      </div>
+        <template
+          v-if="!selectedFile"
+          #upload
+        >
+          <DragDropZone
+            accept="pdf"
+            :multiple="false"
+            @files-selected="handleFilesSelected"
+            @error="handleError"
+          />
+        </template>
 
-      <DragDropZone
-        v-if="!selectedFile"
-        accept="pdf"
-        :multiple="false"
-        @files-selected="handleFilesSelected"
-        @error="handleError"
-      />
-
-      <div
-        v-else
-        class="space-y-6"
-      >
-        <div class="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-          <div class="space-y-6">
+        <template
+          v-if="selectedFile"
+          #primary
+        >
+          <div class="space-y-5">
             <FilePreview
               :file="selectedFile"
               @remove="clearAll"
               @preview="showPDFViewer = true"
             />
 
-            <Card class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
-              <div class="space-y-5">
-                <div>
-                  <p class="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-600">
-                    {{ copy.outputLabel }}
-                  </p>
-                  <h3 class="mt-2 text-xl font-semibold text-slate-900 dark:text-white">
-                    {{ copy.outputTitle }}
-                  </h3>
-                </div>
-
-                <div class="grid grid-cols-3 gap-3">
-                  <div class="rounded-[22px] border border-emerald-100 bg-emerald-50/80 p-4 dark:border-emerald-500/20 dark:bg-emerald-500/10">
-                    <p class="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-600">
-                      {{ copy.pageCount }}
-                    </p>
-                    <p class="mt-2 text-2xl font-bold text-slate-950 dark:text-white">
-                      {{ totalPages }}
-                    </p>
-                  </div>
-                  <div class="rounded-[22px] border border-cyan-100 bg-cyan-50/80 p-4 dark:border-cyan-500/20 dark:bg-cyan-500/10">
-                    <p class="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-600">
-                      {{ copy.firstPage }}
-                    </p>
-                    <p class="mt-2 text-2xl font-bold text-slate-950 dark:text-white">
-                      {{ orderedPages[0] || '-' }}
-                    </p>
-                  </div>
-                  <div class="rounded-[22px] border border-amber-100 bg-amber-50/80 p-4 dark:border-amber-500/20 dark:bg-amber-500/10">
-                    <p class="text-xs font-semibold uppercase tracking-[0.16em] text-amber-600">
-                      {{ copy.lastPage }}
-                    </p>
-                    <p class="mt-2 text-2xl font-bold text-slate-950 dark:text-white">
-                      {{ orderedPages[orderedPages.length - 1] || '-' }}
-                    </p>
-                  </div>
-                </div>
-
-                <div class="rounded-md border border-slate-200 bg-slate-50/80 p-5 dark:border-slate-800 dark:bg-slate-950/40">
-                  <ul class="space-y-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                    <li
-                      v-for="tip in copy.outputTips"
-                      :key="tip"
-                    >
-                      {{ tip }}
-                    </li>
-                  </ul>
-                </div>
-
-                <ProgressBar
-                  v-if="isProcessing"
-                  :progress="processingProgress"
-                  :label="processingStatus"
-                  variant="primary"
-                  size="md"
-                />
-
-                <Button
-                  variant="primary"
-                  size="lg"
-                  :loading="isProcessing"
-                  full-width
-                  @click="organizePages"
-                >
-                  {{ isProcessing ? copy.statusProcessing : copy.generate }}
-                </Button>
-              </div>
-            </Card>
-          </div>
-
-          <Card class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
-            <div class="mb-5 flex flex-wrap items-start justify-between gap-4">
+            <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/90 sm:p-5">
+              <div class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-600">
+                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-600 dark:text-emerald-300">
                   {{ copy.workspaceLabel }}
                 </p>
-                <h2 class="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">
+                <h2 class="mt-2 text-xl font-semibold text-slate-950 dark:text-white">
                   {{ copy.workspaceTitle }}
                 </h2>
                 <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300">
@@ -329,13 +278,13 @@ onUnmounted(clearResult)
                   {{ copy.reset }}
                 </Button>
               </div>
-            </div>
+              </div>
 
-            <p class="mb-4 rounded-md border border-emerald-100 bg-emerald-50/70 px-4 py-3 text-sm leading-6 text-emerald-800 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-100">
-              {{ copy.dragHint }}
-            </p>
+              <p class="mb-4 rounded-md border border-emerald-100 bg-emerald-50/70 px-4 py-3 text-sm leading-6 text-emerald-800 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-100">
+                {{ copy.dragHint }}
+              </p>
 
-            <div class="grid max-h-[680px] grid-cols-2 gap-4 overflow-y-auto pr-1 sm:grid-cols-3 xl:grid-cols-4">
+              <div class="grid max-h-[680px] grid-cols-2 gap-4 overflow-y-auto pr-1 sm:grid-cols-3 xl:grid-cols-4">
               <article
                 v-for="(item, index) in pageItems"
                 :key="item.pageNumber"
@@ -383,10 +332,42 @@ onUnmounted(clearResult)
                   </div>
                 </div>
               </article>
+              </div>
+            </section>
+          </div>
+        </template>
+
+        <template
+          v-if="selectedFile"
+          #secondary
+        >
+          <ToolActionPanel
+            :label="copy.outputLabel"
+            :title="copy.outputTitle"
+            accent="emerald"
+            :stats="actionStats"
+            :show-progress="isProcessing"
+            :progress="processingProgress"
+            :progress-label="processingStatus"
+            :action-label="isProcessing ? copy.statusProcessing : copy.generate"
+            :loading="isProcessing"
+            @action="organizePages"
+          >
+            <template #details>
+            <div class="rounded-md border border-slate-200 bg-slate-50/80 p-5 dark:border-slate-800 dark:bg-slate-950/40">
+              <ul class="space-y-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                <li
+                  v-for="tip in copy.outputTips"
+                  :key="tip"
+                >
+                  {{ tip }}
+                </li>
+              </ul>
             </div>
-          </Card>
-        </div>
-      </div>
+            </template>
+          </ToolActionPanel>
+        </template>
+      </ToolWorkspace>
 
       <Modal
         v-model="showPDFViewer"
@@ -400,24 +381,14 @@ onUnmounted(clearResult)
         />
       </Modal>
 
-      <Modal
+      <ToolResultPanel
         v-model="showSuccessModal"
         :title="copy.successTitle"
+        :message="copy.successMessage"
+        :primary-label="copy.download"
         size="md"
+        @primary="downloadResult"
       >
-        <div class="text-center">
-          <p class="mb-6 text-slate-600 dark:text-slate-300">
-            {{ copy.successMessage }}
-          </p>
-          <Button
-            variant="primary"
-            size="lg"
-            full-width
-            @click="downloadResult"
-          >
-            {{ copy.download }}
-          </Button>
-        </div>
-      </Modal>
+      </ToolResultPanel>
   </ToolPageShell>
 </template>

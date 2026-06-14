@@ -102,7 +102,7 @@ test.describe('Local PDF tool workflows', () => {
 
     await expect(page.getByRole('heading', { name: 'Choose pages to remove' })).toBeVisible()
     await page.getByLabel('2 pages available').fill('2')
-    await expect(page.getByText('Keep').locator('..')).toContainText('1')
+    await expect(page.getByRole('main').getByText('Keep').locator('..')).toContainText('1')
     await page.getByRole('button', { name: 'Delete selected pages' }).click()
 
     await expect(page.getByRole('dialog', { name: 'Pages deleted' })).toBeVisible({

@@ -35,7 +35,7 @@
     "creating": "Creating...",
     "privacyBadge": "Free workflow",
     "cloudToggle": {
-      "localTitle": "Free mode",
+      "localTitle": "Local processing",
       "localDesc": "Good for quick everyday files.",
       "cloudTitle": "Pro mode",
       "cloudDesc": "Use Pro for bigger files, OCR, Office, AI, and longer jobs.",

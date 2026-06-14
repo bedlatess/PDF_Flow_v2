@@ -30,7 +30,8 @@ export async function imagesToPDF(
 
     for (let index = 0; index < images.length; index += 1) {
       const imageData = await readImageAsDataURL(images[index])
-      const imgDimensions = await getImageDimensions(imageData)
+      const normalizedImage = await normalizeImageForPdf(imageData, options?.quality)
+      const imgDimensions = normalizedImage.dimensions
       const ratio = Math.min(
         pageWidth / imgDimensions.width,
         pageHeight / imgDimensions.height
@@ -45,7 +46,7 @@ export async function imagesToPDF(
         pdf.addPage()
       }
 
-      pdf.addImage(imageData, 'JPEG', x, y, width, height, undefined, 'FAST')
+      pdf.addImage(normalizedImage.dataUrl, 'JPEG', x, y, width, height, undefined, 'FAST')
     }
 
     return pdf.output('blob')
@@ -135,6 +136,40 @@ function getImageDimensions(dataURL: string): Promise<{ width: number; height: n
     img.onload = () => {
       resolve({ width: img.width, height: img.height })
     }
+    img.onerror = () => reject(new Error('Failed to load image'))
+    img.src = dataURL
+  })
+}
+
+async function normalizeImageForPdf(
+  dataURL: string,
+  quality = 0.92
+): Promise<{ dataUrl: string; dimensions: { width: number; height: number } }> {
+  const dimensions = await getImageDimensions(dataURL)
+  const img = await loadImage(dataURL)
+  const canvas = document.createElement('canvas')
+  const context = canvas.getContext('2d')
+
+  if (!context) {
+    throw new Error('Failed to prepare image')
+  }
+
+  canvas.width = dimensions.width
+  canvas.height = dimensions.height
+  context.fillStyle = '#ffffff'
+  context.fillRect(0, 0, canvas.width, canvas.height)
+  context.drawImage(img, 0, 0)
+
+  return {
+    dataUrl: canvas.toDataURL('image/jpeg', quality),
+    dimensions,
+  }
+}
+
+function loadImage(dataURL: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => resolve(img)
     img.onerror = () => reject(new Error('Failed to load image'))
     img.src = dataURL
   })

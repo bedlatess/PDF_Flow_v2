@@ -1293,6 +1293,45 @@ Admin Payment Providers Phase D local result:
     - `npm run build`
     - `npm run build:admin`
 
+Admin Payment Providers Phase D production result:
+
+- Deployed commit `ea1d8c5a93120abaf92fb7cc507f6b7290de6f01` to production with `scripts/deploy-main.sh`.
+- Production deploy result:
+  - `git pull --ff-only v2 main` fast-forwarded the server repository.
+  - Docker Compose rebuilt backend, celery worker, and frontend/admin images.
+  - Alembic `upgrade head` completed; no new Phase D migration was required.
+  - Deployment state now records `ea1d8c5a93120abaf92fb7cc507f6b7290de6f01`.
+  - Backend, frontend, celery worker, Postgres, and Redis containers are healthy.
+- Public smoke:
+  - `https://pdf.pawn.eu.org/health` returns healthy.
+  - `https://pdf.pawn.eu.org/zh-cn/pricing` returns HTTP 200.
+  - `https://admin.pawn.eu.org/` returns HTTP 200 with the admin app shell and noindex headers.
+- Admin Payment Providers verification:
+  - The production admin Payment Providers configuration center renders from backend provider registry metadata.
+  - Visible managed providers are exactly Stripe, PayPal, and GM Pay.
+  - Deprecated/hidden providers such as Alipay, WeChat, EPay, tokenpay, bepusdt, and okpay do not appear in the configuration center.
+  - Stripe fields render from metadata: `price_id_monthly`, `price_id_yearly`, `secret_key`, and `webhook_secret`.
+  - PayPal fields render from metadata: `api_base_url`, `client_id`, `webhook_id`, and `client_secret`.
+  - GM Pay fields render from metadata: `api_base_url`, `pid`, `currency`, `token`, `network`, `monthly_amount_cents`, `yearly_amount_cents`, `order_ttl_minutes`, `return_url`, and `secret_key`.
+  - Secret inputs are empty password fields with leave-blank behavior; API responses show only configured/tail status and do not expose plaintext secrets.
+  - `PAYMENT_CONFIG_ENCRYPTION_KEY` is available in production runtime and remains env-only.
+  - Readiness/validation status displays correctly:
+    - Stripe and PayPal show missing config because production DB config is not enabled/complete.
+    - GM Pay shows ready because production DB config is complete, while it remains disabled for checkout exposure.
+    - Local validation checks are visible: Stripe checkout schema, PayPal checkout schema, and GM Pay local signature generation.
+- Runtime/fallback verification:
+  - Admin `/api/v1/admin/payment-configs` returns registry metadata and readiness for Stripe, PayPal, and GM Pay.
+  - Public `/api/v1/payment/providers` still responds successfully and currently exposes only Stripe and PayPal as disabled because GM Pay remains disabled.
+  - Pricing `/api/v1/pricing/plans` remains DB-first and responds successfully.
+  - GM Pay monthly checkout amount resolution uses the provider config center amount when Phase C seeded plan mapping only contains the default catalog amount.
+  - GM Pay checkout item-name compatibility fix resolves the monthly item label as `PDF-Flow Pro monthly`.
+- Not run in this production verification:
+  - No real payment.
+  - No checkout order creation against live providers.
+  - No webhook `paid` transition.
+  - No automatic Pro entitlement activation.
+  - No Payment Reconciliation expansion, AI/OCR/Office provider configuration, or backend task-model refactor.
+
 Admin bootstrap:
 
 ```bash

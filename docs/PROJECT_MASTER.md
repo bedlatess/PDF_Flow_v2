@@ -1048,6 +1048,17 @@ Tool workspace Phase 3 local result:
   - `npx playwright test tests/e2e-playwright/advanced-pdf-workflows.spec.ts tests/e2e-playwright/local-pdf-workflows.spec.ts tests/e2e-playwright/tool-flow-regression.spec.ts tests/e2e-playwright/cloud-tool-access.spec.ts tests/e2e-playwright/advanced-cloud-tools.spec.ts tests/e2e-playwright/tool-pages-matrix.spec.ts --project=chromium --reporter=line`
 - Next target after acceptance: Phase 4 unified UI polish across Home, Tools Center, and tool pages. Do not start backend refactor code before the separate backend audit/design phase is approved.
 
+Tool workspace Phase 3 deployment result:
+
+- Deployed commit `7f8342fcd8fe92cbd8387f2e833522b6aa362f76` on 2026-06-14 with `bash scripts/deploy-main.sh`.
+- Server `.deploy_state/main/current_deployed_commit` records `7f8342fcd8fe92cbd8387f2e833522b6aa362f76`.
+- Production Compose services are healthy after deploy: backend, celery-worker, frontend, postgres, redis.
+- External smoke:
+  - `https://pdf.pawn.eu.org/zh-cn/tools/ocr` returns HTTP 200.
+  - `https://pdf.pawn.eu.org/zh-cn/tools/watermark` returns HTTP 200.
+  - `https://admin.pawn.eu.org/` returns HTTP 200.
+- Next approved work: Phase 4 unified frontend UI polish only. Keep payment logic, backend refactor code, and new PDF features out of this phase.
+
 Admin bootstrap:
 
 ```bash

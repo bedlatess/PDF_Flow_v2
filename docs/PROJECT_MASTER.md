@@ -1611,6 +1611,34 @@ Backend refactor R3 local checkpoint:
   - `python -m pytest backend/tests/test_pdf_tasks.py backend/tests/test_files.py backend/tests/test_admin_operations_domain.py -q`
   - `python -m pytest backend/tests -q` (`172 passed, 1 warning`)
 
+
+Backend refactor R3 production result:
+
+- Committed and pushed R3 as `642f36f0b0266036aaa74d4235557aed35186d62`.
+- Deployed R3 to production with the existing remote `scripts/deploy-main.sh` flow after local Windows preflight could not find Docker.
+- Production `.deploy_state/main/current_deployed_commit` records `642f36f0b0266036aaa74d4235557aed35186d62`.
+- Deployment rebuilt backend, celery-worker, public frontend, and admin frontend images; migrations ran with no new migration in R3.
+- Production health:
+  - backend, celery-worker, frontend, postgres, and redis containers are healthy.
+  - `http://localhost:8000/health` and `https://pdf.pawn.eu.org/health` return healthy.
+- Local PDF Celery durable job smoke covered all current backend local PDF Celery tasks:
+  - merge, split, compress, rotate, image-to-PDF, and PDF-to-images.
+  - Each task wrote Redis `job:{job_id}` pending before completion.
+  - Each task created a matching DB `ProcessingJob` with the same `job_id` and expected `job_type`.
+  - Each task completed through the API polling path with `progress=100`, `result_data`, and `output_file_url` in DB.
+  - Downloads still worked through the existing output path/output files result contract; split and PDF-to-images downloaded as zip.
+  - Route-compatible create/status response keys were unchanged from production response models.
+- Admin operations smoke:
+  - `/api/v1/admin/jobs` domain listing showed all six smoke jobs once each.
+  - DB durable rows were preferred over Redis rows for matching `job_id`.
+  - Operations overview still reported database and redis healthy.
+- Regression confirmations:
+  - Celery still registers OCR, Office, and the six PDF tasks.
+  - AI, advanced PDF, payment, OCR, and Office modules imported successfully.
+  - Recent backend/celery logs showed no traceback/exception/error lines after the smoke window.
+- Cleanup:
+  - Removed R3 smoke DB jobs, Redis `job:*` keys, Redis `file:*` keys, and generated temporary upload/result directories.
+
 Admin bootstrap:
 
 ```bash

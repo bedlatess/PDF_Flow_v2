@@ -1516,6 +1516,33 @@ Backend refactor R1 local checkpoint:
 - `admin/operations.py` now reuses the shared Redis job mapping helper.
 - No migration was added; existing `ProcessingJob` is only wrapped by the new repository/service for future durable job migration.
 
+Backend refactor R1 production result:
+
+- Committed and pushed R1 as `53effdc74801c4f24752348aad71ee8ff10b3d9f`.
+- Deployed R1 to production with `scripts/deploy-main.sh`.
+- Production `.deploy_state/main/current_deployed_commit` records `53effdc74801c4f24752348aad71ee8ff10b3d9f`.
+- Deployment rebuilt backend, celery-worker, public frontend, and admin frontend images.
+- Migrations ran successfully; no new migration was included in R1.
+- Production health:
+  - backend, celery-worker, frontend, postgres, and redis containers are healthy.
+  - `http://localhost:8000/health` returns healthy.
+  - `https://pdf.pawn.eu.org/health` returns healthy.
+- File task smoke:
+  - Uploaded a small PDF through `/api/v1/files/upload`.
+  - Created an existing async compress task through `/api/v1/files/compress`.
+  - Polled `/api/v1/files/jobs/{job_id}` from pending to completed.
+  - Downloaded the result through `/api/v1/files/download/{job_id}`.
+  - Response shape stayed route-compatible: `job_id`, `status`, `created_at`, `updated_at`, `progress`, `result`, `error`.
+- Admin operations smoke:
+  - Created and removed a temporary admin smoke account.
+  - `/api/v1/admin/jobs` returned Redis-backed jobs.
+  - `/api/v1/admin/operations` reported database, redis, and celery_worker healthy.
+- Regression confirmations:
+  - Redis `job:*` remains the active state source for current file polling/download behavior.
+  - Celery task names such as `app.tasks.pdf_tasks.compress_pdf_task` and `app.tasks.pdf_tasks.merge_pdfs_task` remain registered.
+  - The R1 smoke job was not written into `ProcessingJob`, confirming DB durable jobs were not forced on existing file tasks.
+  - Recent backend/celery logs showed no traceback/error/exception entries during the smoke window.
+
 Admin bootstrap:
 
 ```bash

@@ -11,6 +11,11 @@ from pathlib import Path
 
 from app.celery_worker import celery_app
 from app.core.config import settings
+from app.domains.jobs.service import (
+    best_effort_mark_completed,
+    best_effort_mark_failed,
+    best_effort_mark_processing,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -311,28 +316,35 @@ def office_to_pdf_task(
     output_path: Optional[str] = None,
     provider_config: Optional[dict] = None,
 ) -> dict:
-    """
-    通用 Office 文件转 PDF（自动检测文件类型）
+    """Convert an Office document to PDF by dispatching to the matching converter."""
+    job_id = _current_job_id(self)
+    return _run_office_task_with_job_lifecycle(
+        job_id=job_id,
+        operation_label="Office to PDF conversion",
+        operation=lambda: _convert_office_to_pdf(
+            input_path=input_path,
+            output_path=output_path,
+            provider_config=provider_config,
+        ),
+    )
 
-    Args:
-        input_path: 输入文件路径
-        output_path: 输出 PDF 文件路径（可选）
 
-    Returns:
-        dict: 包含 success, output_path, error
-    """
+def _convert_office_to_pdf(
+    *,
+    input_path: str,
+    output_path: Optional[str] = None,
+    provider_config: Optional[dict] = None,
+) -> dict:
     try:
-        # 检测文件类型
         file_ext = os.path.splitext(input_path)[1].lower()
 
         if file_ext in ['.docx', '.doc']:
             return docx_to_pdf_task(input_path, output_path, provider_config)
-        elif file_ext in ['.xlsx', '.xls']:
+        if file_ext in ['.xlsx', '.xls']:
             return xlsx_to_pdf_task(input_path, output_path, provider_config)
-        elif file_ext in ['.pptx', '.ppt']:
+        if file_ext in ['.pptx', '.ppt']:
             return pptx_to_pdf_task(input_path, output_path, provider_config)
-        else:
-            raise ValueError(f"Unsupported file type: {file_ext}")
+        raise ValueError(f"Unsupported file type: {file_ext}")
 
     except Exception as e:
         logger.error(f"Office to PDF conversion failed: {str(e)}")
@@ -342,3 +354,33 @@ def office_to_pdf_task(
             "file_size": 0,
             "error": str(e)
         }
+
+
+def _current_job_id(task: Task) -> str:
+    return str(getattr(task.request, "id", "") or "")
+
+
+def _run_office_task_with_job_lifecycle(
+    *,
+    job_id: str,
+    operation_label: str,
+    operation,
+) -> dict:
+    if job_id:
+        best_effort_mark_processing(job_id, progress=0)
+
+    result = operation()
+    if result.get("success") is False:
+        error_message = str(result.get("error") or f"{operation_label} failed")
+        logger.error("%s failed: %s", operation_label, error_message)
+        if job_id:
+            best_effort_mark_failed(job_id, error_message=error_message)
+        return result
+
+    if job_id:
+        best_effort_mark_completed(
+            job_id,
+            result_data=result,
+            output_file_url=result.get("output_path"),
+        )
+    return result

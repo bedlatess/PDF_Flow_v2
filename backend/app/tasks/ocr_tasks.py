@@ -13,6 +13,11 @@ import logging
 
 from app.celery_worker import celery_app
 from app.core.config import settings
+from app.domains.jobs.service import (
+    best_effort_mark_completed,
+    best_effort_mark_failed,
+    best_effort_mark_processing,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -44,70 +49,81 @@ def extract_text_task(
     Returns:
         dict: 包含 success, text, page_texts, confidence
     """
-    try:
-        provider_config = provider_config or {}
-        tesseract_path = str(provider_config.get("tesseract_path") or settings.TESSERACT_PATH or "").strip()
-        if tesseract_path:
-            pytesseract.pytesseract.tesseract_cmd = tesseract_path
-        if not language:
-            language = str(provider_config.get("default_language") or "eng")
-        logger.info(f"Starting OCR for: {file_path} (language: {language})")
+    job_id = _current_job_id(self)
+    return _run_ocr_task_with_job_lifecycle(
+        job_id=job_id,
+        operation_label="OCR extraction",
+        operation=lambda: _extract_text(
+            file_path=file_path,
+            language=language,
+            pages=pages,
+            provider_config=provider_config,
+        ),
+        retry=lambda exc: self.retry(exc=exc, countdown=60),
+    )
 
-        # 判断文件类型
-        file_ext = os.path.splitext(file_path)[1].lower()
 
-        if file_ext == ".pdf":
-            # PDF 文件：先转为图片
-            images = convert_from_path(file_path, dpi=300)
+def _extract_text(
+    *,
+    file_path: str,
+    language: str = "eng",
+    pages: Optional[List[int]] = None,
+    provider_config: Optional[dict] = None,
+) -> dict:
+    provider_config = provider_config or {}
+    tesseract_path = str(provider_config.get("tesseract_path") or settings.TESSERACT_PATH or "").strip()
+    if tesseract_path:
+        pytesseract.pytesseract.tesseract_cmd = tesseract_path
+    if not language:
+        language = str(provider_config.get("default_language") or "eng")
 
-            # 如果指定了页面，只处理这些页面
-            if pages:
-                images = [images[p - 1] for p in pages if 0 < p <= len(images)]
-        else:
-            # 图片文件：直接读取
-            images = [Image.open(file_path)]
+    logger.info(f"Starting OCR for: {file_path} (language: {language})")
+    file_ext = os.path.splitext(file_path)[1].lower()
 
-        # 对每一页进行 OCR
-        page_texts = []
-        total_confidence = 0
+    if file_ext == ".pdf":
+        images = convert_from_path(file_path, dpi=300)
+        if pages:
+            images = [images[p - 1] for p in pages if 0 < p <= len(images)]
+    else:
+        images = [Image.open(file_path)]
 
-        for idx, image in enumerate(images):
-            # 提取文本
-            text = pytesseract.image_to_string(image, lang=language)
+    page_texts = []
+    total_confidence = 0
 
-            # 获取详细信息（包括置信度）
-            data = pytesseract.image_to_data(image, lang=language, output_type=pytesseract.Output.DICT)
+    for idx, image in enumerate(images):
+        text = pytesseract.image_to_string(image, lang=language)
+        data = pytesseract.image_to_data(
+            image,
+            lang=language,
+            output_type=pytesseract.Output.DICT,
+        )
+        confidences = [int(conf) for conf in data["conf"] if conf != "-1"]
+        avg_confidence = sum(confidences) / len(confidences) if confidences else 0
 
-            # 计算平均置信度
-            confidences = [int(conf) for conf in data['conf'] if conf != '-1']
-            avg_confidence = sum(confidences) / len(confidences) if confidences else 0
+        page_texts.append({
+            "page": idx + 1,
+            "text": text.strip(),
+            "confidence": round(avg_confidence, 2),
+        })
+        total_confidence += avg_confidence
 
-            page_texts.append({
-                "page": idx + 1,
-                "text": text.strip(),
-                "confidence": round(avg_confidence, 2)
-            })
+    full_text = "\n\n".join([pt["text"] for pt in page_texts])
+    avg_confidence = total_confidence / len(page_texts) if page_texts else 0
 
-            total_confidence += avg_confidence
+    logger.info(
+        "OCR completed: %s pages, avg confidence: %.2f%%",
+        len(page_texts),
+        avg_confidence,
+    )
 
-        # 合并所有文本
-        full_text = "\n\n".join([pt["text"] for pt in page_texts])
-        avg_confidence = total_confidence / len(page_texts) if page_texts else 0
-
-        logger.info(f"OCR completed: {len(page_texts)} pages, avg confidence: {avg_confidence:.2f}%")
-
-        return {
-            "success": True,
-            "text": full_text,
-            "page_texts": page_texts,
-            "page_count": len(page_texts),
-            "average_confidence": round(avg_confidence, 2),
-            "language": language
-        }
-
-    except Exception as exc:
-        logger.error(f"OCR extraction failed: {exc}")
-        raise self.retry(exc=exc, countdown=60)
+    return {
+        "success": True,
+        "text": full_text,
+        "page_texts": page_texts,
+        "page_count": len(page_texts),
+        "average_confidence": round(avg_confidence, 2),
+        "language": language,
+    }
 
 
 @celery_app.task(base=OCRTask, bind=True, max_retries=3)
@@ -154,3 +170,35 @@ def batch_ocr_task(self, file_paths: List[str], language: str = "eng") -> dict:
     except Exception as exc:
         logger.error(f"Batch OCR failed: {exc}")
         raise self.retry(exc=exc, countdown=60)
+
+
+def _current_job_id(task: Task) -> str:
+    return str(getattr(task.request, "id", "") or "")
+
+
+def _run_ocr_task_with_job_lifecycle(
+    *,
+    job_id: str,
+    operation_label: str,
+    operation,
+    retry=None,
+) -> dict:
+    if job_id:
+        best_effort_mark_processing(job_id, progress=0)
+
+    try:
+        result = operation()
+        if job_id:
+            best_effort_mark_completed(
+                job_id,
+                result_data=result,
+                output_file_url=None,
+            )
+        return result
+    except Exception as exc:
+        logger.error("%s failed: %s", operation_label, exc)
+        if job_id:
+            best_effort_mark_failed(job_id, error_message=str(exc))
+        if retry is not None:
+            raise retry(exc)
+        raise

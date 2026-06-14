@@ -202,6 +202,7 @@ async def extract_text_ocr(
         lambda: file_processing_service.extract_text_ocr(
             file_id=payload.file_id,
             language=payload.language,
+            db=db,
         ),
         error_detail="Failed to extract text",
         log_message="OCR failed",
@@ -250,7 +251,7 @@ async def office_to_pdf(
     require_file_feature(db, "office_to_pdf", current_user)
     validate_office_upload(file)
     return await run_file_operation(
-        lambda: file_processing_service.office_to_pdf(file),
+        lambda: file_processing_service.office_to_pdf(file, db=db),
         error_detail="Failed to convert Office file",
         log_message="Office to PDF conversion failed",
     )

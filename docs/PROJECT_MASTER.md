@@ -1639,6 +1639,26 @@ Backend refactor R3 production result:
 - Cleanup:
   - Removed R3 smoke DB jobs, Redis `job:*` keys, Redis `file:*` keys, and generated temporary upload/result directories.
 
+
+Backend refactor R4 local checkpoint:
+
+- R4 extends durable `ProcessingJob` coverage to OCR and Office conversion Celery entrypoints while keeping the R3 rollback posture.
+- OCR scope:
+  - `file_processing_service.extract_text_ocr()` still writes Redis `job:*` pending first.
+  - It now best-effort creates a DB `ProcessingJob` with `job_type=ocr_pdf` using the same `job_id`.
+  - `extract_text_task` now best-effort marks DB lifecycle `processing`, `completed`, or `failed` while keeping its return payload and retry behavior.
+  - `batch_ocr_task` remains unchanged to avoid altering its synchronous internal task-call model.
+- Office scope:
+  - `file_processing_service.office_to_pdf()` still writes Redis `job:*` pending first.
+  - It now best-effort creates a DB `ProcessingJob` with `job_type=office_to_pdf` using the same `job_id`.
+  - `office_to_pdf_task` now best-effort marks DB lifecycle around the existing dispatch to DOCX/XLSX/PPTX converters.
+  - Internal `docx_to_pdf_task`, `xlsx_to_pdf_task`, and `pptx_to_pdf_task` behavior remains unchanged; no provider orchestration was added.
+- API response shape, frontend behavior, Redis/Celery polling, downloads/artifacts, payment, AI, and advanced synchronous APIs were not changed.
+- Local verification:
+  - `python -m compileall -q backend/app backend/tests/test_ocr_office_tasks.py backend/tests/test_files.py`
+  - `python -m pytest backend/tests/test_ocr_office_tasks.py backend/tests/test_files.py backend/tests/test_admin_operations_domain.py -q`
+  - `python -m pytest backend/tests -q` (`177 passed, 1 warning`)
+
 Admin bootstrap:
 
 ```bash

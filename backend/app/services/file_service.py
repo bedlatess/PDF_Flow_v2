@@ -593,9 +593,15 @@ class FileProcessingService:
             "message": "PDF to images conversion job queued"
         }
 
-    async def extract_text_ocr(self, file_id: str, language: str = "eng") -> Dict:
+    async def extract_text_ocr(
+        self,
+        file_id: str,
+        language: str = "eng",
+        db: Session | None = None,
+    ) -> Dict:
         """OCR 文本提取"""
-        file_path = str(self._get_file_path(file_id))
+        file_metadata = self._get_file_metadata(file_id)
+        file_path = str(self._get_path_from_metadata(file_id, file_metadata))
         runtime_config = self._service_provider_runtime_config("ocr", "local_tesseract")
         public_config = runtime_config.get("public_config") if runtime_config else {}
         requested_language = language or public_config.get("default_language") or "eng"
@@ -611,6 +617,12 @@ class FileProcessingService:
         job_id = self._generate_job_id()
 
         self._save_job_status(job_id, build_pending_job_status(job_id))
+        self._create_pending_processing_job(
+            job_id=job_id,
+            job_type="ocr_pdf",
+            file_metadata=file_metadata,
+            db=db,
+        )
 
         # 提交任务
         task = extract_text_task.apply_async(
@@ -626,7 +638,7 @@ class FileProcessingService:
             "message": "OCR job queued"
         }
 
-    async def office_to_pdf(self, file: UploadFile) -> Dict:
+    async def office_to_pdf(self, file: UploadFile, db: Session | None = None) -> Dict:
         """Office to PDF conversion"""
         from app.utils.file_utils import save_upload_file
         from app.tasks.office_tasks import office_to_pdf_task
@@ -640,6 +652,16 @@ class FileProcessingService:
         job_id = self._generate_job_id()
 
         self._save_job_status(job_id, build_pending_job_status(job_id))
+        self._create_pending_processing_job(
+            job_id=job_id,
+            job_type="office_to_pdf",
+            file_metadata={
+                "filename": file.filename or os.path.basename(input_path),
+                "filepath": input_path,
+                "size": os.path.getsize(input_path) if os.path.exists(input_path) else 0,
+            },
+            db=db,
+        )
 
         office_to_pdf_task.apply_async(
             args=[input_path, output_path, public_config or None],

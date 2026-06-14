@@ -480,7 +480,9 @@ class TestOfficeToPdfFlow:
         finally:
             db.close()
 
-    def test_office_service_saves_job_state(self, monkeypatch):
+    def test_office_service_saves_job_state(self, monkeypatch, client):
+        from app.core.database import get_db
+        from app.models.user import ProcessingJob
         from app.services import file_service as file_service_module
 
         saved_jobs = {}
@@ -502,7 +504,7 @@ class TestOfficeToPdfFlow:
         import sys
         fake_task_module = type(sys)("app.tasks.office_tasks")
         fake_task_module.office_to_pdf_task = FakeTask()
-        sys.modules["app.tasks.office_tasks"] = fake_task_module
+        monkeypatch.setitem(sys.modules, "app.tasks.office_tasks", fake_task_module)
 
         monkeypatch.setattr(
             sys.modules["app.utils.file_utils"],
@@ -511,8 +513,70 @@ class TestOfficeToPdfFlow:
         )
 
         upload = UploadFile(filename="sample.docx", file=BytesIO(b"PK\x03\x04docx-content"))
-        result = asyncio.run(file_service_module.file_processing_service.office_to_pdf(upload))
+        db = next(client.app.dependency_overrides[get_db]())
+        try:
+            result = asyncio.run(file_service_module.file_processing_service.office_to_pdf(upload, db=db))
+            db_job = db.query(ProcessingJob).filter(ProcessingJob.job_id == "job_office_test").first()
+            assert db_job is not None
+            assert db_job.user_id is None
+            assert db_job.job_type == "office_to_pdf"
+            assert db_job.status == "pending"
+            assert db_job.input_file_name == "sample.docx"
+            assert db_job.input_file_size == 0
+        finally:
+            db.close()
 
         assert result["job_id"] == "job_office_test"
         assert result["status"] == "pending"
         assert saved_jobs["job_office_test"]["status"] == "pending"
+
+    def test_ocr_service_creates_durable_job_and_keeps_redis_contract(self, monkeypatch, tmp_path, client):
+        from app.core.database import get_db
+        from app.models.user import ProcessingJob
+        from app.services import file_service as file_service_module
+
+        uploaded = tmp_path / "ocr-source.pdf"
+        uploaded.write_bytes(b"%PDF-1.4 ocr")
+        saved_jobs = {}
+
+        class FakeTask:
+            def apply_async(self, args, task_id):
+                return MagicMock(id=task_id)
+
+        monkeypatch.setattr(file_service_module.file_processing_service, "_generate_job_id", lambda: "job_ocr_db")
+        monkeypatch.setattr(
+            file_service_module.file_processing_service,
+            "_get_file_metadata",
+            lambda file_id: {
+                "file_id": file_id,
+                "filename": "ocr-source.pdf",
+                "filepath": str(uploaded),
+                "size": uploaded.stat().st_size,
+            },
+        )
+        monkeypatch.setattr(
+            file_service_module.file_processing_service,
+            "_save_job_status",
+            lambda job_id, status_data: saved_jobs.setdefault(job_id, status_data),
+        )
+        monkeypatch.setattr(file_service_module, "extract_text_task", FakeTask())
+
+        db = next(client.app.dependency_overrides[get_db]())
+        try:
+            result = asyncio.run(file_service_module.file_processing_service.extract_text_ocr("file_ocr", db=db))
+            db_job = db.query(ProcessingJob).filter(ProcessingJob.job_id == "job_ocr_db").first()
+            assert db_job is not None
+            assert db_job.user_id is None
+            assert db_job.job_type == "ocr_pdf"
+            assert db_job.status == "pending"
+            assert db_job.input_file_name == "ocr-source.pdf"
+            assert db_job.input_file_size == uploaded.stat().st_size
+        finally:
+            db.close()
+
+        assert result == {
+            "job_id": "job_ocr_db",
+            "status": "pending",
+            "message": "OCR job queued",
+        }
+        assert saved_jobs["job_ocr_db"]["status"] == "pending"

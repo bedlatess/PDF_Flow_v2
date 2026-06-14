@@ -359,6 +359,14 @@ Deployment:
   - successful password rotation clears local browser tokens and returns the operator to the admin login page with a password-changed notice
   - verified with `pytest backend/tests/test_auth.py backend/tests/test_auth_domain.py -q`
   - verified with `npm run type-check`, `npm run test:unit:ci`, `npm run build`, `npm run build:admin`, and `npm run test:e2e:admin`
+- Deployed and verified administrator self-service password rotation on production:
+  - commit `340d9099e141c3946c19997b1e444fb5c5903993`
+  - server `.deploy_state/main/current_deployed_commit` records `340d9099e141c3946c19997b1e444fb5c5903993`
+  - production Compose services `frontend`, `backend`, `celery-worker`, `postgres`, and `redis` are healthy
+  - production `/health` returns `{"status":"healthy","version":"2.0.0","environment":"production"}`
+  - production `POST /api/v1/auth/change-password` was smoke-tested by rotating the admin password to a temporary value and then restoring the known admin password
+  - verified the known admin password still logs in and the temporary password is rejected with HTTP 401
+  - authenticated Playwright Chromium production check reached `https://admin.pawn.eu.org/`, opened `Account Security`, and found no browser page errors, no relevant console errors, no document-level horizontal overflow at `1366x900`, and no raw i18n key exposure
 
 ## Known Code Issues
 

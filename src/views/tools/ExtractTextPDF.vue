@@ -2,7 +2,6 @@
 import { computed, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
-  CheckCircle2,
   ClipboardCopy,
   Download,
   FileText,
@@ -11,12 +10,14 @@ import {
   TextCursorInput,
 } from 'lucide-vue-next'
 import Button from '@/components/common/Button.vue'
-import Card from '@/components/common/Card.vue'
 import DragDropZone from '@/components/pdf/DragDropZone.vue'
 import FilePreview from '@/components/pdf/FilePreview.vue'
-import ProgressBar from '@/components/common/ProgressBar.vue'
 import ToolPageShell from '@/components/tools/ToolPageShell.vue'
 import ToolNoticeBar from '@/components/tools/ToolNoticeBar.vue'
+import ToolWorkspace from '@/components/tools/ToolWorkspace.vue'
+import ToolActionPanel from '@/components/tools/ToolActionPanel.vue'
+import { useToolFileSelection } from '@/composables/useToolFileSelection'
+import { useToolProcessingState } from '@/composables/useToolProcessingState'
 import { formatFileSize } from '@/utils/file-validator'
 import { historyManager } from '@/utils/history-manager'
 import { extractTextFromPDF, type ExtractedTextResult } from '@/utils/pdf/textExtraction'
@@ -25,61 +26,77 @@ const { t, tm } = useI18n()
 
 type ToolPageCopy = Record<string, any>
 
-const selectedFile = ref<File | null>(null)
+const {
+  selectedItems: selectedFiles,
+  fileError,
+  setItems: setSelectedFiles,
+  clearSelection,
+  setFileError,
+  clearFileError,
+} = useToolFileSelection<File>()
 const result = ref<ExtractedTextResult | null>(null)
-const isProcessing = ref(false)
-const progress = ref(0)
-const status = ref('')
-const errorMessage = ref('')
 const copied = ref(false)
+
+const {
+  isProcessing,
+  processingProgress,
+  processingStatus,
+  processingError,
+  startProcessing,
+  updateProcessing,
+  resetProcessing,
+  failProcessing,
+} = useToolProcessingState()
 
 const copy = computed<ToolPageCopy>(() => tm('tools.extractText.page') as ToolPageCopy)
 
+const selectedFile = computed(() => selectedFiles.value[0] || null)
+const workspaceError = computed(() => fileError.value || processingError.value)
 const hasText = computed(() => result.value?.pages.some((page) => page.text.trim().length > 0) ?? false)
 const canExtract = computed(() => !!selectedFile.value && !isProcessing.value)
+const actionStats = computed(() => [
+  { label: copy.value.pageCount, value: result.value?.pageCount || '-' },
+  { label: copy.value.characters, value: result.value?.characterCount || '-' },
+  { label: copy.value.fileSize, value: selectedFile.value ? formatFileSize(selectedFile.value.size) : '-' },
+])
 
 const handleFilesSelected = (files: File[]) => {
   const file = files[0]
   if (!file) return
 
-  selectedFile.value = file
+  setSelectedFiles([file])
   result.value = null
-  errorMessage.value = ''
+  clearFileError()
+  resetProcessing()
   copied.value = false
-  progress.value = 0
-  status.value = ''
 }
 
 const removeFile = () => {
-  selectedFile.value = null
+  clearSelection()
   result.value = null
-  errorMessage.value = ''
+  resetProcessing()
   copied.value = false
-  progress.value = 0
-  status.value = ''
 }
 
 const handleError = (message: string) => {
-  errorMessage.value = message
+  setFileError(message)
 }
 
 const extractText = async () => {
   if (!selectedFile.value) return
 
-  isProcessing.value = true
-  progress.value = 20
-  status.value = copy.value.processing
-  errorMessage.value = ''
+  startProcessing(copy.value.processing)
+  updateProcessing(20, copy.value.processing)
+  clearFileError()
   copied.value = false
 
   try {
-    progress.value = 60
+    updateProcessing(60, copy.value.processing)
     const extracted = await extractTextFromPDF(selectedFile.value, {
       pageLabel: (pageNumber) => t('tools.extractText.page.pageLabel', { page: pageNumber }),
     })
     result.value = extracted
-    progress.value = 100
-    status.value = copy.value.ready
+    updateProcessing(100, copy.value.ready)
 
     historyManager.addHistory({
       type: 'extractText',
@@ -89,7 +106,7 @@ const extractText = async () => {
     })
   } catch {
     result.value = null
-    errorMessage.value = copy.value.errorFailed
+    failProcessing(copy.value.errorFailed)
   } finally {
     isProcessing.value = false
   }
@@ -105,7 +122,7 @@ const copyResult = async () => {
       copied.value = false
     }, 1800)
   } catch {
-    errorMessage.value = copy.value.copyFailed
+    failProcessing(copy.value.copyFailed)
   }
 }
 
@@ -145,31 +162,30 @@ onUnmounted(() => {
         {{ copy.notice }}
       </ToolNoticeBar>
 
-      <div
-        v-if="errorMessage"
-        class="mt-6 rounded-md border border-red-200 bg-red-50 p-4 text-sm leading-6 text-red-700 shadow-sm dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-100"
+      <ToolWorkspace
+        class="mt-6"
+        :error-message="workspaceError"
+        layout="wide-secondary"
       >
-        {{ errorMessage }}
-      </div>
-
-      <div class="mt-6 grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-        <div class="space-y-6">
-          <Card class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
-            <div class="space-y-6">
+        <template
+          v-if="!selectedFile"
+          #upload
+        >
+          <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/90 sm:p-5">
               <div>
                 <p class="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-600">
                   {{ copy.uploadLabel }}
                 </p>
                 <h2 class="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">
-                  {{ selectedFile ? copy.uploadTitleReady : copy.uploadTitleIdle }}
+                  {{ copy.uploadTitleIdle }}
                 </h2>
                 <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                  {{ selectedFile ? copy.uploadDescriptionReady : copy.uploadDescriptionIdle }}
+                  {{ copy.uploadDescriptionIdle }}
                 </p>
               </div>
 
               <DragDropZone
-                v-if="!selectedFile"
+                class="mt-6"
                 accept="pdf"
                 :multiple="false"
                 :max-files="1"
@@ -186,47 +202,19 @@ onUnmounted(() => {
                   {{ copy.dropSubtitle }}
                 </template>
               </DragDropZone>
+          </section>
+        </template>
 
+        <template
+          v-if="selectedFile"
+          #primary
+        >
               <FilePreview
-                v-else
                 :file="selectedFile"
                 @remove="removeFile"
               />
 
-              <ProgressBar
-                v-if="isProcessing || result"
-                :progress="progress"
-                :label="status"
-                variant="primary"
-                size="md"
-              />
-
-              <div class="flex flex-col gap-3 sm:flex-row">
-                <Button
-                  variant="primary"
-                  size="lg"
-                  :loading="isProcessing"
-                  :disabled="!canExtract"
-                  full-width
-                  @click="extractText"
-                >
-                  <TextCursorInput class="mr-2 h-4 w-4" />
-                  {{ isProcessing ? copy.processing : copy.action }}
-                </Button>
-                <Button
-                  v-if="selectedFile"
-                  variant="ghost"
-                  size="lg"
-                  full-width
-                  @click="removeFile"
-                >
-                  {{ copy.remove }}
-                </Button>
-              </div>
-            </div>
-          </Card>
-
-          <Card class="overflow-hidden rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
+          <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/90 sm:p-5">
             <div class="space-y-5">
                 <div>
                   <h3 class="text-xl font-semibold text-slate-900 dark:text-white">
@@ -251,11 +239,52 @@ onUnmounted(() => {
                   </div>
                 </div>
             </div>
-          </Card>
-        </div>
+          </section>
+        </template>
 
-        <div class="space-y-6">
-          <Card class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
+        <template #secondary>
+          <ToolActionPanel
+            v-if="selectedFile"
+            :label="copy.textPreview"
+            :title="result ? copy.resultTitle : copy.action"
+            :description="result ? copy.resultBody : copy.notice"
+            accent="blue"
+            :stats="actionStats"
+            :show-progress="isProcessing || !!result"
+            :progress="processingProgress"
+            :progress-label="processingStatus"
+            :action-label="isProcessing ? copy.processing : copy.action"
+            :loading="isProcessing"
+            :disabled="!canExtract"
+            @action="extractText"
+          >
+            <template #details>
+              <div class="flex flex-col gap-3 sm:flex-row">
+                <Button
+                  v-if="hasText"
+                  variant="outline"
+                  size="lg"
+                  full-width
+                  @click="copyResult"
+                >
+                  <ClipboardCopy class="mr-2 h-4 w-4" />
+                  {{ copied ? copy.copied : copy.copyText }}
+                </Button>
+                <Button
+                  v-if="hasText"
+                  variant="primary"
+                  size="lg"
+                  full-width
+                  @click="downloadResult"
+                >
+                  <Download class="mr-2 h-4 w-4" />
+                  {{ copy.download }}
+                </Button>
+              </div>
+            </template>
+          </ToolActionPanel>
+
+          <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/90 sm:p-5">
             <div class="space-y-5">
               <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
@@ -266,7 +295,7 @@ onUnmounted(() => {
                     {{ result ? copy.resultTitle : copy.textPreview }}
                   </h2>
                   <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                    {{ result ? copy.resultBody : copy.notice }}
+                  {{ result ? copy.resultBody : copy.notice }}
                   </p>
                 </div>
                 <div
@@ -291,36 +320,6 @@ onUnmounted(() => {
                     <Download class="mr-2 h-4 w-4" />
                     {{ copy.download }}
                   </Button>
-                </div>
-              </div>
-
-              <div
-                v-if="selectedFile"
-                class="grid gap-3 sm:grid-cols-3"
-              >
-                <div class="rounded-md border border-cyan-100 bg-cyan-50/80 p-4 dark:border-cyan-500/20 dark:bg-cyan-500/10">
-                  <p class="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-700 dark:text-cyan-200">
-                    {{ copy.pageCount }}
-                  </p>
-                  <p class="mt-2 text-2xl font-bold text-slate-900 dark:text-white">
-                    {{ result?.pageCount || '-' }}
-                  </p>
-                </div>
-                <div class="rounded-md border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-800 dark:bg-slate-950/40">
-                  <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                    {{ copy.characters }}
-                  </p>
-                  <p class="mt-2 text-2xl font-bold text-slate-900 dark:text-white">
-                    {{ result?.characterCount || '-' }}
-                  </p>
-                </div>
-                <div class="rounded-md border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-800 dark:bg-slate-950/40">
-                  <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                    {{ copy.fileSize }}
-                  </p>
-                  <p class="mt-2 text-2xl font-bold text-slate-900 dark:text-white">
-                    {{ formatFileSize(selectedFile.size) }}
-                  </p>
                 </div>
               </div>
 
@@ -358,25 +357,8 @@ onUnmounted(() => {
                 </p>
               </div>
             </div>
-          </Card>
-
-          <Card
-            v-if="hasText"
-            class="rounded-lg border border-emerald-200 bg-emerald-50/90 shadow-sm dark:border-emerald-900/40 dark:bg-emerald-950/20 dark:shadow-none"
-          >
-            <div class="flex items-start gap-4">
-              <CheckCircle2 class="mt-0.5 h-6 w-6 shrink-0 text-emerald-500" />
-              <div class="space-y-3">
-                <h3 class="text-lg font-semibold text-slate-900 dark:text-white">
-                  {{ copy.ready }}
-                </h3>
-                <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
-                  {{ copy.resultBody }}
-                </p>
-              </div>
-            </div>
-          </Card>
-        </div>
-      </div>
+          </section>
+        </template>
+      </ToolWorkspace>
   </ToolPageShell>
 </template>

@@ -1004,6 +1004,50 @@ Tool workspace Phase 2 local result:
   - `npx playwright test tests/e2e-playwright/merge-pdf.spec.ts tests/e2e-playwright/compress-pdf.spec.ts tests/e2e-playwright/tool-pages-matrix.spec.ts --project=chromium --reporter=line`
 - Production acceptance target for this batch: public tool pages render consistently on desktop/mobile and the migrated workflows have no functional regression. Do not start the next special-tool migration batch until this production batch is accepted.
 
+Tool workspace Phase 3 local result:
+
+- Scope: migrated the remaining public tool pages to the shared tool workspace layer before any separate Phase 4 visual polish.
+- Low-risk pages migrated in this batch:
+  - Watermark PDF
+  - Flatten PDF
+  - Protect PDF
+  - Unlock PDF
+  - Repair PDF
+  - Extract Text PDF
+  - Extract Images PDF
+- Special-flow pages migrated in this batch while preserving their page-specific state machines:
+  - Office to PDF
+  - OCR PDF
+  - Sign PDF
+  - Fill Form PDF
+  - Annotate PDF
+  - AI PDF Analyzer
+- Shared UI/state reused:
+  - `ToolWorkspace`
+  - `ToolActionPanel`
+  - `ToolResultPanel` where the page already uses modal-style results
+  - `ToolErrorAlert` through `ToolWorkspace`
+  - `useToolFileSelection` and `useToolProcessingState` where they fit without disrupting special flows
+- Deliberately preserved locally in pages:
+  - Office/OCR backend job polling and access gates.
+  - Sign PDF two-file upload and visual signature placement preview.
+  - Fill Form and Annotate step-based configure/process/result flows.
+  - AI Analyzer tab-specific actions and result renderers.
+  - Extract Text and Extract Images result preview surfaces.
+- Not changed:
+  - Payment logic.
+  - Backend APIs.
+  - New PDF features.
+  - Automatic Pro/payment entitlement behavior.
+- Local checks:
+  - `npm run type-check`
+  - `npm run test:unit:ci`
+  - `npm run build`
+  - `npm run build:admin`
+  - `npx playwright test tests/e2e-playwright/advanced-cloud-tools.spec.ts tests/e2e-playwright/tool-flow-regression.spec.ts --project=chromium --reporter=line`
+  - `npx playwright test tests/e2e-playwright/advanced-pdf-workflows.spec.ts tests/e2e-playwright/local-pdf-workflows.spec.ts tests/e2e-playwright/tool-flow-regression.spec.ts tests/e2e-playwright/cloud-tool-access.spec.ts tests/e2e-playwright/advanced-cloud-tools.spec.ts tests/e2e-playwright/tool-pages-matrix.spec.ts --project=chromium --reporter=line`
+- Next target after acceptance: Phase 4 unified UI polish across Home, Tools Center, and tool pages. Do not start backend refactor code before the separate backend audit/design phase is approved.
+
 Admin bootstrap:
 
 ```bash

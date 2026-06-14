@@ -3,7 +3,6 @@ import { computed, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import {
-  CheckCircle2,
   Download,
   LogIn,
   RefreshCw,
@@ -11,14 +10,16 @@ import {
   Wrench,
 } from 'lucide-vue-next'
 import Button from '@/components/common/Button.vue'
-import Card from '@/components/common/Card.vue'
 import DiagnosticAlert from '@/components/common/DiagnosticAlert.vue'
 import DragDropZone from '@/components/pdf/DragDropZone.vue'
 import FilePreview from '@/components/pdf/FilePreview.vue'
-import ProgressBar from '@/components/common/ProgressBar.vue'
 import ToolAccessPanel from '@/components/tools/ToolAccessPanel.vue'
 import ToolPageShell from '@/components/tools/ToolPageShell.vue'
 import ToolNoticeBar from '@/components/tools/ToolNoticeBar.vue'
+import ToolWorkspace from '@/components/tools/ToolWorkspace.vue'
+import ToolActionPanel from '@/components/tools/ToolActionPanel.vue'
+import { useToolFileSelection } from '@/composables/useToolFileSelection'
+import { useToolProcessingState } from '@/composables/useToolProcessingState'
 import { advancedAPI } from '@/services/api'
 import { useUserStore } from '@/stores/user'
 import { formatUserFacingError, type FormattedUserError } from '@/utils/error-messages'
@@ -32,15 +33,35 @@ const userStore = useUserStore()
 
 type ToolPageCopy = Record<string, any>
 
-const selectedFile = ref<File | null>(null)
-const isProcessing = ref(false)
-const progress = ref(0)
-const status = ref('')
+const {
+  selectedItems: selectedFiles,
+  fileError,
+  setItems: setSelectedFiles,
+  clearSelection,
+  setFileError,
+  clearFileError,
+} = useToolFileSelection<File>()
 const resultUrl = ref('')
 const resultSize = ref(0)
 const errorState = ref<FormattedUserError | null>(null)
 
+const {
+  isProcessing,
+  processingProgress,
+  processingStatus,
+  processingError,
+  startProcessing,
+  updateProcessing,
+  resetProcessing,
+  failProcessing,
+} = useToolProcessingState()
+
 const copy = computed<ToolPageCopy>(() => tm('tools.repair.page') as ToolPageCopy)
+const selectedFile = computed(() => selectedFiles.value[0] || null)
+const workspaceError = computed(() => fileError.value || processingError.value)
+const resultStats = computed(() => [
+  { label: copy.value.resultSize, value: formatFileSize(resultSize.value) },
+])
 
 const canSubmit = computed(() => !!selectedFile.value && !isProcessing.value)
 
@@ -60,17 +81,22 @@ const revokeResultUrl = () => {
 const handleFilesSelected = (files: File[]) => {
   const file = files[0]
   if (!file) return
-  selectedFile.value = file
+  setSelectedFiles([file])
   resultSize.value = 0
   errorState.value = null
+  clearFileError()
+  resetProcessing()
   revokeResultUrl()
 }
 
+const handleError = (message: string) => {
+  setFileError(message)
+}
+
 const removeFile = () => {
-  selectedFile.value = null
+  clearSelection()
   resultSize.value = 0
-  progress.value = 0
-  status.value = ''
+  resetProcessing()
   errorState.value = null
   revokeResultUrl()
 }
@@ -91,20 +117,17 @@ const repairPDF = async () => {
     return
   }
 
-  isProcessing.value = true
-  progress.value = 15
-  status.value = copy.value.uploading
+  startProcessing(copy.value.uploading)
+  updateProcessing(15, copy.value.uploading)
   errorState.value = null
   revokeResultUrl()
 
   try {
-    progress.value = 55
-    status.value = copy.value.processing
+    updateProcessing(55, copy.value.processing)
     const blob = await advancedAPI.repairPDF(selectedFile.value)
     resultUrl.value = URL.createObjectURL(blob)
     resultSize.value = blob.size
-    progress.value = 100
-    status.value = copy.value.ready
+    updateProcessing(100, copy.value.ready)
 
     historyManager.addHistory({
       type: 'repair',
@@ -117,6 +140,7 @@ const repairPDF = async () => {
       area: 'REPAIR',
       fallbackMessage: copy.value.errorFailed,
     })
+    failProcessing('')
   } finally {
     isProcessing.value = false
   }
@@ -189,12 +213,17 @@ onUnmounted(revokeResultUrl)
         </template>
       </ToolAccessPanel>
 
-      <div
+      <ToolWorkspace
         v-else
-        class="mt-6 grid gap-6 lg:grid-cols-[0.95fr_1.05fr]"
+        class="mt-6"
+        :error-message="workspaceError"
+        layout="wide-secondary"
       >
-        <div class="space-y-6">
-          <Card class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
+        <template
+          v-if="!selectedFile"
+          #upload
+        >
+          <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/90 sm:p-5">
             <div>
               <p class="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-700 dark:text-cyan-300">
                 {{ copy.uploadLabel }}
@@ -209,11 +238,11 @@ onUnmounted(revokeResultUrl)
 
             <div class="mt-6">
               <DragDropZone
-                v-if="!selectedFile"
                 accept="pdf"
                 :multiple="false"
                 :max-files="1"
                 @files-selected="handleFilesSelected"
+                @error="handleError"
               >
                 <template #icon>
                   <Wrench class="h-12 w-12" />
@@ -225,19 +254,20 @@ onUnmounted(revokeResultUrl)
                   {{ copy.dropSubtitle }}
                 </template>
               </DragDropZone>
-
-              <FilePreview
-                v-else
-                :file="selectedFile"
-                @remove="removeFile"
-              />
             </div>
-          </Card>
+          </section>
+        </template>
 
-          <Card
-            v-if="selectedFile || isProcessing || resultUrl"
-            class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none"
-          >
+        <template
+          v-if="selectedFile"
+          #primary
+        >
+          <FilePreview
+            :file="selectedFile"
+            @remove="removeFile"
+          />
+
+          <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/90 sm:p-5">
             <div class="space-y-5">
               <div>
                 <h3 class="text-xl font-semibold text-slate-900 dark:text-white">
@@ -262,64 +292,34 @@ onUnmounted(revokeResultUrl)
                 </div>
               </div>
             </div>
-          </Card>
-        </div>
+          </section>
+        </template>
 
-        <div
-          v-if="selectedFile || isProcessing || resultUrl"
-          class="space-y-6"
+        <template
+          v-if="selectedFile"
+          #secondary
         >
-          <Card class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
-            <div class="space-y-5">
-              <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <h2 class="text-2xl font-semibold text-slate-900 dark:text-white">
-                    {{ resultUrl ? copy.successTitle : copy.repair }}
-                  </h2>
-                  <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                    {{ resultUrl ? copy.successMessage : copy.uploadDescriptionSelected }}
-                  </p>
-                </div>
-                <Button
-                  v-if="resultUrl"
-                  variant="primary"
-                  size="sm"
-                  @click="downloadResult"
-                >
-                  <Download class="mr-2 h-4 w-4" />
-                  {{ copy.download }}
-                </Button>
+          <ToolActionPanel
+            :label="copy.workspaceTitle"
+            :title="resultUrl ? copy.successTitle : copy.repair"
+            :description="resultUrl ? copy.successMessage : copy.uploadDescriptionSelected"
+            accent="blue"
+            :stats="resultStats"
+            :show-progress="isProcessing || !!resultUrl"
+            :progress="processingProgress"
+            :progress-label="processingStatus"
+            :action-label="isProcessing ? copy.processing : copy.repair"
+            :loading="isProcessing"
+            :disabled="!canSubmit"
+            @action="repairPDF"
+          >
+            <template #details>
+              <div class="rounded-md border border-cyan-100 bg-cyan-50/80 p-4 text-sm leading-6 text-cyan-900 dark:border-cyan-900/50 dark:bg-cyan-950/20 dark:text-cyan-200">
+                <RefreshCw class="mb-3 h-5 w-5" />
+                <p>{{ copy.step1 }}</p>
+                <p>{{ copy.step2 }}</p>
+                <p>{{ copy.step3 }}</p>
               </div>
-
-              <div class="rounded-md border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-800 dark:bg-slate-950/40">
-                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                  {{ copy.resultSize }}
-                </p>
-                <p class="mt-2 text-2xl font-bold text-slate-900 dark:text-white">
-                  {{ formatFileSize(resultSize) }}
-                </p>
-              </div>
-
-              <ProgressBar
-                v-if="isProcessing || resultUrl"
-                :progress="progress"
-                :label="status"
-                variant="primary"
-                size="md"
-              />
-
-              <div class="flex flex-col gap-3 sm:flex-row">
-                <Button
-                  variant="primary"
-                  size="lg"
-                  :loading="isProcessing"
-                  :disabled="!canSubmit"
-                  full-width
-                  @click="repairPDF"
-                >
-                  <RefreshCw class="mr-2 h-4 w-4" />
-                  {{ isProcessing ? copy.processing : copy.repair }}
-                </Button>
                 <Button
                   v-if="resultUrl"
                   variant="outline"
@@ -330,27 +330,9 @@ onUnmounted(revokeResultUrl)
                   <Download class="mr-2 h-4 w-4" />
                   {{ copy.download }}
                 </Button>
-              </div>
-            </div>
-          </Card>
-
-          <Card
-            v-if="resultUrl"
-            class="rounded-lg border border-emerald-200 bg-emerald-50/90 shadow-sm dark:border-emerald-900/40 dark:bg-emerald-950/20 dark:shadow-none"
-          >
-            <div class="flex items-start gap-4">
-              <CheckCircle2 class="mt-0.5 h-6 w-6 shrink-0 text-emerald-500" />
-              <div>
-                <h3 class="text-lg font-semibold text-slate-900 dark:text-white">
-                  {{ copy.successTitle }}
-                </h3>
-                <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                  {{ copy.successMessage }}
-                </p>
-              </div>
-            </div>
-          </Card>
-        </div>
-      </div>
+            </template>
+          </ToolActionPanel>
+        </template>
+      </ToolWorkspace>
   </ToolPageShell>
 </template>

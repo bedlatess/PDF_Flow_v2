@@ -3,22 +3,20 @@ import { computed, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import {
-  ArrowRight,
-  CheckCircle2,
   Download,
   FileText,
   LogIn,
   Sparkles,
 } from 'lucide-vue-next'
 import Button from '@/components/common/Button.vue'
-import Card from '@/components/common/Card.vue'
-import ProgressBar from '@/components/common/ProgressBar.vue'
 import DiagnosticAlert from '@/components/common/DiagnosticAlert.vue'
 import FilePreview from '@/components/pdf/FilePreview.vue'
 import DragDropZone from '@/components/pdf/DragDropZone.vue'
 import ToolPageShell from '@/components/tools/ToolPageShell.vue'
 import ToolNoticeBar from '@/components/tools/ToolNoticeBar.vue'
 import ToolAccessPanel from '@/components/tools/ToolAccessPanel.vue'
+import ToolWorkspace from '@/components/tools/ToolWorkspace.vue'
+import ToolActionPanel from '@/components/tools/ToolActionPanel.vue'
 import { fileAPI } from '@/services/api'
 import { useUserStore } from '@/stores/user'
 import { formatUserFacingError, type FormattedUserError } from '@/utils/error-messages'
@@ -40,6 +38,10 @@ const resultUrl = ref('')
 type ToolPageCopy = Record<string, any>
 
 const copy = computed<ToolPageCopy>(() => tm('tools.officeToPdf') as ToolPageCopy)
+const convertLabel = computed(() => copy.value.convert || 'Convert to PDF')
+const convertingLabel = computed(() => copy.value.converting || 'Converting...')
+const successTitle = computed(() => copy.value.success || 'Conversion successful!')
+const downloadReady = computed(() => copy.value.downloadReady || 'Your PDF is ready to download.')
 
 const supportedFormats = computed(() => [
   { label: copy.value.formats.word, ext: '.doc, .docx', tone: 'bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-200' },
@@ -226,23 +228,30 @@ onUnmounted(() => {
         </template>
       </ToolAccessPanel>
 
-      <div v-if="userStore.isAuthenticated" class="mt-6 grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-        <Card class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
-          <div class="space-y-6">
+      <ToolWorkspace
+        v-if="userStore.isAuthenticated"
+        class="mt-6"
+        layout="wide-secondary"
+      >
+        <template
+          v-if="!uploadedFile"
+          #upload
+        >
+          <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/90 sm:p-5">
             <div class="space-y-2">
               <p class="text-xs font-semibold uppercase tracking-[0.22em] text-blue-500">
                 {{ t('tools.officeToPdf.uploadLabel') }}
               </p>
               <h2 class="text-2xl font-semibold text-slate-900 dark:text-white">
-                {{ uploadedFile ? t('tools.officeToPdf.uploadTitleSelected') : t('tools.officeToPdf.uploadTitleIdle') }}
+                {{ t('tools.officeToPdf.uploadTitleIdle') }}
               </h2>
               <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
-                {{ uploadedFile ? t('tools.officeToPdf.uploadDescriptionSelected') : t('tools.officeToPdf.uploadDescriptionIdle') }}
+                {{ t('tools.officeToPdf.uploadDescriptionIdle') }}
               </p>
             </div>
 
             <DragDropZone
-              v-if="!uploadedFile"
+              class="mt-6"
               :accept="acceptedFileTypes"
               :multiple="false"
               :max-files="1"
@@ -258,54 +267,19 @@ onUnmounted(() => {
                 {{ t('tools.officeToPdf.dropSubtitle') }}
               </template>
             </DragDropZone>
+          </section>
+        </template>
 
-            <div v-else class="space-y-5">
+        <template
+          v-if="uploadedFile"
+          #primary
+        >
               <FilePreview
                 :file="uploadedFile"
                 @remove="removeFile"
               />
 
-              <ProgressBar
-                v-if="converting || resultUrl"
-                :progress="progress"
-                :label="status"
-                variant="primary"
-                size="md"
-              />
-
-              <div class="flex flex-col gap-3 sm:flex-row">
-                <Button
-                  variant="primary"
-                  size="lg"
-                  :loading="converting"
-                  :disabled="!isReadyToConvert"
-                  full-width
-                  @click="convertFile"
-                >
-                  <ArrowRight class="mr-2 h-4 w-4" />
-                  {{ converting ? t('tools.officeToPdf.converting') : t('tools.officeToPdf.convert') }}
-                </Button>
-
-                <Button
-                  v-if="resultUrl"
-                  variant="outline"
-                  size="lg"
-                  full-width
-                  @click="downloadResult"
-                >
-                  <Download class="mr-2 h-4 w-4" />
-                  {{ t('common.download') }}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        <div class="space-y-6">
-          <Card
-            v-if="uploadedFile"
-            class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none"
-          >
+          <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/90 sm:p-5">
             <div class="space-y-6">
               <div>
                 <h3 class="text-xl font-semibold text-slate-900 dark:text-white">
@@ -342,35 +316,45 @@ onUnmounted(() => {
                 </div>
               </div>
             </div>
-          </Card>
+          </section>
+        </template>
 
-          <Card
-            v-if="resultUrl"
-            class="rounded-lg border border-emerald-200 bg-emerald-50/90 shadow-sm dark:border-emerald-900/40 dark:bg-emerald-950/20 dark:shadow-none"
+        <template
+          v-if="uploadedFile"
+          #secondary
+        >
+          <ToolActionPanel
+            :label="t('tools.officeToPdf.uploadLabel')"
+            :title="resultUrl ? successTitle : t('tools.officeToPdf.uploadTitleSelected')"
+            :description="resultUrl ? downloadReady : t('tools.officeToPdf.uploadDescriptionSelected')"
+            accent="blue"
+            :show-progress="converting || !!resultUrl"
+            :progress="progress"
+            :progress-label="status"
+            :action-label="converting ? convertingLabel : convertLabel"
+            :loading="converting"
+            :disabled="!isReadyToConvert"
+            @action="convertFile"
           >
-            <div class="flex items-start gap-4">
-              <CheckCircle2 class="mt-0.5 h-6 w-6 flex-shrink-0 text-emerald-500" />
-              <div class="space-y-3">
-                <div>
-                  <h3 class="text-lg font-semibold text-slate-900 dark:text-white">
-                    {{ t('tools.officeToPdf.success') }}
-                  </h3>
-                  <p class="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                    {{ t('tools.officeToPdf.downloadReady') }}
-                  </p>
-                </div>
-
+            <template #details>
+              <div class="rounded-md border border-blue-100 bg-blue-50/80 p-4 text-sm leading-6 text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/20 dark:text-blue-200">
+                <p>{{ t('tools.officeToPdf.step1') }}</p>
+                <p>{{ t('tools.officeToPdf.step2') }}</p>
+                <p>{{ t('tools.officeToPdf.step3') }}</p>
+              </div>
                 <Button
+                  v-if="resultUrl"
                   variant="primary"
+                  size="lg"
+                  full-width
                   @click="downloadResult"
                 >
                   <Download class="mr-2 h-4 w-4" />
                   {{ t('common.download') }}
                 </Button>
-              </div>
-            </div>
-          </Card>
-        </div>
-      </div>
+            </template>
+          </ToolActionPanel>
+        </template>
+      </ToolWorkspace>
   </ToolPageShell>
 </template>

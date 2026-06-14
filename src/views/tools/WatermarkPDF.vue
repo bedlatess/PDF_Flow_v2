@@ -4,11 +4,13 @@ import { useI18n } from 'vue-i18n'
 import { FileText } from 'lucide-vue-next'
 import DragDropZone from '@/components/pdf/DragDropZone.vue'
 import FilePreview from '@/components/pdf/FilePreview.vue'
-import Button from '@/components/common/Button.vue'
-import Card from '@/components/common/Card.vue'
 import Modal from '@/components/common/Modal.vue'
-import ProgressBar from '@/components/common/ProgressBar.vue'
 import PDFViewer from '@/components/pdf/PDFViewer.vue'
+import ToolWorkspace from '@/components/tools/ToolWorkspace.vue'
+import ToolActionPanel from '@/components/tools/ToolActionPanel.vue'
+import ToolResultPanel from '@/components/tools/ToolResultPanel.vue'
+import { useToolFileSelection } from '@/composables/useToolFileSelection'
+import { useToolProcessingState } from '@/composables/useToolProcessingState'
 import { memoryManager } from '@/utils/memory-manager'
 import { historyManager } from '@/utils/history-manager'
 import { addWatermark, type WatermarkPosition } from '@/utils/pdf/watermark'
@@ -18,7 +20,14 @@ const { t, tm } = useI18n()
 
 type ToolPageCopy = Record<string, any>
 
-const selectedFile = ref<File | null>(null)
+const {
+  selectedItems: selectedFiles,
+  fileError,
+  setItems: setSelectedFiles,
+  clearSelection,
+  setFileError,
+  clearFileError,
+} = useToolFileSelection<File>()
 const watermarkText = ref('CONFIDENTIAL')
 const opacity = ref(0.3)
 const rotation = ref(45)
@@ -26,15 +35,32 @@ const fontSize = ref(40)
 const position = ref<WatermarkPosition>('center')
 const watermarkColor = ref('#808080')
 
-const isProcessing = ref(false)
-const processingProgress = ref(0)
-const processingStatus = ref('')
 const showSuccessModal = ref(false)
 const showPDFViewer = ref(false)
 const resultUrl = ref('')
-const errorMessage = ref('')
+
+const {
+  isProcessing,
+  processingProgress,
+  processingStatus,
+  processingError,
+  startProcessing,
+  updateProcessing,
+  resetProcessing,
+  failProcessing,
+} = useToolProcessingState()
 
 const copy = computed<ToolPageCopy>(() => tm('tools.watermark.page') as ToolPageCopy)
+const selectedFile = computed(() => selectedFiles.value[0] || null)
+const workspaceError = computed(() => fileError.value || processingError.value)
+
+const clearResult = () => {
+  if (resultUrl.value) {
+    memoryManager.revokeObjectURL(resultUrl.value)
+    resultUrl.value = ''
+  }
+  showSuccessModal.value = false
+}
 
 watch(copy, (nextCopy, previousCopy) => {
   const previousDefault = previousCopy?.defaultText ?? ''
@@ -44,21 +70,20 @@ watch(copy, (nextCopy, previousCopy) => {
   }
 }, { immediate: true })
 const handleFilesSelected = (files: File[]) => {
-  selectedFile.value = files[0]
-  errorMessage.value = ''
+  setSelectedFiles(files.slice(0, 1))
+  clearFileError()
+  resetProcessing()
+  clearResult()
 }
 
 const handleError = (message: string) => {
-  errorMessage.value = message
+  setFileError(message)
 }
 
 const clearAll = () => {
-  selectedFile.value = null
-  errorMessage.value = ''
-  if (resultUrl.value) {
-    memoryManager.revokeObjectURL(resultUrl.value)
-    resultUrl.value = ''
-  }
+  clearSelection()
+  resetProcessing()
+  clearResult()
 }
 
 const hexToRgb = (hex: string): { r: number; g: number; b: number } => {
@@ -74,17 +99,15 @@ const applyWatermark = async () => {
   if (!selectedFile.value) return
 
   if (!watermarkText.value.trim()) {
-    errorMessage.value = copy.value.errorNoText
+    failProcessing(copy.value.errorNoText)
     return
   }
 
-  isProcessing.value = true
-  processingProgress.value = 20
-  processingStatus.value = copy.value.processing
-  errorMessage.value = ''
+  startProcessing(copy.value.processing)
+  updateProcessing(20, copy.value.processing)
 
   try {
-    processingProgress.value = 50
+    updateProcessing(50, copy.value.processing)
     const blob = await addWatermark(selectedFile.value, {
       text: watermarkText.value,
       opacity: opacity.value,
@@ -94,8 +117,7 @@ const applyWatermark = async () => {
       position: position.value,
     })
 
-    processingProgress.value = 100
-    processingStatus.value = copy.value.done
+    updateProcessing(100, copy.value.done)
     resultUrl.value = memoryManager.createTemporaryURL(blob)
 
     historyManager.addHistory({
@@ -107,11 +129,9 @@ const applyWatermark = async () => {
 
     showSuccessModal.value = true
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : copy.value.errorFailed
+    failProcessing(error instanceof Error ? error.message : copy.value.errorFailed)
   } finally {
     isProcessing.value = false
-    processingProgress.value = 0
-    processingStatus.value = ''
   }
 }
 
@@ -151,39 +171,39 @@ onUnmounted(() => {
       <template #badgeIcon>
         <FileText class="h-4 w-4" />
       </template>
-      <div
-        v-if="errorMessage"
-        class="mb-4 rounded-lg bg-error-light p-4 text-error-dark dark:bg-error/20 dark:text-error"
+      <ToolWorkspace
+        :error-message="workspaceError"
+        layout="wide-secondary"
       >
-        {{ errorMessage }}
-      </div>
+        <template
+          v-if="!selectedFile"
+          #upload
+        >
+          <DragDropZone
+            accept="pdf"
+            :multiple="false"
+            @files-selected="handleFilesSelected"
+            @error="handleError"
+          />
+        </template>
 
-      <DragDropZone
-        v-if="!selectedFile"
-        accept="pdf"
-        :multiple="false"
-        @files-selected="handleFilesSelected"
-        @error="handleError"
-      />
-
-      <div
-        v-else
-        class="grid gap-6 xl:grid-cols-[1.02fr_0.98fr]"
-      >
-        <div class="space-y-6">
+        <template
+          v-if="selectedFile"
+          #primary
+        >
           <FilePreview
             :file="selectedFile"
             @remove="clearAll"
             @preview="handlePreview"
           />
 
-          <Card class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
+          <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/90 sm:p-5">
             <div class="space-y-5">
               <div>
-                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-fuchsia-500">
+                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-fuchsia-600 dark:text-fuchsia-300">
                   {{ copy.setupLabel }}
                 </p>
-                <h2 class="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">
+                <h2 class="mt-2 text-xl font-semibold text-slate-950 dark:text-white">
                   {{ copy.setupTitle }}
                 </h2>
                 <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
@@ -282,10 +302,13 @@ onUnmounted(() => {
                 >
               </div>
             </div>
-          </Card>
-        </div>
+          </section>
+        </template>
 
-        <div class="space-y-6">
+        <template
+          v-if="selectedFile"
+          #secondary
+        >
           <div class="rounded-lg border border-emerald-100 bg-emerald-50/80 p-5 text-sm leading-6 text-emerald-800 shadow-sm dark:border-emerald-900/50 dark:bg-emerald-950/20 dark:text-emerald-300 dark:shadow-none">
             <p class="font-semibold">
               {{ copy.localTitle }}
@@ -295,17 +318,18 @@ onUnmounted(() => {
             </p>
           </div>
 
-          <Card class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
-            <div class="space-y-5">
-              <div>
-                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-fuchsia-500">
-                  {{ copy.outputLabel }}
-                </p>
-                <h3 class="mt-2 text-xl font-semibold text-slate-900 dark:text-white">
-                  {{ copy.outputTitle }}
-                </h3>
-              </div>
-
+          <ToolActionPanel
+            :label="copy.outputLabel"
+            :title="copy.outputTitle"
+            accent="purple"
+            :show-progress="isProcessing"
+            :progress="processingProgress"
+            :progress-label="processingStatus"
+            :action-label="isProcessing ? t('common.processing') : copy.action"
+            :loading="isProcessing"
+            @action="applyWatermark"
+          >
+            <template #details>
               <div class="rounded-md border border-slate-200 bg-slate-50/80 p-5 dark:border-slate-800 dark:bg-slate-950/40">
                 <ul class="space-y-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
                   <li
@@ -316,28 +340,10 @@ onUnmounted(() => {
                   </li>
                 </ul>
               </div>
-
-              <ProgressBar
-                v-if="isProcessing"
-                :progress="processingProgress"
-                :label="processingStatus"
-                variant="primary"
-                size="md"
-              />
-
-              <Button
-                variant="primary"
-                size="lg"
-                :loading="isProcessing"
-                full-width
-                @click="applyWatermark"
-              >
-                {{ isProcessing ? t('common.processing') : copy.action }}
-              </Button>
-            </div>
-          </Card>
-        </div>
-      </div>
+            </template>
+          </ToolActionPanel>
+        </template>
+      </ToolWorkspace>
 
       <Modal
         v-model="showPDFViewer"
@@ -351,24 +357,14 @@ onUnmounted(() => {
         />
       </Modal>
 
-      <Modal
+      <ToolResultPanel
         v-model="showSuccessModal"
         :title="copy.successTitle"
+        :message="copy.successMessage"
+        :primary-label="t('common.download')"
         size="md"
+        @primary="downloadResult"
       >
-        <div class="text-center">
-          <p class="mb-6 text-gray-600 dark:text-gray-300">
-            {{ copy.successMessage }}
-          </p>
-          <Button
-            variant="primary"
-            size="lg"
-            full-width
-            @click="downloadResult"
-          >
-            {{ t('common.download') }}
-          </Button>
-        </div>
-      </Modal>
+      </ToolResultPanel>
   </ToolPageShell>
 </template>

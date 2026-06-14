@@ -12,15 +12,15 @@ import {
 } from 'lucide-vue-next'
 import { fileAPI } from '@/services/api'
 import Button from '@/components/common/Button.vue'
-import Card from '@/components/common/Card.vue'
 import Modal from '@/components/common/Modal.vue'
-import ProgressBar from '@/components/common/ProgressBar.vue'
 import DiagnosticAlert from '@/components/common/DiagnosticAlert.vue'
 import DragDropZone from '@/components/pdf/DragDropZone.vue'
 import FilePreview from '@/components/pdf/FilePreview.vue'
 import ToolPageShell from '@/components/tools/ToolPageShell.vue'
 import ToolNoticeBar from '@/components/tools/ToolNoticeBar.vue'
 import ToolAccessPanel from '@/components/tools/ToolAccessPanel.vue'
+import ToolWorkspace from '@/components/tools/ToolWorkspace.vue'
+import ToolActionPanel from '@/components/tools/ToolActionPanel.vue'
 import { useUserStore } from '@/stores/user'
 import { formatUserFacingError, type FormattedUserError } from '@/utils/error-messages'
 import { redirectForFeatureAccess } from '@/utils/feature-access'
@@ -282,23 +282,30 @@ const closeResultModal = () => {
         </template>
       </ToolAccessPanel>
 
-      <div v-if="canUseOCR" class="mt-6 grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-        <Card class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
-          <div class="space-y-6">
+      <ToolWorkspace
+        v-if="canUseOCR"
+        class="mt-6"
+        layout="wide-secondary"
+      >
+        <template
+          v-if="!selectedFile"
+          #upload
+        >
+          <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/90 sm:p-5">
             <div class="space-y-2">
               <p class="text-xs font-semibold uppercase tracking-[0.22em] text-purple-500">
                 {{ t('tools.ocr.uploadLabel') }}
               </p>
               <h2 class="text-2xl font-semibold text-slate-900 dark:text-white">
-                {{ selectedFile ? t('tools.ocr.uploadTitleSelected') : t('tools.ocr.uploadTitleIdle') }}
+                {{ t('tools.ocr.uploadTitleIdle') }}
               </h2>
               <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
-                {{ selectedFile ? t('tools.ocr.uploadDescriptionSelected') : t('tools.ocr.uploadDescriptionIdle') }}
+                {{ t('tools.ocr.uploadDescriptionIdle') }}
               </p>
             </div>
 
             <DragDropZone
-              v-if="!selectedFile"
+              class="mt-6"
               accept="application/pdf,.pdf,image/*,.png,.jpg,.jpeg,.webp"
               :multiple="false"
               :max-files="1"
@@ -315,41 +322,17 @@ const closeResultModal = () => {
                 {{ t('tools.ocr.dropSubtitle') }}
               </template>
             </DragDropZone>
+          </section>
+        </template>
 
-            <div v-else class="space-y-5">
+        <template
+          v-if="selectedFile"
+          #primary
+        >
               <FilePreview
                 :file="selectedFile"
                 @remove="clearAll"
               />
-
-              <div class="rounded-md border border-purple-100 bg-purple-50/70 p-4 text-sm leading-6 text-purple-900 dark:border-purple-900/40 dark:bg-purple-950/20 dark:text-purple-100">
-                <div class="flex flex-wrap items-center justify-between gap-3">
-                  <span class="font-semibold">{{ t('tools.ocr.workspaceLanguage') }}</span>
-                  <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-purple-700 shadow-sm dark:bg-slate-900 dark:text-purple-200">
-                    {{ selectedLanguageLabel }}
-                  </span>
-                </div>
-                <p class="mt-2 text-xs text-purple-700/80 dark:text-purple-200/80">
-                  {{ t('tools.ocr.flowStep2') }}
-                </p>
-              </div>
-
-              <ProgressBar
-                v-if="isProcessing"
-                :progress="processingProgress"
-                :label="processingStatus"
-                variant="primary"
-                size="md"
-              />
-
-              <Button
-                size="lg"
-                full-width
-                :loading="isProcessing"
-                @click="performOCR"
-              >
-                {{ primaryActionLabel }}
-              </Button>
 
               <div
                 v-if="extractedText"
@@ -375,14 +358,40 @@ const closeResultModal = () => {
                   </Button>
                 </div>
               </div>
-            </div>
-          </div>
-        </Card>
+        </template>
 
-        <Card
+        <template
           v-if="selectedFile"
-          class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none"
+          #secondary
         >
+          <ToolActionPanel
+            :label="t('tools.ocr.flowStep2')"
+            :title="extractedText ? t('tools.ocr.resultTitle') : t('tools.ocr.start')"
+            :description="extractedText ? resultPreview : t('tools.ocr.workspaceDescription')"
+            accent="purple"
+            :show-progress="isProcessing"
+            :progress="processingProgress"
+            :progress-label="processingStatus"
+            :action-label="primaryActionLabel"
+            :loading="isProcessing"
+            @action="performOCR"
+          >
+            <template #details>
+              <div class="rounded-md border border-purple-100 bg-purple-50/70 p-4 text-sm leading-6 text-purple-900 dark:border-purple-900/40 dark:bg-purple-950/20 dark:text-purple-100">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <span class="font-semibold">{{ t('tools.ocr.workspaceLanguage') }}</span>
+                  <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-purple-700 shadow-sm dark:bg-slate-900 dark:text-purple-200">
+                    {{ selectedLanguageLabel }}
+                  </span>
+                </div>
+                <p class="mt-2 text-xs text-purple-700/80 dark:text-purple-200/80">
+                  {{ t('tools.ocr.flowStep2') }}
+                </p>
+              </div>
+            </template>
+          </ToolActionPanel>
+
+          <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/90 sm:p-5">
           <div class="space-y-6">
             <div class="space-y-5">
               <div>
@@ -455,8 +464,9 @@ const closeResultModal = () => {
               </div>
             </div>
           </div>
-        </Card>
-      </div>
+          </section>
+        </template>
+      </ToolWorkspace>
 
       <Modal
         v-model="showResultModal"

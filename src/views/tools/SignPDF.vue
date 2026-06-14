@@ -2,7 +2,6 @@
 import { computed, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
-  BadgeCheck,
   Download,
   FileSignature,
   ImagePlus,
@@ -10,12 +9,13 @@ import {
   ShieldCheck,
 } from 'lucide-vue-next'
 import Button from '@/components/common/Button.vue'
-import Card from '@/components/common/Card.vue'
 import DragDropZone from '@/components/pdf/DragDropZone.vue'
 import FilePreview from '@/components/pdf/FilePreview.vue'
-import ProgressBar from '@/components/common/ProgressBar.vue'
 import ToolPageShell from '@/components/tools/ToolPageShell.vue'
 import ToolNoticeBar from '@/components/tools/ToolNoticeBar.vue'
+import ToolWorkspace from '@/components/tools/ToolWorkspace.vue'
+import ToolActionPanel from '@/components/tools/ToolActionPanel.vue'
+import { useToolProcessingState } from '@/composables/useToolProcessingState'
 import { addVisualSignature } from '@/utils/pdf/signature'
 import { getPDFPageCount } from '@/utils/pdf/merge'
 import { historyManager } from '@/utils/history-manager'
@@ -32,16 +32,25 @@ const xPercent = ref(68)
 const yPercent = ref(72)
 const widthPercent = ref(22)
 const opacity = ref(1)
-const isProcessing = ref(false)
-const progress = ref(0)
-const status = ref('')
 const resultUrl = ref('')
 const errorMessage = ref('')
+
+const {
+  isProcessing,
+  processingProgress,
+  processingStatus,
+  processingError,
+  startProcessing,
+  updateProcessing,
+  resetProcessing,
+  failProcessing,
+} = useToolProcessingState()
 
 type ToolPageCopy = Record<string, any>
 
 const copy = computed<ToolPageCopy>(() => tm('tools.sign.page') as ToolPageCopy)
 const canSign = computed(() => !!pdfFile.value && !!signatureFile.value && !isProcessing.value)
+const workspaceError = computed(() => errorMessage.value || processingError.value)
 
 const handlePDFSelected = async (files: File[]) => {
   try {
@@ -50,6 +59,7 @@ const handlePDFSelected = async (files: File[]) => {
     pageCount.value = await getPDFPageCount(files[0])
     pageNumber.value = Math.min(pageNumber.value, pageCount.value || 1)
     errorMessage.value = ''
+    resetProcessing()
   } catch {
     pdfFile.value = null
     pageCount.value = 0
@@ -65,6 +75,7 @@ const handleSignatureSelected = (files: File[]) => {
   signatureFile.value = file
   signaturePreviewUrl.value = URL.createObjectURL(file)
   errorMessage.value = ''
+  resetProcessing()
 }
 
 const clearSignaturePreview = () => {
@@ -84,11 +95,13 @@ const clearResult = () => {
 const removePDF = () => {
   pdfFile.value = null
   pageCount.value = 0
+  resetProcessing()
   clearResult()
 }
 
 const removeSignature = () => {
   signatureFile.value = null
+  resetProcessing()
   clearSignaturePreview()
   clearResult()
 }
@@ -104,14 +117,13 @@ const signPDF = async () => {
     return
   }
 
-  isProcessing.value = true
-  progress.value = 18
-  status.value = copy.value.processing
+  startProcessing(copy.value.processing)
+  updateProcessing(18, copy.value.processing)
   errorMessage.value = ''
   clearResult()
 
   try {
-    progress.value = 56
+    updateProcessing(56, copy.value.processing)
     const blob = await addVisualSignature(pdfFile.value, signatureFile.value, {
       pageNumber: pageNumber.value,
       xPercent: xPercent.value,
@@ -120,8 +132,7 @@ const signPDF = async () => {
       opacity: opacity.value,
     })
 
-    progress.value = 100
-    status.value = copy.value.done
+    updateProcessing(100, copy.value.done)
     resultUrl.value = memoryManager.createTemporaryURL(blob)
 
     historyManager.addHistory({
@@ -131,7 +142,7 @@ const signPDF = async () => {
       resultSize: blob.size,
     })
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : copy.value.errorFailed
+    failProcessing(error instanceof Error ? error.message : copy.value.errorFailed)
   } finally {
     isProcessing.value = false
   }
@@ -170,16 +181,16 @@ onUnmounted(() => {
         {{ copy.notice }}
       </ToolNoticeBar>
 
-      <div
-        v-if="errorMessage"
-        class="mt-6 rounded-md border border-red-200 bg-red-50 p-4 text-sm leading-6 text-red-700 shadow-sm dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-100"
+      <ToolWorkspace
+        class="mt-6"
+        :error-message="workspaceError"
+        layout="wide-secondary"
       >
-        {{ errorMessage }}
-      </div>
-
-      <div class="mt-6 grid gap-6 xl:grid-cols-[1fr_0.95fr]">
-        <div class="space-y-6">
-          <Card class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
+        <template
+          v-if="!pdfFile"
+          #upload
+        >
+          <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/90 sm:p-5">
             <div class="space-y-5">
               <div>
                 <p class="text-xs font-semibold uppercase tracking-[0.22em] text-amber-600">
@@ -211,19 +222,20 @@ onUnmounted(() => {
                   {{ copy.dropSubtitle }}
                 </template>
               </DragDropZone>
-
-              <FilePreview
-                v-else
-                :file="pdfFile"
-                @remove="removePDF"
-              />
             </div>
-          </Card>
+          </section>
+        </template>
 
-          <Card
-            v-if="pdfFile"
-            class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none"
-          >
+        <template
+          v-if="pdfFile"
+          #primary
+        >
+          <FilePreview
+            :file="pdfFile"
+            @remove="removePDF"
+          />
+
+          <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/90 sm:p-5">
             <div class="space-y-5">
               <div>
                 <p class="text-xs font-semibold uppercase tracking-[0.22em] text-orange-600">
@@ -285,11 +297,11 @@ onUnmounted(() => {
                 </button>
               </div>
             </div>
-          </Card>
+          </section>
 
-          <Card
+          <section
             v-if="pdfFile && signatureFile"
-            class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none"
+            class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/90 sm:p-5"
           >
             <div class="space-y-5">
               <div>
@@ -360,47 +372,15 @@ onUnmounted(() => {
                   >
                 </label>
               </div>
-
-              <ProgressBar
-                v-if="isProcessing || resultUrl"
-                :progress="progress"
-                :label="status"
-                variant="primary"
-                size="md"
-              />
-
-              <div class="flex flex-col gap-3 sm:flex-row">
-                <Button
-                  variant="primary"
-                  size="lg"
-                  :loading="isProcessing"
-                  :disabled="!canSign"
-                  full-width
-                  @click="signPDF"
-                >
-                  <PenLine class="mr-2 h-4 w-4" />
-                  {{ isProcessing ? copy.processing : copy.action }}
-                </Button>
-                <Button
-                  v-if="resultUrl"
-                  variant="outline"
-                  size="lg"
-                  full-width
-                  @click="downloadResult"
-                >
-                  <Download class="mr-2 h-4 w-4" />
-                  {{ copy.download }}
-                </Button>
-              </div>
             </div>
-          </Card>
-        </div>
+          </section>
+        </template>
 
-        <div class="space-y-6">
-          <Card
-            v-if="pdfFile"
-            class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none"
-          >
+        <template
+          v-if="pdfFile"
+          #secondary
+        >
+          <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/90 sm:p-5">
             <div class="space-y-5">
               <div>
                 <p class="text-xs font-semibold uppercase tracking-[0.22em] text-amber-600">
@@ -447,34 +427,36 @@ onUnmounted(() => {
                 </div>
               </div>
             </div>
-          </Card>
+          </section>
 
-          <Card
-            v-if="pdfFile"
-            class="rounded-lg border border-emerald-200 bg-emerald-50/90 shadow-sm dark:border-emerald-900/40 dark:bg-emerald-950/20 dark:shadow-none"
+          <ToolActionPanel
+            v-if="signatureFile"
+            :label="copy.localTitle"
+            :title="resultUrl ? copy.successTitle : copy.action"
+            :description="resultUrl ? copy.successMessage : copy.localDesc"
+            accent="amber"
+            :show-progress="isProcessing || !!resultUrl"
+            :progress="processingProgress"
+            :progress-label="processingStatus"
+            :action-label="isProcessing ? copy.processing : copy.action"
+            :loading="isProcessing"
+            :disabled="!canSign"
+            @action="signPDF"
           >
-            <div class="flex items-start gap-4">
-              <BadgeCheck class="mt-0.5 h-6 w-6 shrink-0 text-emerald-500" />
-              <div>
-                <h3 class="text-lg font-semibold text-slate-900 dark:text-white">
-                  {{ resultUrl ? copy.successTitle : copy.localTitle }}
-                </h3>
-                <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                  {{ resultUrl ? copy.successMessage : copy.localDesc }}
-                </p>
+            <template #details>
                 <Button
                   v-if="resultUrl"
-                  class="mt-4"
-                  variant="primary"
+                  variant="outline"
+                  size="lg"
+                  full-width
                   @click="downloadResult"
                 >
                   <Download class="mr-2 h-4 w-4" />
                   {{ copy.download }}
                 </Button>
-              </div>
-            </div>
-          </Card>
-        </div>
-      </div>
+            </template>
+          </ToolActionPanel>
+        </template>
+      </ToolWorkspace>
   </ToolPageShell>
 </template>

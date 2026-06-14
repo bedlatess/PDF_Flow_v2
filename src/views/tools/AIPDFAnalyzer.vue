@@ -53,23 +53,30 @@
         </template>
       </ToolAccessPanel>
 
-      <div v-if="canUseAI" class="mt-6 grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-        <Card class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
-          <div class="space-y-6">
+      <ToolWorkspace
+        v-if="canUseAI"
+        class="mt-6"
+        layout="wide-secondary"
+      >
+        <template
+          v-if="!selectedFile"
+          #upload
+        >
+          <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/90 sm:p-5">
             <div class="space-y-2">
               <p class="text-xs font-semibold uppercase tracking-[0.22em] text-fuchsia-500">
                 {{ t('ai.uploadLabel') }}
               </p>
               <h2 class="text-2xl font-semibold text-slate-900 dark:text-white">
-                {{ selectedFile ? t('ai.uploadTitleSelected') : t('ai.uploadTitleIdle') }}
+                {{ t('ai.uploadTitleIdle') }}
               </h2>
               <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
-                {{ selectedFile ? t('ai.uploadDescriptionSelected') : t('ai.uploadDescriptionIdle') }}
+                {{ t('ai.uploadDescriptionIdle') }}
               </p>
             </div>
 
             <DragDropZone
-              v-if="!selectedFile"
+              class="mt-6"
               :accept="'.pdf'"
               @files-selected="handleFileSelected"
               @error="handleUploadError"
@@ -84,11 +91,15 @@
                 {{ t('ai.dropSubtitle') }}
               </template>
             </DragDropZone>
+          </section>
+        </template>
 
-            <div
-              v-else
-              class="space-y-4"
-            >
+        <template
+          v-if="selectedFile"
+          #primary
+        >
+          <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/90 sm:p-5">
+            <div class="space-y-4">
               <div class="rounded-md border border-slate-200 bg-slate-50/70 p-5 dark:border-slate-800 dark:bg-slate-950/50">
                 <div class="flex items-center justify-between gap-4">
                   <div class="flex items-center gap-3">
@@ -123,13 +134,23 @@
                 </p>
               </div>
             </div>
-          </div>
-        </Card>
+          </section>
+        </template>
 
-        <Card
+        <template
           v-if="selectedFile"
-          class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none"
+          #secondary
         >
+          <ToolActionPanel
+            :label="t('ai.uploadLabel')"
+            :title="t('ai.suggestedFlowTitle')"
+            :description="t('ai.suggestedFlowDescription')"
+            accent="purple"
+            :action-label="t('common.replace')"
+            action-variant="outline"
+            @action="clearFile"
+          >
+            <template #details>
           <div class="space-y-6">
             <div class="flex flex-wrap gap-2">
               <button
@@ -163,7 +184,7 @@
                   for="ai-summary-length"
                   class="mb-2 block text-sm font-semibold text-slate-800 dark:text-slate-200"
                 >
-                  {{ t('ai.summarize.length') }}
+                  {{ aiText('ai.summarize.length', 'Summary Length') }}
                 </label>
                 <select
                   id="ai-summary-length"
@@ -171,13 +192,13 @@
                   class="w-full rounded-md border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-fuchsia-400 focus:ring-4 focus:ring-fuchsia-100 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:focus:border-fuchsia-400 dark:focus:ring-fuchsia-500/20"
                 >
                   <option value="short">
-                    {{ t('ai.summarize.short') }}
+                    {{ aiText('ai.summarize.short', 'Short') }}
                   </option>
                   <option value="medium">
-                    {{ t('ai.summarize.medium') }}
+                    {{ aiText('ai.summarize.medium', 'Medium') }}
                   </option>
                   <option value="long">
-                    {{ t('ai.summarize.long') }}
+                    {{ aiText('ai.summarize.long', 'Long') }}
                   </option>
                 </select>
               </div>
@@ -189,7 +210,7 @@
               >
                 <Sparkles v-if="!processing" class="mr-2 h-4 w-4" />
                 <Loader2 v-else class="mr-2 h-4 w-4 animate-spin" />
-                {{ processing ? t('common.processing') : t('ai.summarize.generate') }}
+                {{ processing ? t('common.processing') : aiText('ai.summarize.generate', 'Generate Summary') }}
               </Button>
 
               <div
@@ -198,7 +219,7 @@
               >
                 <div>
                   <h4 class="font-semibold text-slate-900 dark:text-white">
-                    {{ t('ai.summarize.summary') }}
+                  {{ aiText('ai.summarize.summary', 'Summary') }}
                   </h4>
                   <p class="mt-2 text-sm leading-7 text-slate-700 dark:text-slate-300">
                     {{ summaryResult.summary }}
@@ -207,7 +228,7 @@
 
                 <div v-if="summaryResult.key_points.length > 0">
                   <h4 class="font-semibold text-slate-900 dark:text-white">
-                    {{ t('ai.summarize.keyPoints') }}
+                    {{ aiText('ai.summarize.keyPoints', 'Key points') }}
                   </h4>
                   <ul class="mt-2 space-y-2">
                     <li
@@ -251,7 +272,7 @@
                   for="ai-question"
                   class="mb-2 block text-sm font-semibold text-slate-800 dark:text-slate-200"
                 >
-                  {{ t('ai.ask.question') }}
+                  {{ aiText('ai.ask.question', 'Your Question') }}
                 </label>
                 <textarea
                   id="ai-question"
@@ -269,7 +290,7 @@
               >
                 <MessageCircle v-if="!processing" class="mr-2 h-4 w-4" />
                 <Loader2 v-else class="mr-2 h-4 w-4 animate-spin" />
-                {{ processing ? t('common.processing') : t('ai.ask.submit') }}
+                {{ processing ? t('common.processing') : aiText('ai.ask.submit', 'Ask AI') }}
               </Button>
 
               <div
@@ -278,7 +299,7 @@
               >
                 <div class="flex items-center justify-between gap-3">
                   <h4 class="font-semibold text-slate-900 dark:text-white">
-                    {{ t('ai.ask.answer') }}
+                    {{ aiText('ai.ask.answer', 'Answer') }}
                   </h4>
                   <span
                     :class="[
@@ -290,7 +311,7 @@
                           : 'bg-rose-100 text-rose-700 dark:bg-rose-950/30 dark:text-rose-200',
                     ]"
                   >
-                    {{ qaResult.confidence }} {{ t('ai.ask.confidence') }}
+                    {{ qaResult.confidence }} {{ aiText('ai.ask.confidence', 'confidence') }}
                   </span>
                 </div>
 
@@ -300,7 +321,7 @@
 
                 <div v-if="qaResult.relevant_excerpts.length > 0">
                   <h4 class="font-semibold text-slate-900 dark:text-white">
-                    {{ t('ai.ask.excerpts') }}
+                    {{ aiText('ai.ask.excerpts', 'Relevant excerpts') }}
                   </h4>
                   <div class="mt-2 space-y-2">
                     <div
@@ -330,7 +351,7 @@
                   for="ai-extract-type"
                   class="mb-2 block text-sm font-semibold text-slate-800 dark:text-slate-200"
                 >
-                  {{ t('ai.extract.type') }}
+                  {{ aiText('ai.extract.type', 'Document Type') }}
                 </label>
                 <select
                   id="ai-extract-type"
@@ -338,16 +359,16 @@
                   class="w-full rounded-md border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-fuchsia-400 focus:ring-4 focus:ring-fuchsia-100 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:focus:border-fuchsia-400 dark:focus:ring-fuchsia-500/20"
                 >
                   <option value="general">
-                    {{ t('ai.extract.general') }}
+                    {{ aiText('ai.extract.general', 'General') }}
                   </option>
                   <option value="invoice">
-                    {{ t('ai.extract.invoice') }}
+                    {{ aiText('ai.extract.invoice', 'Invoice') }}
                   </option>
                   <option value="resume">
-                    {{ t('ai.extract.resume') }}
+                    {{ aiText('ai.extract.resume', 'Resume') }}
                   </option>
                   <option value="contract">
-                    {{ t('ai.extract.contract') }}
+                    {{ aiText('ai.extract.contract', 'Contract') }}
                   </option>
                 </select>
               </div>
@@ -359,7 +380,7 @@
               >
                 <Database v-if="!processing" class="mr-2 h-4 w-4" />
                 <Loader2 v-else class="mr-2 h-4 w-4 animate-spin" />
-                {{ processing ? t('common.processing') : t('ai.extract.extract') }}
+                {{ processing ? t('common.processing') : aiText('ai.extract.extract', 'Extract Data') }}
               </Button>
 
               <div
@@ -367,7 +388,7 @@
                 class="rounded-md border border-slate-200 bg-slate-50/70 p-5 dark:border-slate-800 dark:bg-slate-950/50"
               >
                 <h4 class="font-semibold text-slate-900 dark:text-white">
-                  {{ t('ai.extract.extractedData') }}
+                  {{ aiText('ai.extract.extractedData', 'Extracted data') }}
                 </h4>
                 <pre class="mt-3 max-h-96 overflow-auto whitespace-pre-wrap rounded-md bg-white p-4 text-sm text-slate-700 dark:bg-slate-900 dark:text-slate-300">{{ JSON.stringify(extractResult.extracted_data, null, 2) }}</pre>
               </div>
@@ -448,8 +469,10 @@
               </div>
             </div>
           </div>
-        </Card>
-      </div>
+            </template>
+          </ToolActionPanel>
+        </template>
+      </ToolWorkspace>
   </ToolPageShell>
 </template>
 
@@ -458,13 +481,14 @@ import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { aiAPI } from '@/services/api'
-import Card from '@/components/common/Card.vue'
 import Button from '@/components/common/Button.vue'
 import DiagnosticAlert from '@/components/common/DiagnosticAlert.vue'
 import DragDropZone from '@/components/pdf/DragDropZone.vue'
 import ToolPageShell from '@/components/tools/ToolPageShell.vue'
 import ToolNoticeBar from '@/components/tools/ToolNoticeBar.vue'
 import ToolAccessPanel from '@/components/tools/ToolAccessPanel.vue'
+import ToolWorkspace from '@/components/tools/ToolWorkspace.vue'
+import ToolActionPanel from '@/components/tools/ToolActionPanel.vue'
 import {
   Sparkles,
   Loader2,
@@ -512,11 +536,16 @@ const batchClassificationLabel = computed(() => {
   return `${classification.category}${confidence}`
 })
 
+const aiText = (key: string, fallback: string) => {
+  const value = t(key)
+  return value === key ? fallback : value
+}
+
 const tabs = computed(() => [
-  { id: 'summarize', label: t('ai.tabs.summarize'), icon: BookOpen },
-  { id: 'ask', label: t('ai.tabs.ask'), icon: HelpCircle },
-  { id: 'extract', label: t('ai.tabs.extract'), icon: FileJson },
-  { id: 'batch', label: t('ai.tabs.batch'), icon: Layers3 },
+  { id: 'summarize', label: aiText('ai.tabs.summarize', 'Summarize'), icon: BookOpen },
+  { id: 'ask', label: aiText('ai.tabs.ask', 'Q&A'), icon: HelpCircle },
+  { id: 'extract', label: aiText('ai.tabs.extract', 'Extract Data'), icon: FileJson },
+  { id: 'batch', label: aiText('ai.tabs.batch', 'Batch analysis'), icon: Layers3 },
 ])
 
 const batchOperationOptions = computed(() => [

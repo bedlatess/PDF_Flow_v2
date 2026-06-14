@@ -2,19 +2,20 @@
 import { computed, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
-  BadgeCheck,
   Download,
   FileImage,
   ImagePlus,
   Sparkles,
 } from 'lucide-vue-next'
 import Button from '@/components/common/Button.vue'
-import Card from '@/components/common/Card.vue'
 import DragDropZone from '@/components/pdf/DragDropZone.vue'
 import FilePreview from '@/components/pdf/FilePreview.vue'
-import ProgressBar from '@/components/common/ProgressBar.vue'
 import ToolPageShell from '@/components/tools/ToolPageShell.vue'
 import ToolNoticeBar from '@/components/tools/ToolNoticeBar.vue'
+import ToolWorkspace from '@/components/tools/ToolWorkspace.vue'
+import ToolActionPanel from '@/components/tools/ToolActionPanel.vue'
+import { useToolFileSelection } from '@/composables/useToolFileSelection'
+import { useToolProcessingState } from '@/composables/useToolProcessingState'
 import { formatFileSize } from '@/utils/file-validator'
 import { historyManager } from '@/utils/history-manager'
 import { extractImagesFromPDF, type ExtractedPDFImage } from '@/utils/pdf/imageExtraction'
@@ -27,33 +28,52 @@ interface ImagePreview extends ExtractedPDFImage {
 
 type ToolPageCopy = Record<string, any>
 
-const selectedFile = ref<File | null>(null)
+const {
+  selectedItems: selectedFiles,
+  fileError,
+  setItems: setSelectedFiles,
+  clearSelection,
+  setFileError,
+  clearFileError,
+} = useToolFileSelection<File>()
 const resultImages = ref<ImagePreview[]>([])
-const isProcessing = ref(false)
-const progress = ref(0)
-const status = ref('')
-const errorMessage = ref('')
+
+const {
+  isProcessing,
+  processingProgress,
+  processingStatus,
+  processingError,
+  startProcessing,
+  updateProcessing,
+  resetProcessing,
+  failProcessing,
+} = useToolProcessingState()
 
 const copy = computed<ToolPageCopy>(() => tm('tools.extractImages.page') as ToolPageCopy)
 
+const selectedFile = computed(() => selectedFiles.value[0] || null)
+const workspaceError = computed(() => fileError.value || processingError.value)
 const canExtract = computed(() => !!selectedFile.value && !isProcessing.value)
 const totalResultSize = computed(() =>
   resultImages.value.reduce((sum, image) => sum + image.blob.size, 0)
 )
+const actionStats = computed(() => [
+  { label: copy.value.resultLabel, value: resultImages.value.length || '-' },
+  { label: copy.value.fileSize, value: resultImages.value.length > 0 ? formatFileSize(totalResultSize.value) : '-' },
+])
 
 const handleFilesSelected = (files: File[]) => {
   const file = files[0]
   if (!file) return
 
   clearImageUrls()
-  selectedFile.value = file
-  errorMessage.value = ''
-  progress.value = 0
-  status.value = ''
+  setSelectedFiles([file])
+  clearFileError()
+  resetProcessing()
 }
 
 const handleError = (message: string) => {
-  errorMessage.value = message
+  setFileError(message)
 }
 
 const clearImageUrls = () => {
@@ -62,31 +82,27 @@ const clearImageUrls = () => {
 }
 
 const removeFile = () => {
-  selectedFile.value = null
-  errorMessage.value = ''
-  progress.value = 0
-  status.value = ''
+  clearSelection()
+  resetProcessing()
   clearImageUrls()
 }
 
 const extractImages = async () => {
   if (!selectedFile.value) return
 
-  isProcessing.value = true
-  progress.value = 18
-  status.value = copy.value.processing
-  errorMessage.value = ''
+  startProcessing(copy.value.processing)
+  updateProcessing(18, copy.value.processing)
+  clearFileError()
   clearImageUrls()
 
   try {
-    progress.value = 58
+    updateProcessing(58, copy.value.processing)
     const extracted = await extractImagesFromPDF(selectedFile.value)
     resultImages.value = extracted.map((image) => ({
       ...image,
       url: URL.createObjectURL(image.blob),
     }))
-    progress.value = 100
-    status.value = copy.value.ready
+    updateProcessing(100, copy.value.ready)
 
     historyManager.addHistory({
       type: 'extractImages',
@@ -95,7 +111,7 @@ const extractImages = async () => {
       resultSize: totalResultSize.value,
     })
   } catch {
-    errorMessage.value = copy.value.errorFailed
+    failProcessing(copy.value.errorFailed)
   } finally {
     isProcessing.value = false
   }
@@ -143,31 +159,30 @@ onUnmounted(() => {
         {{ copy.notice }}
       </ToolNoticeBar>
 
-      <div
-        v-if="errorMessage"
-        class="mt-6 rounded-md border border-red-200 bg-red-50 p-4 text-sm leading-6 text-red-700 shadow-sm dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-100"
+      <ToolWorkspace
+        class="mt-6"
+        :error-message="workspaceError"
+        layout="wide-secondary"
       >
-        {{ errorMessage }}
-      </div>
-
-      <div class="mt-6 grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-        <div class="space-y-6">
-          <Card class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
-            <div class="space-y-6">
+        <template
+          v-if="!selectedFile"
+          #upload
+        >
+          <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/90 sm:p-5">
               <div>
                 <p class="text-xs font-semibold uppercase tracking-[0.22em] text-orange-600">
                   {{ copy.uploadLabel }}
                 </p>
                 <h2 class="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">
-                  {{ selectedFile ? copy.uploadTitleReady : copy.uploadTitleIdle }}
+                  {{ copy.uploadTitleIdle }}
                 </h2>
                 <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                  {{ selectedFile ? copy.uploadDescriptionReady : copy.uploadDescriptionIdle }}
+                  {{ copy.uploadDescriptionIdle }}
                 </p>
               </div>
 
               <DragDropZone
-                v-if="!selectedFile"
+                class="mt-6"
                 accept="pdf"
                 :multiple="false"
                 :max-files="1"
@@ -184,47 +199,19 @@ onUnmounted(() => {
                   {{ copy.dropSubtitle }}
                 </template>
               </DragDropZone>
+          </section>
+        </template>
 
+        <template
+          v-if="selectedFile"
+          #primary
+        >
               <FilePreview
-                v-else
                 :file="selectedFile"
                 @remove="removeFile"
               />
 
-              <ProgressBar
-                v-if="isProcessing || resultImages.length > 0"
-                :progress="progress"
-                :label="status"
-                variant="primary"
-                size="md"
-              />
-
-              <div class="flex flex-col gap-3 sm:flex-row">
-                <Button
-                  variant="primary"
-                  size="lg"
-                  :loading="isProcessing"
-                  :disabled="!canExtract"
-                  full-width
-                  @click="extractImages"
-                >
-                  <ImagePlus class="mr-2 h-4 w-4" />
-                  {{ isProcessing ? copy.processing : copy.action }}
-                </Button>
-                <Button
-                  v-if="selectedFile"
-                  variant="ghost"
-                  size="lg"
-                  full-width
-                  @click="removeFile"
-                >
-                  {{ copy.remove }}
-                </Button>
-              </div>
-            </div>
-          </Card>
-
-          <Card class="overflow-hidden rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
+          <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/90 sm:p-5">
             <div class="space-y-5">
                 <div>
                   <h3 class="text-xl font-semibold text-slate-900 dark:text-white">
@@ -249,11 +236,40 @@ onUnmounted(() => {
                   </div>
                 </div>
             </div>
-          </Card>
-        </div>
+          </section>
+        </template>
 
-        <div class="space-y-6">
-          <Card class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
+        <template #secondary>
+          <ToolActionPanel
+            v-if="selectedFile"
+            :label="copy.resultLabel"
+            :title="resultImages.length > 0 ? t('tools.extractImages.page.readyTitle', { count: resultImages.length }) : copy.action"
+            :description="resultImages.length > 0 ? `${copy.fileSize}: ${formatFileSize(totalResultSize)}` : copy.emptyHint"
+            accent="amber"
+            :stats="actionStats"
+            :show-progress="isProcessing || resultImages.length > 0"
+            :progress="processingProgress"
+            :progress-label="processingStatus"
+            :action-label="isProcessing ? copy.processing : copy.action"
+            :loading="isProcessing"
+            :disabled="!canExtract"
+            @action="extractImages"
+          >
+            <template #details>
+              <Button
+                v-if="resultImages.length > 0"
+                variant="primary"
+                size="lg"
+                full-width
+                @click="downloadAll"
+              >
+                <Download class="mr-2 h-4 w-4" />
+                {{ copy.downloadAll }}
+              </Button>
+            </template>
+          </ToolActionPanel>
+
+          <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/90 sm:p-5">
             <div class="space-y-5">
               <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
@@ -279,7 +295,7 @@ onUnmounted(() => {
               </div>
 
               <div
-                v-if="selectedFile && !isProcessing && progress === 100 && resultImages.length === 0"
+                v-if="selectedFile && !isProcessing && processingProgress === 100 && resultImages.length === 0"
                 class="rounded-md border border-amber-200 bg-amber-50 p-6 dark:border-amber-500/20 dark:bg-amber-500/10"
               >
                 <div class="flex items-start gap-3">
@@ -340,25 +356,8 @@ onUnmounted(() => {
                 </article>
               </div>
             </div>
-          </Card>
-
-          <Card
-            v-if="resultImages.length > 0"
-            class="rounded-lg border border-emerald-200 bg-emerald-50/90 shadow-sm dark:border-emerald-900/40 dark:bg-emerald-950/20 dark:shadow-none"
-          >
-            <div class="flex items-start gap-4">
-              <BadgeCheck class="mt-0.5 h-6 w-6 shrink-0 text-emerald-500" />
-              <div>
-                <h3 class="text-lg font-semibold text-slate-900 dark:text-white">
-                  {{ copy.ready }}
-                </h3>
-                <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                  {{ copy.localBody }}
-                </p>
-              </div>
-            </div>
-          </Card>
-        </div>
-      </div>
+          </section>
+        </template>
+      </ToolWorkspace>
   </ToolPageShell>
 </template>

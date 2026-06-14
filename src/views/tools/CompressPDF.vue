@@ -315,6 +315,12 @@ onUnmounted(() => {
 
               <CloudToggle v-model="useCloud" />
 
+              <div class="rounded-md border border-emerald-100 bg-emerald-50/80 p-4 text-sm leading-6 text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/20 dark:text-emerald-200">
+                <p class="font-semibold">
+                  {{ copy.freeModeLabel || 'Free mode' }}
+                </p>
+              </div>
+
               <div class="space-y-3">
                 <button
                   v-for="option in copy.qualityOptions"

@@ -4,10 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import {
   ArrowLeft,
-  CheckCircle2,
   Crown,
-  Download,
-  FileCheck,
   FileText,
   LockKeyhole,
   RotateCcw,
@@ -15,14 +12,14 @@ import {
 } from 'lucide-vue-next'
 import { advancedAPI } from '@/services/api'
 import Button from '@/components/common/Button.vue'
-import Card from '@/components/common/Card.vue'
-import ProgressBar from '@/components/common/ProgressBar.vue'
 import DiagnosticAlert from '@/components/common/DiagnosticAlert.vue'
 import DragDropZone from '@/components/pdf/DragDropZone.vue'
 import FilePreview from '@/components/pdf/FilePreview.vue'
 import ToolPageShell from '@/components/tools/ToolPageShell.vue'
 import ToolNoticeBar from '@/components/tools/ToolNoticeBar.vue'
 import ToolAccessPanel from '@/components/tools/ToolAccessPanel.vue'
+import ToolWorkspace from '@/components/tools/ToolWorkspace.vue'
+import ToolActionPanel from '@/components/tools/ToolActionPanel.vue'
 import { useUserStore } from '@/stores/user'
 import { formatUserFacingError, type FormattedUserError } from '@/utils/error-messages'
 import { redirectForFeatureAccess } from '@/utils/feature-access'
@@ -42,6 +39,10 @@ const errorState = ref<FormattedUserError | null>(null)
 const resultUrl = ref('')
 const stepText = (value: number) => t('tools.fillForm.stepLabel', { step: value })
 const fieldInputId = (field: any, index: number) => `fill-form-field-${index}-${String(field.name || 'field').replace(/[^a-zA-Z0-9_-]/g, '-')}`
+const fillText = (key: string, fallback: string, params?: Record<string, unknown>) => {
+  const value = t(key, params || {})
+  return value === key ? fallback : value
+}
 
 const canUseTool = computed(() => userStore.isAuthenticated && userStore.canUseCloudFeatures)
 
@@ -54,7 +55,7 @@ const primaryActionLabel = computed(() => {
     return t('tools.fillForm.upgradeAfterLogin')
   }
 
-  return t('tools.fillForm.fillForm')
+  return fillText('tools.fillForm.fillForm', 'Fill Form')
 })
 
 const canSubmit = computed(() =>
@@ -271,13 +272,13 @@ onUnmounted(() => {
         </template>
       </ToolAccessPanel>
 
-      <div class="mt-6 space-y-6">
-        <div
-          v-if="step === 1 && canUseTool"
-          class="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]"
-        >
-          <Card class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
-            <div class="space-y-6">
+      <ToolWorkspace
+        v-if="step === 1 && canUseTool"
+        class="mt-6"
+        layout="wide-secondary"
+      >
+        <template #upload>
+          <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/90 sm:p-5">
               <div class="space-y-2">
                 <p class="text-xs font-semibold uppercase tracking-[0.22em] text-amber-500">
                   {{ t('tools.fillForm.uploadLabel') }}
@@ -306,10 +307,11 @@ onUnmounted(() => {
                   {{ t('tools.fillForm.dropSubtitle') }}
                 </template>
               </DragDropZone>
-            </div>
-          </Card>
+          </section>
+        </template>
 
-          <Card class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
+        <template #secondary>
+          <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/90 sm:p-5">
             <div class="space-y-6">
               <div>
                 <h3 class="text-xl font-semibold text-slate-900 dark:text-white">
@@ -346,260 +348,249 @@ onUnmounted(() => {
                 </div>
               </div>
             </div>
-          </Card>
-        </div>
+          </section>
+        </template>
+      </ToolWorkspace>
 
-        <Card
-          v-if="step === 2"
-          class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none"
-        >
-          <div
-            v-if="loading"
-            class="space-y-6 py-6 text-center"
-          >
-            <div class="mx-auto h-14 w-14 animate-spin rounded-full border-4 border-amber-100 border-t-amber-500 dark:border-amber-950 dark:border-t-amber-400" />
-            <div class="space-y-2">
-              <p class="text-xs font-semibold uppercase tracking-[0.22em] text-amber-500">
-                {{ stepText(2) }}
-              </p>
-              <h2 class="text-2xl font-semibold text-slate-900 dark:text-white">
-                {{ t('tools.fillForm.stepDetecting') }}
-              </h2>
-              <p class="text-sm text-slate-600 dark:text-slate-300">
-                {{ t('tools.fillForm.analyzing') }}
-              </p>
-            </div>
-          </div>
-
-          <div
-            v-else-if="formFields.length > 0"
-            class="space-y-6"
-          >
-            <div class="space-y-2">
-              <p class="text-xs font-semibold uppercase tracking-[0.22em] text-amber-500">
-                {{ stepText(2) }}
-              </p>
-              <h2 class="text-2xl font-semibold text-slate-900 dark:text-white">
-                {{ t('tools.fillForm.stepReview') }}
-              </h2>
-              <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
-                {{ t('tools.fillForm.foundFields', { count: formFields.length }) }}
-              </p>
-            </div>
-
+      <ToolWorkspace
+        v-if="step === 2"
+        class="mt-6"
+        layout="wide-primary"
+      >
+        <template #primary>
+          <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/90 sm:p-5">
             <FilePreview
               v-if="uploadedFile"
               :file="uploadedFile"
+              class="mb-5"
               @remove="handleRemoveFile"
             />
 
-            <div class="space-y-4">
-              <div
-                v-for="(field, index) in formFields"
-                :key="`${field.name}-${index}`"
-                class="rounded-md border border-slate-200 bg-slate-50/70 p-5 dark:border-slate-800 dark:bg-slate-950/50"
-              >
-                <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <label
-                      :for="field.type === 'radio' ? undefined : fieldInputId(field, index)"
-                      class="block text-sm font-semibold text-slate-900 dark:text-white"
-                    >
-                      {{ field.name }}
-                      <span
-                        v-if="field.required"
-                        class="ml-1 text-red-500"
-                      >*</span>
-                    </label>
-                    <p class="mt-1 text-xs uppercase tracking-[0.14em] text-slate-400">
-                      {{ t(`tools.fillForm.fieldTypes.${field.type}`) }}
-                    </p>
-                  </div>
-
-                  <span
-                    :class="[
-                      'rounded-full px-3 py-1 text-xs font-semibold',
-                      field.required
-                        ? 'bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-200'
-                        : 'bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
-                    ]"
-                  >
-                    {{ field.required ? t('common.required') : t('common.optional') }}
-                  </span>
-                </div>
-
-                <input
-                  v-if="field.type === 'text'"
-                  :id="fieldInputId(field, index)"
-                  v-model="field.value"
-                  type="text"
-                  :placeholder="field.default_value || t('tools.fillForm.enterValue')"
-                  class="w-full rounded-md border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-400 focus:ring-4 focus:ring-amber-100 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:focus:border-amber-400 dark:focus:ring-amber-500/20"
-                >
-
-                <label
-                  v-else-if="field.type === 'checkbox'"
-                  :for="fieldInputId(field, index)"
-                  class="flex items-center gap-3 rounded-md border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
-                >
-                  <input
-                    :id="fieldInputId(field, index)"
-                    v-model="field.value"
-                    type="checkbox"
-                    class="h-4 w-4 rounded border-slate-300 text-amber-500 focus:ring-amber-500"
-                  >
-                  <span>{{ field.default_value || t('tools.fillForm.checkThis') }}</span>
-                </label>
-
-                <div
-                  v-else-if="field.type === 'radio'"
-                  class="grid gap-3 sm:grid-cols-2"
-                >
-                  <label
-                    v-for="(option, optionIndex) in field.options || []"
-                    :key="optionIndex"
-                    class="flex items-center gap-3 rounded-md border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
-                  >
-                    <input
-                      v-model="field.value"
-                      type="radio"
-                      :value="option"
-                      class="h-4 w-4 border-slate-300 text-amber-500 focus:ring-amber-500"
-                    >
-                    <span>{{ option }}</span>
-                  </label>
-                </div>
-
-                <select
-                  v-else-if="field.type === 'dropdown'"
-                  :id="fieldInputId(field, index)"
-                  v-model="field.value"
-                  class="w-full rounded-md border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-400 focus:ring-4 focus:ring-amber-100 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:focus:border-amber-400 dark:focus:ring-amber-500/20"
-                >
-                  <option value="">
-                    {{ t('tools.fillForm.selectOption') }}
-                  </option>
-                  <option
-                    v-for="(option, optionIndex) in field.options || []"
-                    :key="optionIndex"
-                    :value="option"
-                  >
-                    {{ option }}
-                  </option>
-                </select>
+            <div
+              v-if="loading"
+              class="space-y-6 py-6 text-center"
+            >
+              <div class="mx-auto h-14 w-14 animate-spin rounded-full border-4 border-amber-100 border-t-amber-500 dark:border-amber-950 dark:border-t-amber-400" />
+              <div class="space-y-2">
+                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-amber-500">
+                  {{ stepText(2) }}
+                </p>
+                <h2 class="text-2xl font-semibold text-slate-900 dark:text-white">
+                  {{ t('tools.fillForm.stepDetecting') }}
+                </h2>
+                <p class="text-sm text-slate-600 dark:text-slate-300">
+                  {{ t('tools.fillForm.analyzing') }}
+                </p>
               </div>
             </div>
 
-            <div class="flex flex-col gap-3 sm:flex-row">
+            <div
+              v-else-if="formFields.length > 0"
+              class="space-y-6"
+            >
+              <div class="space-y-2">
+                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-amber-500">
+                  {{ stepText(2) }}
+                </p>
+                <h2 class="text-2xl font-semibold text-slate-900 dark:text-white">
+                  {{ t('tools.fillForm.stepReview') }}
+                </h2>
+                <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
+                  {{ fillText('tools.fillForm.foundFields', `${formFields.length} fields found`, { count: formFields.length }) }}
+                </p>
+              </div>
+
+              <div class="space-y-4">
+                <div
+                  v-for="(field, index) in formFields"
+                  :key="`${field.name}-${index}`"
+                  class="rounded-md border border-slate-200 bg-slate-50/70 p-5 dark:border-slate-800 dark:bg-slate-950/50"
+                >
+                  <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <label
+                        :for="field.type === 'radio' ? undefined : fieldInputId(field, index)"
+                        class="block text-sm font-semibold text-slate-900 dark:text-white"
+                      >
+                        {{ field.name }}
+                        <span
+                          v-if="field.required"
+                          class="ml-1 text-red-500"
+                        >*</span>
+                      </label>
+                      <p class="mt-1 text-xs uppercase tracking-[0.14em] text-slate-400">
+                        {{ fillText(`tools.fillForm.fieldTypes.${field.type}`, field.type) }}
+                      </p>
+                    </div>
+
+                    <span
+                      :class="[
+                        'rounded-full px-3 py-1 text-xs font-semibold',
+                        field.required
+                          ? 'bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-200'
+                          : 'bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
+                      ]"
+                    >
+                      {{ field.required ? t('common.required') : t('common.optional') }}
+                    </span>
+                  </div>
+
+                  <input
+                    v-if="field.type === 'text'"
+                    :id="fieldInputId(field, index)"
+                    v-model="field.value"
+                    type="text"
+                    :placeholder="field.default_value || fillText('tools.fillForm.enterValue', 'Enter value')"
+                    class="w-full rounded-md border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-400 focus:ring-4 focus:ring-amber-100 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:focus:border-amber-400 dark:focus:ring-amber-500/20"
+                  >
+
+                  <label
+                    v-else-if="field.type === 'checkbox'"
+                    :for="fieldInputId(field, index)"
+                    class="flex items-center gap-3 rounded-md border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                  >
+                    <input
+                      :id="fieldInputId(field, index)"
+                      v-model="field.value"
+                      type="checkbox"
+                      class="h-4 w-4 rounded border-slate-300 text-amber-500 focus:ring-amber-500"
+                    >
+                    <span>{{ field.default_value || fillText('tools.fillForm.checkThis', 'Check this') }}</span>
+                  </label>
+
+                  <div
+                    v-else-if="field.type === 'radio'"
+                    class="grid gap-3 sm:grid-cols-2"
+                  >
+                    <label
+                      v-for="(option, optionIndex) in field.options || []"
+                      :key="optionIndex"
+                      class="flex items-center gap-3 rounded-md border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                    >
+                      <input
+                        v-model="field.value"
+                        type="radio"
+                        :value="option"
+                        class="h-4 w-4 border-slate-300 text-amber-500 focus:ring-amber-500"
+                      >
+                      <span>{{ option }}</span>
+                    </label>
+                  </div>
+
+                  <select
+                    v-else-if="field.type === 'dropdown'"
+                    :id="fieldInputId(field, index)"
+                    v-model="field.value"
+                    class="w-full rounded-md border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-400 focus:ring-4 focus:ring-amber-100 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:focus:border-amber-400 dark:focus:ring-amber-500/20"
+                  >
+                    <option value="">
+                      {{ fillText('tools.fillForm.selectOption', 'Select an option') }}
+                    </option>
+                    <option
+                      v-for="(option, optionIndex) in field.options || []"
+                      :key="optionIndex"
+                      :value="option"
+                    >
+                      {{ option }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div
+              v-else
+              class="space-y-6 py-6 text-center"
+            >
+              <div class="space-y-2">
+                <h2 class="text-2xl font-semibold text-slate-900 dark:text-white">
+                  {{ t('tools.fillForm.noFields') }}
+                </h2>
+                <p class="text-sm text-slate-600 dark:text-slate-300">
+                  {{ t('tools.fillForm.noFieldsHelp') }}
+                </p>
+              </div>
+            </div>
+          </section>
+        </template>
+
+        <template #secondary>
+          <ToolActionPanel
+            :label="stepText(2)"
+            :title="loading ? t('tools.fillForm.stepDetecting') : t('tools.fillForm.workspaceTitle')"
+            :description="formFields.length > 0 ? fillText('tools.fillForm.foundFields', `${formFields.length} fields found`, { count: formFields.length }) : t('tools.fillForm.workspaceDescription')"
+            accent="amber"
+            :action-label="primaryActionLabel"
+            :loading="loading"
+            :disabled="loading || formFields.length === 0 || !canSubmit"
+            @action="handleFillForm"
+          >
+            <template #details>
               <Button
                 variant="outline"
                 size="lg"
+                full-width
                 @click="step = 1"
               >
                 <ArrowLeft class="mr-2 h-4 w-4" />
                 {{ t('common.back') }}
               </Button>
-              <Button
-                size="lg"
-                :disabled="!canSubmit"
-                full-width
-                @click="handleFillForm"
-              >
-                <FileCheck class="mr-2 h-4 w-4" />
-                {{ primaryActionLabel }}
-              </Button>
-            </div>
-          </div>
+            </template>
+          </ToolActionPanel>
+        </template>
+      </ToolWorkspace>
 
-          <div
-            v-else
-            class="space-y-6 py-6 text-center"
+      <ToolWorkspace
+        v-if="step === 3"
+        class="mt-6"
+      >
+        <template #primary>
+          <ToolActionPanel
+            :label="stepText(3)"
+            :title="t('tools.fillForm.stepGenerating')"
+            :description="fillText('tools.fillForm.filling', 'Filling form fields')"
+            accent="amber"
+            :show-progress="true"
+            :progress="progress"
+            :progress-label="t('tools.fillForm.preparingResult')"
+            :action-label="t('common.processing')"
+            :loading="true"
+            disabled
+            @action="() => {}"
+          />
+        </template>
+      </ToolWorkspace>
+
+      <ToolWorkspace
+        v-if="step === 4"
+        class="mt-6"
+      >
+        <template #primary>
+          <ToolActionPanel
+            :label="t('tools.fillForm.ready')"
+            :title="fillText('tools.fillForm.success', 'Form filled')"
+            :description="t('tools.fillForm.successMessage')"
+            accent="emerald"
+            :action-label="t('common.download')"
+            @action="handleDownload"
           >
-            <div class="space-y-2">
-              <h2 class="text-2xl font-semibold text-slate-900 dark:text-white">
-                {{ t('tools.fillForm.noFields') }}
-              </h2>
-              <p class="text-sm text-slate-600 dark:text-slate-300">
-                {{ t('tools.fillForm.noFieldsHelp') }}
+            <template #details>
+              <p class="text-center text-sm font-medium text-emerald-700 dark:text-emerald-200">
+                {{ fillText('tools.fillForm.filledFields', `${formFields.length} fields filled`, { count: formFields.length }) }}
               </p>
-            </div>
-            <Button
-              variant="outline"
-              size="lg"
-              @click="step = 1"
-            >
-              {{ t('common.back') }}
-            </Button>
-          </div>
-        </Card>
-
-        <Card
-          v-if="step === 3"
-          class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none"
-        >
-          <div class="space-y-6 py-6 text-center">
-            <div class="mx-auto h-14 w-14 animate-spin rounded-full border-4 border-amber-100 border-t-amber-500 dark:border-amber-950 dark:border-t-amber-400" />
-            <div class="space-y-2">
-              <p class="text-xs font-semibold uppercase tracking-[0.22em] text-amber-500">
-                {{ stepText(3) }}
-              </p>
-              <h2 class="text-2xl font-semibold text-slate-900 dark:text-white">
-                {{ t('tools.fillForm.stepGenerating') }}
-              </h2>
-              <p class="text-sm text-slate-600 dark:text-slate-300">
-                {{ t('tools.fillForm.filling') }}
-              </p>
-            </div>
-
-            <ProgressBar
-              :progress="progress"
-              :label="t('tools.fillForm.preparingResult')"
-              variant="primary"
-              size="md"
-            />
-          </div>
-        </Card>
-
-        <Card
-          v-if="step === 4"
-          class="rounded-lg border border-emerald-200 bg-emerald-50/90 shadow-sm dark:border-emerald-900/40 dark:bg-emerald-950/20 dark:shadow-none"
-        >
-          <div class="space-y-6 py-4 text-center">
-            <CheckCircle2 class="mx-auto h-16 w-16 text-emerald-500" />
-            <div class="space-y-2">
-              <p class="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-500">
-                {{ t('tools.fillForm.ready') }}
-              </p>
-              <h2 class="text-2xl font-semibold text-slate-900 dark:text-white">
-                {{ t('tools.fillForm.success') }}
-              </h2>
-              <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
-                {{ t('tools.fillForm.successMessage') }}
-              </p>
-              <p class="text-sm font-medium text-emerald-700 dark:text-emerald-200">
-                {{ t('tools.fillForm.filledFields', { count: formFields.length }) }}
-              </p>
-            </div>
-
-            <div class="flex flex-col gap-3 sm:flex-row sm:justify-center">
-              <Button
-                size="lg"
-                @click="handleDownload"
-              >
-                <Download class="mr-2 h-4 w-4" />
-                {{ t('common.download') }}
-              </Button>
               <Button
                 variant="outline"
                 size="lg"
+                full-width
                 @click="handleReset"
               >
                 <RotateCcw class="mr-2 h-4 w-4" />
                 {{ t('common.fillAnother') }}
               </Button>
-            </div>
-          </div>
-        </Card>
-      </div>
+            </template>
+          </ToolActionPanel>
+        </template>
+      </ToolWorkspace>
+
   </ToolPageShell>
 </template>

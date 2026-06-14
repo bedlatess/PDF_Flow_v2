@@ -3,7 +3,6 @@ import { computed, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import {
-  CheckCircle2,
   Download,
   Eye,
   EyeOff,
@@ -14,14 +13,16 @@ import {
   UnlockKeyhole,
 } from 'lucide-vue-next'
 import Button from '@/components/common/Button.vue'
-import Card from '@/components/common/Card.vue'
 import DiagnosticAlert from '@/components/common/DiagnosticAlert.vue'
 import DragDropZone from '@/components/pdf/DragDropZone.vue'
 import FilePreview from '@/components/pdf/FilePreview.vue'
-import ProgressBar from '@/components/common/ProgressBar.vue'
 import ToolAccessPanel from '@/components/tools/ToolAccessPanel.vue'
 import ToolPageShell from '@/components/tools/ToolPageShell.vue'
 import ToolNoticeBar from '@/components/tools/ToolNoticeBar.vue'
+import ToolWorkspace from '@/components/tools/ToolWorkspace.vue'
+import ToolActionPanel from '@/components/tools/ToolActionPanel.vue'
+import { useToolFileSelection } from '@/composables/useToolFileSelection'
+import { useToolProcessingState } from '@/composables/useToolProcessingState'
 import { advancedAPI } from '@/services/api'
 import { useUserStore } from '@/stores/user'
 import { formatUserFacingError, type FormattedUserError } from '@/utils/error-messages'
@@ -35,16 +36,33 @@ const userStore = useUserStore()
 
 type ToolPageCopy = Record<string, any>
 
-const selectedFile = ref<File | null>(null)
+const {
+  selectedItems: selectedFiles,
+  fileError,
+  setItems: setSelectedFiles,
+  clearSelection,
+  setFileError,
+  clearFileError,
+} = useToolFileSelection<File>()
 const password = ref('')
 const showPassword = ref(false)
-const isProcessing = ref(false)
-const progress = ref(0)
-const status = ref('')
 const resultUrl = ref('')
 const errorState = ref<FormattedUserError | null>(null)
 
+const {
+  isProcessing,
+  processingProgress,
+  processingStatus,
+  processingError,
+  startProcessing,
+  updateProcessing,
+  resetProcessing,
+  failProcessing,
+} = useToolProcessingState()
+
 const copy = computed<ToolPageCopy>(() => tm('tools.unlock.page') as ToolPageCopy)
+const selectedFile = computed(() => selectedFiles.value[0] || null)
+const workspaceError = computed(() => fileError.value || processingError.value)
 
 const canSubmit = computed(() =>
   !!selectedFile.value
@@ -68,16 +86,21 @@ const revokeResultUrl = () => {
 const handleFilesSelected = (files: File[]) => {
   const file = files[0]
   if (!file) return
-  selectedFile.value = file
+  setSelectedFiles([file])
   errorState.value = null
+  clearFileError()
+  resetProcessing()
   revokeResultUrl()
 }
 
+const handleError = (message: string) => {
+  setFileError(message)
+}
+
 const removeFile = () => {
-  selectedFile.value = null
+  clearSelection()
   errorState.value = null
-  progress.value = 0
-  status.value = ''
+  resetProcessing()
   revokeResultUrl()
 }
 
@@ -106,19 +129,16 @@ const unlockPDF = async () => {
     return
   }
 
-  isProcessing.value = true
-  progress.value = 15
-  status.value = copy.value.uploading
+  startProcessing(copy.value.uploading)
+  updateProcessing(15, copy.value.uploading)
   errorState.value = null
   revokeResultUrl()
 
   try {
-    progress.value = 55
-    status.value = copy.value.processing
+    updateProcessing(55, copy.value.processing)
     const blob = await advancedAPI.unlockPDF(selectedFile.value, password.value)
     resultUrl.value = URL.createObjectURL(blob)
-    progress.value = 100
-    status.value = copy.value.ready
+    updateProcessing(100, copy.value.ready)
 
     historyManager.addHistory({
       type: 'unlock',
@@ -131,6 +151,7 @@ const unlockPDF = async () => {
       area: 'UNLOCK',
       fallbackMessage: copy.value.errorFailed,
     })
+    failProcessing('')
   } finally {
     isProcessing.value = false
   }
@@ -193,30 +214,36 @@ onUnmounted(() => {
         </template>
       </ToolAccessPanel>
 
-      <div
+      <ToolWorkspace
         v-if="userStore.isAuthenticated"
-        class="mt-6 grid gap-6 lg:grid-cols-[1fr_0.95fr]"
+        class="mt-6"
+        :error-message="workspaceError"
+        layout="wide-secondary"
       >
-        <Card class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
-          <div class="space-y-6">
+        <template
+          v-if="!selectedFile"
+          #upload
+        >
+          <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/90 sm:p-5">
             <div>
               <p class="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-600">
                 {{ copy.uploadLabel }}
               </p>
               <h2 class="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">
-                {{ selectedFile ? copy.uploadTitleSelected : copy.uploadTitleIdle }}
+                {{ copy.uploadTitleIdle }}
               </h2>
               <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                {{ selectedFile ? copy.uploadDescriptionSelected : copy.uploadDescriptionIdle }}
+                {{ copy.uploadDescriptionIdle }}
               </p>
             </div>
 
             <DragDropZone
-              v-if="!selectedFile"
+              class="mt-6"
               accept="pdf"
               :multiple="false"
               :max-files="1"
               @files-selected="handleFilesSelected"
+              @error="handleError"
             >
               <template #icon>
                 <UnlockKeyhole class="h-12 w-12" />
@@ -228,13 +255,31 @@ onUnmounted(() => {
                 {{ copy.dropSubtitle }}
               </template>
             </DragDropZone>
+          </section>
+        </template>
 
-            <FilePreview
-              v-else
-              :file="selectedFile"
-              @remove="removeFile"
-            />
+        <template
+          v-if="selectedFile"
+          #primary
+        >
+          <FilePreview
+            :file="selectedFile"
+            @remove="removeFile"
+          />
 
+          <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/90 sm:p-5">
+            <div class="space-y-6">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-600 dark:text-emerald-300">
+                  {{ copy.uploadLabel }}
+                </p>
+                <h2 class="mt-2 text-xl font-semibold text-slate-950 dark:text-white">
+                  {{ copy.uploadTitleSelected }}
+                </h2>
+                <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                  {{ copy.uploadDescriptionSelected }}
+                </p>
+              </div>
             <label
               v-if="selectedFile"
               class="block"
@@ -259,50 +304,10 @@ onUnmounted(() => {
                 </button>
               </div>
             </label>
-
-            <ProgressBar
-              v-if="isProcessing || resultUrl"
-              :progress="progress"
-              :label="status"
-              variant="primary"
-              size="md"
-            />
-
-            <div
-              v-if="selectedFile"
-              class="flex flex-col gap-3 sm:flex-row"
-            >
-              <Button
-                variant="primary"
-                size="lg"
-                :loading="isProcessing"
-                :disabled="!canSubmit"
-                full-width
-                @click="unlockPDF"
-              >
-                <KeyRound class="mr-2 h-4 w-4" />
-                {{ isProcessing ? copy.processing : copy.unlock }}
-              </Button>
-
-              <Button
-                v-if="resultUrl"
-                variant="outline"
-                size="lg"
-                full-width
-                @click="downloadResult"
-              >
-                <Download class="mr-2 h-4 w-4" />
-                {{ copy.download }}
-              </Button>
             </div>
-          </div>
-          </Card>
+          </section>
 
-        <div class="space-y-6">
-          <Card
-            v-if="selectedFile"
-            class="overflow-hidden rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none"
-          >
+          <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/90 sm:p-5">
             <div class="space-y-6">
                 <div class="rounded-md border border-emerald-100 bg-emerald-50/80 p-5 dark:border-emerald-900/50 dark:bg-emerald-950/20">
                   <div class="flex items-start gap-3">
@@ -342,35 +347,46 @@ onUnmounted(() => {
                   </div>
                 </div>
             </div>
-          </Card>
+          </section>
+        </template>
 
-          <Card
-            v-if="resultUrl"
-            class="rounded-lg border border-emerald-200 bg-emerald-50/90 shadow-sm dark:border-emerald-900/40 dark:bg-emerald-950/20 dark:shadow-none"
+        <template
+          v-if="selectedFile"
+          #secondary
+        >
+          <ToolActionPanel
+            :label="copy.workspaceTitle"
+            :title="resultUrl ? copy.successTitle : copy.unlock"
+            :description="resultUrl ? copy.successMessage : copy.workspaceDescription"
+            accent="emerald"
+            :show-progress="isProcessing || !!resultUrl"
+            :progress="processingProgress"
+            :progress-label="processingStatus"
+            :action-label="isProcessing ? copy.processing : copy.unlock"
+            :loading="isProcessing"
+            :disabled="!canSubmit"
+            @action="unlockPDF"
           >
-            <div class="flex items-start gap-4">
-              <CheckCircle2 class="mt-0.5 h-6 w-6 shrink-0 text-emerald-500" />
-              <div class="space-y-3">
-                <div>
-                  <h3 class="text-lg font-semibold text-slate-900 dark:text-white">
-                    {{ copy.successTitle }}
-                  </h3>
-                  <p class="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                    {{ copy.successMessage }}
-                  </p>
-                </div>
-
+            <template #details>
+              <div class="rounded-md border border-emerald-100 bg-emerald-50/80 p-4 text-sm leading-6 text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/20 dark:text-emerald-200">
+                <KeyRound class="mb-3 h-5 w-5" />
+                <p>{{ copy.step1 }}</p>
+                <p>{{ copy.step2 }}</p>
+                <p>{{ copy.step3 }}</p>
+              </div>
                 <Button
+                  v-if="resultUrl"
                   variant="primary"
+                  size="lg"
+                  full-width
                   @click="downloadResult"
                 >
                   <Download class="mr-2 h-4 w-4" />
                   {{ copy.download }}
                 </Button>
-              </div>
-            </div>
-          </Card>
-        </div>
-      </div>
+            </template>
+          </ToolActionPanel>
+        </template>
+      </ToolWorkspace>
   </ToolPageShell>
 </template>

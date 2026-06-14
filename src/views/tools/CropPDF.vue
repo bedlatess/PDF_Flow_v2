@@ -328,7 +328,7 @@ onUnmounted(clearResult)
           #secondary
         >
           <ToolActionPanel
-            :title="copy.action"
+            :title="copy.localTitle"
             :description="copy.localDesc"
             accent="emerald"
             :stats="actionStats"

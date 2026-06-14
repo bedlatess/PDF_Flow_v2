@@ -4,17 +4,18 @@ import { useI18n } from 'vue-i18n'
 import {
   BadgeCheck,
   Download,
-  FileCheck2,
   Layers3,
   ShieldAlert,
 } from 'lucide-vue-next'
 import Button from '@/components/common/Button.vue'
-import Card from '@/components/common/Card.vue'
 import DragDropZone from '@/components/pdf/DragDropZone.vue'
 import FilePreview from '@/components/pdf/FilePreview.vue'
-import ProgressBar from '@/components/common/ProgressBar.vue'
 import ToolPageShell from '@/components/tools/ToolPageShell.vue'
+import ToolWorkspace from '@/components/tools/ToolWorkspace.vue'
+import ToolActionPanel from '@/components/tools/ToolActionPanel.vue'
 import ToolNoticeBar from '@/components/tools/ToolNoticeBar.vue'
+import { useToolFileSelection } from '@/composables/useToolFileSelection'
+import { useToolProcessingState } from '@/composables/useToolProcessingState'
 import { flattenPDF } from '@/utils/pdf/flatten'
 import { getPDFPageCount } from '@/utils/pdf/merge'
 import { historyManager } from '@/utils/history-manager'
@@ -24,36 +25,58 @@ const { tm } = useI18n()
 
 type ToolPageCopy = Record<string, any>
 
-const selectedFile = ref<File | null>(null)
+const {
+  selectedItems: selectedFiles,
+  fileError,
+  setItems: setSelectedFiles,
+  clearSelection,
+  setFileError,
+  clearFileError,
+} = useToolFileSelection<File>()
 const pageCount = ref(0)
 const fieldCount = ref<number | null>(null)
-const isProcessing = ref(false)
-const progress = ref(0)
-const status = ref('')
 const resultUrl = ref('')
 const resultSize = ref(0)
-const errorMessage = ref('')
+
+const {
+  isProcessing,
+  processingProgress,
+  processingStatus,
+  processingError,
+  startProcessing,
+  updateProcessing,
+  resetProcessing,
+  failProcessing,
+} = useToolProcessingState()
 
 const copy = computed<ToolPageCopy>(() => tm('tools.flatten.page') as ToolPageCopy)
 
+const selectedFile = computed(() => selectedFiles.value[0] || null)
+const workspaceError = computed(() => fileError.value || processingError.value)
 const canFlatten = computed(() => !!selectedFile.value && !isProcessing.value)
+const resultStats = computed(() => [
+  { label: copy.value.pages, value: pageCount.value || '-' },
+  { label: copy.value.fieldLabel, value: fieldCount.value ?? '-' },
+  { label: copy.value.outputSize, value: formatFileSize(resultSize.value) },
+])
 
 const handleFilesSelected = async (files: File[]) => {
   try {
     clearResult()
-    selectedFile.value = files[0]
+    setSelectedFiles(files.slice(0, 1))
     pageCount.value = await getPDFPageCount(files[0])
     fieldCount.value = null
-    errorMessage.value = ''
+    clearFileError()
+    resetProcessing()
   } catch {
-    selectedFile.value = null
+    clearSelection()
     pageCount.value = 0
-    errorMessage.value = copy.value.errorLoad
+    setFileError(copy.value.errorLoad)
   }
 }
 
 const handleError = (message: string) => {
-  errorMessage.value = message
+  setFileError(message)
 }
 
 const clearResult = () => {
@@ -65,29 +88,26 @@ const clearResult = () => {
 }
 
 const removeFile = () => {
-  selectedFile.value = null
+  clearSelection()
   pageCount.value = 0
   fieldCount.value = null
-  errorMessage.value = ''
+  resetProcessing()
   clearResult()
 }
 
 const flatten = async () => {
   if (!selectedFile.value) return
 
-  isProcessing.value = true
-  progress.value = 20
-  status.value = copy.value.processing
-  errorMessage.value = ''
+  startProcessing(copy.value.processing)
+  updateProcessing(20, copy.value.processing)
   clearResult()
 
   try {
-    progress.value = 65
+    updateProcessing(65, copy.value.processing)
     const result = await flattenPDF(selectedFile.value)
     fieldCount.value = result.fieldCount
     resultSize.value = result.blob.size
-    progress.value = 100
-    status.value = copy.value.done
+    updateProcessing(100, copy.value.done)
     resultUrl.value = memoryManager.createTemporaryURL(result.blob)
 
     historyManager.addHistory({
@@ -97,7 +117,7 @@ const flatten = async () => {
       resultSize: result.blob.size,
     })
   } catch {
-    errorMessage.value = copy.value.errorFailed
+    failProcessing(copy.value.errorFailed)
   } finally {
     isProcessing.value = false
   }
@@ -145,31 +165,29 @@ onUnmounted(clearResult)
         {{ copy.notice }}
       </ToolNoticeBar>
 
-      <div
-        v-if="errorMessage"
-        class="mt-6 rounded-md border border-red-200 bg-red-50 p-4 text-sm leading-6 text-red-700 shadow-sm dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-100"
+      <ToolWorkspace
+        :error-message="workspaceError"
+        layout="wide-secondary"
       >
-        {{ errorMessage }}
-      </div>
-
-      <div class="mt-6 grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-        <div class="space-y-6">
-          <Card class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
+        <template
+          v-if="!selectedFile"
+          #upload
+        >
+          <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/90 sm:p-5">
             <div class="space-y-6">
               <div>
-                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-600 dark:text-slate-300">
+                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-600 dark:text-slate-300">
                   {{ copy.uploadLabel }}
                 </p>
-                <h2 class="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">
-                  {{ selectedFile ? copy.uploadTitleReady : copy.uploadTitleIdle }}
+                <h2 class="mt-2 text-xl font-semibold text-slate-950 dark:text-white">
+                  {{ copy.uploadTitleIdle }}
                 </h2>
                 <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                  {{ selectedFile ? copy.uploadDescriptionReady : copy.uploadDescriptionIdle }}
+                  {{ copy.uploadDescriptionIdle }}
                 </p>
               </div>
 
               <DragDropZone
-                v-if="!selectedFile"
                 accept="pdf"
                 :multiple="false"
                 :max-files="1"
@@ -186,17 +204,29 @@ onUnmounted(clearResult)
                   {{ copy.dropSubtitle }}
                 </template>
               </DragDropZone>
-
-              <FilePreview
-                v-else
-                :file="selectedFile"
-                @remove="removeFile"
-              />
             </div>
-          </Card>
+          </section>
+        </template>
 
-          <Card class="overflow-hidden rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
+        <template
+          v-if="selectedFile"
+          #primary
+        >
+          <FilePreview
+            :file="selectedFile"
+            @remove="removeFile"
+          />
+
+          <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/90 sm:p-5">
             <div class="space-y-5">
+                <div>
+                  <h3 class="text-xl font-semibold text-slate-900 dark:text-white">
+                    {{ copy.uploadTitleReady }}
+                  </h3>
+                  <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                    {{ copy.uploadDescriptionReady }}
+                  </p>
+                </div>
                 <div>
                   <h3 class="text-xl font-semibold text-slate-900 dark:text-white">
                     {{ copy.localTitle }}
@@ -220,70 +250,28 @@ onUnmounted(clearResult)
                   </div>
                 </div>
             </div>
-          </Card>
-        </div>
+          </section>
+        </template>
 
-        <div class="space-y-6">
-          <Card class="rounded-lg border border-white/70 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-none">
-            <div class="space-y-5">
-              <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-600 dark:text-slate-300">
-                    {{ copy.resultLabel }}
-                  </p>
-                  <h2 class="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">
-                    {{ resultUrl ? copy.successTitle : copy.waitingTitle }}
-                  </h2>
-                  <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                    {{ resultUrl ? copy.successMessage : copy.waitingBody }}
-                  </p>
-                </div>
-                <Button
-                  v-if="resultUrl"
-                  variant="primary"
-                  size="sm"
-                  @click="downloadResult"
-                >
-                  <Download class="mr-2 h-4 w-4" />
-                  {{ copy.download }}
-                </Button>
-              </div>
-
-              <div class="grid gap-3 sm:grid-cols-3">
-                <div class="rounded-md border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-800 dark:bg-slate-950/40">
-                  <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                    {{ copy.pages }}
-                  </p>
-                  <p class="mt-2 text-2xl font-bold text-slate-900 dark:text-white">
-                    {{ pageCount || '-' }}
-                  </p>
-                </div>
-                <div class="rounded-md border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-800 dark:bg-slate-950/40">
-                  <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                    {{ copy.fieldLabel }}
-                  </p>
-                  <p class="mt-2 text-2xl font-bold text-slate-900 dark:text-white">
-                    {{ fieldCount ?? '-' }}
-                  </p>
-                </div>
-                <div class="rounded-md border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-800 dark:bg-slate-950/40">
-                  <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                    {{ copy.outputSize }}
-                  </p>
-                  <p class="mt-2 text-2xl font-bold text-slate-900 dark:text-white">
-                    {{ formatFileSize(resultSize) }}
-                  </p>
-                </div>
-              </div>
-
-              <ProgressBar
-                v-if="isProcessing || resultUrl"
-                :progress="progress"
-                :label="status"
-                variant="primary"
-                size="md"
-              />
-
+        <template
+          v-if="selectedFile"
+          #secondary
+        >
+          <ToolActionPanel
+            :label="copy.resultLabel"
+            :title="resultUrl ? copy.successTitle : copy.waitingTitle"
+            :description="resultUrl ? copy.successMessage : copy.waitingBody"
+            accent="blue"
+            :stats="resultStats"
+            :show-progress="isProcessing || !!resultUrl"
+            :progress="processingProgress"
+            :progress-label="processingStatus"
+            :action-label="isProcessing ? copy.processing : copy.action"
+            :loading="isProcessing"
+            :disabled="!canFlatten"
+            @action="flatten"
+          >
+            <template #details>
               <div
                 v-if="fieldCount === 0 && resultUrl"
                 class="rounded-md border border-amber-200 bg-amber-50 p-5 dark:border-amber-500/20 dark:bg-amber-500/10"
@@ -296,35 +284,22 @@ onUnmounted(clearResult)
                 </p>
               </div>
 
-              <div class="flex flex-col gap-3 sm:flex-row">
-                <Button
-                  variant="primary"
-                  size="lg"
-                  :loading="isProcessing"
-                  :disabled="!canFlatten"
-                  full-width
-                  @click="flatten"
-                >
-                  <FileCheck2 class="mr-2 h-4 w-4" />
-                  {{ isProcessing ? copy.processing : copy.action }}
-                </Button>
-                <Button
-                  v-if="resultUrl"
-                  variant="outline"
-                  size="lg"
-                  full-width
-                  @click="downloadResult"
-                >
-                  <Download class="mr-2 h-4 w-4" />
-                  {{ copy.download }}
-                </Button>
-              </div>
-            </div>
-          </Card>
+              <Button
+                v-if="resultUrl"
+                variant="outline"
+                size="lg"
+                full-width
+                @click="downloadResult"
+              >
+                <Download class="mr-2 h-4 w-4" />
+                {{ copy.download }}
+              </Button>
+            </template>
+          </ToolActionPanel>
 
-          <Card
+          <section
             v-if="resultUrl"
-            class="rounded-lg border border-emerald-200 bg-emerald-50/90 shadow-sm dark:border-emerald-900/40 dark:bg-emerald-950/20 dark:shadow-none"
+            class="rounded-lg border border-emerald-200 bg-emerald-50/90 p-4 shadow-sm dark:border-emerald-900/40 dark:bg-emerald-950/20 dark:shadow-none sm:p-5"
           >
             <div class="flex items-start gap-4">
               <BadgeCheck class="mt-0.5 h-6 w-6 shrink-0 text-emerald-500" />
@@ -337,8 +312,8 @@ onUnmounted(clearResult)
                 </p>
               </div>
             </div>
-          </Card>
-        </div>
-      </div>
+          </section>
+        </template>
+      </ToolWorkspace>
   </ToolPageShell>
 </template>

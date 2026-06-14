@@ -10,7 +10,6 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.security import get_password_hash
 from app.domains.account.entitlements import effective_role
 from app.models.user import UsageLog, User
 from app.schemas.user import UserUpdate
@@ -56,9 +55,6 @@ def update_account(db: Session, user: User, payload: UserUpdate) -> User:
     """Apply profile updates for the current account."""
     if payload.full_name is not None:
         user.full_name = payload.full_name
-
-    if payload.password is not None:
-        user.hashed_password = get_password_hash(payload.password)
 
     db.commit()
     db.refresh(user)

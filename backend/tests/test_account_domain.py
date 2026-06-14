@@ -133,7 +133,7 @@ def test_account_stats_treats_expired_pro_as_free(client):
     assert response.json()["role"] == "free"
 
 
-def test_account_update_changes_name_and_password(client):
+def test_account_update_changes_name_without_password_rotation(client):
     from app.core.database import get_db
     from app.core.security import verify_password
     from app.models.user import User
@@ -150,13 +150,13 @@ def test_account_update_changes_name_and_password(client):
     assert response.status_code == 200
     assert response.json()["full_name"] == "Updated User"
 
-    assert _login(client, email=email, password="SecurePass123!").status_code == 401
-    assert _login(client, email=email, password="NewSecurePass123!").status_code == 200
+    assert _login(client, email=email, password="SecurePass123!").status_code == 200
+    assert _login(client, email=email, password="NewSecurePass123!").status_code == 401
 
     db = next(client.app.dependency_overrides[get_db]())
     try:
         user = db.query(User).filter(User.email == email).first()
-        assert verify_password("NewSecurePass123!", user.hashed_password)
+        assert verify_password("SecurePass123!", user.hashed_password)
     finally:
         db.close()
 

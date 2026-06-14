@@ -367,6 +367,11 @@ Deployment:
   - production `POST /api/v1/auth/change-password` was smoke-tested by rotating the admin password to a temporary value and then restoring the known admin password
   - verified the known admin password still logs in and the temporary password is rejected with HTTP 401
   - authenticated Playwright Chromium production check reached `https://admin.pawn.eu.org/`, opened `Account Security`, and found no browser page errors, no relevant console errors, no document-level horizontal overflow at `1366x900`, and no raw i18n key exposure
+- Hardened account profile updates locally:
+  - removed the legacy password mutation path from `PATCH /api/v1/users/me`
+  - profile updates now only apply supported profile fields; password rotation must go through `/api/v1/auth/change-password` or the reset-token flow
+  - verified with `pytest backend/tests/test_account_domain.py backend/tests/test_auth.py -q`
+  - verified with `npm run type-check`, `npm run build`, and `npm run test:e2e:admin`
 
 ## Known Code Issues
 

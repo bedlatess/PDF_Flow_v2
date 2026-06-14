@@ -1816,6 +1816,43 @@ Backend refactor R9 local checkpoint:
   - `python -m compileall -q backend/app backend/tests`
   - `python -m pytest backend/tests -q` (`182 passed, 1 warning`)
 
+Backend refactor R9 production result:
+
+- Committed and pushed R9 as `536313020389fcc3fd85ac1281cdc26aaa40aa19`.
+- Deployed R9 to production with the existing remote `scripts/deploy-main.sh` flow.
+- Production `.deploy_state/main/current_deployed_commit` records `536313020389fcc3fd85ac1281cdc26aaa40aa19`.
+- Production smoke verified:
+  - compress, merge, OCR, and Office representative tasks created, completed, and downloaded successfully.
+  - Redis `job:*` keys were still written and remained the active-state source when present.
+  - `/api/v1/files/jobs/{job_id}` remained Redis-first and fell back to DB durable status when Redis state was missing.
+  - Status response keys stayed unchanged.
+  - Admin Job Center merged Redis and DB durable records, de-duplicated by `job_id`, and preferred DB durable source.
+  - backend, celery-worker, frontend, postgres, and redis containers were healthy.
+  - Recent backend/celery logs showed no traceback, SQLAlchemy exception, or critical entries during the smoke window.
+- Cleanup:
+  - Removed R9 smoke DB jobs, Redis `job:*` keys, and temporary smoke data.
+
+Backend refactor R10 local checkpoint:
+
+- R10 polishes Admin Job Center observability without changing public job polling or task execution behavior.
+- Admin job API responses now include admin-only observability fields:
+  - `output_file_url`
+  - `source`
+  - `sources`
+  - `is_durable`
+- `domains/jobs` admin serializers now include DB/Redis output paths so operators can see the current artifact target or failure reason from one view.
+- Admin Job Center UI now shows:
+  - summary counters for matched, running, failed, durable, and mixed-source jobs.
+  - desktop table with task, status/progress, source, user/file, timing, and output/error columns.
+  - mobile card layout with stable source/status badges and progress display.
+  - clearer DB durable / Redis / mixed source labels.
+- Public `/api/v1/files/jobs/{job_id}` response shape, Redis fallback, Celery behavior, downloads/artifacts, payment, AI, and user-facing frontend pages were not changed.
+- Local verification:
+  - `python -m pytest backend/tests/test_admin.py::test_admin_can_list_recent_jobs backend/tests/test_admin.py::test_admin_can_list_redis_jobs backend/tests/test_admin_operations_domain.py backend/tests/test_jobs_domain.py -q` (`14 passed, 1 warning`)
+  - `npm run type-check`
+  - `npm run build:admin`
+  - `npm run test:e2e:admin` (`7 passed`)
+
 Admin bootstrap:
 
 ```bash

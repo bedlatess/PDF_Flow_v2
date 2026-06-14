@@ -172,10 +172,14 @@ class AdminJobResponse(BaseModel):
     progress: int
     input_file_name: str
     input_file_size: int
+    output_file_url: Optional[str] = None
     error_message: Optional[str]
     created_at: datetime
     started_at: Optional[datetime]
     completed_at: Optional[datetime]
+    source: str = "db"
+    sources: list[str] = Field(default_factory=list)
+    is_durable: bool = False
 
 
 class AdminApiErrorResponse(BaseModel):

@@ -101,10 +101,14 @@ export interface AdminJob {
   progress: number
   input_file_name: string
   input_file_size: number
+  output_file_url: string | null
   error_message: string | null
   created_at: string
   started_at: string | null
   completed_at: string | null
+  source: 'db' | 'redis' | string
+  sources: string[]
+  is_durable: boolean
 }
 
 export interface AdminApiError {

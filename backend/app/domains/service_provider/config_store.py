@@ -1,4 +1,4 @@
-"""Admin-managed OCR/Office service provider configuration storage."""
+"""Admin-managed OCR/Office/AI service provider configuration storage."""
 
 from __future__ import annotations
 
@@ -10,6 +10,12 @@ import shutil
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
+
+try:
+    import google.generativeai  # noqa: F401
+    GEMINI_SDK_AVAILABLE = True
+except ImportError:
+    GEMINI_SDK_AVAILABLE = False
 
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from fastapi import HTTPException, status
@@ -75,6 +81,12 @@ OCR_DEFAULT_PUBLIC_CONFIG: dict[str, Any] = {
 
 OFFICE_DEFAULT_PUBLIC_CONFIG: dict[str, Any] = {
     "binary_path": "libreoffice",
+    "timeout_seconds": 60,
+}
+
+AI_GEMINI_DEFAULT_PUBLIC_CONFIG: dict[str, Any] = {
+    "api_base_url": "",
+    "model": "gemini-1.5-pro",
     "timeout_seconds": 60,
 }
 
@@ -145,6 +157,54 @@ MANAGED_SERVICE_PROVIDERS: dict[str, ManagedServiceProviderDefinition] = {
             "This module only controls runtime settings, not the conversion workflow.",
         ),
         runtime_fallback="libreoffice command + hard-coded task timeout",
+    ),
+    "google_gemini": ManagedServiceProviderDefinition(
+        service_key="ai",
+        provider_key="google_gemini",
+        display_name="Google Gemini",
+        description="Google Gemini provider used by the existing AI PDF analyzer workflow.",
+        public_defaults=AI_GEMINI_DEFAULT_PUBLIC_CONFIG,
+        public_fields=(
+            ServiceProviderFieldDefinition(
+                key="api_base_url",
+                label="API Base URL",
+                input_type="url",
+                placeholder="Optional Google Generative AI endpoint override",
+                help_text="Leave empty to use the official Google Generative AI API endpoint.",
+            ),
+            ServiceProviderFieldDefinition(
+                key="model",
+                label="Model",
+                required=True,
+                placeholder="gemini-1.5-pro",
+                help_text="Model used by the current AI PDF analyzer workflow.",
+            ),
+            ServiceProviderFieldDefinition(
+                key="timeout_seconds",
+                label="Timeout Seconds",
+                input_type="number",
+                required=True,
+                min_value=10,
+                help_text="Maximum time allowed for one Gemini generation request.",
+            ),
+        ),
+        secret_fields=(
+            ServiceProviderFieldDefinition(
+                key="api_key",
+                label="API Key",
+                input_type="password",
+                required=True,
+                secret=True,
+                placeholder="Leave blank to keep the existing key",
+                help_text="Write-only. The stored value is encrypted and never returned by the API.",
+            ),
+        ),
+        validation_checks=("required_fields", "api_key_configured", "local_sdk_available"),
+        setup_notes=(
+            "This controls only the existing AI PDF analyzer provider configuration.",
+            "Leave API Base URL empty unless a compatible Gemini endpoint override is required.",
+        ),
+        runtime_fallback="GEMINI_API_KEY + gemini-1.5-pro",
     ),
 }
 
@@ -371,6 +431,12 @@ def _readiness_errors(definition: ManagedServiceProviderDefinition, public_confi
         binary = str(public_config.get("binary_path") or "libreoffice").strip()
         if not _command_exists(binary):
             errors.append("libreoffice binary is not available")
+    elif definition.provider_key == "google_gemini":
+        model = str(public_config.get("model") or "").strip()
+        if not model:
+            errors.append("model is required")
+        if not GEMINI_SDK_AVAILABLE:
+            errors.append("google-generativeai package is not installed")
 
     return errors
 
@@ -584,6 +650,8 @@ def validate_service_provider_config_payload(
         checks = ["required_fields", "tesseract_binary_check", "language_pack_check"]
     elif provider_key == "local_libreoffice":
         checks = ["required_fields", "libreoffice_binary_check"]
+    elif provider_key == "google_gemini":
+        checks = ["required_fields", "api_key_configured", "local_sdk_available"]
 
     return {
         "valid": not errors,

@@ -87,7 +87,7 @@ async def summarize_pdf(
             )
 
         # Get AI service
-        ai_service = get_gemini_service()
+        ai_service = get_gemini_service(db)
 
         # Generate summary
         result = await ai_service.summarize_pdf(pdf_text, length)
@@ -154,7 +154,7 @@ async def ask_question(
             )
 
         # Get AI service
-        ai_service = get_gemini_service()
+        ai_service = get_gemini_service(db)
 
         # Ask question
         result = await ai_service.ask_question(pdf_text, request.question)
@@ -228,7 +228,7 @@ async def extract_data(
             )
 
         # Get AI service
-        ai_service = get_gemini_service()
+        ai_service = get_gemini_service(db)
 
         # Extract structured data
         result = await ai_service.extract_structured_data(pdf_text, data_type)
@@ -295,7 +295,7 @@ async def batch_analyze(
             )
 
         # Get AI service
-        ai_service = get_gemini_service()
+        ai_service = get_gemini_service(db)
 
         # Perform batch analysis
         result = await ai_service.batch_analyze(pdf_text, request.operations)

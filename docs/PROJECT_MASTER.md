@@ -1408,6 +1408,51 @@ Admin Service Provider Phase E1 production result:
   - No task-model refactor.
   - No new PDF features.
 
+Admin Service Provider Phase E2 local result:
+
+- Scope:
+  - Added AI provider configuration to the existing `service_provider_configs` model.
+  - First release supports only the current runtime provider:
+    - service key: `ai`
+    - provider key: `google_gemini`
+  - No payment logic changed.
+  - No AI task-model refactor or new AI/PDF feature was added.
+  - No multi-provider orchestration was added.
+- Backend registry/runtime:
+  - Added Google Gemini provider metadata to the service provider registry.
+  - Public config fields are intentionally minimal:
+    - `api_base_url`
+    - `model`
+    - `timeout_seconds`
+  - Secret config is only `api_key`.
+  - AI endpoints now call `get_gemini_service(db)` so runtime lookup is DB-first.
+  - When DB config is missing, disabled, incomplete, or missing the required secret, runtime falls back to the existing `GEMINI_API_KEY` + `gemini-1.5-pro` behavior.
+  - Gemini service cache is keyed by resolved runtime config so admin changes can take effect without backend restart.
+  - `timeout_seconds` is passed to Gemini generation requests through request options.
+- Secret handling:
+  - `api_key` is encrypted using the existing service-provider encryption path.
+  - API responses never return plaintext secret values.
+  - Admin UI shows only configured state and tail metadata.
+  - Leaving the API key field blank preserves the existing stored key.
+  - Audit logs record changed field names, not secret plaintext.
+- Admin UI:
+  - Service Providers module now loads OCR, Office, and AI providers.
+  - Added AI filter and secret input rendering.
+  - Secret inputs are write-only and are cleared from the saved response path.
+  - Fixed visible mojibake in the Service Providers panel copy and action messages touched by this phase.
+- Validation/readiness:
+  - Validation remains local-only.
+  - Gemini checks cover required fields, API key configured state, and local SDK availability.
+  - No live AI request is sent during validation.
+- Tests/checks:
+  - Added backend coverage for AI provider listing, save, encrypted secret storage, no plaintext API leak, blank-secret preservation, runtime DB-first lookup, and disabled fallback.
+  - Local checks run:
+    - `python -m pytest backend/tests/test_service_provider_config.py -q`
+    - `python -m pytest backend/tests/test_admin.py backend/tests/test_service_provider_config.py -q`
+    - `npm run type-check`
+    - `npm run build:admin`
+    - `npm run build`
+
 Admin bootstrap:
 
 ```bash

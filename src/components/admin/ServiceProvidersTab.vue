@@ -19,36 +19,47 @@ const emit = defineEmits<{
   'update:service-filter': [value: string]
 }>()
 
-type EditableServiceProviderConfig = AdminServiceProviderConfig
+const formState = reactive<Record<string, AdminServiceProviderConfig>>({})
 
-const formState = reactive<Record<string, EditableServiceProviderConfig>>({})
+const serviceFilters = [
+  { key: 'all', label: 'All' },
+  { key: 'ocr', label: 'OCR' },
+  { key: 'office', label: 'Office' },
+  { key: 'ai', label: 'AI' },
+]
 
 const configKey = (config: AdminServiceProviderConfig) =>
   `${config.service_key}:${config.provider_key}`
 
+const cloneConfig = (config: AdminServiceProviderConfig): AdminServiceProviderConfig => ({
+  ...config,
+  public_config: { ...config.public_config },
+  secret_fields: { ...config.secret_fields },
+  secrets: {},
+  required_public_fields: [...config.required_public_fields],
+  required_secret_fields: [...config.required_secret_fields],
+  missing_config_keys: [...config.missing_config_keys],
+  metadata: {
+    ...config.metadata,
+    validation_checks: [...config.metadata.validation_checks],
+    setup_notes: [...config.metadata.setup_notes],
+    fields: {
+      public: [...config.metadata.fields.public],
+      secret: [...config.metadata.fields.secret],
+    },
+  },
+  readiness: {
+    ...config.readiness,
+    missing_config_keys: [...config.readiness.missing_config_keys],
+    validation_checks: [...config.readiness.validation_checks],
+  },
+})
+
 const ensureFormState = (config: AdminServiceProviderConfig) => {
   const key = configKey(config)
   formState[key] = {
-    ...config,
-    public_config: { ...config.public_config },
-    secret_fields: { ...config.secret_fields },
-    required_public_fields: [...config.required_public_fields],
-    required_secret_fields: [...config.required_secret_fields],
-    missing_config_keys: [...config.missing_config_keys],
-    metadata: {
-      ...config.metadata,
-      validation_checks: [...config.metadata.validation_checks],
-      setup_notes: [...config.metadata.setup_notes],
-      fields: {
-        public: [...config.metadata.fields.public],
-        secret: [...config.metadata.fields.secret],
-      },
-    },
-    readiness: {
-      ...config.readiness,
-      missing_config_keys: [...config.readiness.missing_config_keys],
-      validation_checks: [...config.readiness.validation_checks],
-    },
+    ...cloneConfig(config),
+    secrets: {},
   }
 }
 
@@ -61,14 +72,12 @@ watch(
 )
 
 const visibleConfigs = computed(() => {
-  if (props.serviceFilter === 'ocr') {
-    return props.serviceProviderConfigs.filter((config) => config.service_key === 'ocr')
-  }
-  if (props.serviceFilter === 'office') {
-    return props.serviceProviderConfigs.filter((config) => config.service_key === 'office')
-  }
-  return props.serviceProviderConfigs
+  if (props.serviceFilter === 'all') return props.serviceProviderConfigs
+  return props.serviceProviderConfigs.filter((config) => config.service_key === props.serviceFilter)
 })
+
+const draftFor = (config: AdminServiceProviderConfig) =>
+  formState[configKey(config)] ?? config
 
 const inputType = (field: AdminServiceProviderFieldMetadata) =>
   field.secret ? 'password' : field.input_type
@@ -78,7 +87,7 @@ const inputMode = (field: AdminServiceProviderFieldMetadata): 'numeric' | undefi
 
 const updateField = (config: AdminServiceProviderConfig, field: string, value: string | number | boolean) => {
   const key = configKey(config)
-  const draft = formState[key] ?? config
+  const draft = draftFor(config)
   formState[key] = {
     ...draft,
     public_config: {
@@ -88,21 +97,35 @@ const updateField = (config: AdminServiceProviderConfig, field: string, value: s
   }
 }
 
+const updateSecret = (config: AdminServiceProviderConfig, field: string, value: string) => {
+  const key = configKey(config)
+  const draft = draftFor(config)
+  formState[key] = {
+    ...draft,
+    secrets: {
+      ...(draft.secrets ?? {}),
+      [field]: value,
+    },
+  }
+}
+
 const updateEnabled = (config: AdminServiceProviderConfig, value: boolean) => {
   const key = configKey(config)
-  const draft = formState[key] ?? config
+  const draft = draftFor(config)
   formState[key] = { ...draft, enabled: value }
 }
 
 const updatePriority = (config: AdminServiceProviderConfig, value: number) => {
   const key = configKey(config)
-  const draft = formState[key] ?? config
+  const draft = draftFor(config)
   formState[key] = { ...draft, priority: value }
 }
 
-const draftFor = (config: AdminServiceProviderConfig) =>
-  formState[configKey(config)] ?? config
-
+const secretStatusLabel = (config: AdminServiceProviderConfig, field: string) => {
+  const status = config.secret_fields[field]
+  if (!status?.configured) return 'Not configured'
+  return status.tail ? `Configured, ending ${status.tail}` : 'Configured'
+}
 </script>
 
 <template>
@@ -115,43 +138,27 @@ const draftFor = (config: AdminServiceProviderConfig) =>
             Service Providers
           </div>
           <h3 class="mt-2 text-xl font-semibold text-slate-950 dark:text-white">
-            OCR / Office 配置中心
+            OCR / Office / AI Provider Center
           </h3>
           <p class="mt-2 max-w-3xl text-sm leading-6 text-slate-600 dark:text-slate-300">
-            这里管理本地 OCR 和 Office provider 的运行时配置。数据库优先，留空时回退到 server settings 和内置默认值。
+            Manage runtime provider configuration from the admin console. Database settings are used first; disabled, missing, or incomplete configs fall back to the existing server settings.
           </p>
         </div>
 
-        <div class="flex flex-col gap-3 sm:flex-row">
-          <label class="inline-flex min-h-11 items-center gap-3 rounded-md border border-slate-200 px-3 py-2 text-sm font-semibold dark:border-slate-800">
+        <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-end">
+          <label
+            v-for="filter in serviceFilters"
+            :key="filter.key"
+            class="inline-flex min-h-11 items-center gap-3 rounded-md border border-slate-200 px-3 py-2 text-sm font-semibold dark:border-slate-800"
+          >
             <input
-              :checked="serviceFilter === 'all'"
+              :checked="serviceFilter === filter.key"
               type="radio"
               name="service-filter"
               class="h-4 w-4 border-slate-300 text-sky-600 focus:ring-sky-500"
-              @change="emit('update:service-filter', 'all')"
+              @change="emit('update:service-filter', filter.key)"
             >
-            全部
-          </label>
-          <label class="inline-flex min-h-11 items-center gap-3 rounded-md border border-slate-200 px-3 py-2 text-sm font-semibold dark:border-slate-800">
-            <input
-              :checked="serviceFilter === 'ocr'"
-              type="radio"
-              name="service-filter"
-              class="h-4 w-4 border-slate-300 text-sky-600 focus:ring-sky-500"
-              @change="emit('update:service-filter', 'ocr')"
-            >
-            OCR
-          </label>
-          <label class="inline-flex min-h-11 items-center gap-3 rounded-md border border-slate-200 px-3 py-2 text-sm font-semibold dark:border-slate-800">
-            <input
-              :checked="serviceFilter === 'office'"
-              type="radio"
-              name="service-filter"
-              class="h-4 w-4 border-slate-300 text-sky-600 focus:ring-sky-500"
-              @change="emit('update:service-filter', 'office')"
-            >
-            Office
+            {{ filter.label }}
           </label>
           <AdminActionButton
             tone="neutral"
@@ -161,7 +168,7 @@ const draftFor = (config: AdminServiceProviderConfig) =>
             <template #icon>
               <RefreshCw class="h-4 w-4" />
             </template>
-            刷新
+            Refresh
           </AdminActionButton>
         </div>
       </div>
@@ -180,6 +187,9 @@ const draftFor = (config: AdminServiceProviderConfig) =>
               <h3 class="text-lg font-semibold text-slate-950 dark:text-white">
                 {{ config.display_name }}
               </h3>
+              <StatusPill tone="info">
+                {{ config.service_key }}
+              </StatusPill>
               <StatusPill :tone="draftFor(config).enabled ? 'success' : 'neutral'">
                 {{ draftFor(config).enabled ? 'enabled' : 'disabled' }}
               </StatusPill>
@@ -190,6 +200,9 @@ const draftFor = (config: AdminServiceProviderConfig) =>
             <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
               {{ config.metadata.description }}
             </p>
+            <p class="mt-2 text-xs leading-5 text-slate-500 dark:text-slate-400">
+              Fallback: {{ config.metadata.runtime_fallback }}
+            </p>
           </div>
 
           <label class="inline-flex min-h-11 items-center gap-3 rounded-md border border-slate-200 px-3 py-2 text-sm font-semibold dark:border-slate-800">
@@ -199,7 +212,7 @@ const draftFor = (config: AdminServiceProviderConfig) =>
               class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
               @change="updateEnabled(config, ($event.target as HTMLInputElement).checked)"
             >
-            启用 {{ config.display_name }}
+            Enable {{ config.display_name }}
           </label>
         </div>
 
@@ -224,6 +237,7 @@ const draftFor = (config: AdminServiceProviderConfig) =>
               @input="updatePriority(config, Number(($event.target as HTMLInputElement).value || 100))"
             >
           </label>
+
           <div class="grid gap-4 md:grid-cols-2">
             <label
               v-for="field in config.metadata.fields.public"
@@ -256,7 +270,47 @@ const draftFor = (config: AdminServiceProviderConfig) =>
                 {{ field.help_text }}
               </span>
             </label>
+
+            <label
+              v-for="field in config.metadata.fields.secret"
+              :key="`${config.provider_key}-secret-${field.key}`"
+              class="space-y-2"
+            >
+              <span class="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                {{ field.label }}
+                <span
+                  v-if="field.required"
+                  class="text-rose-500"
+                >
+                  *
+                </span>
+              </span>
+              <input
+                :value="String(draftFor(config).secrets?.[field.key] ?? '')"
+                :type="inputType(field)"
+                :placeholder="field.placeholder"
+                autocomplete="new-password"
+                class="min-h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-950 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:ring-sky-500/20"
+                @input="updateSecret(config, field.key, ($event.target as HTMLInputElement).value)"
+              >
+              <span class="block text-xs leading-5 text-slate-500 dark:text-slate-400">
+                {{ secretStatusLabel(config, field.key) }}. Leave blank to keep the existing value.
+              </span>
+              <span
+                v-if="field.help_text"
+                class="block text-xs leading-5 text-slate-500 dark:text-slate-400"
+              >
+                {{ field.help_text }}
+              </span>
+            </label>
           </div>
+        </div>
+
+        <div
+          v-if="config.readiness.missing_config_keys.length"
+          class="mt-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100"
+        >
+          Missing or invalid: {{ config.readiness.missing_config_keys.join(', ') }}
         </div>
 
         <div class="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-end">
@@ -269,7 +323,7 @@ const draftFor = (config: AdminServiceProviderConfig) =>
             <template #icon>
               <TestTube2 class="h-4 w-4" />
             </template>
-            本地校验
+            Validate
           </AdminActionButton>
           <AdminActionButton
             tone="primary"
@@ -280,7 +334,7 @@ const draftFor = (config: AdminServiceProviderConfig) =>
             <template #icon>
               <Save class="h-4 w-4" />
             </template>
-            保存 {{ config.display_name }}
+            Save {{ config.display_name }}
           </AdminActionButton>
         </div>
       </template>

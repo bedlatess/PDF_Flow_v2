@@ -8,11 +8,12 @@ export const createControlRoomServiceProvidersActions = (ctx: ControlRoomContext
     ctx.error.value = ''
 
     try {
-      const [ocrProviderData, officeProviderData] = await Promise.all([
+      const [ocrProviderData, officeProviderData, aiProviderData] = await Promise.all([
         adminAPI.listServiceProviderConfigs('ocr'),
         adminAPI.listServiceProviderConfigs('office'),
+        adminAPI.listServiceProviderConfigs('ai'),
       ])
-      ctx.serviceProviderConfigs.value = [...ocrProviderData, ...officeProviderData]
+      ctx.serviceProviderConfigs.value = [...ocrProviderData, ...officeProviderData, ...aiProviderData]
     } catch {
       ctx.error.value = 'Service provider config failed to load. Please try again later.'
     } finally {
@@ -29,7 +30,7 @@ export const createControlRoomServiceProvidersActions = (ctx: ControlRoomContext
         enabled: config.enabled,
         priority: Number(config.priority || 100),
         public_config: config.public_config,
-        secrets: {},
+        secrets: config.secrets ?? {},
       })
       const index = ctx.serviceProviderConfigs.value.findIndex(
         (item) =>
@@ -37,8 +38,9 @@ export const createControlRoomServiceProvidersActions = (ctx: ControlRoomContext
           item.provider_key === updated.provider_key,
       )
       if (index >= 0) ctx.serviceProviderConfigs.value[index] = updated
+      updated.secrets = {}
       ctx.auditLogs.value = await adminAPI.listAuditLogs()
-      ctx.setMessage(`已保存服务提供方：${updated.display_name}`)
+      ctx.setMessage(`Saved service provider: ${updated.display_name}`)
     } catch {
       ctx.error.value = 'Service provider config save failed. Please check the config and try again.'
     } finally {
@@ -55,12 +57,12 @@ export const createControlRoomServiceProvidersActions = (ctx: ControlRoomContext
         enabled: config.enabled,
         priority: Number(config.priority || 100),
         public_config: config.public_config,
-        secrets: {},
+        secrets: config.secrets ?? {},
       })
       ctx.setMessage(
         result.valid
-          ? `${config.display_name} 本地校验通过`
-          : `${config.display_name} 需要补齐配置：${result.errors.join(', ')}`,
+          ? `${config.display_name} validation passed`
+          : `${config.display_name} needs config: ${result.errors.join(', ')}`,
       )
     } catch {
       ctx.error.value = 'Service provider validation failed. Please try again later.'

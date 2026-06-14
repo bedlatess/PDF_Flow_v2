@@ -183,6 +183,7 @@ export interface AdminServiceProviderConfig {
   encryption_available: boolean
   metadata: AdminServiceProviderMetadata
   readiness: AdminServiceProviderReadiness
+  secrets?: Record<string, string>
 }
 
 export interface AdminServiceProviderConfigUpdate {

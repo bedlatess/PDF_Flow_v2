@@ -15,21 +15,48 @@ except ImportError:
 
 from app.core.config import settings
 
+try:
+    from sqlalchemy.orm import Session
+except ImportError:  # pragma: no cover - imported in app runtime
+    Session = Any  # type: ignore
+
+try:
+    from app.domains.service_provider.config_store import get_service_provider_runtime_config
+except ImportError:  # pragma: no cover - keeps direct module import resilient in partial envs
+    get_service_provider_runtime_config = None  # type: ignore
+
+
+DEFAULT_GEMINI_MODEL = "gemini-1.5-pro"
+DEFAULT_GEMINI_TIMEOUT_SECONDS = 60
+
 
 class GeminiService:
     """Service for interacting with Google Gemini AI"""
 
-    def __init__(self):
+    def __init__(
+        self,
+        *,
+        api_key: str | None = None,
+        model: str | None = None,
+        api_base_url: str | None = None,
+        timeout_seconds: int | None = None,
+        source: str = "env",
+    ):
         if not GEMINI_AVAILABLE:
             raise ImportError("google-generativeai package not installed")
 
-        # Configure Gemini
-        api_key = getattr(settings, 'GEMINI_API_KEY', None)
-        if not api_key:
+        resolved_api_key = (api_key or getattr(settings, 'GEMINI_API_KEY', None) or "").strip()
+        if not resolved_api_key:
             raise ValueError("GEMINI_API_KEY not configured")
 
-        genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel('gemini-1.5-pro')
+        configure_kwargs: dict[str, Any] = {"api_key": resolved_api_key}
+        if api_base_url:
+            configure_kwargs["client_options"] = {"api_endpoint": api_base_url}
+        genai.configure(**configure_kwargs)
+        self.model_name = (model or DEFAULT_GEMINI_MODEL).strip() or DEFAULT_GEMINI_MODEL
+        self.timeout_seconds = int(timeout_seconds or DEFAULT_GEMINI_TIMEOUT_SECONDS)
+        self.source = source
+        self.model = genai.GenerativeModel(self.model_name)
 
     async def summarize_pdf(
         self,
@@ -69,7 +96,10 @@ Respond in JSON format:
 """
 
         try:
-            response = self.model.generate_content(prompt)
+            response = self.model.generate_content(
+                prompt,
+                request_options={"timeout": self.timeout_seconds},
+            )
             result_text = response.text
 
             # Parse JSON response
@@ -136,7 +166,10 @@ Respond in JSON format:
 """
 
         try:
-            response = self.model.generate_content(prompt)
+            response = self.model.generate_content(
+                prompt,
+                request_options={"timeout": self.timeout_seconds},
+            )
             result_text = response.text
 
             # Parse JSON response
@@ -233,7 +266,10 @@ Respond in JSON format with the extracted data. Use null for missing fields.
 """
 
         try:
-            response = self.model.generate_content(prompt)
+            response = self.model.generate_content(
+                prompt,
+                request_options={"timeout": self.timeout_seconds},
+            )
             result_text = response.text
 
             # Parse JSON response
@@ -323,7 +359,10 @@ Respond in JSON format:
 """
 
         try:
-            response = self.model.generate_content(prompt)
+            response = self.model.generate_content(
+                prompt,
+                request_options={"timeout": self.timeout_seconds},
+            )
             result_text = response.text
 
             if '```json' in result_text:
@@ -344,13 +383,50 @@ Respond in JSON format:
             }
 
 
-# Singleton instance
+# Singleton instance. The key includes runtime config so admin changes take
+# effect without a backend restart.
 _gemini_service: Optional[GeminiService] = None
+_gemini_service_cache_key: Optional[tuple[str, str, str, int, str]] = None
 
 
-def get_gemini_service() -> GeminiService:
+def _gemini_runtime_from_db(db: Session | None) -> dict[str, Any] | None:
+    if db is None or get_service_provider_runtime_config is None:
+        return None
+    runtime = get_service_provider_runtime_config(db, "ai", "google_gemini")
+    if not runtime:
+        return None
+    public_config = runtime.get("public_config") or {}
+    secrets = runtime.get("secrets") or {}
+    api_key = str(secrets.get("api_key") or "").strip()
+    if not api_key:
+        return None
+    return {
+        "api_key": api_key,
+        "api_base_url": str(public_config.get("api_base_url") or "").strip() or None,
+        "model": str(public_config.get("model") or DEFAULT_GEMINI_MODEL).strip() or DEFAULT_GEMINI_MODEL,
+        "timeout_seconds": int(public_config.get("timeout_seconds") or DEFAULT_GEMINI_TIMEOUT_SECONDS),
+        "source": "db",
+    }
+
+
+def get_gemini_service(db: Session | None = None) -> GeminiService:
     """Get or create Gemini service singleton"""
-    global _gemini_service
-    if _gemini_service is None:
-        _gemini_service = GeminiService()
+    global _gemini_service, _gemini_service_cache_key
+    runtime = _gemini_runtime_from_db(db) or {
+        "api_key": getattr(settings, "GEMINI_API_KEY", None),
+        "api_base_url": None,
+        "model": DEFAULT_GEMINI_MODEL,
+        "timeout_seconds": DEFAULT_GEMINI_TIMEOUT_SECONDS,
+        "source": "env",
+    }
+    cache_key = (
+        str(runtime.get("api_key") or ""),
+        str(runtime.get("api_base_url") or ""),
+        str(runtime.get("model") or DEFAULT_GEMINI_MODEL),
+        int(runtime.get("timeout_seconds") or DEFAULT_GEMINI_TIMEOUT_SECONDS),
+        str(runtime.get("source") or "env"),
+    )
+    if _gemini_service is None or _gemini_service_cache_key != cache_key:
+        _gemini_service = GeminiService(**runtime)
+        _gemini_service_cache_key = cache_key
     return _gemini_service

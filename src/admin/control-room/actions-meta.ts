@@ -49,6 +49,7 @@ export const createControlRoomMetaActions = (ctx: ControlRoomContext) => {
         pricingPlansData,
         ocrProviderData,
         officeProviderData,
+        aiProviderData,
         diagnosticsData,
         healthReportData,
         maintenanceData,
@@ -66,6 +67,7 @@ export const createControlRoomMetaActions = (ctx: ControlRoomContext) => {
         adminAPI.listPricingPlans(),
         adminAPI.listServiceProviderConfigs('ocr'),
         adminAPI.listServiceProviderConfigs('office'),
+        adminAPI.listServiceProviderConfigs('ai'),
         adminAPI.getDiagnostics(),
         adminAPI.getHealthReport(),
         adminAPI.getMaintenance(),
@@ -82,7 +84,7 @@ export const createControlRoomMetaActions = (ctx: ControlRoomContext) => {
       ctx.feedbackReports.value = feedbackData
       ctx.paymentSummary.value = paymentData
       ctx.pricingPlans.value = pricingPlansData
-      ctx.serviceProviderConfigs.value = [...ocrProviderData, ...officeProviderData]
+      ctx.serviceProviderConfigs.value = [...ocrProviderData, ...officeProviderData, ...aiProviderData]
       ctx.diagnostics.value = diagnosticsData
       ctx.healthReport.value = healthReportData
       ctx.maintenance.value = maintenanceData

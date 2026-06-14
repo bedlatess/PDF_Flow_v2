@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-import time
 from urllib.parse import urlsplit, urlunsplit
 
 from fastapi import Request
@@ -19,38 +18,10 @@ from app.domains.admin.users import (
     serialize_admin_user,
     test_user_query,
 )
+from app.domains.jobs.service import datetime_from_epoch, redis_status_to_admin_job
 from app.models.user import ApiErrorLog, FeedbackReport, ProcessingJob, User
 from app.services.file_retention_service import file_retention_service
 from app.services.file_service import file_processing_service
-
-
-def datetime_from_epoch(value) -> datetime | None:
-    try:
-        return datetime.fromtimestamp(float(value))
-    except (TypeError, ValueError, OSError):
-        return None
-
-
-def infer_job_type(status_data: dict) -> str:
-    message = str(status_data.get("message") or "").lower()
-    result = status_data.get("result") or {}
-    if "ocr" in message or "text" in result:
-        return "ocr_pdf"
-    if "office" in message:
-        return "office_to_pdf"
-    if "merge" in message:
-        return "merge_pdf"
-    if "split" in message:
-        return "split_pdf"
-    if "compression" in message or "compress" in message:
-        return "compress_pdf"
-    if "rotation" in message or "rotate" in message:
-        return "rotate_pdf"
-    if "image to pdf" in message:
-        return "image_to_pdf"
-    if "pdf to images" in message:
-        return "pdf_to_image"
-    return "processing_job"
 
 
 def list_redis_jobs(limit: int) -> list[dict]:
@@ -78,39 +49,11 @@ def list_redis_jobs(limit: int) -> list[dict]:
         except Exception:
             continue
 
-        created_at = datetime_from_epoch(status_data.get("created_at"))
-        updated_at = datetime_from_epoch(status_data.get("updated_at")) or created_at
-        result = status_data.get("result") or {}
-        error = status_data.get("error")
-        output_path = result.get("output_path") or ""
-        input_file_name = (
-            result.get("input_file_name")
-            or output_path.rsplit("/", 1)[-1]
-            or "Redis task"
-        )
-        jobs.append({
-            "id": None,
-            "job_id": status_data.get("job_id") or str(key).replace("job:", ""),
-            "user_id": None,
-            "user_email": None,
-            "job_type": infer_job_type(status_data),
-            "status": status_data.get("status", "unknown"),
-            "progress": int(
-                status_data.get("progress")
-                or (100 if status_data.get("status") == "completed" else 0)
-            ),
-            "input_file_name": input_file_name,
-            "input_file_size": int(result.get("file_size") or 0),
-            "error_message": str(error) if error else None,
-            "created_at": created_at or datetime.fromtimestamp(0),
-            "started_at": None,
-            "completed_at": (
-                updated_at
-                if status_data.get("status") in ("completed", "failed")
-                else None
-            ),
-            "_sort": created_at.timestamp() if created_at else time.time() - index,
-        })
+        jobs.append(redis_status_to_admin_job(
+            status_data,
+            fallback_job_id=str(key).replace("job:", ""),
+            sort_offset=index,
+        ))
 
     jobs.sort(key=lambda item: item["_sort"], reverse=True)
     for item in jobs:

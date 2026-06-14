@@ -282,6 +282,41 @@ class TestUploadEndpoint:
 
 
 class TestOfficeToPdfFlow:
+    def test_merge_service_keeps_redis_pending_job_contract(self, monkeypatch):
+        from app.services import file_service as file_service_module
+
+        saved_jobs = {}
+
+        class FakeTask:
+            def apply_async(self, args, task_id):
+                return MagicMock(id=task_id)
+
+        monkeypatch.setattr(file_service_module.file_processing_service, "_generate_job_id", lambda: "job_merge_test")
+        monkeypatch.setattr(
+            file_service_module.file_processing_service,
+            "_get_file_path",
+            lambda file_id: f"/tmp/pdf-flow/uploads/{file_id}.pdf",
+        )
+        monkeypatch.setattr(
+            file_service_module.file_processing_service,
+            "_save_job_status",
+            lambda job_id, status_data: saved_jobs.setdefault(job_id, status_data),
+        )
+        monkeypatch.setattr(file_service_module, "merge_pdfs_task", FakeTask())
+
+        result = asyncio.run(
+            file_service_module.file_processing_service.merge_pdfs(["file_a", "file_b"])
+        )
+
+        assert result == {
+            "job_id": "job_merge_test",
+            "status": "pending",
+            "message": "PDF merge job queued",
+        }
+        assert saved_jobs["job_merge_test"]["job_id"] == "job_merge_test"
+        assert saved_jobs["job_merge_test"]["status"] == "pending"
+        assert set(saved_jobs["job_merge_test"]) == {"job_id", "status", "created_at", "updated_at"}
+
     def test_office_service_saves_job_state(self, monkeypatch):
         from app.services import file_service as file_service_module
 

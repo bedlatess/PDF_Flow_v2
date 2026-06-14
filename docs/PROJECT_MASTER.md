@@ -1496,6 +1496,26 @@ Admin Service Provider Phase E2 production result:
   - Temporary verification script was removed from the server.
   - Original production `ai:google_gemini` DB row was restored after verification.
 
+Backend refactor design checkpoint:
+
+- Current backend expansion is paused at the design/audit stage; no refactor code has been written for this phase.
+- Added [`docs/BACKEND_REFACTOR_DESIGN.md`](BACKEND_REFACTOR_DESIGN.md) as the approved backend refactor design.
+- The design identifies the current split between newer `domains/*` modules and legacy `services/*` / endpoint-centered flows.
+- Top priority problem is split job truth across Redis `job:*`, Celery result state, and DB `ProcessingJob`.
+- Recommended first implementation phase is R1: introduce a durable `domains/jobs` boundary while preserving current public APIs, Redis compatibility, and existing frontend behavior.
+- Explicitly out of scope for this design phase: new PDF tools, new payment behavior, webhook entitlement automation, paid provider expansion, frontend UI redesign, and backend rewrite.
+
+Backend refactor R1 local checkpoint:
+
+- Added `backend/app/domains/jobs` as the first Job Foundation boundary.
+- R1 defines shared job status semantics, artifact/result/error/progress value objects, Celery-to-job status conversion, pending Redis status construction, Redis admin-job mapping, and a small `ProcessingJob` repository/service.
+- Existing Redis `job:*` state remains the active frontend polling/download source.
+- Existing Celery tasks remain unchanged.
+- Existing public file APIs and response shapes remain unchanged.
+- `file_service.py` now reuses pure compatibility helpers for pending job status and Celery status merging.
+- `admin/operations.py` now reuses the shared Redis job mapping helper.
+- No migration was added; existing `ProcessingJob` is only wrapped by the new repository/service for future durable job migration.
+
 Admin bootstrap:
 
 ```bash

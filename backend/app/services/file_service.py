@@ -23,6 +23,8 @@ from app.tasks.pdf_tasks import (
     convert_pdf_to_images_task,
 )
 from app.domains.service_provider.config_store import get_service_provider_runtime_config
+from app.domains.jobs.service import build_pending_job_status, merge_celery_state_into_status
+from app.domains.jobs.types import is_terminal_job_status
 from app.tasks.ocr_tasks import extract_text_task
 from app.services.file_retention_service import file_retention_service
 
@@ -174,7 +176,7 @@ class FileProcessingService:
 
         # 若 Redis 中已是终态（completed/failed），直接信任，不再被 Celery 覆盖
         # （Celery 结果可能已过期，AsyncResult 会退回 PENDING，不能据此降级）
-        if status_data.get("status") in ("completed", "failed", "cancelled"):
+        if is_terminal_job_status(status_data.get("status")):
             return status_data
 
         # 否则结合 Celery 执行状态
@@ -185,24 +187,11 @@ class FileProcessingService:
             async_result = AsyncResult(job_id, app=celery_app)
             celery_state = async_result.state  # PENDING / STARTED / SUCCESS / FAILURE / RETRY
 
-            state_map = {
-                "PENDING": "pending",
-                "STARTED": "processing",
-                "RETRY": "processing",
-                "SUCCESS": "completed",
-                "FAILURE": "failed",
-            }
-            mapped = state_map.get(celery_state)
-            if mapped:
-                status_data["status"] = mapped
-                status_data["updated_at"] = time.time()
-
-            if celery_state == "SUCCESS":
-                result = async_result.result
-                status_data["progress"] = 100
-                status_data["result"] = result
-            elif celery_state == "FAILURE":
-                status_data["error"] = str(async_result.result)
+            status_data = merge_celery_state_into_status(
+                status_data,
+                celery_state=celery_state,
+                celery_result=async_result.result,
+            )
         except Exception as e:  # Celery 不可用时降级为 Redis 原始记录
             logger.warning(f"Celery status lookup failed for {job_id}: {e}")
 
@@ -326,12 +315,7 @@ class FileProcessingService:
         job_id = self._generate_job_id()
 
         # 保存初始任务状态
-        self._save_job_status(job_id, {
-            "job_id": job_id,
-            "status": "pending",
-            "created_at": time.time(),
-            "updated_at": time.time()
-        })
+        self._save_job_status(job_id, build_pending_job_status(job_id))
 
         # 提交 Celery 任务
         task = merge_pdfs_task.apply_async(
@@ -360,12 +344,7 @@ class FileProcessingService:
         # 创建任务
         job_id = self._generate_job_id()
 
-        self._save_job_status(job_id, {
-            "job_id": job_id,
-            "status": "pending",
-            "created_at": time.time(),
-            "updated_at": time.time()
-        })
+        self._save_job_status(job_id, build_pending_job_status(job_id))
 
         # 提交任务
         task = split_pdf_task.apply_async(
@@ -392,12 +371,7 @@ class FileProcessingService:
         # 创建任务
         job_id = self._generate_job_id()
 
-        self._save_job_status(job_id, {
-            "job_id": job_id,
-            "status": "pending",
-            "created_at": time.time(),
-            "updated_at": time.time()
-        })
+        self._save_job_status(job_id, build_pending_job_status(job_id))
 
         # 提交任务
         task = compress_pdf_task.apply_async(
@@ -424,12 +398,7 @@ class FileProcessingService:
         # 创建任务
         job_id = self._generate_job_id()
 
-        self._save_job_status(job_id, {
-            "job_id": job_id,
-            "status": "pending",
-            "created_at": time.time(),
-            "updated_at": time.time()
-        })
+        self._save_job_status(job_id, build_pending_job_status(job_id))
 
         # 提交任务
         task = rotate_pdf_task.apply_async(
@@ -456,12 +425,7 @@ class FileProcessingService:
         # 创建任务
         job_id = self._generate_job_id()
 
-        self._save_job_status(job_id, {
-            "job_id": job_id,
-            "status": "pending",
-            "created_at": time.time(),
-            "updated_at": time.time()
-        })
+        self._save_job_status(job_id, build_pending_job_status(job_id))
 
         # 提交任务
         task = convert_images_to_pdf_task.apply_async(
@@ -487,12 +451,7 @@ class FileProcessingService:
         # 创建任务
         job_id = self._generate_job_id()
 
-        self._save_job_status(job_id, {
-            "job_id": job_id,
-            "status": "pending",
-            "created_at": time.time(),
-            "updated_at": time.time()
-        })
+        self._save_job_status(job_id, build_pending_job_status(job_id))
 
         # 提交任务
         task = convert_pdf_to_images_task.apply_async(
@@ -525,12 +484,7 @@ class FileProcessingService:
         # 创建任务
         job_id = self._generate_job_id()
 
-        self._save_job_status(job_id, {
-            "job_id": job_id,
-            "status": "pending",
-            "created_at": time.time(),
-            "updated_at": time.time()
-        })
+        self._save_job_status(job_id, build_pending_job_status(job_id))
 
         # 提交任务
         task = extract_text_task.apply_async(
@@ -559,12 +513,7 @@ class FileProcessingService:
 
         job_id = self._generate_job_id()
 
-        self._save_job_status(job_id, {
-            "job_id": job_id,
-            "status": "pending",
-            "created_at": time.time(),
-            "updated_at": time.time()
-        })
+        self._save_job_status(job_id, build_pending_job_status(job_id))
 
         office_to_pdf_task.apply_async(
             args=[input_path, output_path, public_config or None],

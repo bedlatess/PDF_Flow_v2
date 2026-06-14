@@ -1933,6 +1933,23 @@ Product Phase P2 local checkpoint:
   - Backend Python dependency adds Playwright.
   - Backend Docker image installs system Chromium and fonts for server-side PDF rendering.
 
+Product Phase P2 production result:
+
+- Committed and deployed P2 as `2bc10e0aadce52d41ecfbcb5eed13f4c267eb895`.
+- Production deploy rebuilt backend/celery images with system Chromium and Playwright support, then ran migrations and the existing deploy smoke successfully.
+- Production smoke verified:
+  - backend, celery-worker, frontend, postgres, and redis containers are healthy.
+  - `/health` returns healthy.
+  - `/en/tools/html-to-pdf` returns the frontend shell.
+  - unauthenticated `POST /api/v1/files/html-to-pdf` returns HTTP 401.
+  - authenticated pasted HTML conversion queues `job_type="html_to_pdf"`, completes through Celery, downloads a PDF result, and appears in History.
+  - authenticated public URL conversion against `https://example.com/` completes and downloads a PDF result.
+  - internal URL `http://127.0.0.1:8000/health` is rejected with HTTP 400 before queueing.
+  - History reports `download_state="available"` and `download_available=true` for completed HTML to PDF jobs.
+  - Recent backend/celery logs showed no traceback, SQLAlchemy exception, critical entry, or error entry after deployment.
+- Cleanup:
+  - Removed temporary P2 smoke users, DB `ProcessingJob` rows, Redis `job:*` keys, and generated HTML to PDF output directories.
+
 Admin bootstrap:
 
 ```bash

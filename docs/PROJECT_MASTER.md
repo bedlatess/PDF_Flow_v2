@@ -1659,6 +1659,41 @@ Backend refactor R4 local checkpoint:
   - `python -m pytest backend/tests/test_ocr_office_tasks.py backend/tests/test_files.py backend/tests/test_admin_operations_domain.py -q`
   - `python -m pytest backend/tests -q` (`177 passed, 1 warning`)
 
+
+Backend refactor R4 production result:
+
+- Committed and pushed R4 as `538204f273405c8edf7c8f799173255a031bf88f`.
+- Deployed R4 to production with the existing remote `scripts/deploy-main.sh` flow from `/root/data/docker_data/PDF/pdf-flow`.
+- Deployment rebuilt backend, celery-worker, public frontend, and admin frontend images; migrations ran with no new R4 migration.
+- Production health:
+  - backend, celery-worker, frontend, postgres, and redis containers are healthy.
+  - `http://localhost:8000/health` returned healthy during deployment and R4 smoke verification.
+- OCR durable job smoke:
+  - Uploaded a temporary OCR image through the existing file upload API.
+  - `/api/v1/files/ocr` returned the unchanged create response keys: `job_id`, `status`, `message`, `progress`, `result_url`, and `error`.
+  - Redis `job:{job_id}` was present.
+  - DB `ProcessingJob(job_type="ocr_pdf")` was created with the same `job_id`.
+  - Celery completed the task and DB lifecycle reached `completed`, `progress=100`, and `result_data` present.
+  - `/api/v1/files/jobs/{job_id}` kept the unchanged status response keys.
+  - Existing download endpoint returned OCR text output through the current path.
+- Office durable job smoke:
+  - Uploaded a temporary DOCX through `/api/v1/files/office-to-pdf`.
+  - Create response shape remained unchanged.
+  - Redis `job:{job_id}` was present.
+  - DB `ProcessingJob(job_type="office_to_pdf")` was created with the same `job_id`.
+  - Celery completed through the existing Office dispatch path and DB lifecycle reached `completed`, `progress=100`, `result_data` present, and `output_file_url` present.
+  - Existing download endpoint returned the generated PDF.
+- Admin operations smoke:
+  - `list_all_jobs()` merged Redis and DB jobs.
+  - OCR and Office smoke jobs appeared once each by `job_id`.
+  - DB durable job data was preferred for the matching `job_id` entries.
+  - Other Redis-backed jobs remain compatible with the merged view.
+- Regression confirmations:
+  - AI, advanced synchronous APIs, payment, frontend behavior, polling response shape, and artifact/download paths were not changed.
+  - Recent backend/celery logs showed no traceback, SQLAlchemy exception, or critical entries during the R4 smoke window.
+- Cleanup:
+  - Removed R4 smoke DB jobs, Redis `job:*` keys, Redis `file:*` key, temporary smoke user, uploaded sample image, and generated OCR/Office artifacts.
+
 Admin bootstrap:
 
 ```bash

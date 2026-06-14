@@ -59,14 +59,14 @@ const accentClasses = computed(() => {
 <template>
   <section
     data-testid="tool-access-panel"
-    class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900/90"
+    class="pf-panel p-5"
   >
     <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
       <div class="min-w-0">
-        <p :class="['text-xs font-semibold uppercase tracking-[0.2em]', accentClasses.label]">
+        <p :class="['pf-eyebrow', accentClasses.label]">
           {{ label }}
         </p>
-        <h2 class="mt-2 max-w-2xl text-2xl font-semibold leading-tight text-slate-950 dark:text-white">
+        <h2 class="mt-2 max-w-2xl text-xl font-semibold leading-tight text-slate-950 dark:text-white sm:text-2xl">
           {{ title }}
         </h2>
         <p class="mt-3 max-w-3xl text-sm leading-6 text-slate-600 dark:text-slate-300">
@@ -92,7 +92,7 @@ const accentClasses = computed(() => {
       <div
         v-for="(step, index) in steps"
         :key="step"
-        :class="['flex min-h-12 items-center gap-3 rounded-md border px-3 py-2', accentClasses.step]"
+        :class="['flex min-h-12 items-center gap-3 rounded-md border px-3 py-2 shadow-sm', accentClasses.step]"
       >
         <span :class="['flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-xs font-semibold', accentClasses.marker]">
           {{ index + 1 }}

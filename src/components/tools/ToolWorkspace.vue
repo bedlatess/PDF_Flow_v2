@@ -12,9 +12,9 @@ const props = withDefaults(defineProps<{
 })
 
 const layoutClasses: Record<Layout, string> = {
-  balanced: 'lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.92fr)]',
-  'wide-primary': 'xl:grid-cols-[minmax(0,1.08fr)_minmax(320px,0.92fr)]',
-  'wide-secondary': 'lg:grid-cols-[minmax(0,0.95fr)_minmax(320px,1.05fr)]',
+  balanced: 'lg:grid-cols-[minmax(0,1fr)_minmax(300px,0.88fr)]',
+  'wide-primary': 'xl:grid-cols-[minmax(0,1.1fr)_minmax(300px,0.9fr)]',
+  'wide-secondary': 'lg:grid-cols-[minmax(0,0.95fr)_minmax(300px,1.05fr)]',
 }
 </script>
 
@@ -30,13 +30,13 @@ const layoutClasses: Record<Layout, string> = {
     <div
       v-if="$slots.primary || $slots.secondary"
       :class="[
-        'grid min-w-0 gap-5',
+        'grid min-w-0 items-start gap-5 lg:gap-6',
         layoutClasses[props.layout],
       ]"
     >
       <section
         v-if="$slots.primary"
-        class="min-w-0 space-y-5"
+        class="min-w-0 space-y-5 lg:sticky lg:top-24"
       >
         <slot name="primary" />
       </section>

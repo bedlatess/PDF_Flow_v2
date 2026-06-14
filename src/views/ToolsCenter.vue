@@ -157,12 +157,12 @@ onMounted(() => {
 </script>
 
 <template>
-  <main class="min-h-screen bg-[#f7f8fb] text-slate-950 dark:bg-slate-950 dark:text-white">
-    <section class="border-b border-slate-200 bg-white dark:border-white/10 dark:bg-slate-900">
+  <main class="pf-app-surface min-h-screen text-slate-950 dark:text-white">
+    <section class="border-b border-slate-200/80 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90">
       <div class="mx-auto max-w-7xl px-4 py-7 sm:px-6 lg:px-8">
         <div class="grid gap-6 lg:grid-cols-[1fr_420px] lg:items-end">
           <div>
-            <div class="inline-flex items-center gap-2 rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-red-700 dark:border-red-400/20 dark:bg-red-500/10 dark:text-red-200">
+            <div class="inline-flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-red-700 shadow-sm dark:border-red-400/20 dark:bg-red-500/10 dark:text-red-200">
               <Layers3 class="h-4 w-4" />
               {{ copy.eyebrow }}
             </div>
@@ -178,7 +178,7 @@ onMounted(() => {
             <article
               v-for="stat in stats"
               :key="stat.label"
-              class="flex items-center gap-3 rounded-md border border-slate-200 bg-slate-50 p-4 dark:border-white/10 dark:bg-slate-950/55"
+              class="flex items-center gap-3 rounded-md border border-slate-200 bg-slate-50 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950/55"
             >
               <span class="flex h-10 w-10 items-center justify-center rounded-md bg-white text-slate-700 shadow-sm dark:bg-slate-900 dark:text-slate-200">
                 <component :is="stat.icon" class="h-5 w-5" />
@@ -194,7 +194,7 @@ onMounted(() => {
     </section>
 
     <section class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-      <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-slate-900">
+      <div class="pf-panel p-4">
         <div class="grid gap-3 lg:grid-cols-[1fr_auto_auto] lg:items-center">
           <label class="relative block">
             <Search class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -238,7 +238,7 @@ onMounted(() => {
 
       <div
         v-if="groupedTools.length"
-        class="mt-5 space-y-6"
+          class="mt-5 space-y-7"
       >
         <section
           v-for="group in groupedTools"
@@ -257,7 +257,7 @@ onMounted(() => {
             <article
               v-for="tool in group.tools"
               :key="tool.id"
-              class="group flex min-h-[144px] cursor-pointer flex-col rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-red-200 hover:shadow-md dark:border-white/10 dark:bg-slate-900 dark:hover:border-red-300/30"
+              class="group flex min-h-[144px] cursor-pointer flex-col rounded-lg border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/60 transition hover:-translate-y-0.5 hover:border-red-200 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/90 dark:shadow-none dark:hover:border-red-300/30"
               @click="openTool(tool)"
             >
               <div class="flex items-start justify-between gap-3">
@@ -283,7 +283,7 @@ onMounted(() => {
                 {{ t(tool.descriptionKey) }}
               </p>
 
-              <div class="mt-4 flex items-center justify-between border-t border-slate-200 pt-3 dark:border-white/10">
+              <div class="mt-4 flex items-center justify-between border-t border-slate-200 pt-3 dark:border-slate-800">
                 <span
                   :class="[
                     'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset',
@@ -304,7 +304,7 @@ onMounted(() => {
 
       <div
         v-else
-        class="mt-6 rounded-lg border border-dashed border-slate-300 bg-white p-10 text-center dark:border-white/15 dark:bg-slate-900"
+        class="mt-6 rounded-lg border border-dashed border-slate-300 bg-white p-10 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900"
       >
         <Search class="mx-auto h-8 w-8 text-slate-400" />
         <h2 class="mt-4 text-lg font-semibold text-slate-950 dark:text-white">
@@ -317,7 +317,7 @@ onMounted(() => {
     </section>
 
     <section class="mx-auto grid max-w-7xl gap-3 px-4 pb-10 sm:px-6 lg:grid-cols-3 lg:px-8">
-      <article class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-slate-900">
+      <article class="pf-panel p-5">
         <ShieldCheck class="h-5 w-5 text-emerald-600 dark:text-emerald-300" />
         <h3 class="mt-4 font-semibold text-slate-950 dark:text-white">
           {{ copy.modes.local }}
@@ -326,7 +326,7 @@ onMounted(() => {
           {{ copy.localDescription }}
         </p>
       </article>
-      <article class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-slate-900">
+      <article class="pf-panel p-5">
         <Cloud class="h-5 w-5 text-sky-600 dark:text-sky-300" />
         <h3 class="mt-4 font-semibold text-slate-950 dark:text-white">
           {{ copy.modes.cloud }}
@@ -335,7 +335,7 @@ onMounted(() => {
           {{ copy.cloudDescription }}
         </p>
       </article>
-      <article class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-slate-900">
+      <article class="pf-panel p-5">
         <Sparkles class="h-5 w-5 text-violet-600 dark:text-violet-300" />
         <h3 class="mt-4 font-semibold text-slate-950 dark:text-white">
           {{ copy.modes.ai }}

@@ -55,16 +55,16 @@ const accentClasses = computed(() => {
 </script>
 
 <template>
-  <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/90 sm:p-5">
+  <section class="pf-panel p-4 sm:p-5">
     <div class="space-y-5">
       <div>
         <p
           v-if="label"
-          :class="['text-xs font-semibold uppercase tracking-[0.18em]', accentClasses]"
+          :class="['pf-eyebrow', accentClasses]"
         >
           {{ label }}
         </p>
-        <h2 class="mt-2 text-xl font-semibold text-slate-950 dark:text-white">
+        <h2 class="mt-2 text-lg font-semibold leading-snug text-slate-950 dark:text-white sm:text-xl">
           {{ title }}
         </h2>
         <p
@@ -84,9 +84,9 @@ const accentClasses = computed(() => {
         <div
           v-for="stat in stats"
           :key="stat.label"
-          class="rounded-md border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/45"
+          class="pf-panel-muted px-4 py-3"
         >
-          <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+          <p class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
             {{ stat.label }}
           </p>
           <p class="mt-2 text-lg font-semibold text-slate-950 dark:text-white">

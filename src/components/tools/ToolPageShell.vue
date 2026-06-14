@@ -25,7 +25,7 @@ const widthClasses: Record<Width, string> = {
 </script>
 
 <template>
-  <div class="bg-[#f7f8fb] text-slate-950 dark:bg-[#f7f8fb] dark:text-slate-950">
+  <div class="pf-app-surface min-h-screen text-slate-950 dark:text-slate-100">
     <ToolHeader
       :title="title"
       :subtitle="subtitle"
@@ -41,7 +41,7 @@ const widthClasses: Record<Width, string> = {
       </template>
     </ToolHeader>
 
-    <section :class="['mx-auto px-4 pb-12 pt-5 sm:px-6 lg:px-8', widthClasses[width]]">
+    <section :class="['mx-auto space-y-6 px-4 pb-12 pt-6 sm:px-6 lg:px-8', widthClasses[width]]">
       <slot />
     </section>
   </div>

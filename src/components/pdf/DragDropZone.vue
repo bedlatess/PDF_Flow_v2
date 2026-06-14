@@ -210,11 +210,11 @@ const openFileDialog = () => {
     role="button"
     tabindex="0"
     :class="[
-      'group relative grid min-h-[184px] cursor-pointer overflow-hidden rounded-lg border px-5 py-5 text-left transition-all duration-200 md:grid-cols-[1fr_auto] md:items-center md:gap-5',
-      'border-slate-200 bg-white shadow-sm hover:border-primary/50 hover:shadow-md',
-      'dark:border-slate-200 dark:bg-white',
+      'group relative grid min-h-[184px] cursor-pointer overflow-hidden rounded-lg border border-dashed px-5 py-5 text-left transition-all duration-200 md:grid-cols-[1fr_auto] md:items-center md:gap-5',
+      'border-slate-300 bg-white/90 shadow-sm hover:border-primary/60 hover:bg-white hover:shadow-md',
+      'dark:border-slate-700 dark:bg-slate-900/90 dark:hover:border-primary/50 dark:hover:bg-slate-900',
       {
-        'border-primary bg-primary/5 shadow-lg shadow-primary/10': isDragging,
+        'border-primary bg-primary/5 shadow-lg shadow-primary/10 dark:bg-primary/10': isDragging,
       },
     ]"
     @dragenter="handleDragEnter"
@@ -231,7 +231,7 @@ const openFileDialog = () => {
           'flex h-12 w-12 shrink-0 items-center justify-center rounded-md transition-all duration-200',
           isDragging
             ? 'scale-105 bg-primary/15 text-primary'
-            : 'bg-slate-100 text-slate-500 group-hover:bg-primary/10 group-hover:text-primary dark:bg-slate-100 dark:text-slate-500',
+            : 'bg-slate-100 text-slate-500 group-hover:bg-primary/10 group-hover:text-primary dark:bg-slate-800 dark:text-slate-300',
         ]"
       >
         <slot name="icon">
@@ -252,7 +252,7 @@ const openFileDialog = () => {
       </div>
 
       <div class="min-w-0">
-        <p class="text-base font-semibold text-slate-950 dark:text-slate-950 sm:text-lg">
+        <p class="text-base font-semibold text-slate-950 dark:text-white sm:text-lg">
           <slot
             v-if="slots.title"
             name="title"
@@ -266,13 +266,13 @@ const openFileDialog = () => {
           </template>
         </p>
 
-        <p class="mt-1.5 text-sm leading-6 text-slate-500 dark:text-slate-500">
+        <p class="mt-1.5 text-sm leading-6 text-slate-500 dark:text-slate-300">
           <slot name="subtitle">
             {{ t('common.or') }} {{ t('common.browse') }}
           </slot>
         </p>
 
-        <p class="mt-2 text-xs font-medium text-slate-400 dark:text-slate-400">
+        <p class="mt-2 text-xs font-medium text-slate-400 dark:text-slate-500">
           {{ helperText }}
         </p>
       </div>
@@ -280,7 +280,7 @@ const openFileDialog = () => {
 
     <div class="mt-5 flex flex-col gap-2 md:mt-0 md:min-w-44 md:items-end">
       <span
-        class="inline-flex min-h-11 items-center justify-center rounded-md bg-slate-950 px-5 text-sm font-semibold text-white shadow-sm transition-colors group-hover:bg-primary focus:outline-none focus:ring-2 focus:ring-primary/40"
+        class="inline-flex min-h-11 items-center justify-center rounded-md bg-slate-950 px-5 text-sm font-semibold text-white shadow-sm transition-colors group-hover:bg-primary focus:outline-none focus:ring-2 focus:ring-primary/40 dark:bg-white dark:text-slate-950 dark:group-hover:bg-primary dark:group-hover:text-white"
       >
         {{ t('common.browse') }}
       </span>

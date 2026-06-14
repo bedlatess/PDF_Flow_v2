@@ -1059,6 +1059,31 @@ Tool workspace Phase 3 deployment result:
   - `https://admin.pawn.eu.org/` returns HTTP 200.
 - Next approved work: Phase 4 unified frontend UI polish only. Keep payment logic, backend refactor code, and new PDF features out of this phase.
 
+Frontend UI Phase 4 local result:
+
+- Scope: unified frontend visual language across Home, Tools Center, and migrated tool pages without adding PDF features, changing payment logic, or entering backend refactor work.
+- Shared UI layer updated:
+  - `src/assets/styles/main.css`: cleaned global base styles, restored proper light/dark app surfaces, and added reusable `pf-app-surface`, `pf-panel`, `pf-panel-muted`, `pf-eyebrow`, and `pf-icon-tile` classes.
+  - `ToolPageShell`, `ToolHeader`, `ToolWorkspace`, `ToolActionPanel`, `ToolAccessPanel`, `ToolNoticeBar`, and `ToolErrorAlert`: aligned spacing, panel treatment, sticky secondary action column, heading scale, borders, shadows, and state presentation.
+  - `DragDropZone`: unified upload area treatment, dashed borders, mobile layout, and dark mode colors.
+  - `Modal`/`ToolResultPanel`: tightened result modal sizing, scroll behavior, and light/dark consistency.
+- Page-level polish:
+  - `Home` and `ToolsCenter` now use the same app surface/panel language as tool pages.
+  - Tool cards, filters, stats, and advanced sections have consistent borders, shadows, spacing, and dark mode behavior.
+  - Fixed exposed i18n keys by pointing Fill Form and Annotate metadata/page subtitles to existing `.desc` locale keys.
+- Local visual smoke:
+  - Captured desktop screenshots for Home, Tools Center, Merge, and OCR.
+  - Captured mobile screenshots for Annotate and Merge.
+  - Checked representative pages for horizontal overflow and raw `tools.*` / `common.*` key exposure; all passed.
+- Local checks:
+  - `npm run type-check`
+  - `npm run test:unit:ci`
+  - `npm run build`
+  - `npm run build:admin`
+  - `npx playwright test tests/e2e-playwright/tool-pages-matrix.spec.ts tests/e2e-playwright/tool-flow-regression.spec.ts --project=chromium --reporter=line`
+  - `npx playwright test tests/e2e-playwright/advanced-pdf-workflows.spec.ts tests/e2e-playwright/local-pdf-workflows.spec.ts tests/e2e-playwright/tool-flow-regression.spec.ts tests/e2e-playwright/cloud-tool-access.spec.ts tests/e2e-playwright/advanced-cloud-tools.spec.ts tests/e2e-playwright/tool-pages-matrix.spec.ts --project=chromium --reporter=line`
+- Next approved work after this phase is complete: backend structure audit and refactor design only; do not start backend refactor code until that design is approved.
+
 Admin bootstrap:
 
 ```bash

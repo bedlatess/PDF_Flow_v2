@@ -232,7 +232,7 @@ onUnmounted(() => {
 <template>
   <ToolPageShell
       :title="t('tools.annotate.title')"
-      :subtitle="t('tools.annotate.description')"
+      :subtitle="t('tools.annotate.desc')"
       :badge="t('tools.annotate.proOnly')"
       pro
       accent="purple"

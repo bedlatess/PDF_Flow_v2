@@ -65,7 +65,7 @@ const handleContentClick = (event: MouseEvent) => {
     >
       <div
         v-if="modelValue"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm"
         @click="handleBackdropClick"
       >
         <Transition
@@ -82,7 +82,7 @@ const handleContentClick = (event: MouseEvent) => {
             aria-modal="true"
             :aria-label="title || undefined"
             :class="[
-              'relative w-full bg-white dark:bg-gray-800 rounded-2xl shadow-2xl',
+              'relative max-h-[calc(100vh-2rem)] w-full overflow-hidden rounded-lg bg-white shadow-2xl shadow-slate-950/20 dark:bg-slate-900',
               sizeClasses,
             ]"
             @click="handleContentClick"
@@ -90,17 +90,17 @@ const handleContentClick = (event: MouseEvent) => {
             <!-- Header -->
             <div
               v-if="title || showCloseButton || $slots.header"
-              class="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-700"
+              class="flex items-center justify-between border-b border-slate-200 px-6 py-4 dark:border-slate-800"
             >
               <slot name="header">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                <h3 class="text-lg font-semibold text-slate-950 dark:text-white">
                   {{ title }}
                 </h3>
               </slot>
 
               <button
                 v-if="showCloseButton"
-                class="rounded-lg p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+                class="rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200"
                 @click="close"
               >
                 <svg
@@ -120,14 +120,14 @@ const handleContentClick = (event: MouseEvent) => {
             </div>
 
             <!-- Body -->
-            <div class="px-6 py-4">
+            <div class="max-h-[calc(100vh-9rem)] overflow-y-auto px-6 py-5">
               <slot />
             </div>
 
             <!-- Footer -->
             <div
               v-if="$slots.footer"
-              class="border-t border-gray-200 px-6 py-4 dark:border-gray-700"
+              class="border-t border-slate-200 px-6 py-4 dark:border-slate-800"
             >
               <slot name="footer" />
             </div>

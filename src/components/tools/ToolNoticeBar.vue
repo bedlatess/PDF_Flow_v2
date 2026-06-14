@@ -22,7 +22,7 @@ const classes = computed(() => {
 </script>
 
 <template>
-  <div :class="['rounded-md border px-5 py-4', classes]">
+  <div :class="['rounded-lg border px-5 py-4 shadow-sm', classes]">
     <div class="flex items-start gap-3">
       <div class="mt-0.5 text-lg">
         <slot name="icon">

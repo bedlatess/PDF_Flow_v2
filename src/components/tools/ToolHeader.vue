@@ -58,11 +58,11 @@ const accentClasses = computed(() => {
 </script>
 
 <template>
-  <section class="border-b border-slate-200 bg-white dark:border-slate-200 dark:bg-white">
-    <div class="mx-auto max-w-7xl px-4 py-7 sm:px-6 lg:px-8">
-      <div class="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-center">
+  <section class="border-b border-slate-200/80 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90">
+    <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
         <div class="flex items-start gap-4">
-          <div :class="['inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-md border text-sm', accentClasses.rail]">
+          <div :class="['pf-icon-tile h-11 w-11 border text-sm shadow-sm', accentClasses.rail]">
             <span :class="accentClasses.icon">
               <slot name="badgeIcon">
                 *
@@ -72,7 +72,7 @@ const accentClasses = computed(() => {
 
           <div class="min-w-0">
             <div class="flex flex-wrap items-center gap-2">
-              <h1 class="text-2xl font-semibold leading-tight text-slate-950 dark:text-slate-950 sm:text-3xl">
+              <h1 class="text-2xl font-semibold leading-tight text-slate-950 dark:text-white sm:text-3xl">
                 {{ title }}
               </h1>
               <span
@@ -82,7 +82,7 @@ const accentClasses = computed(() => {
                 {{ badge }}
               </span>
             </div>
-            <p class="mt-2 max-w-3xl text-sm leading-7 text-slate-600 dark:text-slate-600 sm:text-base">
+            <p class="mt-2 max-w-3xl text-sm leading-7 text-slate-600 dark:text-slate-300 sm:text-base">
               {{ subtitle }}
             </p>
           </div>

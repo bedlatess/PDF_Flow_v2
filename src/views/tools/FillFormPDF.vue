@@ -220,7 +220,7 @@ onUnmounted(() => {
 <template>
   <ToolPageShell
       :title="t('tools.fillForm.title')"
-      :subtitle="t('tools.fillForm.description')"
+      :subtitle="t('tools.fillForm.desc')"
       :badge="t('tools.fillForm.proOnly')"
       pro
       accent="amber"

@@ -117,12 +117,12 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#f6f8fb] text-slate-950 dark:bg-slate-950 dark:text-white">
-    <section class="border-b border-slate-200 bg-white dark:border-white/10 dark:bg-slate-900">
+  <div class="pf-app-surface min-h-screen text-slate-950 dark:text-white">
+    <section class="border-b border-slate-200/80 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90">
       <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <div class="grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(360px,0.7fr)] lg:items-end">
           <div>
-            <div class="inline-flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 dark:border-red-400/20 dark:bg-red-500/10 dark:text-red-200">
+            <div class="inline-flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 shadow-sm dark:border-red-400/20 dark:bg-red-500/10 dark:text-red-200">
               <FileStack class="h-4 w-4" />
               {{ workspaceCopy.eyebrow }}
             </div>
@@ -151,7 +151,7 @@ onMounted(() => {
             </div>
           </div>
 
-          <div class="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-white/10 dark:bg-slate-950/45">
+          <div class="pf-panel p-4">
             <label class="relative block">
               <Search class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <input
@@ -167,7 +167,7 @@ onMounted(() => {
                 v-for="tool in featuredTools"
                 :key="tool.id"
                 type="button"
-                class="group flex min-h-[56px] items-center gap-3 rounded-md border border-slate-200 bg-white px-3 py-2 text-left transition hover:border-red-200 hover:bg-red-50/50 dark:border-white/10 dark:bg-slate-900 dark:hover:border-red-300/30 dark:hover:bg-red-500/10"
+                class="group flex min-h-[56px] items-center gap-3 rounded-md border border-slate-200 bg-white px-3 py-2 text-left transition hover:border-red-200 hover:bg-red-50/50 dark:border-slate-800 dark:bg-slate-950/55 dark:hover:border-red-300/30 dark:hover:bg-red-500/10"
                 @click="navigateToTool(tool)"
               >
                 <span :class="['flex h-9 w-9 shrink-0 items-center justify-center rounded-md ring-1 ring-inset', getAccentClass(tool)]">
@@ -205,7 +205,7 @@ onMounted(() => {
               'h-10 shrink-0 rounded-md px-4 text-sm font-semibold transition',
               activeCategory === category.id
                 ? 'bg-slate-950 text-white dark:bg-white dark:text-slate-950'
-                : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-white/10 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800',
+                : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800',
             ]"
             @click="activeCategory = category.id"
           >
@@ -222,7 +222,7 @@ onMounted(() => {
           v-for="tool in filteredTools"
           :key="tool.id"
           data-testid="tool-card"
-          class="group flex min-h-[126px] cursor-pointer flex-col rounded-lg border border-slate-200 bg-white p-3.5 shadow-sm transition hover:-translate-y-0.5 hover:border-red-200 hover:shadow-md dark:border-white/10 dark:bg-slate-900 dark:hover:border-red-300/30"
+          class="group flex min-h-[126px] cursor-pointer flex-col rounded-lg border border-slate-200 bg-white p-3.5 shadow-sm shadow-slate-200/60 transition hover:-translate-y-0.5 hover:border-red-200 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/90 dark:shadow-none dark:hover:border-red-300/30"
           @click="navigateToTool(tool)"
         >
           <div class="flex items-start justify-between gap-3">
@@ -247,7 +247,7 @@ onMounted(() => {
 
       <div
         v-else
-        class="mt-5 rounded-lg border border-dashed border-slate-300 bg-white p-10 text-center dark:border-white/15 dark:bg-slate-900"
+        class="mt-5 rounded-lg border border-dashed border-slate-300 bg-white p-10 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900"
       >
         <Search class="mx-auto h-8 w-8 text-slate-400" />
         <h3 class="mt-4 text-lg font-semibold text-slate-950 dark:text-white">
@@ -260,7 +260,7 @@ onMounted(() => {
     </section>
 
     <section class="mx-auto grid max-w-7xl min-w-0 gap-4 px-4 pb-10 sm:px-6 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:px-8">
-      <div class="min-w-0 rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-slate-900">
+      <div class="pf-panel min-w-0 p-4">
         <div class="grid gap-3 sm:grid-cols-3">
           <article
             v-for="[value, label] in workspaceCopy.stats"
@@ -275,7 +275,7 @@ onMounted(() => {
           <article
             v-for="item in workspaceCopy.trust"
             :key="item[0]"
-            class="rounded-md border border-slate-200 p-3 dark:border-white/10"
+            class="rounded-md border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950/35"
           >
             <ShieldCheck v-if="item[0] === workspaceCopy.trust[0][0]" class="h-5 w-5 text-emerald-600 dark:text-emerald-300" />
             <Cloud v-else-if="item[0] === workspaceCopy.trust[1][0]" class="h-5 w-5 text-sky-600 dark:text-sky-300" />
@@ -286,7 +286,7 @@ onMounted(() => {
         </div>
       </div>
 
-      <div class="min-w-0 rounded-lg border border-amber-200 bg-amber-50/70 p-5 shadow-sm dark:border-amber-300/20 dark:bg-amber-500/10">
+      <div class="min-w-0 rounded-lg border border-amber-200 bg-amber-50/80 p-5 shadow-sm shadow-amber-100/60 dark:border-amber-300/20 dark:bg-amber-500/10 dark:shadow-none">
         <div class="flex items-start justify-between gap-4">
           <div>
             <div class="flex h-10 w-10 items-center justify-center rounded-md bg-white text-amber-700 shadow-sm dark:bg-slate-900 dark:text-amber-200">

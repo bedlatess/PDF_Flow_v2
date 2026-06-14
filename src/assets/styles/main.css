@@ -2,50 +2,81 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 全局样式重置与优化 */
 @layer base {
-  body {
-    @apply bg-background-light text-gray-900 font-sans antialiased;
-    @apply dark:bg-background-light dark:text-gray-900;
-  }
-
-  /* 平滑滚动 */
   html {
     scroll-behavior: smooth;
   }
 
-  /* 隐藏滚动条但保持功能 (可选) */
+  body {
+    @apply bg-slate-50 font-sans text-slate-950 antialiased;
+    @apply dark:bg-slate-950 dark:text-slate-100;
+  }
+
+  #app {
+    min-height: 100vh;
+  }
+
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-gray-100 dark:bg-gray-800;
+    @apply bg-slate-100 dark:bg-slate-900;
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-gray-300 dark:bg-gray-600 rounded-full;
+    @apply rounded-full bg-slate-300 dark:bg-slate-700;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-gray-400 dark:bg-gray-500;
+    @apply bg-slate-400 dark:bg-slate-600;
   }
 }
 
-/* 毛玻璃效果工具类 */
 @layer components {
+  .pf-app-surface {
+    background:
+      linear-gradient(180deg, rgba(248, 250, 252, 0.98), rgba(241, 245, 249, 0.95)),
+      radial-gradient(circle at 12% 0%, rgba(239, 68, 68, 0.08), transparent 30%),
+      radial-gradient(circle at 88% 6%, rgba(14, 165, 233, 0.08), transparent 28%);
+  }
+
+  .dark .pf-app-surface {
+    background:
+      linear-gradient(180deg, rgba(2, 6, 23, 0.98), rgba(15, 23, 42, 0.98)),
+      radial-gradient(circle at 12% 0%, rgba(248, 113, 113, 0.12), transparent 30%),
+      radial-gradient(circle at 88% 6%, rgba(56, 189, 248, 0.10), transparent 28%);
+  }
+
+  .pf-panel {
+    @apply rounded-lg border border-slate-200 bg-white shadow-sm shadow-slate-200/60;
+    @apply dark:border-slate-800 dark:bg-slate-900/90 dark:shadow-none;
+  }
+
+  .pf-panel-muted {
+    @apply rounded-lg border border-slate-200 bg-slate-50/80;
+    @apply dark:border-slate-800 dark:bg-slate-950/50;
+  }
+
+  .pf-eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.16em];
+  }
+
+  .pf-icon-tile {
+    @apply flex shrink-0 items-center justify-center rounded-md ring-1 ring-inset;
+  }
+
   .glass {
-    @apply bg-white/70 backdrop-blur-glass border border-white/20;
-    @apply dark:bg-gray-900/70 dark:border-gray-700/20;
+    @apply border border-white/20 bg-white/70 backdrop-blur-glass;
+    @apply dark:border-slate-700/20 dark:bg-slate-900/70;
   }
 
   .glass-shadow {
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+    box-shadow: 0 8px 32px 0 rgba(15, 23, 42, 0.14);
   }
 }
 
-/* 拖拽波纹动画 */
 @layer utilities {
   .drag-ripple {
     @apply relative overflow-hidden;

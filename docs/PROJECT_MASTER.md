@@ -1853,6 +1853,31 @@ Backend refactor R10 local checkpoint:
   - `npm run build:admin`
   - `npm run test:e2e:admin` (`7 passed`)
 
+Backend refactor R10 production result:
+
+- Committed and pushed R10 as `89587a92f2bb4d97e759b667e2eebe408534a52d`.
+- During production smoke, compress exposed an existing pypdf compatibility bug:
+  - `compress_pdf_task` failed with `Page must be part of a PdfWriter`.
+  - This was not caused by R10 observability work, but it blocked the requested representative compress validation.
+- Applied and deployed a small follow-up fix as `6ebcbcbc4b5082df14fb21a8e6cc05ae84159037`:
+  - `_compress_pdf()` now adds pages to `PdfWriter` first, then compresses the writer-owned pages.
+  - Added a regression test with a content-stream PDF to prevent the pypdf owner error from returning.
+- Production `.deploy_state/main/current_deployed_commit` records `6ebcbcbc4b5082df14fb21a8e6cc05ae84159037`.
+- Production smoke verified:
+  - Admin static entry `/admin.html` is reachable.
+  - backend, celery-worker, frontend, postgres, and redis containers are healthy.
+  - `/health` returns healthy.
+  - compress, merge, OCR, and Office representative tasks created, completed, and downloaded successfully.
+  - Redis `job:*` keys are still written.
+  - Admin Job Center serialization includes status, progress, source, user/file, timing, output path, and error fields.
+  - DB durable jobs are preferred for duplicate `job_id` entries.
+  - Redis-only and mixed DB+Redis source modes are distinguishable through `source`, `sources`, and `is_durable`.
+  - Public `/api/v1/files/jobs/{job_id}` did not expose admin-only fields such as `source`, `sources`, `is_durable`, `output_file_url`, or `error_message`.
+  - DB fallback status shape remains route-compatible with `job_id`, `status`, `created_at`, `updated_at`, `progress`, `result`, and `error`.
+  - Recent backend/celery logs showed no traceback, SQLAlchemy exception, or critical entries after the final deployment.
+- Cleanup:
+  - Removed temporary synthetic DB verification jobs and R10 smoke users.
+
 Admin bootstrap:
 
 ```bash

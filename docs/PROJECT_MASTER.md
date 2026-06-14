@@ -1878,6 +1878,31 @@ Backend refactor R10 production result:
 - Cleanup:
   - Removed temporary synthetic DB verification jobs and R10 smoke users.
 
+Product Phase P1 local checkpoint:
+
+- Upgraded `/history` from browser-local history messaging into an account-level Results Center backed by durable `ProcessingJob` records.
+- Added owner-only history APIs:
+  - `GET /api/v1/files/history`
+  - `GET /api/v1/files/history/{job_id}`
+  - `GET /api/v1/files/history/{job_id}/download`
+- History APIs require login and only read `ProcessingJob.user_id == current_user.id`; missing and cross-user jobs return 404.
+- Result download state is explicit:
+  - `available` for completed jobs with existing artifacts or OCR text results.
+  - `expired` for completed jobs whose artifact is gone.
+  - `unavailable` for failed, pending, processing, or cancelled jobs.
+- New history download endpoint is owner-only and reuses existing download/artifact logic; the old `/api/v1/files/download/{job_id}` path remains unchanged for existing tool pages.
+- Failed jobs show a short first-line error only; tracebacks and long internal details are not exposed in the user history row.
+- Frontend `/history` now shows signed-in task history, filters, status/download badges, details, re-download action, empty state, and login prompt.
+- LocalStorage history code and legacy `HistoryPanel` remain in place but are not the P1 primary path.
+- Public `/api/v1/files/jobs/{job_id}` response shape, Redis/Celery behavior, artifact storage, payment, AI, and PDF tool functionality were not changed.
+- Local verification:
+  - `python -m pytest backend/tests/test_files.py -q` (`32 passed, 1 warning`)
+  - `python -m pytest backend/tests/test_jobs_domain.py backend/tests/test_admin_operations_domain.py backend/tests/test_files.py -q` (`44 passed, 1 warning`)
+  - `python -m pytest backend/tests -q` (`188 passed, 1 warning`)
+  - `npm run type-check`
+  - `npm run build`
+  - Browser smoke for `/en/history` desktop and mobile unauthenticated states: no horizontal overflow and no console errors.
+
 Admin bootstrap:
 
 ```bash

@@ -2,13 +2,15 @@
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, File, Request, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile, status
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
-from app.api.v1.endpoints.auth import get_current_user_optional
+from app.api.v1.endpoints.auth import get_current_user, get_current_user_optional
 from app.core.database import get_db
 from app.core.rate_limiter import rate_limit_middleware
+from app.domains.jobs.repository import ProcessingJobRepository
+from app.domains.jobs.service import JobService
 from app.domains.files.service import (
     require_file_feature,
     require_job_status,
@@ -27,6 +29,8 @@ from app.schemas.file import (
     PDFRotateRequest,
     PDFSplitRequest,
     PDFToImageRequest,
+    ProcessingJobHistoryItem,
+    ProcessingJobHistoryListResponse,
     ProcessingJobResponse,
     ProcessingJobStatusResponse,
 )
@@ -214,6 +218,75 @@ async def download_result(
     job_id: str,
     current_user: Optional[User] = Depends(get_current_user_optional),
 ):
+    download_path = file_processing_service.get_download_path(job_id)
+    return FileResponse(
+        path=str(download_path),
+        filename=download_path.name,
+        media_type="application/octet-stream",
+    )
+
+
+@router.get("/history", response_model=ProcessingJobHistoryListResponse)
+async def list_job_history(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    status_filter: Optional[str] = Query(None, alias="status"),
+    job_type: Optional[str] = Query(None),
+    limit: int = Query(30, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+):
+    service = JobService(ProcessingJobRepository(db))
+    items, total = service.user_history(
+        user_id=current_user.id,
+        limit=limit,
+        offset=offset,
+        status_filter=status_filter,
+        job_type=job_type,
+    )
+    return {
+        "items": items,
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+    }
+
+
+@router.get("/history/{job_id}", response_model=ProcessingJobHistoryItem)
+async def get_job_history_detail(
+    job_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    service = JobService(ProcessingJobRepository(db))
+    item = service.user_history_detail(job_id=job_id, user_id=current_user.id)
+    if not item:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Job not found: {job_id}",
+        )
+    return item
+
+
+@router.get("/history/{job_id}/download")
+async def download_history_result(
+    job_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    service = JobService(ProcessingJobRepository(db))
+    item = service.user_history_detail(job_id=job_id, user_id=current_user.id)
+    if not item:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Job not found: {job_id}",
+        )
+    if not item["download_available"]:
+        is_expired = item["download_state"] == "expired"
+        raise HTTPException(
+            status_code=status.HTTP_410_GONE if is_expired else status.HTTP_409_CONFLICT,
+            detail="Result file has expired" if is_expired else "Job result is not available for download",
+        )
+
     download_path = file_processing_service.get_download_path(job_id)
     return FileResponse(
         path=str(download_path),

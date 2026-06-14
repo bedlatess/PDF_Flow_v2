@@ -27,6 +27,38 @@ export interface JobStatusResponse {
   error?: string
 }
 
+export type JobHistoryStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'
+export type JobDownloadState = 'available' | 'expired' | 'unavailable'
+
+export interface JobHistoryItem {
+  job_id: string
+  job_type: string
+  status: JobHistoryStatus
+  progress: number
+  input_file_name: string
+  input_file_size: number
+  created_at: string
+  started_at?: string | null
+  completed_at?: string | null
+  download_state: JobDownloadState
+  download_available: boolean
+  error_message?: string | null
+}
+
+export interface JobHistoryResponse {
+  items: JobHistoryItem[]
+  total: number
+  limit: number
+  offset: number
+}
+
+export interface JobHistoryParams {
+  status?: JobHistoryStatus | ''
+  job_type?: string
+  limit?: number
+  offset?: number
+}
+
 export const fileAPI = {
   async uploadFile(file: File): Promise<FileUploadResponse> {
     const formData = new FormData()
@@ -120,6 +152,25 @@ export const fileAPI = {
 
   async downloadResult(jobId: string): Promise<Blob> {
     const response = await apiClient.get(`/api/v1/files/download/${jobId}`, {
+      responseType: 'blob',
+    })
+    return response.data as Blob
+  },
+
+  async getHistory(params: JobHistoryParams = {}): Promise<JobHistoryResponse> {
+    const response = await apiClient.get<JobHistoryResponse>('/api/v1/files/history', {
+      params,
+    })
+    return response.data
+  },
+
+  async getHistoryItem(jobId: string): Promise<JobHistoryItem> {
+    const response = await apiClient.get<JobHistoryItem>(`/api/v1/files/history/${jobId}`)
+    return response.data
+  },
+
+  async downloadHistoryResult(jobId: string): Promise<Blob> {
+    const response = await apiClient.get(`/api/v1/files/history/${jobId}/download`, {
       responseType: 'blob',
     })
     return response.data as Blob

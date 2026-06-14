@@ -379,6 +379,209 @@ class TestUploadEndpoint:
         assert r.json()["file_id"].startswith("file_")
 
 
+class TestJobHistoryEndpoint:
+    def _register_and_login(self, client, email: str) -> str:
+        client.post("/api/v1/auth/register", json={
+            "email": email,
+            "password": "SecurePass123!",
+            "full_name": "History User",
+        })
+        login = client.post("/api/v1/auth/login", data={
+            "username": email,
+            "password": "SecurePass123!",
+        })
+        return login.json()["access_token"]
+
+    def _user_id_for_email(self, client, email: str) -> int:
+        from app.core.database import get_db
+        from app.models.user import User
+
+        db = next(client.app.dependency_overrides[get_db]())
+        try:
+            return db.query(User).filter(User.email == email).first().id
+        finally:
+            db.close()
+
+    def test_history_requires_login(self, client):
+        response = client.get("/api/v1/files/history")
+        assert response.status_code == 401
+
+    def test_history_lists_only_current_user_jobs(self, client, tmp_path):
+        from app.core.database import get_db
+        from app.models.user import ProcessingJob
+
+        owner_token = self._register_and_login(client, "history-owner@example.com")
+        other_token = self._register_and_login(client, "history-other@example.com")
+        owner_id = self._user_id_for_email(client, "history-owner@example.com")
+        other_id = self._user_id_for_email(client, "history-other@example.com")
+
+        output = tmp_path / "owned.pdf"
+        output.write_bytes(b"%PDF-1.4\nowned")
+
+        db = next(client.app.dependency_overrides[get_db]())
+        try:
+            db.add_all([
+                ProcessingJob(
+                    job_id="job_history_owner",
+                    user_id=owner_id,
+                    job_type="compress_pdf",
+                    status="completed",
+                    progress=100,
+                    input_file_name="owned.pdf",
+                    input_file_size=12,
+                    output_file_url=str(output),
+                    result_data=json.dumps({"output_path": str(output)}),
+                ),
+                ProcessingJob(
+                    job_id="job_history_other",
+                    user_id=other_id,
+                    job_type="merge_pdf",
+                    status="completed",
+                    progress=100,
+                    input_file_name="other.pdf",
+                    input_file_size=12,
+                    result_data=json.dumps({"output_path": str(output)}),
+                ),
+            ])
+            db.commit()
+        finally:
+            db.close()
+
+        owner_response = client.get(
+            "/api/v1/files/history",
+            headers={"Authorization": f"Bearer {owner_token}"},
+        )
+        assert owner_response.status_code == 200
+        body = owner_response.json()
+        assert body["total"] == 1
+        assert body["items"][0]["job_id"] == "job_history_owner"
+        assert body["items"][0]["download_state"] == "available"
+
+        other_detail = client.get(
+            "/api/v1/files/history/job_history_owner",
+            headers={"Authorization": f"Bearer {other_token}"},
+        )
+        assert other_detail.status_code == 404
+
+    def test_completed_history_job_can_download_when_artifact_exists(self, client, tmp_path):
+        from app.core.database import get_db
+        from app.models.user import ProcessingJob
+
+        token = self._register_and_login(client, "history-download@example.com")
+        user_id = self._user_id_for_email(client, "history-download@example.com")
+        output = tmp_path / "download.pdf"
+        output.write_bytes(b"%PDF-1.4\ndownload")
+        now = time.time()
+        _put_job("job_history_download", {
+            "job_id": "job_history_download",
+            "status": "completed",
+            "created_at": now,
+            "updated_at": now,
+            "progress": 100,
+            "result": {"output_path": str(output)},
+        })
+
+        db = next(client.app.dependency_overrides[get_db]())
+        try:
+            db.add(ProcessingJob(
+                job_id="job_history_download",
+                user_id=user_id,
+                job_type="compress_pdf",
+                status="completed",
+                progress=100,
+                input_file_name="download.pdf",
+                input_file_size=output.stat().st_size,
+                output_file_url=str(output),
+                result_data=json.dumps({"output_path": str(output)}),
+            ))
+            db.commit()
+        finally:
+            db.close()
+
+        response = client.get(
+            "/api/v1/files/history/job_history_download/download",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert response.status_code == 200
+        assert response.content == output.read_bytes()
+
+    def test_failed_history_job_is_not_downloadable(self, client):
+        from app.core.database import get_db
+        from app.models.user import ProcessingJob
+
+        token = self._register_and_login(client, "history-failed@example.com")
+        user_id = self._user_id_for_email(client, "history-failed@example.com")
+
+        db = next(client.app.dependency_overrides[get_db]())
+        try:
+            db.add(ProcessingJob(
+                job_id="job_history_failed",
+                user_id=user_id,
+                job_type="ocr_pdf",
+                status="failed",
+                progress=20,
+                input_file_name="failed.pdf",
+                input_file_size=100,
+                error_message="Conversion failed\nTraceback should not be shown",
+            ))
+            db.commit()
+        finally:
+            db.close()
+
+        detail = client.get(
+            "/api/v1/files/history/job_history_failed",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert detail.status_code == 200
+        body = detail.json()
+        assert body["download_state"] == "unavailable"
+        assert body["error_message"] == "Conversion failed"
+
+        download = client.get(
+            "/api/v1/files/history/job_history_failed/download",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert download.status_code == 409
+
+    def test_completed_history_job_without_artifact_is_expired(self, client, tmp_path):
+        from app.core.database import get_db
+        from app.models.user import ProcessingJob
+
+        token = self._register_and_login(client, "history-expired@example.com")
+        user_id = self._user_id_for_email(client, "history-expired@example.com")
+        missing = tmp_path / "missing.pdf"
+
+        db = next(client.app.dependency_overrides[get_db]())
+        try:
+            db.add(ProcessingJob(
+                job_id="job_history_expired",
+                user_id=user_id,
+                job_type="merge_pdf",
+                status="completed",
+                progress=100,
+                input_file_name="missing.pdf",
+                input_file_size=100,
+                output_file_url=str(missing),
+                result_data=json.dumps({"output_path": str(missing)}),
+            ))
+            db.commit()
+        finally:
+            db.close()
+
+        detail = client.get(
+            "/api/v1/files/history/job_history_expired",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert detail.status_code == 200
+        assert detail.json()["download_state"] == "expired"
+
+        download = client.get(
+            "/api/v1/files/history/job_history_expired/download",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert download.status_code == 410
+
+
 class TestOfficeToPdfFlow:
     def test_compress_service_creates_anonymous_durable_job(self, monkeypatch, tmp_path, client):
         from app.core.database import get_db

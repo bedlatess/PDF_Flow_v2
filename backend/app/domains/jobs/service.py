@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 import json
 import logging
+import os
 import time
 from typing import Any, Mapping
 
@@ -57,6 +58,33 @@ class JobService:
         if not job:
             return None
         return db_job_to_route_status(job)
+
+    def get_for_user(self, job_id: str, user_id: int) -> ProcessingJob | None:
+        return self.repository.get_by_job_id_for_user(job_id, user_id)
+
+    def user_history(
+        self,
+        *,
+        user_id: int,
+        limit: int,
+        offset: int,
+        status_filter: str | None = None,
+        job_type: str | None = None,
+    ) -> tuple[list[dict[str, Any]], int]:
+        jobs, total = self.repository.list_for_user(
+            user_id=user_id,
+            limit=limit,
+            offset=offset,
+            status_filter=status_filter,
+            job_type=job_type,
+        )
+        return [db_job_to_user_history_item(job) for job in jobs], total
+
+    def user_history_detail(self, *, job_id: str, user_id: int) -> dict[str, Any] | None:
+        job = self.get_for_user(job_id, user_id)
+        if not job:
+            return None
+        return db_job_to_user_history_item(job)
 
     def admin_jobs(
         self,
@@ -450,6 +478,53 @@ def db_job_to_route_status(job: ProcessingJob) -> dict[str, Any]:
         "result": result if result else None,
         "error": job.error_message,
     }
+
+
+def db_job_to_user_history_item(job: ProcessingJob) -> dict[str, Any]:
+    download_state = durable_job_download_state(job)
+    return {
+        "job_id": job.job_id,
+        "job_type": job.job_type,
+        "status": normalize_job_status(job.status),
+        "progress": int(job.progress or 0),
+        "input_file_name": job.input_file_name,
+        "input_file_size": int(job.input_file_size or 0),
+        "created_at": job.created_at,
+        "started_at": job.started_at,
+        "completed_at": job.completed_at,
+        "download_state": download_state,
+        "download_available": download_state == "available",
+        "error_message": sanitize_history_error(job.error_message),
+    }
+
+
+def durable_job_download_state(job: ProcessingJob) -> str:
+    status = normalize_job_status(job.status)
+    if status != JobStatus.COMPLETED.value:
+        return "unavailable"
+
+    result = _load_json_mapping(job.result_data) or {}
+    output_path = str(result.get("output_path") or job.output_file_url or "")
+    if output_path and os.path.exists(output_path):
+        return "available"
+
+    output_files = result.get("output_files")
+    if isinstance(output_files, list) and any(os.path.exists(str(path)) for path in output_files):
+        return "available"
+
+    if isinstance(result.get("text"), str):
+        return "available"
+
+    return "expired"
+
+
+def sanitize_history_error(error_message: str | None) -> str | None:
+    if not error_message:
+        return None
+    first_line = str(error_message).splitlines()[0].strip()
+    if not first_line:
+        return None
+    return first_line[:240]
 
 
 def _job_updated_at(job: ProcessingJob) -> datetime:

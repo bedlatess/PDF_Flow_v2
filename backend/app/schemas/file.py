@@ -2,6 +2,7 @@
 File Processing Schemas
 文件处理相关的数据模型
 """
+from datetime import datetime
 from typing import Optional, List
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from enum import Enum
@@ -241,3 +242,29 @@ class ProcessingJobStatusResponse(BaseModel):
             }
         }
     )
+
+
+class ProcessingJobHistoryItem(BaseModel):
+    """Account-owned processing job history row."""
+
+    job_id: str
+    job_type: str
+    status: ProcessingStatus
+    progress: int = Field(0, ge=0, le=100)
+    input_file_name: str
+    input_file_size: int
+    created_at: datetime
+    started_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
+    download_state: str
+    download_available: bool
+    error_message: Optional[str] = None
+
+
+class ProcessingJobHistoryListResponse(BaseModel):
+    """Paginated account-owned processing job history."""
+
+    items: List[ProcessingJobHistoryItem]
+    total: int
+    limit: int
+    offset: int

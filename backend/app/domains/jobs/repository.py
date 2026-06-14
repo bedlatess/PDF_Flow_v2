@@ -21,6 +21,40 @@ class ProcessingJobRepository:
     def get_by_job_id(self, job_id: str) -> ProcessingJob | None:
         return self.db.query(ProcessingJob).filter(ProcessingJob.job_id == job_id).first()
 
+    def get_by_job_id_for_user(self, job_id: str, user_id: int) -> ProcessingJob | None:
+        return (
+            self.db.query(ProcessingJob)
+            .filter(
+                ProcessingJob.job_id == job_id,
+                ProcessingJob.user_id == user_id,
+            )
+            .first()
+        )
+
+    def list_for_user(
+        self,
+        *,
+        user_id: int,
+        limit: int,
+        offset: int,
+        status_filter: str | None = None,
+        job_type: str | None = None,
+    ) -> tuple[list[ProcessingJob], int]:
+        query = self.db.query(ProcessingJob).filter(ProcessingJob.user_id == user_id)
+        if status_filter:
+            query = query.filter(ProcessingJob.status == status_filter)
+        if job_type:
+            query = query.filter(ProcessingJob.job_type == job_type)
+
+        total = query.count()
+        jobs = (
+            query.order_by(ProcessingJob.created_at.desc())
+            .offset(offset)
+            .limit(limit)
+            .all()
+        )
+        return jobs, total
+
     def list_recent_with_user_email(
         self,
         *,

@@ -1286,18 +1286,89 @@
     "bottomLine": "Free tools for daily work, Pro when you need more."
   },
   "history": {
-    "title": "Processing History",
+    "title": "Results Center",
     "page": {
       "backHome": "Back to home",
-      "badge": "Local processing history",
-      "title": "Processing History",
-      "description": "Review recent PDF actions saved by this browser. History stays on this device and helps you revisit files, tools, and processing time.",
-      "localTitle": "Stored locally",
-      "localDescription": "History data is not uploaded. It disappears when browser data is cleared.",
-      "reviewTitle": "Quick review",
-      "reviewDescription": "Useful when you need to confirm which tool ran and which files were processed.",
+      "badge": "Account results center",
+      "title": "Results Center",
+      "description": "Review signed-in PDF jobs, check processing status, and download available results again before temporary files expire.",
       "continueProcessing": "Continue processing PDF"
     },
+    "auth": {
+      "title": "Sign in to see your results",
+      "description": "Account history only shows jobs attached to your signed-in account. Anonymous local work stays on this device and is not merged here.",
+      "action": "Sign in"
+    },
+    "stats": {
+      "total": "Total",
+      "completed": "Done",
+      "available": "Ready"
+    },
+    "filters": {
+      "status": "Status",
+      "tool": "Tool",
+      "allStatuses": "All statuses",
+      "allTools": "All tools"
+    },
+    "actions": {
+      "refresh": "Refresh",
+      "apply": "Apply",
+      "download": "Download",
+      "details": "Details",
+      "hideDetails": "Hide"
+    },
+    "loading": "Loading your recent jobs...",
+    "empty": {
+      "title": "No account jobs yet",
+      "description": "Run OCR, Office conversion, or other backend PDF jobs while signed in, then return here to review status and downloads."
+    },
+    "table": {
+      "task": "Task",
+      "status": "Status",
+      "download": "Result",
+      "created": "Created",
+      "finished": "Finished",
+      "action": "Action"
+    },
+    "details": {
+      "jobId": "Job ID",
+      "started": "Started",
+      "completed": "Completed",
+      "progress": "Progress"
+    },
+    "status": {
+      "pending": "Pending",
+      "processing": "Processing",
+      "completed": "Completed",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    },
+    "downloadStates": {
+      "available": "Available",
+      "expired": "Expired",
+      "unavailable": "Unavailable"
+    },
+    "jobTypes": {
+      "merge_pdf": "Merge PDF",
+      "split_pdf": "Split PDF",
+      "compress_pdf": "Compress PDF",
+      "rotate_pdf": "Rotate PDF",
+      "image_to_pdf": "Image to PDF",
+      "pdf_to_image": "PDF to Image",
+      "ocr_pdf": "OCR PDF",
+      "office_to_pdf": "Office to PDF"
+    },
+    "common": {
+      "none": "None",
+      "unknownSize": "Unknown size"
+    },
+    "errors": {
+      "loadTitle": "History could not be loaded",
+      "loadMessage": "We could not load your result history. Please retry in a moment.",
+      "downloadTitle": "Download failed",
+      "downloadMessage": "This result may have expired or is not available right now."
+    },
+    "failedHint": "{count} failed jobs are visible with short error details.",
     "panel": {
       "confirmClear": "Clear all processing history?",
       "confirmTitle": "Clear all local history?",

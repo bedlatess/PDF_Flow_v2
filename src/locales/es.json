@@ -1552,18 +1552,89 @@
     "bottomLine": "Procesamiento PDF local primero con nube opcional"
   },
   "history": {
-    "title": "Historial de procesamiento",
+    "title": "Centro de resultados",
     "page": {
       "backHome": "Volver al inicio",
-      "badge": "Historial local",
-      "title": "Historial de procesamiento",
-      "description": "Revisa las acciones PDF recientes guardadas por este navegador. El historial permanece en este dispositivo para volver a ver archivos, herramientas y horas de proceso.",
-      "localTitle": "Guardado localmente",
-      "localDescription": "El historial no se sube. Desaparece cuando borras los datos del navegador.",
-      "reviewTitle": "Revision rapida",
-      "reviewDescription": "Util para confirmar que herramienta usaste y que archivos procesaste.",
+      "badge": "Centro de resultados de cuenta",
+      "title": "Centro de resultados",
+      "description": "Revisa trabajos PDF de tu cuenta, comprueba el estado y descarga resultados disponibles antes de que expiren los archivos temporales.",
       "continueProcessing": "Seguir procesando PDF"
     },
+    "auth": {
+      "title": "Inicia sesion para ver tus resultados",
+      "description": "El historial de cuenta solo muestra trabajos asociados a tu sesion. El trabajo anonimo local permanece en este navegador y no se mezcla aqui.",
+      "action": "Iniciar sesion"
+    },
+    "stats": {
+      "total": "Total",
+      "completed": "Listos",
+      "available": "Descargas"
+    },
+    "filters": {
+      "status": "Estado",
+      "tool": "Herramienta",
+      "allStatuses": "Todos los estados",
+      "allTools": "Todas las herramientas"
+    },
+    "actions": {
+      "refresh": "Actualizar",
+      "apply": "Aplicar",
+      "download": "Descargar",
+      "details": "Detalles",
+      "hideDetails": "Ocultar"
+    },
+    "loading": "Cargando trabajos recientes...",
+    "empty": {
+      "title": "Aun no hay trabajos de cuenta",
+      "description": "Ejecuta OCR, conversion de Office u otros trabajos PDF del backend con sesion iniciada para ver aqui estados y descargas."
+    },
+    "table": {
+      "task": "Tarea",
+      "status": "Estado",
+      "download": "Resultado",
+      "created": "Creado",
+      "finished": "Finalizado",
+      "action": "Accion"
+    },
+    "details": {
+      "jobId": "ID de trabajo",
+      "started": "Inicio",
+      "completed": "Completado",
+      "progress": "Progreso"
+    },
+    "status": {
+      "pending": "Pendiente",
+      "processing": "Procesando",
+      "completed": "Completado",
+      "failed": "Fallido",
+      "cancelled": "Cancelado"
+    },
+    "downloadStates": {
+      "available": "Disponible",
+      "expired": "Expirado",
+      "unavailable": "No disponible"
+    },
+    "jobTypes": {
+      "merge_pdf": "Unir PDF",
+      "split_pdf": "Dividir PDF",
+      "compress_pdf": "Comprimir PDF",
+      "rotate_pdf": "Rotar PDF",
+      "image_to_pdf": "Imagen a PDF",
+      "pdf_to_image": "PDF a imagen",
+      "ocr_pdf": "OCR PDF",
+      "office_to_pdf": "Office a PDF"
+    },
+    "common": {
+      "none": "Ninguno",
+      "unknownSize": "Tamano desconocido"
+    },
+    "errors": {
+      "loadTitle": "No se pudo cargar el historial",
+      "loadMessage": "No pudimos cargar tu historial de resultados. Intentalo de nuevo en un momento.",
+      "downloadTitle": "Fallo la descarga",
+      "downloadMessage": "Este resultado puede haber expirado o no estar disponible ahora."
+    },
+    "failedHint": "{count} trabajos fallidos muestran detalles breves del error.",
     "panel": {
       "confirmClear": "Borrar todo el historial de procesamiento?",
       "confirmTitle": "Borrar el historial local?",

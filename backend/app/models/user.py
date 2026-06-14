@@ -178,7 +178,7 @@ class ProcessingJob(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     job_id = Column(String, unique=True, index=True, nullable=False)  # Celery task ID
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
 
     # Job info
     job_type = Column(String, nullable=False)  # ocr, office_convert, compress, etc.

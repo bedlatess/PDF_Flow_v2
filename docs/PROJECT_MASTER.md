@@ -1543,6 +1543,21 @@ Backend refactor R1 production result:
   - The R1 smoke job was not written into `ProcessingJob`, confirming DB durable jobs were not forced on existing file tasks.
   - Recent backend/celery logs showed no traceback/error/exception entries during the smoke window.
 
+Backend refactor R2 local checkpoint:
+
+- R2 is scoped to `compress_pdf_task` only.
+- Added a minimal migration to make `processing_jobs.user_id` nullable so anonymous compress jobs can be recorded.
+- `ProcessingJob` remains the durable job table; no artifact/result table was added.
+- Compress job creation still writes Redis `job:*` pending and keeps the existing API response shape.
+- Compress job creation now best-effort creates a matching DB `ProcessingJob` using the same `job_id`.
+- `compress_pdf_task` now best-effort marks the DB job `processing`, `completed`, or `failed` while keeping the existing return dict and retry behavior.
+- File status polling still uses the existing `file_processing_service` Redis/Celery path and has not been switched to DB-first.
+- Admin job listing now de-duplicates Redis and DB jobs by `job_id`, preferring the DB durable job when both exist.
+- Non-compress tasks remain Redis/Celery-only in R2.
+- Local verification:
+  - `python -m pytest backend/tests/test_jobs_domain.py backend/tests/test_files.py backend/tests/test_pdf_tasks.py backend/tests/test_admin_operations_domain.py -q`
+  - `python -m pytest backend/tests -q`
+
 Admin bootstrap:
 
 ```bash

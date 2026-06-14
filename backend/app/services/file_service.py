@@ -11,6 +11,7 @@ from fastapi import UploadFile, HTTPException, status
 from redis import Redis
 import json
 import logging
+from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.utils.file_utils import FileManager, FileValidator
@@ -23,7 +24,11 @@ from app.tasks.pdf_tasks import (
     convert_pdf_to_images_task,
 )
 from app.domains.service_provider.config_store import get_service_provider_runtime_config
-from app.domains.jobs.service import build_pending_job_status, merge_celery_state_into_status
+from app.domains.jobs.service import (
+    best_effort_create_processing_job,
+    build_pending_job_status,
+    merge_celery_state_into_status,
+)
 from app.domains.jobs.types import is_terminal_job_status
 from app.tasks.ocr_tasks import extract_text_task
 from app.services.file_retention_service import file_retention_service
@@ -133,16 +138,8 @@ class FileProcessingService:
         }
 
     def _get_file_path(self, file_id: str) -> Path:
-        """从 Redis 获取文件路径"""
-        file_data = self.redis_client.get(f"file:{file_id}")
-
-        if not file_data:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"File not found: {file_id}"
-            )
-
-        metadata = json.loads(file_data)
+        """Return an uploaded file path from Redis metadata."""
+        metadata = self._get_file_metadata(file_id)
         file_path = Path(metadata["filepath"])
 
         if not file_path.exists():
@@ -152,6 +149,18 @@ class FileProcessingService:
             )
 
         return file_path
+
+    def _get_file_metadata(self, file_id: str) -> Dict:
+        """Return uploaded file metadata from Redis without changing its shape."""
+        file_data = self.redis_client.get(f"file:{file_id}")
+
+        if not file_data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"File not found: {file_id}"
+            )
+
+        return json.loads(file_data)
 
     def _save_job_status(self, job_id: str, status_data: Dict):
         """保存任务状态到 Redis"""
@@ -360,20 +369,35 @@ class FileProcessingService:
             "message": "PDF split job queued"
         }
 
-    async def compress_pdf(self, file_id: str, quality: str = "medium") -> Dict:
-        """压缩 PDF 文件"""
-        file_path = str(self._get_file_path(file_id))
+    async def compress_pdf(self, file_id: str, quality: str = "medium", db: Session | None = None) -> Dict:
+        """Compress a PDF file."""
+        file_metadata = self._get_file_metadata(file_id)
+        file_path_obj = Path(file_metadata["filepath"])
+        if not file_path_obj.exists():
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"File no longer exists: {file_id}"
+            )
+        file_path = str(file_path_obj)
 
-        # 创建输出路径
+        # Create output path.
         output_dir = self.file_manager.create_temp_dir(prefix="compress_")
         output_path = output_dir / "compressed.pdf"
 
-        # 创建任务
+        # Create the legacy Redis/Celery job and optional durable DB record.
         job_id = self._generate_job_id()
 
         self._save_job_status(job_id, build_pending_job_status(job_id))
+        best_effort_create_processing_job(
+            job_id=job_id,
+            user_id=None,
+            job_type="compress_pdf",
+            input_file_name=str(file_metadata.get("filename") or file_path_obj.name),
+            input_file_size=int(file_metadata.get("size") or 0),
+            db=db,
+        )
 
-        # 提交任务
+        # Submit the existing Celery task.
         task = compress_pdf_task.apply_async(
             args=[file_path, str(output_path), quality],
             task_id=job_id

@@ -152,3 +152,24 @@ def test_job_repository_and_service_lifecycle(client):
         assert unchanged.status == "completed"
     finally:
         db.close()
+
+
+def test_job_repository_allows_anonymous_processing_job(client):
+    from app.core.database import get_db
+
+    db = next(client.app.dependency_overrides[get_db]())
+    try:
+        service = JobService(ProcessingJobRepository(db))
+        created = service.create_pending(
+            job_id="job_domain_anonymous",
+            user_id=None,
+            job_type="compress_pdf",
+            input_file_name="anonymous.pdf",
+            input_file_size=321,
+        )
+
+        assert created.user_id is None
+        assert created.job_type == "compress_pdf"
+        assert created.status == "pending"
+    finally:
+        db.close()

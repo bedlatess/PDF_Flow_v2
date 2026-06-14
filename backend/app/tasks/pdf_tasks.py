@@ -8,6 +8,11 @@ from PIL import Image
 from pypdf import PdfReader, PdfWriter
 
 from app.celery_worker import celery_app
+from app.domains.jobs.service import (
+    best_effort_mark_completed,
+    best_effort_mark_failed,
+    best_effort_mark_processing,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -100,6 +105,27 @@ def split_pdf_task(self, file_path: str, page_ranges: List[tuple], output_dir: s
 @celery_app.task(base=PDFTask, bind=True, max_retries=3)
 def compress_pdf_task(self, file_path: str, output_path: str, quality: str = "medium") -> dict:
     """Compress a PDF file with pypdf content stream compression."""
+    job_id = str(getattr(self.request, "id", "") or "")
+    return _run_compress_pdf_with_job_lifecycle(
+        job_id=job_id,
+        file_path=file_path,
+        output_path=output_path,
+        quality=quality,
+        retry=lambda exc: self.retry(exc=exc, countdown=60),
+    )
+
+
+def _run_compress_pdf_with_job_lifecycle(
+    *,
+    job_id: str,
+    file_path: str,
+    output_path: str,
+    quality: str = "medium",
+    retry=None,
+) -> dict:
+    if job_id:
+        best_effort_mark_processing(job_id, progress=0)
+
     try:
         logger.info(f"Compressing PDF: {file_path} (quality: {quality})")
 
@@ -122,7 +148,7 @@ def compress_pdf_task(self, file_path: str, output_path: str, quality: str = "me
             f"({compression_ratio:.1f}% reduction)"
         )
 
-        return {
+        result = {
             "success": True,
             "output_path": output_path,
             "original_size": original_size,
@@ -130,9 +156,22 @@ def compress_pdf_task(self, file_path: str, output_path: str, quality: str = "me
             "compression_ratio": round(compression_ratio, 2),
         }
 
+        if job_id:
+            best_effort_mark_completed(
+                job_id,
+                result_data=result,
+                output_file_url=result["output_path"],
+            )
+
+        return result
+
     except Exception as exc:
         logger.error(f"PDF compression failed: {exc}")
-        raise self.retry(exc=exc, countdown=60)
+        if job_id:
+            best_effort_mark_failed(job_id, error_message=str(exc))
+        if retry is not None:
+            raise retry(exc)
+        raise
 
 
 @celery_app.task(base=PDFTask, bind=True, max_retries=3)

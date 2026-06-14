@@ -120,6 +120,7 @@ async def compress_pdf(
         lambda: file_processing_service.compress_pdf(
             file_id=payload.file_id,
             quality=payload.quality.value,
+            db=db,
         ),
         error_detail="Failed to compress PDF",
         log_message="Compress failed",

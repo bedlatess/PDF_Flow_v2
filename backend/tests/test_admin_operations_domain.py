@@ -167,3 +167,45 @@ def test_admin_operations_domain_cleanup_expired_files_audits_result(client, tmp
         assert "removed=1" in audit.detail
     finally:
         db.close()
+
+
+def test_admin_operations_prefers_db_job_when_redis_has_same_job_id(client):
+    from app.core.database import get_db
+    from app.domains.admin.operations import list_jobs
+    from app.models.user import ProcessingJob, User
+    from app.services.file_service import file_processing_service
+
+    _register(client, email="admin-ops-dedupe@example.com")
+    file_processing_service._save_job_status("job_dedupe", {
+        "job_id": "job_dedupe",
+        "status": "pending",
+        "progress": 0,
+        "message": "PDF compression job queued",
+        "created_at": time.time(),
+        "updated_at": time.time(),
+    })
+
+    db = next(client.app.dependency_overrides[get_db]())
+    try:
+        user = db.query(User).filter(User.email == "admin-ops-dedupe@example.com").first()
+        db.add(ProcessingJob(
+            job_id="job_dedupe",
+            user_id=user.id,
+            job_type="compress_pdf",
+            status="completed",
+            progress=100,
+            input_file_name="db-source.pdf",
+            input_file_size=1234,
+            output_file_url="/tmp/compressed.pdf",
+        ))
+        db.commit()
+
+        jobs = list_jobs(db, status_filter=None, limit=10)
+        matches = [job for job in jobs if job["job_id"] == "job_dedupe"]
+
+        assert len(matches) == 1
+        assert matches[0]["id"] is not None
+        assert matches[0]["status"] == "completed"
+        assert matches[0]["input_file_name"] == "db-source.pdf"
+    finally:
+        db.close()

@@ -3,9 +3,13 @@
 from __future__ import annotations
 
 from datetime import datetime
+import logging
 import time
 from typing import Any, Mapping
 
+from sqlalchemy.orm import Session
+
+from app.core.database import SessionLocal
 from app.domains.jobs.repository import ProcessingJobRepository
 from app.domains.jobs.types import (
     JobStatus,
@@ -14,6 +18,9 @@ from app.domains.jobs.types import (
     normalize_job_status,
 )
 from app.models.user import ProcessingJob
+
+
+logger = logging.getLogger(__name__)
 
 
 JOB_TYPE_MESSAGE_PATTERNS: tuple[tuple[str, str], ...] = (
@@ -48,7 +55,7 @@ class JobService:
         self,
         *,
         job_id: str,
-        user_id: int,
+        user_id: int | None,
         job_type: str,
         input_file_name: str,
         input_file_size: int,
@@ -128,6 +135,93 @@ def build_pending_job_status(job_id: str, *, now: float | None = None) -> dict[s
         "created_at": timestamp,
         "updated_at": timestamp,
     }
+
+
+def best_effort_create_processing_job(
+    *,
+    job_id: str,
+    user_id: int | None,
+    job_type: str,
+    input_file_name: str,
+    input_file_size: int,
+    db: Session | None = None,
+) -> ProcessingJob | None:
+    return _with_optional_session(
+        db,
+        lambda session: JobService(ProcessingJobRepository(session)).create_pending(
+            job_id=job_id,
+            user_id=user_id,
+            job_type=job_type,
+            input_file_name=input_file_name,
+            input_file_size=input_file_size,
+        ),
+        "create processing job",
+        job_id,
+    )
+
+
+def best_effort_mark_processing(job_id: str, *, progress: int | None = None) -> ProcessingJob | None:
+    return _with_optional_session(
+        None,
+        lambda session: JobService(ProcessingJobRepository(session)).mark_processing(
+            job_id,
+            progress=progress,
+        ),
+        "mark processing job processing",
+        job_id,
+    )
+
+
+def best_effort_mark_completed(
+    job_id: str,
+    *,
+    result_data: Mapping[str, Any] | None = None,
+    output_file_url: str | None = None,
+) -> ProcessingJob | None:
+    return _with_optional_session(
+        None,
+        lambda session: JobService(ProcessingJobRepository(session)).mark_completed(
+            job_id,
+            result_data=result_data,
+            output_file_url=output_file_url,
+        ),
+        "mark processing job completed",
+        job_id,
+    )
+
+
+def best_effort_mark_failed(job_id: str, *, error_message: str) -> ProcessingJob | None:
+    return _with_optional_session(
+        None,
+        lambda session: JobService(ProcessingJobRepository(session)).mark_failed(
+            job_id,
+            error_message,
+        ),
+        "mark processing job failed",
+        job_id,
+    )
+
+
+def _with_optional_session(
+    db: Session | None,
+    operation,
+    label: str,
+    job_id: str,
+) -> ProcessingJob | None:
+    owns_session = db is None
+    session = db or SessionLocal()
+    try:
+        return operation(session)
+    except Exception as exc:
+        try:
+            session.rollback()
+        except Exception:
+            pass
+        logger.warning("%s failed for %s: %s", label, job_id, exc)
+        return None
+    finally:
+        if owns_session:
+            session.close()
 
 
 def merge_celery_state_into_status(

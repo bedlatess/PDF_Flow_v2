@@ -25,7 +25,7 @@ class ProcessingJobRepository:
         self,
         *,
         job_id: str,
-        user_id: int,
+        user_id: int | None,
         job_type: str,
         input_file_name: str,
         input_file_size: int,

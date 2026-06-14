@@ -282,6 +282,96 @@ class TestUploadEndpoint:
 
 
 class TestOfficeToPdfFlow:
+    def test_compress_service_creates_anonymous_durable_job(self, monkeypatch, tmp_path, client):
+        from app.core.database import get_db
+        from app.models.user import ProcessingJob
+        from app.services import file_service as file_service_module
+
+        uploaded = tmp_path / "source.pdf"
+        uploaded.write_bytes(b"%PDF-1.4 source")
+        saved_jobs = {}
+
+        class FakeTask:
+            def apply_async(self, args, task_id):
+                return MagicMock(id=task_id)
+
+        monkeypatch.setattr(file_service_module.file_processing_service, "_generate_job_id", lambda: "job_compress_db")
+        monkeypatch.setattr(
+            file_service_module.file_processing_service,
+            "_get_file_metadata",
+            lambda file_id: {
+                "file_id": file_id,
+                "filename": "source.pdf",
+                "filepath": str(uploaded),
+                "size": uploaded.stat().st_size,
+            },
+        )
+        monkeypatch.setattr(
+            file_service_module.file_processing_service,
+            "_save_job_status",
+            lambda job_id, status_data: saved_jobs.setdefault(job_id, status_data),
+        )
+        monkeypatch.setattr(file_service_module, "compress_pdf_task", FakeTask())
+
+        db = next(client.app.dependency_overrides[get_db]())
+        try:
+            result = asyncio.run(file_service_module.file_processing_service.compress_pdf("file_compress", db=db))
+            db_job = db.query(ProcessingJob).filter(ProcessingJob.job_id == "job_compress_db").first()
+            assert db_job is not None
+            assert db_job.user_id is None
+            assert db_job.job_type == "compress_pdf"
+            assert db_job.status == "pending"
+            assert db_job.input_file_name == "source.pdf"
+            assert db_job.input_file_size == uploaded.stat().st_size
+            assert result == {
+                "job_id": "job_compress_db",
+                "status": "pending",
+                "message": "PDF compression job queued",
+            }
+            assert saved_jobs["job_compress_db"]["status"] == "pending"
+        finally:
+            db.close()
+
+    def test_compress_db_write_failure_does_not_break_redis_flow(self, monkeypatch, tmp_path):
+        from app.services import file_service as file_service_module
+
+        uploaded = tmp_path / "source.pdf"
+        uploaded.write_bytes(b"%PDF-1.4 source")
+        saved_jobs = {}
+
+        class FakeTask:
+            def apply_async(self, args, task_id):
+                return MagicMock(id=task_id)
+
+        monkeypatch.setattr(file_service_module.file_processing_service, "_generate_job_id", lambda: "job_compress_fallback")
+        monkeypatch.setattr(
+            file_service_module.file_processing_service,
+            "_get_file_metadata",
+            lambda file_id: {
+                "file_id": file_id,
+                "filename": "source.pdf",
+                "filepath": str(uploaded),
+                "size": uploaded.stat().st_size,
+            },
+        )
+        monkeypatch.setattr(
+            file_service_module.file_processing_service,
+            "_save_job_status",
+            lambda job_id, status_data: saved_jobs.setdefault(job_id, status_data),
+        )
+        monkeypatch.setattr(file_service_module, "compress_pdf_task", FakeTask())
+        monkeypatch.setattr(
+            file_service_module,
+            "best_effort_create_processing_job",
+            lambda **_kwargs: None,
+        )
+
+        result = asyncio.run(file_service_module.file_processing_service.compress_pdf("file_compress"))
+
+        assert result["job_id"] == "job_compress_fallback"
+        assert result["status"] == "pending"
+        assert saved_jobs["job_compress_fallback"]["status"] == "pending"
+
     def test_merge_service_keeps_redis_pending_job_contract(self, monkeypatch):
         from app.services import file_service as file_service_module
 

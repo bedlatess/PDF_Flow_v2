@@ -145,8 +145,8 @@ def list_all_jobs(
         }
         for job, email in rows
     ]
-    seen = {job["job_id"] for job in redis_jobs}
-    merged = redis_jobs + [job for job in db_jobs if job["job_id"] not in seen]
+    seen = {job["job_id"] for job in db_jobs}
+    merged = db_jobs + [job for job in redis_jobs if job["job_id"] not in seen]
     merged.sort(key=lambda item: item["created_at"], reverse=True)
     return merged[:safe_limit]
 

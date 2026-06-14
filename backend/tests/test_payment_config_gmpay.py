@@ -241,11 +241,26 @@ def test_gmpay_checkout_uses_db_config_and_creates_pending_order(client, monkeyp
 
     call_url, call_kwargs = _FakeGMPayClient.calls[0]
     assert call_url == "https://gmpay.example/payments/gmpay/v1/order/create-transaction"
-    payload = call_kwargs["json"]
+    assert call_kwargs["headers"]["Content-Type"] == "application/x-www-form-urlencoded"
+    payload = call_kwargs["data"]
     assert payload["pid"] == "gm-pid"
     assert payload["amount"] == "12.34"
+    assert payload["name"] == "PDF-Flow Pro monthly"
     assert payload["notify_url"] == "https://api.pdf-flow.test/api/v1/payment/webhooks/gmpay"
     assert payload["signature"] == build_gmpay_signature(payload, "checkout-secret")
+    assert payload["signature"] == build_gmpay_signature(
+        {
+            "amount": "12.34",
+            "currency": "cny",
+            "name": "PDF-Flow Pro monthly",
+            "network": "tron",
+            "notify_url": "https://api.pdf-flow.test/api/v1/payment/webhooks/gmpay",
+            "order_id": payload["order_id"],
+            "pid": "gm-pid",
+            "token": "usdt",
+        },
+        "checkout-secret",
+    )
 
     db = next(client.app.dependency_overrides[get_db]())
     try:

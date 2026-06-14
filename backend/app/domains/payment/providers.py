@@ -179,19 +179,10 @@ class ConfigurableHostedPaymentProvider:
 
 
 def build_gmpay_signature(params: Mapping[str, object], secret_key: str) -> str:
-    signature_fields = [
-        "amount",
-        "currency",
-        "name",
-        "network",
-        "notify_url",
-        "order_id",
-        "pid",
-        "token",
-    ]
     canonical = "&".join(
-        f"{field}={params.get(field, '')}"
-        for field in signature_fields
+        f"{field}={params[field]}"
+        for field in sorted(params)
+        if field != "signature" and params.get(field) not in (None, "")
     )
     return hashlib.md5(f"{canonical}{secret_key}".encode("utf-8")).hexdigest().lower()
 
@@ -245,8 +236,8 @@ class GMPayPaymentProvider:
         with self.http_client_factory(timeout=15.0) as client:
             response = client.post(
                 f"{api_base_url}/payments/gmpay/v1/order/create-transaction",
-                json=payload,
-                headers={"Content-Type": "application/json"},
+                data=payload,
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
             )
             response.raise_for_status()
             data = response.json()

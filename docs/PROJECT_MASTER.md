@@ -1084,6 +1084,29 @@ Frontend UI Phase 4 local result:
   - `npx playwright test tests/e2e-playwright/advanced-pdf-workflows.spec.ts tests/e2e-playwright/local-pdf-workflows.spec.ts tests/e2e-playwright/tool-flow-regression.spec.ts tests/e2e-playwright/cloud-tool-access.spec.ts tests/e2e-playwright/advanced-cloud-tools.spec.ts tests/e2e-playwright/tool-pages-matrix.spec.ts --project=chromium --reporter=line`
 - Next approved work after this phase is complete: backend structure audit and refactor design only; do not start backend refactor code until that design is approved.
 
+Frontend UI Phase 4 deployment result:
+
+- Deployed commit `fae6ae0965f7a63505ea8218c95d83e4a67dba37` on 2026-06-14 with `bash scripts/deploy-main.sh`.
+- Server `.deploy_state/main/current_deployed_commit` records `fae6ae0965f7a63505ea8218c95d83e4a67dba37`.
+- Production Compose services are healthy after deploy: backend, celery-worker, frontend, postgres, redis.
+- External HTTP smoke:
+  - `https://pdf.pawn.eu.org/zh-cn/` returns HTTP 200.
+  - `https://pdf.pawn.eu.org/zh-cn/tools` returns HTTP 200.
+  - `https://pdf.pawn.eu.org/zh-cn/tools/merge` returns HTTP 200.
+  - `https://pdf.pawn.eu.org/zh-cn/tools/ocr` returns HTTP 200 and correctly redirects unauthenticated Pro access into login flow.
+  - `https://admin.pawn.eu.org/` returns HTTP 200.
+- Production browser smoke:
+  - Home, Tools Center, Merge, OCR/login flow, and Admin have no page errors, no horizontal overflow, no raw `tools.*` / `common.*` key exposure, and CSS is loaded.
+  - Forced dark-mode CSS check on the Merge tool page applies dark background rules without horizontal overflow or raw key exposure.
+- Frontend tool migration and UI polish are now closed for this round. Do not continue small public UI tweaks until a new frontend phase is explicitly opened.
+
+Admin management design result:
+
+- Added `docs/ADMIN_MANAGEMENT_DESIGN.md`.
+- Scope: design only, no backend/admin code changes.
+- Covers future admin-managed capabilities, menu structure, DB-managed vs env-only config, secret handling, validation/hot-update/audit rules, payment configuration center v2, feature flags/tool availability, plans/pricing, AI/OCR/Office provider configuration, site content, current admin code structure issues, extensibility model, and phased rollout.
+- Recommended next implementation batch after approval: admin information-architecture cleanup, then product configuration center / feature flags.
+
 Admin bootstrap:
 
 ```bash

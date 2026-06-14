@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+import json
 import logging
 import time
 from typing import Any, Mapping
@@ -310,8 +311,111 @@ def redis_status_to_admin_job(
             )
             else None
         ),
+        "source": "redis",
+        "sources": ["redis"],
+        "is_durable": False,
         "_sort": created_at.timestamp() if created_at else time.time() - sort_offset,
     }
+
+
+def db_job_to_admin_job(job: ProcessingJob, *, user_email: str | None = None) -> dict[str, Any]:
+    return {
+        "id": job.id,
+        "job_id": job.job_id,
+        "user_id": job.user_id,
+        "user_email": user_email,
+        "job_type": job.job_type,
+        "status": normalize_job_status(job.status),
+        "progress": int(job.progress or 0),
+        "input_file_name": job.input_file_name,
+        "input_file_size": int(job.input_file_size or 0),
+        "error_message": job.error_message,
+        "created_at": job.created_at,
+        "started_at": job.started_at,
+        "completed_at": job.completed_at,
+        "source": "db",
+        "sources": ["db"],
+        "is_durable": True,
+    }
+
+
+def merge_admin_jobs(
+    db_jobs: list[dict[str, Any]],
+    redis_jobs: list[dict[str, Any]],
+    *,
+    limit: int,
+) -> list[dict[str, Any]]:
+    """Merge DB durable and Redis active jobs for admin views.
+
+    DB durable rows win for duplicate job IDs. Redis-only rows remain visible so
+    legacy and rollback-path tasks do not disappear from the operations view.
+    """
+
+    merged_by_id: dict[str, dict[str, Any]] = {}
+
+    for job in db_jobs:
+        job_id = str(job.get("job_id") or "")
+        if not job_id:
+            continue
+        normalized = dict(job)
+        normalized["source"] = "db"
+        normalized["sources"] = ["db"]
+        normalized["is_durable"] = True
+        merged_by_id[job_id] = normalized
+
+    for job in redis_jobs:
+        job_id = str(job.get("job_id") or "")
+        if not job_id:
+            continue
+        if job_id in merged_by_id:
+            sources = list(merged_by_id[job_id].get("sources") or ["db"])
+            if "redis" not in sources:
+                sources.append("redis")
+            merged_by_id[job_id]["sources"] = sources
+            continue
+        normalized = dict(job)
+        normalized["source"] = "redis"
+        normalized["sources"] = ["redis"]
+        normalized["is_durable"] = False
+        merged_by_id[job_id] = normalized
+
+    merged = list(merged_by_id.values())
+    merged.sort(key=lambda item: item.get("created_at") or datetime.fromtimestamp(0), reverse=True)
+    return merged[:limit]
+
+
+def db_job_to_route_status(job: ProcessingJob) -> dict[str, Any]:
+    """Serialize a durable DB job into the existing /files/jobs response shape."""
+
+    result = _load_json_mapping(job.result_data)
+    status = normalize_job_status(job.status)
+    return {
+        "job_id": job.job_id,
+        "status": status,
+        "created_at": job.created_at.timestamp() if job.created_at else time.time(),
+        "updated_at": _job_updated_at(job).timestamp(),
+        "progress": float(job.progress or 0),
+        "result": result if result else None,
+        "error": job.error_message,
+    }
+
+
+def _job_updated_at(job: ProcessingJob) -> datetime:
+    if job.completed_at:
+        return job.completed_at
+    if job.started_at:
+        return job.started_at
+    return job.created_at or datetime.utcnow()
+
+
+def _load_json_mapping(value: str | None) -> dict[str, Any] | None:
+    if not value:
+        return None
+    try:
+        parsed = json.loads(value)
+    except (TypeError, ValueError):
+        return None
+    return parsed if isinstance(parsed, dict) else None
 
 
 def datetime_from_epoch(value: object) -> datetime | None:

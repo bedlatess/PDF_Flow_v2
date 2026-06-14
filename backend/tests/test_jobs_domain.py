@@ -6,7 +6,9 @@ from app.domains.jobs.repository import ProcessingJobRepository
 from app.domains.jobs.service import (
     JobService,
     build_pending_job_status,
+    db_job_to_route_status,
     infer_job_type_from_status,
+    merge_admin_jobs,
     merge_celery_state_into_status,
     redis_status_to_admin_job,
 )
@@ -101,6 +103,49 @@ def test_redis_status_to_admin_job_uses_shared_inference():
     assert admin_job["input_file_size"] == 2048
     assert isinstance(admin_job["created_at"], datetime)
     assert admin_job["completed_at"] is not None
+    assert admin_job["source"] == "redis"
+    assert admin_job["sources"] == ["redis"]
+    assert admin_job["is_durable"] is False
+
+
+def test_merge_admin_jobs_prefers_db_and_marks_sources():
+    created = datetime(2026, 1, 1, 12, 0, 0)
+    db_job = {
+        "id": 1,
+        "job_id": "job_shared",
+        "job_type": "compress_pdf",
+        "status": "completed",
+        "progress": 100,
+        "created_at": created,
+    }
+    redis_job = {
+        "id": None,
+        "job_id": "job_shared",
+        "job_type": "processing_job",
+        "status": "pending",
+        "progress": 0,
+        "created_at": created,
+    }
+    redis_only = {
+        "id": None,
+        "job_id": "job_redis_only",
+        "job_type": "ocr_pdf",
+        "status": "processing",
+        "progress": 50,
+        "created_at": created,
+    }
+
+    merged = merge_admin_jobs([db_job], [redis_job, redis_only], limit=10)
+    by_id = {job["job_id"]: job for job in merged}
+
+    assert len([job for job in merged if job["job_id"] == "job_shared"]) == 1
+    assert by_id["job_shared"]["id"] == 1
+    assert by_id["job_shared"]["status"] == "completed"
+    assert by_id["job_shared"]["source"] == "db"
+    assert by_id["job_shared"]["sources"] == ["db", "redis"]
+    assert by_id["job_shared"]["is_durable"] is True
+    assert by_id["job_redis_only"]["source"] == "redis"
+    assert by_id["job_redis_only"]["is_durable"] is False
 
 
 def test_job_repository_and_service_lifecycle(client):
@@ -146,6 +191,17 @@ def test_job_repository_and_service_lifecycle(client):
         assert completed.progress == 100
         assert completed.output_file_url == "/tmp/output.pdf"
         assert completed.completed_at is not None
+
+        route_status = db_job_to_route_status(completed)
+        assert route_status == {
+            "job_id": "job_domain_lifecycle",
+            "status": "completed",
+            "created_at": completed.created_at.timestamp(),
+            "updated_at": completed.completed_at.timestamp(),
+            "progress": 100.0,
+            "result": {"output_path": "/tmp/output.pdf"},
+            "error": None,
+        }
 
         unchanged = service.mark_cancelled("job_domain_lifecycle")
         assert unchanged is not None

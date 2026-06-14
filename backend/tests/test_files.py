@@ -134,6 +134,104 @@ class TestJobCancellation:
         assert status_response.status_code == 200
         assert status_response.json()["status"] == "cancelled"
 
+    def test_status_endpoint_keeps_redis_first_when_db_job_exists(self, client):
+        from app.core.database import get_db
+        from app.models.user import ProcessingJob
+
+        _put_job("job_status_redis_first", {
+            "job_id": "job_status_redis_first",
+            "status": "pending",
+            "progress": 10,
+            "created_at": 100.0,
+            "updated_at": 101.0,
+        })
+
+        db = next(client.app.dependency_overrides[get_db]())
+        try:
+            db.add(ProcessingJob(
+                job_id="job_status_redis_first",
+                user_id=None,
+                job_type="compress_pdf",
+                status="completed",
+                progress=100,
+                input_file_name="source.pdf",
+                input_file_size=123,
+                result_data='{"output_path": "/tmp/result.pdf"}',
+                output_file_url="/tmp/result.pdf",
+            ))
+            db.commit()
+
+            response = client.get("/api/v1/files/jobs/job_status_redis_first")
+            assert response.status_code == 200
+            body = response.json()
+            assert set(body.keys()) == {
+                "job_id",
+                "status",
+                "created_at",
+                "updated_at",
+                "progress",
+                "result",
+                "error",
+            }
+            assert body["status"] == "pending"
+            assert body["progress"] == 10
+            assert body["result"] is None
+        finally:
+            db.close()
+
+    def test_status_endpoint_falls_back_to_durable_db_job_when_redis_missing(self, client):
+        from datetime import datetime
+
+        from app.core.database import get_db
+        from app.models.user import ProcessingJob
+        from app.services import file_service as file_service_module
+        from conftest import TestingSessionLocal
+
+        created_at = datetime(2026, 1, 2, 3, 4, 5)
+        completed_at = datetime(2026, 1, 2, 3, 5, 6)
+        db = next(client.app.dependency_overrides[get_db]())
+        previous_factory = file_service_module.file_processing_service._db_session_factory
+        try:
+            file_service_module.file_processing_service._db_session_factory = TestingSessionLocal
+            db.add(ProcessingJob(
+                job_id="job_status_db_fallback",
+                user_id=None,
+                job_type="ocr_pdf",
+                status="completed",
+                progress=100,
+                input_file_name="ocr.png",
+                input_file_size=321,
+                result_data='{"text": "hello"}',
+                created_at=created_at,
+                completed_at=completed_at,
+            ))
+            db.commit()
+
+            response = client.get("/api/v1/files/jobs/job_status_db_fallback")
+            assert response.status_code == 200
+            body = response.json()
+            assert set(body.keys()) == {
+                "job_id",
+                "status",
+                "created_at",
+                "updated_at",
+                "progress",
+                "result",
+                "error",
+            }
+            assert body == {
+                "job_id": "job_status_db_fallback",
+                "status": "completed",
+                "created_at": created_at.timestamp(),
+                "updated_at": completed_at.timestamp(),
+                "progress": 100.0,
+                "result": {"text": "hello"},
+                "error": None,
+            }
+        finally:
+            file_service_module.file_processing_service._db_session_factory = previous_factory
+            db.close()
+
 
 class TestFileDomain:
     def test_upload_tier_maps_admin_to_enterprise_and_anonymous_to_free(self, client):

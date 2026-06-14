@@ -18,7 +18,11 @@ from app.domains.admin.users import (
     serialize_admin_user,
     test_user_query,
 )
-from app.domains.jobs.service import datetime_from_epoch, redis_status_to_admin_job
+from app.domains.jobs.service import (
+    db_job_to_admin_job,
+    merge_admin_jobs,
+    redis_status_to_admin_job,
+)
 from app.models.user import ApiErrorLog, FeedbackReport, ProcessingJob, User
 from app.services.file_retention_service import file_retention_service
 from app.services.file_service import file_processing_service
@@ -128,27 +132,10 @@ def list_all_jobs(
 
     rows = query.limit(safe_limit).all()
     db_jobs = [
-        {
-            "id": job.id,
-            "job_id": job.job_id,
-            "user_id": job.user_id,
-            "user_email": email,
-            "job_type": job.job_type,
-            "status": job.status,
-            "progress": job.progress,
-            "input_file_name": job.input_file_name,
-            "input_file_size": job.input_file_size,
-            "error_message": job.error_message,
-            "created_at": job.created_at,
-            "started_at": job.started_at,
-            "completed_at": job.completed_at,
-        }
+        db_job_to_admin_job(job, user_email=email)
         for job, email in rows
     ]
-    seen = {job["job_id"] for job in db_jobs}
-    merged = db_jobs + [job for job in redis_jobs if job["job_id"] not in seen]
-    merged.sort(key=lambda item: item["created_at"], reverse=True)
-    return merged[:safe_limit]
+    return merge_admin_jobs(db_jobs, redis_jobs, limit=safe_limit)
 
 
 def safe_diag(value: object | None, fallback: str = "none", max_length: int = 240) -> str:

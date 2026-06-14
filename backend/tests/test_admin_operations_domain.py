@@ -207,5 +207,52 @@ def test_admin_operations_prefers_db_job_when_redis_has_same_job_id(client):
         assert matches[0]["id"] is not None
         assert matches[0]["status"] == "completed"
         assert matches[0]["input_file_name"] == "db-source.pdf"
+        assert matches[0]["source"] == "db"
+        assert matches[0]["sources"] == ["db", "redis"]
+        assert matches[0]["is_durable"] is True
+    finally:
+        db.close()
+
+
+def test_admin_operations_keeps_redis_only_and_db_only_jobs_visible(client):
+    from app.core.database import get_db
+    from app.domains.admin.operations import list_jobs
+    from app.models.user import ProcessingJob, User
+    from app.services.file_service import file_processing_service
+
+    _register(client, email="admin-ops-sources@example.com")
+    file_processing_service._save_job_status("job_redis_only", {
+        "job_id": "job_redis_only",
+        "status": "processing",
+        "progress": 45,
+        "message": "OCR job queued",
+        "created_at": time.time(),
+        "updated_at": time.time(),
+    })
+
+    db = next(client.app.dependency_overrides[get_db]())
+    try:
+        user = db.query(User).filter(User.email == "admin-ops-sources@example.com").first()
+        db.add(ProcessingJob(
+            job_id="job_db_only",
+            user_id=user.id,
+            job_type="office_to_pdf",
+            status="completed",
+            progress=100,
+            input_file_name="history.docx",
+            input_file_size=4567,
+            output_file_url="/tmp/history.pdf",
+        ))
+        db.commit()
+
+        jobs = list_jobs(db, status_filter=None, limit=10)
+        by_id = {job["job_id"]: job for job in jobs}
+
+        assert by_id["job_redis_only"]["source"] == "redis"
+        assert by_id["job_redis_only"]["sources"] == ["redis"]
+        assert by_id["job_redis_only"]["is_durable"] is False
+        assert by_id["job_db_only"]["source"] == "db"
+        assert by_id["job_db_only"]["sources"] == ["db"]
+        assert by_id["job_db_only"]["is_durable"] is True
     finally:
         db.close()

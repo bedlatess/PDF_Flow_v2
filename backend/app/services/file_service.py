@@ -27,6 +27,7 @@ from app.domains.service_provider.config_store import get_service_provider_runti
 from app.domains.jobs.service import (
     best_effort_create_processing_job,
     build_pending_job_status,
+    db_job_to_route_status,
     merge_celery_state_into_status,
 )
 from app.domains.jobs.types import is_terminal_job_status
@@ -42,6 +43,7 @@ class FileProcessingService:
     def __init__(self):
         self.file_manager = FileManager()
         self.redis_client = Redis.from_url(settings.REDIS_URL, decode_responses=True)
+        self._db_session_factory = None
         self.file_ttl = 3600  # 文件在 Redis 中的 TTL（1小时）
 
     def _generate_file_id(self) -> str:
@@ -217,7 +219,7 @@ class FileProcessingService:
         """
         job_data = self.redis_client.get(f"job:{job_id}")
         if not job_data:
-            return None
+            return self._get_durable_job_status(job_id)
 
         status_data = json.loads(job_data)
 
@@ -243,6 +245,26 @@ class FileProcessingService:
             logger.warning(f"Celery status lookup failed for {job_id}: {e}")
 
         return status_data
+
+    def _get_durable_job_status(self, job_id: str) -> Optional[Dict]:
+        """Fallback to DB durable status only when Redis active state is absent."""
+        try:
+            from app.core.database import SessionLocal
+            from app.domains.jobs.repository import ProcessingJobRepository
+            from app.domains.jobs.service import JobService
+
+            session_factory = self._db_session_factory or SessionLocal
+            db = session_factory()
+            try:
+                job = JobService(ProcessingJobRepository(db)).get(job_id)
+                if not job:
+                    return None
+                return db_job_to_route_status(job)
+            finally:
+                db.close()
+        except Exception as exc:
+            logger.warning("Durable job status fallback failed for %s: %s", job_id, exc)
+            return None
 
     def cancel_job(self, job_id: str) -> Dict:
         """Cancel a queued or running processing job.

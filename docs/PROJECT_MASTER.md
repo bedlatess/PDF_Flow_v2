@@ -1694,6 +1694,27 @@ Backend refactor R4 production result:
 - Cleanup:
   - Removed R4 smoke DB jobs, Redis `job:*` keys, Redis `file:*` key, temporary smoke user, uploaded sample image, and generated OCR/Office artifacts.
 
+
+Backend refactor R5/R6 local checkpoint:
+
+- R5 Admin Job Center read/merge cleanup:
+  - Moved DB job admin serialization and DB + Redis merge/de-duplication helpers into `domains/jobs`.
+  - Admin operations now delegates durable/Redis merge behavior to the jobs domain instead of carrying the merge rules inline.
+  - DB durable jobs remain preferred when DB and Redis have the same `job_id`.
+  - Redis-only jobs remain visible for legacy/rollback-path tasks.
+  - DB-only durable jobs remain visible as historical/persistent job records.
+  - Admin job dictionaries now include internal `source`, `sources`, and `is_durable` fields; the frontend UI does not need to display them yet.
+- R6 foreground job status fallback:
+  - `/api/v1/files/jobs/{job_id}` remains Redis-first and still overlays Celery result state only when Redis active state exists.
+  - If Redis `job:{job_id}` is missing but a durable DB `ProcessingJob` exists, `file_service.get_job_status()` falls back to a route-compatible DB serialization.
+  - Response keys remain unchanged: `job_id`, `status`, `created_at`, `updated_at`, `progress`, `result`, and `error`.
+  - Redis active state remains the primary path; DB fallback is only used on Redis miss.
+  - Download/artifact routing, Celery tasks, frontend behavior, payment, AI, and advanced synchronous APIs were not changed.
+- Local verification:
+  - `python -m compileall -q backend/app backend/tests`
+  - `python -m pytest backend/tests/test_jobs_domain.py backend/tests/test_admin_operations_domain.py backend/tests/test_files.py -q` (`38 passed, 1 warning`)
+  - `python -m pytest backend/tests -q` (`181 passed, 1 warning`)
+
 Admin bootstrap:
 
 ```bash

@@ -391,6 +391,20 @@ Deployment:
   - Pricing can expose GM Pay when the backend reports it enabled and configured
   - verified with `pytest backend/tests/test_payment_config_gmpay.py backend/tests/test_payment_domain.py backend/tests/test_admin_payment_domain.py -q`
   - verified with `npm run type-check`
+- Completed local GM Pay Phase 1 acceptance on 2026-06-14:
+  - local backend used an isolated SQLite database under `.tmp/`, with `PAYMENT_CONFIG_ENCRYPTION_KEY` provided only as a process environment variable
+  - admin Payment Setup opened the GM Pay configuration center
+  - GM Pay config save, modify, and validate paths passed
+  - secret responses showed configured status and tail only; plaintext `secret_key` was not returned
+  - saving with an empty secret payload preserved the previously encrypted secret
+  - database and admin audit log checks did not contain plaintext payment secrets
+  - Pricing exposed GM Pay as the only enabled provider when only GM Pay was configured
+  - frontend checkout created a GM Pay `PaymentOrder`, received `payment_url`, and opened the local GM Pay cashier
+  - mobile admin layout at 390px had no horizontal document overflow
+  - webhook endpoint returned accepted status but left orders pending and did not grant Pro
+  - checkout copy now says Pro access is handled only after server-side payment confirmation, not by the frontend page
+  - verified with `pytest backend/tests -q`, `npm run type-check`, `npm run test:unit:ci`, `npm run build`, `npm run build:admin`, and `npm run test:e2e:admin`
+  - additional targeted checks after the checkout-copy correction: `npm run test:unit:ci -- tests/unit/locale-overrides.test.ts tests/unit/locale-registry.test.ts`, `npm run build`, and `npm run build:admin`
 
 ## Known Code Issues
 
@@ -780,6 +794,48 @@ bash scripts/production-acceptance.sh
 ```
 
 Set `RUN_WRITE_PROBE=1` only with `LIVE_ADMIN_EMAIL` and `LIVE_ADMIN_PASSWORD`; the default acceptance path is read-only.
+
+GM Pay Phase 1 production checklist:
+
+```bash
+# Generate the payment config master key on the server only.
+python3 - <<'PY'
+import secrets
+print(secrets.token_urlsafe(48))
+PY
+```
+
+- Add `PAYMENT_CONFIG_ENCRYPTION_KEY=<generated-value>` to server `backend/.env` only. Do not put the value in the database, admin UI, Git, docs, screenshots, audit logs, or chat.
+- Keep the existing production URL settings in `backend/.env`: `FRONTEND_URL`, `ADMIN_FRONTEND_URL`, `BACKEND_PUBLIC_URL`, allowed hosts, and CORS origins.
+- Existing `PAYMENT_ENABLED_PROVIDERS` and legacy `PAYMENT_GATEWAY_CONFIGS` can remain as they are. GM Pay is DB-managed after admin configuration, and old Stripe/PayPal/Alipay/WeChat fallback behavior remains environment-driven.
+- Migration is included in `backend/alembic/versions/add_payment_provider_configs.py`. The normal deploy script runs migrations. If a manual migration is needed, run `cd backend && alembic upgrade head` inside the backend runtime environment.
+- Deploy only after pushing the accepted local commits:
+  ```bash
+  cd /root/data/docker_data/PDF/pdf-flow
+  git pull --ff-only v2 main
+  bash scripts/deploy-main.sh
+  ```
+- Confirm services and migration state:
+  ```bash
+  docker compose --env-file backend/.env -f docker-compose.yml ps
+  curl http://localhost:8000/health
+  cat .deploy_state/main/current_deployed_commit
+  ```
+- Verify the admin configuration center at `https://admin.pawn.eu.org`: save GM Pay public fields and secret once, confirm the UI only shows configured status or tail, validate locally, then save again with secret blank and confirm the old secret remains configured.
+- Verify public checkout at `https://pdf.pawn.eu.org/zh-cn/pricing`: sign in as a test user, choose GM Pay, create a monthly order, and confirm the returned page opens the GM Pay cashier URL.
+- Check logs during smoke:
+  ```bash
+  docker compose --env-file backend/.env -f docker-compose.yml logs -f backend
+  docker compose --env-file backend/.env -f docker-compose.yml logs -f frontend
+  ```
+- Useful DB tables for evidence when needed: `payment_provider_configs`, `payment_orders`, `payment_events`, and `admin_audit_logs`. Do not print or copy encrypted secret payloads unless debugging locally with care.
+- Rollback:
+  ```bash
+  bash scripts/rollback-main.sh
+  ```
+  Keep the same `PAYMENT_CONFIG_ENCRYPTION_KEY` across rollback and redeploy. Changing it makes previously stored encrypted payment secrets unreadable.
+- Phase 1 production acceptance stops at configure, create order, and open GM Pay cashier. Do not expect automatic Pro activation yet.
+- Before Phase 2, collect a real GM Pay webhook sample and implement strict signature verification, amount verification, currency verification, idempotency, and entitlement granting in the backend trust boundary.
 
 Rollback:
 

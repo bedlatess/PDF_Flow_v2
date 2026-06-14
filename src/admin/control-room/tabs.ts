@@ -7,6 +7,7 @@ import {
   Flag,
   Flame,
   GaugeCircle,
+  KeyRound,
   Settings2,
   Trash2,
   UserCog,
@@ -96,6 +97,13 @@ export const controlRoomTabs: Array<{
     description: '验收反馈、测试账号和过期文件清理。',
     group: '运营支持',
     icon: Trash2,
+  },
+  {
+    id: 'security',
+    label: 'Account Security',
+    description: 'Admin password rotation and session handoff.',
+    group: '安全',
+    icon: KeyRound,
   },
   {
     id: 'audit',

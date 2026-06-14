@@ -658,10 +658,12 @@ interface AdminMockCalls {
   cleanupUsers: number
   cleanupFiles: number
   deleteUsers: number
+  passwordChanges?: number
 }
 
 async function mockAdminControlRoom(page: Page, calls?: AdminMockCalls) {
   await page.addInitScript(() => {
+    if (window.location.search.includes('reason=password_changed')) return
     window.localStorage.setItem('access_token', 'visual-qa-admin-token')
     window.localStorage.setItem('refresh_token', 'visual-qa-refresh-token')
   })
@@ -681,6 +683,11 @@ async function mockAdminControlRoom(page: Page, calls?: AdminMockCalls) {
         role: 'admin',
       },
     })
+  })
+
+  await page.route('**/api/v1/auth/change-password', async (route) => {
+    if (calls) calls.passwordChanges = (calls.passwordChanges ?? 0) + 1
+    await route.fulfill({ json: { message: 'Password successfully changed' } })
   })
 
   await page.route('**/api/v1/admin/public-config', async (route) => {
@@ -832,6 +839,7 @@ test.describe('Admin Control Room visual QA', () => {
         { label: '问题反馈', visibleText: '压缩完成后下载按钮没有响应' },
         { label: '错误观察', visibleText: '/api/v1/files/compress' },
         { label: '维护清理', visibleText: 'backend/uploads' },
+        { label: 'Account Security', visibleText: 'Change and sign out' },
         { label: '审计日志', visibleText: 'feature_flag.update' },
         { label: '运营总览', visibleText: 'PDF-Flow 上线健康报告' },
       ]
@@ -843,6 +851,41 @@ test.describe('Admin Control Room visual QA', () => {
       }
     })
   }
+
+  test('changes the admin password from the account security tab and signs out', async ({ page }) => {
+    const calls = {
+      maintenanceGets: 0,
+      cleanupLive: 0,
+      cleanupUsers: 0,
+      cleanupFiles: 0,
+      deleteUsers: 0,
+      passwordChanges: 0,
+    }
+    await mockAdminControlRoom(page, calls)
+    await page.goto('/')
+
+    await page.getByRole('button', { name: 'Account Security' }).click()
+    await expect(page.getByRole('heading', { name: 'Change password' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Change and sign out' })).toBeDisabled()
+
+    await page.getByLabel('Current password').fill('CurrentPass123!')
+    await page.getByLabel('New password').fill('LettersOnly')
+    await page.getByLabel('Confirm password').fill('LettersOnly')
+    await expect(page.getByRole('button', { name: 'Change and sign out' })).toBeDisabled()
+
+    await page.getByLabel('New password').fill('NewAdminPass123!')
+    await page.getByLabel('Confirm password').fill('DifferentPass123!')
+    await expect(page.getByRole('button', { name: 'Change and sign out' })).toBeDisabled()
+
+    await page.getByLabel('Confirm password').fill('NewAdminPass123!')
+    await page.getByRole('button', { name: 'Change and sign out' }).click()
+
+    await expect(page.getByText('Password changed. Sign in again')).toBeVisible()
+    await page.waitForURL('**/access?reason=password_changed&redirect=/', { timeout: 5000 })
+    expect(calls.passwordChanges).toBe(1)
+    expect(await page.evaluate(() => window.localStorage.getItem('access_token'))).toBeNull()
+    expect(await page.evaluate(() => window.localStorage.getItem('refresh_token'))).toBeNull()
+  })
 
   test('keeps maintenance refresh separate from destructive cleanup actions', async ({ page }) => {
     const calls = {

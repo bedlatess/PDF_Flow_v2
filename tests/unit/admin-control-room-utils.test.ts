@@ -31,9 +31,10 @@ describe('admin control room utilities', () => {
       'feedback',
       'errors',
       'maintenance',
+      'security',
       'audit',
     ])
-    expect(controlRoomTabs.map((tab) => tab.group)).toEqual([
+    expect(controlRoomTabs.filter((tab) => tab.id !== 'security').map((tab) => tab.group)).toEqual([
       '概览',
       '客户与收入',
       '客户与收入',

@@ -152,7 +152,7 @@ https://github.com/bedlatess/PDF_Flow_v2.git
 ```
 
 This workspace and the production server use the remote name `v2`.
-The latest verified production deployment is commit `77f939199a97634d48f1768bc5e297783942cedb` at `https://pdf.pawn.eu.org`.
+The latest verified production deployment is commit `e8a9d8d9b1d24b71d7a3a93c7ac6661c3bed7cae` at `https://pdf.pawn.eu.org`.
 
 ```bash
 git remote -v
@@ -166,6 +166,11 @@ cd /root/data/docker_data/PDF/pdf-flow
 git pull --ff-only v2 main
 bash scripts/deploy-main.sh
 ```
+
+Local server access notes:
+
+- `ssh/ssh.example.md` documents the expected local access-file shape.
+- Put real server access values in `ssh/ssh.md` only. It is ignored by Git and must stay out of commits.
 
 The frontend image builds both `dist/` and `dist-admin/`. Nginx serves the public app from `PUBLIC_FRONTEND_HOST` and the admin app from `ADMIN_FRONTEND_HOST`; the admin server adds `X-Robots-Tag: noindex, nofollow` and a stricter CSP. For local Compose, ports `5173` and `5174` map to those two entries.
 

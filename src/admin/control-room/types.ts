@@ -10,6 +10,7 @@ export type ControlRoomTabId =
   | 'feedback'
   | 'errors'
   | 'maintenance'
+  | 'security'
   | 'audit'
 
 export type ControlRoomTabGroup =

@@ -340,6 +340,25 @@ Deployment:
   - verified with `npm run build:admin`
   - verified with Playwright locale/public checks: `locale-seo`, `public-shell`, and `public-marketing`
   - verified with `npm run test:e2e:admin`
+- Ran final production browser acceptance for deployed commit `e8a9d8d9b1d24b71d7a3a93c7ac6661c3bed7cae` on 2026-06-14:
+  - server project path verified as `/root/data/docker_data/PDF/pdf-flow`
+  - remote `main` HEAD and `.deploy_state/main/current_deployed_commit` both record `e8a9d8d9b1d24b71d7a3a93c7ac6661c3bed7cae`
+  - production Compose services `frontend`, `backend`, `celery-worker`, `postgres`, and `redis` are healthy
+  - production `/health` returns `{"status":"healthy","version":"2.0.0","environment":"production"}`
+  - rotated the production `admin@pawn.eu.org` password from the trusted server shell; the password is intentionally not stored in repository documentation
+  - Playwright Chromium production acceptance passed for `https://pdf.pawn.eu.org/zh-cn/`, `/zh-cn/tools/merge`, `/en/tools/merge`, `/es/tools/merge`, and `/zh-cn/pricing`
+  - authenticated Playwright Chromium acceptance passed for `https://admin.pawn.eu.org/` after login and covered Overview, Users, Payment Setup, Payment Reconciliation, and Maintenance modules
+  - verified no browser page errors, no relevant console errors, no document-level horizontal overflow at `1366x900`, and no raw `home.toolsTitle` / `home.tools` / `admin.` / `controlRoom.` key exposure
+- Added local server access guardrails:
+  - `.gitignore` now ignores real files under `ssh/` while allowing the non-secret `ssh/ssh.example.md` template to be tracked
+  - added `ssh/ssh.example.md` with the expected `HOST`, `PORT`, `USER`, `PASSWORD`, and `PROJECT_DIR` fields
+  - README deployment notes now state that real server access values belong in local-only `ssh/ssh.md` and must stay out of commits
+- Added administrator self-service password rotation locally:
+  - backend `POST /api/v1/auth/change-password` requires an authenticated user, verifies the current password, rejects current-password reuse, and requires letters plus numbers
+  - admin frontend now has an `Account Security` tab under the Security group with current-password, new-password, and confirmation fields
+  - successful password rotation clears local browser tokens and returns the operator to the admin login page with a password-changed notice
+  - verified with `pytest backend/tests/test_auth.py backend/tests/test_auth_domain.py -q`
+  - verified with `npm run type-check`, `npm run test:unit:ci`, `npm run build`, `npm run build:admin`, and `npm run test:e2e:admin`
 
 ## Known Code Issues
 

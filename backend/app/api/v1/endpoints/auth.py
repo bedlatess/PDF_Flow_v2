@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.domains.auth.service import (
+    change_password as change_password_service,
     get_current_user_from_token,
     get_optional_user_from_token,
     login_user,
@@ -16,6 +17,7 @@ from app.domains.auth.service import (
 )
 from app.models.user import User
 from app.schemas.user import (
+    PasswordChangeRequest,
     PasswordResetConfirm,
     PasswordResetRequest,
     Token,
@@ -82,6 +84,16 @@ async def get_current_user_info(current_user: User = Depends(get_current_user)):
 async def logout(current_user: User = Depends(get_current_user)):
     """Logout is client-side for stateless JWT; clients should discard tokens."""
     return {"message": "Successfully logged out"}
+
+
+@router.post("/change-password")
+async def change_password(
+    request: PasswordChangeRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Change the current user's password after confirming the existing password."""
+    return change_password_service(db, user=current_user, request=request)
 
 
 @router.post("/forgot-password")

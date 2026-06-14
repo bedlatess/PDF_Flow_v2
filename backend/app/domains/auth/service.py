@@ -19,7 +19,12 @@ from app.core.security import (
     verify_password,
 )
 from app.models.user import PasswordResetToken, User, UserRole
-from app.schemas.user import PasswordResetConfirm, PasswordResetRequest, UserCreate
+from app.schemas.user import (
+    PasswordChangeRequest,
+    PasswordResetConfirm,
+    PasswordResetRequest,
+    UserCreate,
+)
 from app.services.email_service import email_service
 
 
@@ -349,3 +354,35 @@ def reset_password(db: Session, *, request: PasswordResetConfirm) -> dict:
     db.commit()
 
     return {"message": "Password successfully reset"}
+
+
+def change_password(
+    db: Session,
+    *,
+    user: User,
+    request: PasswordChangeRequest,
+) -> dict:
+    if not verify_password(request.current_password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password is incorrect",
+        )
+
+    if verify_password(request.new_password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New password must be different from the current password",
+        )
+
+    if not any(char.isalpha() for char in request.new_password) or not any(
+        char.isdigit() for char in request.new_password
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New password must include both letters and numbers",
+        )
+
+    user.hashed_password = get_password_hash(request.new_password)
+    db.commit()
+
+    return {"message": "Password successfully changed"}

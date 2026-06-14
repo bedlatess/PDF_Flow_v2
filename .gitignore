@@ -54,4 +54,5 @@ pdf_content.txt
 .deploy_backups/
 
 # Local server access material
-ssh/
+ssh/*
+!ssh/ssh.example.md

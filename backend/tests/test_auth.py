@@ -172,6 +172,86 @@ class TestProtectedEndpoints:
         assert r.json()["storage_used"] == 3072
 
 
+class TestChangePassword:
+    def test_change_password_requires_current_password_and_updates_login(self, client):
+        _register(client)
+        token = _login(client).json()["access_token"]
+
+        response = client.post(
+            "/api/v1/auth/change-password",
+            headers={"Authorization": f"Bearer {token}"},
+            json={
+                "current_password": "SecurePass123!",
+                "new_password": "NewSecurePass123!",
+            },
+        )
+
+        assert response.status_code == 200
+        assert response.json()["message"] == "Password successfully changed"
+        assert _login(client, password="SecurePass123!").status_code == 401
+        assert _login(client, password="NewSecurePass123!").status_code == 200
+
+    def test_change_password_rejects_wrong_current_password(self, client):
+        _register(client)
+        token = _login(client).json()["access_token"]
+
+        response = client.post(
+            "/api/v1/auth/change-password",
+            headers={"Authorization": f"Bearer {token}"},
+            json={
+                "current_password": "WrongPass123!",
+                "new_password": "NewSecurePass123!",
+            },
+        )
+
+        assert response.status_code == 400
+        assert _login(client).status_code == 200
+        assert _login(client, password="NewSecurePass123!").status_code == 401
+
+    def test_change_password_rejects_reusing_current_password(self, client):
+        _register(client)
+        token = _login(client).json()["access_token"]
+
+        response = client.post(
+            "/api/v1/auth/change-password",
+            headers={"Authorization": f"Bearer {token}"},
+            json={
+                "current_password": "SecurePass123!",
+                "new_password": "SecurePass123!",
+            },
+        )
+
+        assert response.status_code == 400
+        assert "different" in response.json()["detail"]
+
+    def test_change_password_requires_letters_and_numbers(self, client):
+        _register(client)
+        token = _login(client).json()["access_token"]
+
+        response = client.post(
+            "/api/v1/auth/change-password",
+            headers={"Authorization": f"Bearer {token}"},
+            json={
+                "current_password": "SecurePass123!",
+                "new_password": "LettersOnly!",
+            },
+        )
+
+        assert response.status_code == 400
+        assert "letters and numbers" in response.json()["detail"]
+
+    def test_change_password_requires_authentication(self, client):
+        response = client.post(
+            "/api/v1/auth/change-password",
+            json={
+                "current_password": "SecurePass123!",
+                "new_password": "NewSecurePass123!",
+            },
+        )
+
+        assert response.status_code == 401
+
+
 class TestRefresh:
     def test_refresh_returns_new_tokens(self, client):
         _register(client)

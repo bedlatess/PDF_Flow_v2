@@ -19,6 +19,7 @@ import MaintenanceTab from '@/components/admin/MaintenanceTab.vue'
 import OverviewTab from '@/components/admin/OverviewTab.vue'
 import PaymentSetupTab from '@/components/admin/PaymentSetupTab.vue'
 import PaymentsTab from '@/components/admin/PaymentsTab.vue'
+import SecurityTab from '@/components/admin/SecurityTab.vue'
 import SiteSettingsTab from '@/components/admin/SiteSettingsTab.vue'
 import UsersTab from '@/components/admin/UsersTab.vue'
 import { useControlRoom } from '@/admin/control-room/useControlRoom'
@@ -422,6 +423,8 @@ onMounted(loadAdminData)
             @cleanup-test-users="cleanupTestUsers"
             @cleanup-expired-files="cleanupExpiredFiles"
           />
+
+          <SecurityTab v-else-if="activeTab === 'security'" />
 
           <AuditLogsTab v-else :audit-logs="auditLogs" :format-date="formatDate" />
         </div>

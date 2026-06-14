@@ -21,6 +21,11 @@ export interface PasswordResetConfirmData {
   new_password: string
 }
 
+export interface PasswordChangeData {
+  current_password: string
+  new_password: string
+}
+
 export interface MessageResponse {
   message: string
 }
@@ -86,6 +91,11 @@ export const authAPI = {
 
   async resetPassword(data: PasswordResetConfirmData): Promise<MessageResponse> {
     const response = await apiClient.post<MessageResponse>('/api/v1/auth/reset-password', data)
+    return response.data
+  },
+
+  async changePassword(data: PasswordChangeData): Promise<MessageResponse> {
+    const response = await apiClient.post<MessageResponse>('/api/v1/auth/change-password', data)
     return response.data
   },
 }

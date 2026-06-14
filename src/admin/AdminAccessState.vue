@@ -19,6 +19,7 @@ const errorMessage = ref('')
 
 const reason = computed(() => String(route.query.reason || 'auth'))
 const isForbidden = computed(() => reason.value === 'forbidden')
+const isPasswordChanged = computed(() => reason.value === 'password_changed')
 
 const publicHomeUrl = computed(() => {
   if (window.location.hostname === 'admin.pawn.eu.org') {
@@ -74,6 +75,12 @@ const handleLogin = async () => {
       </div>
       <h1 class="mt-5 text-3xl font-semibold">{{ title }}</h1>
       <p class="mt-3 text-sm leading-7 text-slate-600">{{ description }}</p>
+      <p
+        v-if="isPasswordChanged"
+        class="mt-4 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700"
+      >
+        Password changed. Sign in again with the new administrator password.
+      </p>
 
       <form class="mt-6 space-y-4" @submit.prevent="handleLogin">
         <div>

@@ -442,6 +442,14 @@ Deployment:
   - production business API smoke saved official GM Pay config, enabled GM Pay briefly, created a real GM Pay order, and received a real cashier URL from `https://pay.pawn.eu.org/pay/checkout-counter/...`
   - after smoke, GM Pay was disabled again; final checks show `gmpay_enabled=False`, `db_gmpay_enabled=False`, no temporary adapter smoke users, and production `/health` healthy
   - no real payment was made and webhook-based Pro activation remains disabled until a paid callback sample is captured and verified
+- Closed the GM Pay order-creation phase on 2026-06-14:
+  - current stage is now `order creation link complete; waiting for real payment webhook verification`
+  - final create-transaction request format is `application/x-www-form-urlencoded`
+  - final signature rule is: include every non-empty request field except `signature`, sort by ASCII key, join as `key=value` with `&`, append the GM Pay secret directly, then MD5 lowercase
+  - verified scope: encrypted admin config save, write-only secret display, provider visibility while enabled, real create-transaction call, real `payment_url` return, real GM Pay cashier URL format, production health after deploy
+  - unverified scope: real payment completion, webhook method/headers/raw body/signature fields, paid/failed status values, amount/currency/network verification, idempotency, and automatic Pro entitlement grants
+  - production remains safe after cleanup: GM Pay disabled, encrypted official config retained, no temporary GM Pay test users, no local unpaid GM Pay test orders/events remaining
+  - external GM Pay orders created during unpaid probes were not paid; they should expire naturally unless the GM Pay dashboard exposes a cancellation tool
 
 ## Known Code Issues
 

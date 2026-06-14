@@ -1258,6 +1258,41 @@ Admin Plans & Pricing Phase C production result:
   - Temporary smoke user and local smoke `PaymentOrder` rows were deleted.
   - No real payment, webhook paid transition, or automatic Pro entitlement validation was run.
 
+Admin Payment Providers Phase D local result:
+
+- Scope: unified the existing Stripe, PayPal, and GM Pay payment configuration center around provider metadata registry. Payment Providers v2 in this phase is configuration/registry/readiness only.
+- Not changed:
+  - No real payment validation was added.
+  - No webhook automatic `paid` transition was added.
+  - No automatic Pro entitlement activation was added.
+  - Payment Reconciliation, AI/OCR/Office provider configuration, and backend task models were not expanded.
+- Backend registry:
+  - Upgraded `MANAGED_PAYMENT_PROVIDERS` into the single metadata source for public fields, secret fields, labels, input types, required flags, placeholders, help text, settlement mode, provider capability flags, merchant-console hints, setup notes, and validation checks.
+  - Admin `/api/v1/admin/payment-configs` now returns `metadata` and `readiness` alongside the existing safe config shape.
+  - Existing fields remain available for compatibility: `public_config`, `secret_fields`, `required_public_fields`, `required_secret_fields`, `missing_config_keys`, `configured`, `enabled`, and `webhook_url`.
+  - Secret values remain write-only. API responses return only configured/tail status and never return plaintext secrets.
+  - `PAYMENT_CONFIG_ENCRYPTION_KEY` remains env-only; database secret payloads remain encrypted.
+  - `PaymentService` still reads DB-first runtime configs and falls back to the existing environment variable logic.
+- Admin UI:
+  - `PaymentSetupTab` now renders provider forms from `config.metadata.fields.public` and `config.metadata.fields.secret` instead of hardcoded Stripe/PayPal/GM Pay field lists.
+  - The page shows provider readiness, missing keys, validation checks, secret configured/tail status, and webhook/notify URLs from backend metadata.
+  - Admin save and validate actions still use the existing endpoints and preserve leave-blank-secret behavior.
+- Readiness and validation:
+  - Registry-driven readiness shows `Ready` vs `Missing config` using required public fields and required secret field status.
+  - Local validation remains non-charging and limited to required fields, local schemas, and GM Pay local signature generation.
+  - Admin payment operation cards reuse registry metadata for managed provider merchant-console hints and setup notes.
+- Tests/checks:
+  - Added registry metadata assertions for Stripe/PayPal/GM Pay payment config API responses.
+  - Verified secret masking and audit detail still do not expose plaintext secrets.
+  - Verified Stripe DB config checkout remains able to create a pending order under mocked Stripe checkout.
+  - Local checks run:
+    - `pytest backend/tests/test_payment_config_stripe.py backend/tests/test_admin_payment_domain.py -q`
+    - `pytest backend/tests/test_admin_payment_domain.py backend/tests/test_payment_config_stripe.py backend/tests/test_payment_domain.py backend/tests/test_pricing_plans.py -q`
+    - `npm run type-check`
+    - `npm run test:unit:ci`
+    - `npm run build`
+    - `npm run build:admin`
+
 Admin bootstrap:
 
 ```bash

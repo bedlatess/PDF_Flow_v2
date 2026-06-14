@@ -89,6 +89,17 @@ def test_admin_can_save_stripe_config_without_secret_leak(client, monkeypatch):
     assert body["public_config"]["price_id_monthly"] == "price_db_monthly"
     assert body["secret_fields"]["secret_key"] == {"configured": True, "tail": "1234"}
     assert body["secret_fields"]["webhook_secret"] == {"configured": True, "tail": "5678"}
+    assert body["metadata"]["provider_key"] == "stripe"
+    assert [field["key"] for field in body["metadata"]["fields"]["public"]] == [
+        "price_id_monthly",
+        "price_id_yearly",
+    ]
+    assert [field["key"] for field in body["metadata"]["fields"]["secret"]] == [
+        "secret_key",
+        "webhook_secret",
+    ]
+    assert body["readiness"]["status"] == "ready"
+    assert body["readiness"]["validation_checks"] == ["required_fields", "stripe_checkout_schema"]
 
     db = next(client.app.dependency_overrides[get_db]())
     try:
@@ -175,6 +186,42 @@ def test_validate_stripe_is_local_only(client, monkeypatch):
     assert body["valid"] is True
     assert body["checks"] == ["required_fields", "stripe_checkout_schema"]
     assert body["signature_preview_tail"] is None
+
+
+def test_admin_payment_configs_are_registry_driven_for_visible_providers(client, monkeypatch):
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "PAYMENT_CONFIG_ENCRYPTION_KEY", "unit-test-payment-config-key")
+    headers = _make_admin(client, email="providers-registry-admin@example.com")
+
+    response = client.get("/api/v1/admin/payment-configs", headers=headers)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert [item["provider_key"] for item in body] == ["stripe", "paypal", "gmpay"]
+
+    paypal = next(item for item in body if item["provider_key"] == "paypal")
+    assert paypal["metadata"]["fields"]["public"][0]["key"] == "api_base_url"
+    assert paypal["metadata"]["fields"]["secret"][0]["key"] == "client_secret"
+    assert paypal["metadata"]["fields"]["secret"][0]["secret"] is True
+    assert "client_secret" in paypal["readiness"]["missing_config_keys"]
+
+    gmpay = next(item for item in body if item["provider_key"] == "gmpay")
+    assert [field["key"] for field in gmpay["metadata"]["fields"]["public"]] == [
+        "api_base_url",
+        "pid",
+        "currency",
+        "token",
+        "network",
+        "monthly_amount_cents",
+        "yearly_amount_cents",
+        "order_ttl_minutes",
+        "return_url",
+    ]
+    assert gmpay["metadata"]["validation_checks"] == [
+        "required_fields",
+        "local_signature_generation",
+    ]
 
 
 def test_stripe_checkout_uses_db_config_and_creates_pending_order(client, monkeypatch):

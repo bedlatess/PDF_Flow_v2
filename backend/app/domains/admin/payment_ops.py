@@ -8,7 +8,11 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.domains.payment import PaymentService
-from app.domains.payment.config_store import is_managed_payment_provider, list_safe_provider_configs
+from app.domains.payment.config_store import (
+    get_managed_provider_definition,
+    is_managed_payment_provider,
+    list_safe_provider_configs,
+)
 from app.domains.payment.providers import PaymentProviderConfig, provider_display_name
 from app.models.user import PaymentEvent, PaymentOrder, User
 
@@ -166,6 +170,8 @@ def _payment_provider_missing_config(provider: str) -> list[str]:
 
 
 def _payment_provider_console_hint(provider: str) -> str:
+    if is_managed_payment_provider(provider):
+        return get_managed_provider_definition(provider).merchant_console_hint
     hints = {
         "stripe": "Stripe Dashboard > Developers > Webhooks",
         "paypal": "PayPal Developer Dashboard > Apps & Credentials > Webhooks",
@@ -182,6 +188,8 @@ def _payment_provider_console_hint(provider: str) -> str:
 
 
 def _payment_provider_setup_notes(provider: str) -> list[str]:
+    if is_managed_payment_provider(provider):
+        return list(get_managed_provider_definition(provider).setup_notes)
     notes = [
         "Use the webhook/notify URL as the provider server callback URL.",
         "Success and cancel URLs are user return pages only; they must not be treated as payment proof.",

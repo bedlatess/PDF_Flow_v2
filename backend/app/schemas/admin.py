@@ -380,6 +380,44 @@ class AdminPaymentSecretFieldStatus(BaseModel):
     tail: str = ""
 
 
+class AdminPaymentProviderFieldMetadata(BaseModel):
+    key: str
+    label: str
+    input_type: str = "text"
+    required: bool = False
+    secret: bool = False
+    placeholder: str = ""
+    help_text: str = ""
+    min_value: Optional[int] = None
+    max_value: Optional[int] = None
+
+
+class AdminPaymentProviderMetadataFields(BaseModel):
+    public: list[AdminPaymentProviderFieldMetadata]
+    secret: list[AdminPaymentProviderFieldMetadata]
+
+
+class AdminPaymentProviderMetadata(BaseModel):
+    provider_key: str
+    display_name: str
+    description: str
+    settlement: str
+    supports_subscription: bool
+    supports_one_time: bool
+    merchant_console_hint: str
+    setup_notes: list[str]
+    validation_checks: list[str]
+    fields: AdminPaymentProviderMetadataFields
+
+
+class AdminPaymentProviderReadiness(BaseModel):
+    status: str
+    label: str
+    detail: str
+    missing_config_keys: list[str]
+    validation_checks: list[str]
+
+
 class AdminPaymentProviderConfigResponse(BaseModel):
     provider_key: str
     display_name: str
@@ -394,6 +432,8 @@ class AdminPaymentProviderConfigResponse(BaseModel):
     updated_at: Optional[datetime] = None
     encryption_available: bool
     webhook_status: str
+    metadata: AdminPaymentProviderMetadata
+    readiness: AdminPaymentProviderReadiness
 
 
 class AdminPaymentProviderConfigUpdate(BaseModel):

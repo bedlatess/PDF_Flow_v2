@@ -169,9 +169,19 @@ class PaymentService:
             public_config = runtime_config["public_config"] if runtime_config else {}
             amount_key = "monthly_amount_cents" if normalized_plan == "pro_monthly" else "yearly_amount_cents"
             gmpay_mapping = provider_mappings.get("gmpay") or {}
+            mapped_amount_cents = int(gmpay_mapping.get("amount_cents") or 0)
+            default_amount_cents = int(PLAN_CATALOG[normalized_plan]["amount_cents"])
+            # Phase C seeded default GM Pay plan mappings for display. Treat the
+            # default catalog amount as "not explicitly overridden" so the
+            # provider config center remains the primary GM Pay amount fallback.
+            explicit_mapped_amount_cents = (
+                mapped_amount_cents
+                if mapped_amount_cents and mapped_amount_cents != default_amount_cents
+                else 0
+            )
             catalog_item = {
                 "amount_cents": int(
-                    gmpay_mapping.get("amount_cents")
+                    explicit_mapped_amount_cents
                     or public_config.get(amount_key)
                     or catalog_item["amount_cents"]
                 ),

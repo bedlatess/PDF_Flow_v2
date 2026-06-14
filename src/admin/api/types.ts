@@ -272,6 +272,42 @@ export interface AdminPaymentSecretFieldStatus {
   tail: string
 }
 
+export interface AdminPaymentProviderFieldMetadata {
+  key: string
+  label: string
+  input_type: 'text' | 'url' | 'number' | 'password'
+  required: boolean
+  secret: boolean
+  placeholder: string
+  help_text: string
+  min_value: number | null
+  max_value: number | null
+}
+
+export interface AdminPaymentProviderMetadata {
+  provider_key: string
+  display_name: string
+  description: string
+  settlement: string
+  supports_subscription: boolean
+  supports_one_time: boolean
+  merchant_console_hint: string
+  setup_notes: string[]
+  validation_checks: string[]
+  fields: {
+    public: AdminPaymentProviderFieldMetadata[]
+    secret: AdminPaymentProviderFieldMetadata[]
+  }
+}
+
+export interface AdminPaymentProviderReadiness {
+  status: string
+  label: string
+  detail: string
+  missing_config_keys: string[]
+  validation_checks: string[]
+}
+
 export interface AdminPaymentProviderConfig {
   provider_key: string
   display_name: string
@@ -297,6 +333,8 @@ export interface AdminPaymentProviderConfig {
   updated_at: string | null
   encryption_available: boolean
   webhook_status: string
+  metadata: AdminPaymentProviderMetadata
+  readiness: AdminPaymentProviderReadiness
 }
 
 export interface AdminPaymentProviderConfigUpdate {

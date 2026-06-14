@@ -29,12 +29,44 @@ SENSITIVE_FIELD_MARKERS = (
 
 
 @dataclass(frozen=True)
+class PaymentProviderFieldDefinition:
+    key: str
+    label: str
+    input_type: str = "text"
+    required: bool = False
+    secret: bool = False
+    placeholder: str = ""
+    help_text: str = ""
+    min_value: int | None = None
+    max_value: int | None = None
+
+
+@dataclass(frozen=True)
 class ManagedProviderDefinition:
     key: str
     display_name: str
+    description: str
     public_defaults: dict[str, Any]
-    required_public_fields: tuple[str, ...]
-    secret_fields: tuple[str, ...]
+    public_fields: tuple[PaymentProviderFieldDefinition, ...]
+    secret_fields: tuple[PaymentProviderFieldDefinition, ...]
+    settlement: str
+    supports_subscription: bool = False
+    supports_one_time: bool = True
+    merchant_console_hint: str = ""
+    setup_notes: tuple[str, ...] = ()
+    validation_checks: tuple[str, ...] = ()
+
+    @property
+    def required_public_fields(self) -> tuple[str, ...]:
+        return tuple(field.key for field in self.public_fields if field.required)
+
+    @property
+    def secret_field_keys(self) -> tuple[str, ...]:
+        return tuple(field.key for field in self.secret_fields)
+
+    @property
+    def required_secret_fields(self) -> tuple[str, ...]:
+        return tuple(field.key for field in self.secret_fields if field.required)
 
 
 GMPAY_DEFAULT_PUBLIC_CONFIG: dict[str, Any] = {
@@ -67,37 +99,194 @@ MANAGED_PAYMENT_PROVIDERS: dict[str, ManagedProviderDefinition] = {
     "stripe": ManagedProviderDefinition(
         key="stripe",
         display_name="Stripe",
-        public_defaults=STRIPE_DEFAULT_PUBLIC_CONFIG,
-        required_public_fields=(
-            "price_id_monthly",
-            "price_id_yearly",
+        description=(
+            "Hosted Stripe Checkout sessions. Payment proof still comes from "
+            "verified Stripe webhooks, not the frontend success page."
         ),
-        secret_fields=("secret_key", "webhook_secret"),
+        public_defaults=STRIPE_DEFAULT_PUBLIC_CONFIG,
+        public_fields=(
+            PaymentProviderFieldDefinition(
+                key="price_id_monthly",
+                label="Monthly Price ID",
+                required=True,
+                placeholder="price_...",
+                help_text="Stripe recurring price used for monthly Pro checkout.",
+            ),
+            PaymentProviderFieldDefinition(
+                key="price_id_yearly",
+                label="Yearly Price ID",
+                required=True,
+                placeholder="price_...",
+                help_text="Stripe recurring price used for annual Pro checkout.",
+            ),
+        ),
+        secret_fields=(
+            PaymentProviderFieldDefinition(
+                key="secret_key",
+                label="Secret Key",
+                input_type="password",
+                required=True,
+                secret=True,
+                placeholder="Leave blank to keep existing",
+                help_text="Write-only Stripe API secret. It is encrypted at rest and never returned.",
+            ),
+            PaymentProviderFieldDefinition(
+                key="webhook_secret",
+                label="Webhook Secret",
+                input_type="password",
+                required=True,
+                secret=True,
+                placeholder="Leave blank to keep existing",
+                help_text="Write-only endpoint signing secret for Stripe webhooks.",
+            ),
+        ),
+        settlement="subscription",
+        supports_subscription=True,
+        merchant_console_hint="Stripe Dashboard > Developers > Webhooks",
+        setup_notes=(
+            "Use the webhook URL shown here as the Stripe endpoint URL.",
+            "Success and cancel URLs are user return pages only; they are not payment proof.",
+            "Use Stripe test mode first, then switch to live keys and live price ids together.",
+        ),
+        validation_checks=("required_fields", "stripe_checkout_schema"),
     ),
     "paypal": ManagedProviderDefinition(
         key="paypal",
         display_name="PayPal",
-        public_defaults=PAYPAL_DEFAULT_PUBLIC_CONFIG,
-        required_public_fields=(
-            "api_base_url",
-            "client_id",
+        description=(
+            "PayPal checkout order creation and approval URL handoff. Capture/webhook "
+            "entitlement hardening remains outside this phase."
         ),
-        secret_fields=("client_secret",),
+        public_defaults=PAYPAL_DEFAULT_PUBLIC_CONFIG,
+        public_fields=(
+            PaymentProviderFieldDefinition(
+                key="api_base_url",
+                label="API Base URL",
+                input_type="url",
+                required=True,
+                placeholder="https://api-m.sandbox.paypal.com",
+                help_text="Use sandbox for testing and live API only after live credentials are ready.",
+            ),
+            PaymentProviderFieldDefinition(
+                key="client_id",
+                label="Client ID",
+                required=True,
+                help_text="PayPal REST app client id.",
+            ),
+            PaymentProviderFieldDefinition(
+                key="webhook_id",
+                label="Webhook ID",
+                required=False,
+                help_text="Needed for strict webhook verification; optional for checkout URL creation.",
+            ),
+        ),
+        secret_fields=(
+            PaymentProviderFieldDefinition(
+                key="client_secret",
+                label="Client Secret",
+                input_type="password",
+                required=True,
+                secret=True,
+                placeholder="Leave blank to keep existing",
+                help_text="Write-only PayPal REST app secret.",
+            ),
+        ),
+        settlement="one_time_entitlement",
+        merchant_console_hint="PayPal Developer Dashboard > Apps & Credentials > Webhooks",
+        setup_notes=(
+            "Create the PayPal webhook from the same REST app as the client id.",
+            "Copy the webhook id when strict webhook verification is enabled.",
+            "Keep sandbox and live credentials separated.",
+        ),
+        validation_checks=("required_fields", "paypal_checkout_schema"),
     ),
     "gmpay": ManagedProviderDefinition(
         key="gmpay",
         display_name="GM Pay",
-        public_defaults=GMPAY_DEFAULT_PUBLIC_CONFIG,
-        required_public_fields=(
-            "api_base_url",
-            "pid",
-            "currency",
-            "token",
-            "network",
-            "monthly_amount_cents",
-            "yearly_amount_cents",
+        description=(
+            "GM Pay hosted cashier integration. Webhook is skeleton-only until real "
+            "callback samples are verified."
         ),
-        secret_fields=("secret_key",),
+        public_defaults=GMPAY_DEFAULT_PUBLIC_CONFIG,
+        public_fields=(
+            PaymentProviderFieldDefinition(
+                key="api_base_url",
+                label="API Base URL",
+                input_type="url",
+                required=True,
+                placeholder="https://pay.example.com",
+                help_text="GM Pay API origin without a trailing slash.",
+            ),
+            PaymentProviderFieldDefinition(
+                key="pid",
+                label="PID / Merchant ID",
+                required=True,
+                help_text="Merchant identifier issued by GM Pay.",
+            ),
+            PaymentProviderFieldDefinition(
+                key="currency",
+                label="Currency",
+                required=True,
+                placeholder="cny",
+            ),
+            PaymentProviderFieldDefinition(
+                key="token",
+                label="Token",
+                required=True,
+                placeholder="usdt",
+            ),
+            PaymentProviderFieldDefinition(
+                key="network",
+                label="Network",
+                required=True,
+                placeholder="tron",
+            ),
+            PaymentProviderFieldDefinition(
+                key="monthly_amount_cents",
+                label="Monthly Amount Cents",
+                input_type="number",
+                required=True,
+                min_value=1,
+            ),
+            PaymentProviderFieldDefinition(
+                key="yearly_amount_cents",
+                label="Yearly Amount Cents",
+                input_type="number",
+                required=True,
+                min_value=1,
+            ),
+            PaymentProviderFieldDefinition(
+                key="order_ttl_minutes",
+                label="Order TTL Minutes",
+                input_type="number",
+                min_value=5,
+            ),
+            PaymentProviderFieldDefinition(
+                key="return_url",
+                label="Return URL Override",
+                input_type="url",
+                placeholder="Optional",
+            ),
+        ),
+        secret_fields=(
+            PaymentProviderFieldDefinition(
+                key="secret_key",
+                label="Secret Key",
+                input_type="password",
+                required=True,
+                secret=True,
+                placeholder="Leave blank to keep existing",
+                help_text="Write-only GM Pay signing secret.",
+            ),
+        ),
+        settlement="one_time_entitlement",
+        merchant_console_hint="GM Pay merchant console > notify URL / checkout settings",
+        setup_notes=(
+            "Create checkout first and confirm GM Pay returns a cashier payment_url.",
+            "Do not use frontend success pages as payment proof.",
+            "Keep automatic Pro activation disabled until strict webhook verification is implemented.",
+        ),
+        validation_checks=("required_fields", "local_signature_generation"),
     )
 }
 
@@ -209,10 +398,42 @@ def _fingerprints(secrets: dict[str, str]) -> dict[str, dict[str, str | bool]]:
     }
 
 
+def _field_to_metadata(field: PaymentProviderFieldDefinition) -> dict[str, Any]:
+    return {
+        "key": field.key,
+        "label": field.label,
+        "input_type": field.input_type,
+        "required": field.required,
+        "secret": field.secret,
+        "placeholder": field.placeholder,
+        "help_text": field.help_text,
+        "min_value": field.min_value,
+        "max_value": field.max_value,
+    }
+
+
+def _provider_metadata(definition: ManagedProviderDefinition) -> dict[str, Any]:
+    return {
+        "provider_key": definition.key,
+        "display_name": definition.display_name,
+        "description": definition.description,
+        "settlement": definition.settlement,
+        "supports_subscription": definition.supports_subscription,
+        "supports_one_time": definition.supports_one_time,
+        "merchant_console_hint": definition.merchant_console_hint,
+        "setup_notes": list(definition.setup_notes),
+        "validation_checks": list(definition.validation_checks),
+        "fields": {
+            "public": [_field_to_metadata(field) for field in definition.public_fields],
+            "secret": [_field_to_metadata(field) for field in definition.secret_fields],
+        },
+    }
+
+
 def _secret_status(definition: ManagedProviderDefinition, row: PaymentProviderConfigModel | None) -> dict[str, dict[str, str | bool]]:
     fingerprint = _load_json_object(row.secret_fingerprint_json if row else None)
     status_map: dict[str, dict[str, str | bool]] = {}
-    for field in definition.secret_fields:
+    for field in definition.secret_field_keys:
         item = fingerprint.get(field) or {}
         configured = bool(item.get("configured"))
         tail = str(item.get("tail") or "")
@@ -272,10 +493,10 @@ def get_provider_runtime_config(db: Session, provider_key: str) -> dict[str, Any
     secret_status = _secret_status(definition, row)
     if not _is_public_config_complete(definition, public_config):
         return None
-    if not all(secret_status[field]["configured"] for field in definition.secret_fields):
+    if not all(secret_status[field]["configured"] for field in definition.required_secret_fields):
         return None
     secrets = _decrypt_secret_payload(row.encrypted_secret_json)
-    if not all(secrets.get(field) for field in definition.secret_fields):
+    if not all(secrets.get(field) for field in definition.required_secret_fields):
         return None
     return {
         "provider_key": provider_key,
@@ -301,9 +522,10 @@ def build_safe_provider_config(
         )
     ]
     missing_secret = [
-        field for field in definition.secret_fields
+        field for field in definition.required_secret_fields
         if not secret_status[field]["configured"]
     ]
+    readiness_status = "ready" if not missing_public and not missing_secret else "missing_config"
     return {
         "provider_key": definition.key,
         "display_name": row.display_name if row else definition.display_name,
@@ -312,7 +534,7 @@ def build_safe_provider_config(
         "public_config": public_config,
         "secret_fields": secret_status,
         "required_public_fields": list(definition.required_public_fields),
-        "required_secret_fields": list(definition.secret_fields),
+        "required_secret_fields": list(definition.required_secret_fields),
         "missing_config_keys": missing_public + missing_secret,
         "webhook_url": (
             f"{settings.BACKEND_PUBLIC_URL.rstrip('/')}"
@@ -321,6 +543,18 @@ def build_safe_provider_config(
         "updated_at": row.updated_at if row else None,
         "encryption_available": payment_config_encryption_available(),
         "webhook_status": "skeleton_no_entitlement",
+        "metadata": _provider_metadata(definition),
+        "readiness": {
+            "status": readiness_status,
+            "label": "Ready" if readiness_status == "ready" else "Missing config",
+            "detail": (
+                "Required public fields and write-only secrets are configured."
+                if readiness_status == "ready"
+                else "Required public fields or write-only secrets are missing."
+            ),
+            "missing_config_keys": missing_public + missing_secret,
+            "validation_checks": list(definition.validation_checks),
+        },
     }
 
 
@@ -364,7 +598,7 @@ def update_provider_config(
     incoming_secrets = {
         key: str(value).strip()
         for key, value in (secret_values or {}).items()
-        if key in definition.secret_fields and str(value or "").strip()
+        if key in definition.secret_field_keys and str(value or "").strip()
     }
     if incoming_secrets and not payment_config_encryption_available() and _is_production():
         _require_encryption_key()
@@ -412,7 +646,7 @@ def validate_provider_config_payload(
             errors.append(f"{field} must be greater than 0")
 
     existing_secret_status = (existing_safe_config or {}).get("secret_fields") or {}
-    for field in definition.secret_fields:
+    for field in definition.required_secret_fields:
         has_existing = bool((existing_secret_status.get(field) or {}).get("configured"))
         has_incoming = bool(str((secret_values or {}).get(field) or "").strip())
         if not has_existing and not has_incoming:
@@ -437,13 +671,7 @@ def validate_provider_config_payload(
             secret_key,
         )
 
-    if provider_key in {"stripe", "paypal"} and not errors:
-        checks = ["required_fields", f"{provider_key}_checkout_schema"]
-    else:
-        checks = [
-            "required_fields",
-            "local_signature_generation" if provider_key == "gmpay" else "local_schema",
-        ]
+    checks = list(definition.validation_checks or ("required_fields", "local_schema"))
 
     return {
         "valid": not errors,

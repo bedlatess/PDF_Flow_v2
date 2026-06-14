@@ -219,7 +219,11 @@ class GMPayPaymentProvider:
         if not api_base_url or not pid or not secret_key:
             raise RuntimeError("GM Pay gateway is not configured")
 
-        name = f"PDF-Flow Pro {plan}"
+        plan_label = {
+            "pro_monthly": "monthly",
+            "pro_yearly": "yearly",
+        }.get(plan, plan)
+        name = f"PDF-Flow Pro {plan_label}"
         amount = self._money_value(amount_cents)
         payload = {
             "pid": pid,

@@ -74,7 +74,7 @@ class Settings(BaseSettings):
     # Payment provider registry
     PAYMENT_ENABLED_PROVIDERS_RAW: str = Field(default="[]", alias="PAYMENT_ENABLED_PROVIDERS")
     PAYMENT_PROVIDER_ORDER_RAW: str = Field(
-        default="stripe,paypal,epay,alipay,wechat,tokenpay,bepusdt,epusdt,okpay",
+        default="stripe,paypal,gmpay",
         alias="PAYMENT_PROVIDER_ORDER",
     )
     PAYMENT_PROVIDER_CHECKOUT_URLS_RAW: str = Field(default="{}", alias="PAYMENT_PROVIDER_CHECKOUT_URLS")

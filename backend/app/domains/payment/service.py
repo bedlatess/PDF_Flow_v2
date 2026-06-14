@@ -45,6 +45,8 @@ PROVIDER_CURRENCY = {
     "wechat": "CNY",
 }
 
+PUBLIC_CHECKOUT_PROVIDER_KEYS = ("stripe", "paypal", "gmpay")
+
 
 class PaymentService:
     def __init__(self, db: Session):
@@ -72,6 +74,18 @@ class PaymentService:
                 public_config=gmpay_config["public_config"],
                 secrets=gmpay_config["secrets"],
             )
+        stripe_config = self._runtime_configs.get("stripe")
+        if stripe_config:
+            providers["stripe"] = StripePaymentProvider(
+                public_config=stripe_config["public_config"],
+                secrets=stripe_config["secrets"],
+            )
+        paypal_config = self._runtime_configs.get("paypal")
+        if paypal_config:
+            providers["paypal"] = PayPalPaymentProvider(
+                public_config=paypal_config["public_config"],
+                secrets=paypal_config["secrets"],
+            )
         for key in settings.PAYMENT_ENABLED_PROVIDERS:
             if key in providers:
                 continue
@@ -94,10 +108,15 @@ class PaymentService:
 
     def list_providers(self) -> list[PaymentProviderConfig]:
         enabled = set(settings.PAYMENT_ENABLED_PROVIDERS)
-        provider_order = list(settings.PAYMENT_PROVIDER_ORDER)
+        provider_order = [
+            key for key in settings.PAYMENT_PROVIDER_ORDER
+            if key in PUBLIC_CHECKOUT_PROVIDER_KEYS
+        ]
         for key in self._runtime_configs:
-            if key not in provider_order:
+            if key in PUBLIC_CHECKOUT_PROVIDER_KEYS and key not in provider_order:
                 provider_order.append(key)
+        if not provider_order:
+            provider_order = list(PUBLIC_CHECKOUT_PROVIDER_KEYS)
         providers = [
             PaymentProviderConfig(
                 key=key,

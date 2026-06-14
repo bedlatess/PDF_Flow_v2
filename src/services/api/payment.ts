@@ -20,13 +20,6 @@ export interface CheckoutSessionResponse {
 export type PaymentProviderKey =
   | 'stripe'
   | 'paypal'
-  | 'epay'
-  | 'alipay'
-  | 'wechat'
-  | 'tokenpay'
-  | 'bepusdt'
-  | 'epusdt'
-  | 'okpay'
   | 'gmpay'
 
 export interface PaymentProviderOption {

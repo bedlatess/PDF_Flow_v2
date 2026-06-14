@@ -104,17 +104,12 @@ def test_payment_operations_summary_reports_provider_readiness_and_safe_packets(
     assert [item["provider"] for item in summary["recent_orders"]] == ["epusdt"]
 
     stripe = next(provider for provider in summary["providers"] if provider["key"] == "stripe")
-    epusdt = next(provider for provider in summary["providers"] if provider["key"] == "epusdt")
-    wechat = next(provider for provider in summary["providers"] if provider["key"] == "wechat")
+
+    assert [provider["key"] for provider in summary["providers"]] == ["stripe", "paypal", "gmpay"]
 
     assert stripe["acceptance_status"] == "accepted"
     assert stripe["webhook_url"] == "https://api.pdf-flow.test/api/v1/payment/webhooks/stripe"
     assert stripe["latest_paid_event_at"] is not None
-    assert epusdt["acceptance_status"] == "missing_config"
-    assert "PAYMENT_GATEWAY_CONFIGS.epusdt.secret" in epusdt["missing_config_keys"]
-    assert "EPUSDT 管理后台" in epusdt["merchant_console_hint"]
-    assert wechat["acceptance_status"] == "needs_review"
-    assert "platform certificate" in " ".join(wechat["troubleshooting_steps"])
 
     assert "checkout.stripe.local" not in summary["reconciliation_summary"]
     assert "tron:private-domain-address" not in summary["reconciliation_summary"]

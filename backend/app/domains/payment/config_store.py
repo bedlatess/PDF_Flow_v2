@@ -50,7 +50,40 @@ GMPAY_DEFAULT_PUBLIC_CONFIG: dict[str, Any] = {
 }
 
 
+STRIPE_DEFAULT_PUBLIC_CONFIG: dict[str, Any] = {
+    "price_id_monthly": "",
+    "price_id_yearly": "",
+}
+
+
+PAYPAL_DEFAULT_PUBLIC_CONFIG: dict[str, Any] = {
+    "api_base_url": "https://api-m.sandbox.paypal.com",
+    "client_id": "",
+    "webhook_id": "",
+}
+
+
 MANAGED_PAYMENT_PROVIDERS: dict[str, ManagedProviderDefinition] = {
+    "stripe": ManagedProviderDefinition(
+        key="stripe",
+        display_name="Stripe",
+        public_defaults=STRIPE_DEFAULT_PUBLIC_CONFIG,
+        required_public_fields=(
+            "price_id_monthly",
+            "price_id_yearly",
+        ),
+        secret_fields=("secret_key", "webhook_secret"),
+    ),
+    "paypal": ManagedProviderDefinition(
+        key="paypal",
+        display_name="PayPal",
+        public_defaults=PAYPAL_DEFAULT_PUBLIC_CONFIG,
+        required_public_fields=(
+            "api_base_url",
+            "client_id",
+        ),
+        secret_fields=("client_secret",),
+    ),
     "gmpay": ManagedProviderDefinition(
         key="gmpay",
         display_name="GM Pay",
@@ -404,12 +437,17 @@ def validate_provider_config_payload(
             secret_key,
         )
 
+    if provider_key in {"stripe", "paypal"} and not errors:
+        checks = ["required_fields", f"{provider_key}_checkout_schema"]
+    else:
+        checks = [
+            "required_fields",
+            "local_signature_generation" if provider_key == "gmpay" else "local_schema",
+        ]
+
     return {
         "valid": not errors,
         "errors": errors,
-        "checks": [
-            "required_fields",
-            "local_signature_generation" if provider_key == "gmpay" else "local_schema",
-        ],
+        "checks": checks,
         "signature_preview_tail": signature_preview[-8:] if signature_preview else None,
     }

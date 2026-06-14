@@ -407,6 +407,10 @@ class SignedHostedGatewayProvider:
 class StripePaymentProvider:
     key = "stripe"
 
+    def __init__(self, *, public_config: dict | None = None, secrets: dict | None = None):
+        self.public_config = dict(public_config or {})
+        self.secrets = dict(secrets or {})
+
     def create_order(
         self,
         *,
@@ -419,17 +423,18 @@ class StripePaymentProvider:
         cancel_url: str,
         notification_url: str,
     ) -> PaymentCreateResult:
-        if not settings.STRIPE_SECRET_KEY:
+        secret_key = self._secret_key()
+        if not secret_key:
             raise RuntimeError("Stripe secret key is not configured")
 
         price_id = {
-            "monthly": settings.STRIPE_PRICE_ID_MONTHLY,
-            "yearly": settings.STRIPE_PRICE_ID_YEARLY,
+            "monthly": self.public_config.get("price_id_monthly") or settings.STRIPE_PRICE_ID_MONTHLY,
+            "yearly": self.public_config.get("price_id_yearly") or settings.STRIPE_PRICE_ID_YEARLY,
         }.get(plan)
         if not price_id:
             raise RuntimeError(f"Stripe price ID for {plan} is not configured")
 
-        stripe.api_key = settings.STRIPE_SECRET_KEY
+        stripe.api_key = secret_key
         checkout_session = stripe.checkout.Session.create(
             customer_email=user_email,
             payment_method_types=["card"],
@@ -457,14 +462,15 @@ class StripePaymentProvider:
         body: bytes,
         query: Mapping[str, str],
     ) -> NormalizedPaymentEvent:
-        if not settings.STRIPE_WEBHOOK_SECRET:
+        webhook_secret = self._webhook_secret()
+        if not webhook_secret:
             raise RuntimeError("Stripe webhook secret is not configured")
 
-        stripe.api_key = settings.STRIPE_SECRET_KEY
+        stripe.api_key = self._secret_key()
         event = stripe.Webhook.construct_event(
             body,
             headers.get("stripe-signature"),
-            settings.STRIPE_WEBHOOK_SECRET,
+            webhook_secret,
         )
         event_type = event["type"]
         data = event["data"]["object"]
@@ -484,6 +490,12 @@ class StripePaymentProvider:
     def capture_order(self, *, provider_order_id: str) -> NormalizedPaymentEvent:
         raise NotImplementedError("Stripe checkout is completed by webhook, not capture")
 
+    def _secret_key(self) -> str | None:
+        return str(self.secrets.get("secret_key") or settings.STRIPE_SECRET_KEY or "").strip() or None
+
+    def _webhook_secret(self) -> str | None:
+        return str(self.secrets.get("webhook_secret") or settings.STRIPE_WEBHOOK_SECRET or "").strip() or None
+
     @staticmethod
     def _append_query(url: str, query: str) -> str:
         separator = "&" if "?" in url else "?"
@@ -494,8 +506,17 @@ class PayPalPaymentProvider:
     key = "paypal"
     http_client_factory = httpx.Client
 
-    def __init__(self, base_url: str | None = None):
-        self.base_url = (base_url or settings.PAYPAL_API_BASE_URL).rstrip("/")
+    def __init__(
+        self,
+        base_url: str | None = None,
+        *,
+        public_config: dict | None = None,
+        secrets: dict | None = None,
+    ):
+        self.public_config = dict(public_config or {})
+        self.secrets = dict(secrets or {})
+        configured_base_url = self.public_config.get("api_base_url") or base_url or settings.PAYPAL_API_BASE_URL
+        self.base_url = str(configured_base_url).rstrip("/")
 
     def create_order(
         self,
@@ -596,7 +617,8 @@ class PayPalPaymentProvider:
         body: bytes,
         query: Mapping[str, str],
     ) -> NormalizedPaymentEvent:
-        if not settings.PAYPAL_WEBHOOK_ID:
+        webhook_id = self._webhook_id()
+        if not webhook_id:
             raise RuntimeError("PayPal webhook id is not configured")
 
         event = self._parse_json(body)
@@ -607,7 +629,7 @@ class PayPalPaymentProvider:
             "transmission_id": headers.get("paypal-transmission-id"),
             "transmission_sig": headers.get("paypal-transmission-sig"),
             "transmission_time": headers.get("paypal-transmission-time"),
-            "webhook_id": settings.PAYPAL_WEBHOOK_ID,
+            "webhook_id": webhook_id,
             "webhook_event": event,
         }
 
@@ -642,13 +664,15 @@ class PayPalPaymentProvider:
         )
 
     def _access_token(self) -> str:
-        if not settings.PAYPAL_CLIENT_ID or not settings.PAYPAL_CLIENT_SECRET:
+        client_id = self._client_id()
+        client_secret = self._client_secret()
+        if not client_id or not client_secret:
             raise RuntimeError("PayPal credentials are not configured")
 
         with self.http_client_factory(timeout=15.0) as client:
             response = client.post(
                 f"{self.base_url}/v1/oauth2/token",
-                auth=(settings.PAYPAL_CLIENT_ID, settings.PAYPAL_CLIENT_SECRET),
+                auth=(client_id, client_secret),
                 data={"grant_type": "client_credentials"},
                 headers={"Accept": "application/json", "Accept-Language": "en_US"},
             )
@@ -659,6 +683,15 @@ class PayPalPaymentProvider:
         if not token:
             raise RuntimeError("PayPal token response did not include an access token")
         return token
+
+    def _client_id(self) -> str | None:
+        return str(self.public_config.get("client_id") or settings.PAYPAL_CLIENT_ID or "").strip() or None
+
+    def _client_secret(self) -> str | None:
+        return str(self.secrets.get("client_secret") or settings.PAYPAL_CLIENT_SECRET or "").strip() or None
+
+    def _webhook_id(self) -> str | None:
+        return str(self.public_config.get("webhook_id") or settings.PAYPAL_WEBHOOK_ID or "").strip() or None
 
     @staticmethod
     def _money_value(amount_cents: int) -> str:

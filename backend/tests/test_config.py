@@ -34,4 +34,4 @@ def test_payment_providers_are_disabled_by_default():
     settings = _settings()
 
     assert settings.PAYMENT_ENABLED_PROVIDERS == []
-    assert settings.PAYMENT_PROVIDER_ORDER[:4] == ["stripe", "paypal", "epay", "alipay"]
+    assert settings.PAYMENT_PROVIDER_ORDER == ["stripe", "paypal", "gmpay"]

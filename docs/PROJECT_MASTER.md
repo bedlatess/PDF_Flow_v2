@@ -882,6 +882,81 @@ PY
 - Phase 1 production acceptance stops at configure, create order, and open GM Pay cashier. Do not expect automatic Pro activation yet.
 - Before Phase 2, collect a real GM Pay webhook sample and implement strict signature verification, amount verification, currency verification, idempotency, and entitlement granting in the backend trust boundary.
 
+Stripe configuration-center Phase 1 local result:
+
+- Scope: Stripe is now managed by the admin payment configuration center first, with legacy `STRIPE_*` environment variables kept as fallback when the DB config is disabled or incomplete.
+- New admin fields:
+  - Public config: `price_id_monthly`, `price_id_yearly`
+  - Write-only encrypted secrets: `secret_key`, `webhook_secret`
+- Verified locally:
+  - Admin can save, modify, enable, and disable Stripe config through `/api/v1/admin/payment-configs/stripe`.
+  - Secrets are encrypted in `payment_provider_configs`, API responses show only configured status plus tail, and blank secret inputs preserve existing encrypted values.
+  - Admin audit detail records provider/enabled/changed field names only; no secret plaintext is recorded.
+  - PaymentService reads enabled complete Stripe DB config without backend restart, and falls back to legacy env config when DB config is absent.
+  - `/api/v1/payment/providers` exposes Stripe as enabled when the DB config is enabled and complete, so Pricing can show/select Stripe.
+  - Stripe checkout session creation uses the DB `secret_key` and the configured monthly/yearly Price ID, creates a local pending `PaymentOrder`, and returns the Stripe Checkout URL.
+  - Admin Payment Setup now renders Stripe and GM Pay in the same configuration center pattern.
+- Not verified in this phase:
+  - No real Stripe payment was made.
+  - No real Stripe webhook sample was collected.
+  - No automatic `paid` marking or Pro entitlement automation was changed for Stripe.
+- Local checks:
+  - `pytest backend/tests/test_payment_config_stripe.py backend/tests/test_payment_config_gmpay.py -q`
+  - `pytest backend/tests/test_payment_domain.py backend/tests/test_admin_payment_domain.py backend/tests/test_admin.py -q`
+  - `npm run type-check`
+  - `npm run build`
+  - `npm run build:admin`
+
+PayPal configuration-center Phase 1 local result:
+
+- Scope: PayPal is now managed by the admin payment configuration center first, with legacy `PAYPAL_*` environment variables kept as fallback when the DB config is disabled or incomplete.
+- New admin fields:
+  - Public config: `api_base_url`, `client_id`, optional `webhook_id`
+  - Write-only encrypted secret: `client_secret`
+- Verified locally:
+  - Admin can save, modify, enable, and disable PayPal config through `/api/v1/admin/payment-configs/paypal`.
+  - `client_secret` is encrypted in `payment_provider_configs`, API responses show only configured status plus tail, and blank secret input preserves the existing encrypted value.
+  - Admin audit detail records provider/enabled/changed field names only; no secret plaintext is recorded.
+  - PaymentService reads enabled complete PayPal DB config without backend restart, and falls back to legacy env config when DB config is absent.
+  - `/api/v1/payment/providers` exposes PayPal as enabled when the DB config is enabled and complete, so Pricing can show/select PayPal.
+  - PayPal checkout order creation uses DB `client_id`, encrypted `client_secret`, and `api_base_url`, creates a local pending `PaymentOrder`, and returns the PayPal approval URL.
+  - `webhook_id` is stored for later webhook verification work, but it is not required for this phase's create-order acceptance.
+  - Admin Payment Setup renders Stripe, PayPal, and GM Pay in the same configuration center pattern.
+- Not verified in this phase:
+  - No real PayPal payment was made.
+  - No real PayPal webhook sample was collected.
+  - No automatic `paid` marking or Pro entitlement automation was changed for PayPal.
+- Local checks:
+  - `pytest backend/tests/test_payment_config_paypal.py backend/tests/test_payment_config_stripe.py backend/tests/test_payment_config_gmpay.py -q`
+  - `pytest backend/tests/test_payment_domain.py backend/tests/test_admin_payment_domain.py backend/tests/test_admin.py -q`
+  - `npm run type-check`
+  - `npm run build`
+  - `npm run build:admin`
+
+Payment scope cleanup Phase 1 local result:
+
+- Scope: visible checkout/admin payment scope is now limited to `stripe`, `paypal`, and `gmpay`.
+- Retained:
+  - Stripe admin-managed config and legacy `STRIPE_*` fallback.
+  - PayPal admin-managed config and legacy `PAYPAL_*` fallback.
+  - GM Pay admin-managed config and checkout-to-cashier flow.
+  - Backend historical compatibility for old provider orders and explicit legacy gateway checkout paths, including `PAYMENT_GATEWAY_CONFIGS.epusdt` fallback.
+- Hidden/disabled from visible surfaces:
+  - `/api/v1/payment/providers` no longer exposes `epay`, `alipay`, `wechat`, `tokenpay`, `bepusdt`, `epusdt`, or `okpay`, even if they are present in legacy environment variables.
+  - Pricing provider selection is typed and rendered for the visible provider set only.
+  - Admin payment operations provider cards now follow the same visible set while preserving historical order/event summaries and provider-filtered recent orders.
+  - Admin Payment Setup remains limited to Stripe, PayPal, and GM Pay.
+- Actually removed in this phase:
+  - Deprecated provider keys were removed from frontend `PaymentProviderKey` and QR-provider UI mapping.
+  - Default `PAYMENT_PROVIDER_ORDER` values in app config and Docker compose were reduced to `stripe,paypal,gmpay`.
+- Not removed yet:
+  - Alipay, WeChat Pay, EPay, TokenPay, BEPUSDT, EPUSDT, and OKPay provider/adapter code remains for historical compatibility until the second audit/cleanup phase.
+  - Existing webhook/controller compatibility remains untouched.
+- Local checks:
+  - `pytest backend/tests/test_config.py backend/tests/test_payment_domain.py -q`
+  - `pytest backend/tests/test_admin_payment_domain.py backend/tests/test_admin.py -q`
+  - `npm run type-check`
+
 Rollback:
 
 ```bash

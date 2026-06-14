@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.domains.payment import PaymentService
-from app.domains.payment.config_store import list_safe_provider_configs
+from app.domains.payment.config_store import is_managed_payment_provider, list_safe_provider_configs
 from app.domains.payment.providers import PaymentProviderConfig, provider_display_name
 from app.models.user import PaymentEvent, PaymentOrder, User
 
@@ -85,13 +85,17 @@ def _payment_return_url(path: str) -> str:
 def _payment_provider_required_config(provider: str) -> list[str]:
     if provider == "stripe":
         return [
-            "STRIPE_SECRET_KEY",
-            "STRIPE_WEBHOOK_SECRET",
-            "STRIPE_PRICE_ID_MONTHLY",
-            "STRIPE_PRICE_ID_YEARLY",
+            "payment_provider_configs.stripe.price_id_monthly",
+            "payment_provider_configs.stripe.price_id_yearly",
+            "payment_provider_configs.stripe.secret_key",
+            "payment_provider_configs.stripe.webhook_secret",
         ]
     if provider == "paypal":
-        return ["PAYPAL_CLIENT_ID", "PAYPAL_CLIENT_SECRET", "PAYPAL_WEBHOOK_ID"]
+        return [
+            "payment_provider_configs.paypal.api_base_url",
+            "payment_provider_configs.paypal.client_id",
+            "payment_provider_configs.paypal.client_secret",
+        ]
     if provider == "alipay":
         return ["ALIPAY_APP_ID", "ALIPAY_PRIVATE_KEY", "ALIPAY_PUBLIC_KEY"]
     if provider == "wechat":
@@ -116,6 +120,19 @@ def _payment_provider_required_config(provider: str) -> list[str]:
             "payment_provider_configs.gmpay.secret_key",
         ]
     return [f"PAYMENT_PROVIDER_CHECKOUT_URLS.{provider}"]
+
+
+def _legacy_payment_provider_required_config(provider: str) -> list[str]:
+    if provider == "stripe":
+        return [
+            "STRIPE_SECRET_KEY",
+            "STRIPE_WEBHOOK_SECRET",
+            "STRIPE_PRICE_ID_MONTHLY",
+            "STRIPE_PRICE_ID_YEARLY",
+        ]
+    if provider == "paypal":
+        return ["PAYPAL_CLIENT_ID", "PAYPAL_CLIENT_SECRET", "PAYPAL_WEBHOOK_ID"]
+    return _payment_provider_required_config(provider)
 
 
 def _payment_provider_missing_config(provider: str) -> list[str]:
@@ -143,7 +160,7 @@ def _payment_provider_missing_config(provider: str) -> list[str]:
         f"PAYMENT_PROVIDER_CHECKOUT_URLS.{provider}": settings.PAYMENT_PROVIDER_CHECKOUT_URLS.get(provider),
     }
     return [
-        key for key in _payment_provider_required_config(provider)
+        key for key in _legacy_payment_provider_required_config(provider)
         if not values.get(key)
     ]
 
@@ -650,12 +667,18 @@ def get_payment_operations_summary(
         provider_orders = [order for order in all_orders if order.provider == option.key]
         provider_events = [event for event in all_events if event.provider == option.key]
         latest_order = max(provider_orders, key=lambda item: item.created_at) if provider_orders else None
-        if option.key in managed_config_rows:
-            configured = bool(managed_config_rows[option.key]["configured"])
-            missing_config_keys = list(managed_config_rows[option.key]["missing_config_keys"])
+        managed_row = managed_config_rows.get(option.key)
+        if managed_row and managed_row["enabled"]:
+            configured = bool(managed_row["configured"])
+            missing_config_keys = list(managed_row["missing_config_keys"])
         else:
             configured = _provider_configured(option.key)
             missing_config_keys = _payment_provider_missing_config(option.key)
+        required_config_keys = (
+            _payment_provider_required_config(option.key)
+            if managed_row and managed_row["enabled"] and is_managed_payment_provider(option.key)
+            else _legacy_payment_provider_required_config(option.key)
+        )
         acceptance_state = _payment_provider_acceptance_state(
             option,
             configured,
@@ -690,7 +713,7 @@ def get_payment_operations_summary(
             "success_return_url": _payment_return_url("/payment/success"),
             "cancel_return_url": _payment_return_url("/payment/cancel"),
             "merchant_console_hint": _payment_provider_console_hint(option.key),
-            "required_config_keys": _payment_provider_required_config(option.key),
+            "required_config_keys": required_config_keys,
             "missing_config_keys": missing_config_keys,
             "setup_notes": _payment_provider_setup_notes(option.key),
             "sandbox_runbook": _payment_provider_sandbox_runbook(option.key),

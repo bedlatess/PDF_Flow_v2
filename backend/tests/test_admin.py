@@ -677,7 +677,7 @@ def test_admin_payment_operations_returns_provider_health_and_reconciliation(cli
     assert body["currency_breakdown"]["USD"] == 990
 
     stripe = next(provider for provider in body["providers"] if provider["key"] == "stripe")
-    epusdt = next(provider for provider in body["providers"] if provider["key"] == "epusdt")
+    assert [provider["key"] for provider in body["providers"]] == ["stripe", "paypal", "gmpay"]
     assert stripe["enabled"] is True
     assert stripe["paid_orders"] == 1
     assert stripe["acceptance_status"] == "accepted"
@@ -689,22 +689,6 @@ def test_admin_payment_operations_returns_provider_health_and_reconciliation(cli
     assert "STRIPE_WEBHOOK_SECRET" in stripe["required_config_keys"]
     assert "checkout.session.completed webhook" in " ".join(stripe["sandbox_runbook"])
     assert "PaymentEvent processing_status=applied" in " ".join(stripe["expected_event_flow"])
-    assert epusdt["enabled"] is True
-    assert epusdt["configured"] is False
-    assert epusdt["acceptance_status"] == "missing_config"
-    assert "PAYMENT_GATEWAY_CONFIGS.epusdt.secret" in epusdt["acceptance_blockers"]
-    assert epusdt["open_orders"] == 1
-    assert epusdt["webhook_url"] == "https://api.pdf-flow.test/api/v1/payment/webhooks/epusdt"
-    assert "PAYMENT_GATEWAY_CONFIGS.epusdt.secret" in epusdt["missing_config_keys"]
-    assert "EPUSDT" in epusdt["merchant_console_hint"]
-    assert "USDT test order" in " ".join(epusdt["sandbox_runbook"])
-    assert "gateway trade id" in epusdt["evidence_fields"]
-
-    wechat = next(provider for provider in body["providers"] if provider["key"] == "wechat")
-    assert wechat["acceptance_status"] == "needs_review"
-    assert "manual review" in " ".join(wechat["acceptance_blockers"])
-    assert "API v3" in " ".join(wechat["go_live_checklist"])
-    assert "platform certificate" in " ".join(wechat["troubleshooting_steps"])
 
     order = next(item for item in body["recent_orders"] if item["merchant_order_id"] == "pf_admin_paid")
     assert order["user_email"] == "paying-customer@example.com"
@@ -714,7 +698,6 @@ def test_admin_payment_operations_returns_provider_health_and_reconciliation(cli
     assert "Privacy note" in body["reconciliation_summary"]
     assert "PDF-Flow payment integration evidence packet" in body["integration_evidence_packet"]
     assert "acceptance_status=accepted" in body["integration_evidence_packet"]
-    assert "acceptance_status=missing_config" in body["integration_evidence_packet"]
     assert "provider_dashboard_event_url=" in body["integration_evidence_packet"]
     assert "evt_admin_paid" in body["integration_evidence_packet"]
     assert "checkout.stripe.local" not in body["integration_evidence_packet"]

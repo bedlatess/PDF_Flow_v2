@@ -168,11 +168,33 @@ class TestPaymentProviders:
         assert r.status_code == 200
         providers = r.json()["providers"]
         keys = [item["key"] for item in providers]
-        assert keys[:4] == ["stripe", "paypal", "epay", "alipay"]
-        assert any(item["key"] == "wechat" for item in providers)
-        assert any(item["key"] == "epusdt" for item in providers)
+        assert keys == ["stripe", "paypal", "gmpay"]
         assert providers[0]["enabled"] is False
         assert not any(item["enabled"] for item in providers)
+
+    def test_public_provider_list_hides_deprecated_gateways_even_if_env_enabled(self, client, monkeypatch):
+        from app.core.config import settings
+
+        monkeypatch.setattr(
+            settings,
+            "PAYMENT_ENABLED_PROVIDERS_RAW",
+            "stripe,paypal,epay,alipay,wechat,tokenpay,bepusdt,epusdt,okpay",
+        )
+        monkeypatch.setattr(
+            settings,
+            "PAYMENT_PROVIDER_ORDER_RAW",
+            "stripe,paypal,epay,alipay,wechat,tokenpay,bepusdt,epusdt,okpay,gmpay",
+        )
+
+        r = client.get("/api/v1/payment/providers")
+
+        assert r.status_code == 200
+        providers = r.json()["providers"]
+        keys = [item["key"] for item in providers]
+        assert keys == ["stripe", "paypal", "gmpay"]
+        assert providers[0]["enabled"] is True
+        assert providers[1]["enabled"] is True
+        assert providers[2]["enabled"] is False
 
     def test_stripe_checkout_is_disabled_by_default(self, client):
         headers = _auth_headers(client)

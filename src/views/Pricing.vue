@@ -131,11 +131,6 @@ const qrCheckoutResult = ref<{
 } | null>(null)
 
 const QR_PAYMENT_PROVIDERS = new Set<PaymentProviderKey>([
-  'wechat',
-  'tokenpay',
-  'bepusdt',
-  'epusdt',
-  'okpay',
   'gmpay',
 ])
 

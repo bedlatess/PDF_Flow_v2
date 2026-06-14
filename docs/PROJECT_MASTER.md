@@ -405,6 +405,23 @@ Deployment:
   - checkout copy now says Pro access is handled only after server-side payment confirmation, not by the frontend page
   - verified with `pytest backend/tests -q`, `npm run type-check`, `npm run test:unit:ci`, `npm run build`, `npm run build:admin`, and `npm run test:e2e:admin`
   - additional targeted checks after the checkout-copy correction: `npm run test:unit:ci -- tests/unit/locale-overrides.test.ts tests/unit/locale-registry.test.ts`, `npm run build`, and `npm run build:admin`
+- Deployed Payment Configuration Center Phase 1 to production on 2026-06-14:
+  - pushed `main` to remote `v2/main`
+  - production `backend/.env` now has `PAYMENT_CONFIG_ENCRYPTION_KEY` set as an environment-only secret; the value was not written to docs, Git, database, or admin UI
+  - deployment `2d23339bcff241ce503552ffcc2b59a1b1bd79f2` completed successfully with `bash scripts/deploy-main.sh`
+  - migration ran `add_password_reset_tokens -> add_payment_provider_configs`
+  - production `.deploy_state/main/current_deployed_commit` records `2d23339`
+  - production `/health` returns healthy
+  - production Compose services are healthy: `frontend`, `backend`, `celery-worker`, `postgres`, and `redis`
+  - Phase 1 smoke used a temporary GM Pay cashier container inside the Docker network and temporary smoke users
+  - smoke saved and validated GM Pay config, with secret response showing only configured state and tail `1234`; plaintext smoke secret was not returned
+  - `/api/v1/payment/providers` reported GM Pay enabled while smoke config was enabled
+  - checkout created a GM Pay order and returned a cashier URL from the temporary GM Pay service
+  - backend could open the returned cashier URL with HTTP 200
+  - GM Pay webhook endpoint returned HTTP 202 and left the smoke order pending, event ignored/accepted, buyer role free, and buyer subscription unset
+  - after smoke, GM Pay was disabled again so public Pricing does not show the temporary provider
+  - temporary smoke container and temporary smoke users were removed
+  - final production check: `gmpay_enabled=False`, `db_gmpay_enabled=False`, `alembic_version=add_payment_provider_configs`
 
 ## Known Code Issues
 

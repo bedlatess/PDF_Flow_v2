@@ -24,6 +24,7 @@ from app.tasks.pdf_tasks import (
     convert_pdf_to_images_task,
 )
 from app.domains.service_provider.config_store import get_service_provider_runtime_config
+from app.domains.files.html_to_pdf import validate_html_text, validate_url_for_html_to_pdf
 from app.domains.jobs.service import (
     build_pending_job_status,
     job_lifecycle,
@@ -188,6 +189,7 @@ class FileProcessingService:
         job_id: str,
         job_type: str,
         file_metadata: Dict | List[Dict],
+        user_id: int | None = None,
         db: Session | None = None,
     ) -> None:
         """Best-effort durable job creation while Redis remains active state."""
@@ -203,7 +205,7 @@ class FileProcessingService:
 
         job_lifecycle.create_pending(
             job_id=job_id,
-            user_id=None,
+            user_id=user_id,
             job_type=job_type,
             input_file_name=input_file_name,
             input_file_size=total_size,
@@ -683,6 +685,64 @@ class FileProcessingService:
             "job_id": job_id,
             "status": "pending",
             "message": "Office to PDF job queued"
+        }
+
+    async def html_to_pdf(
+        self,
+        *,
+        mode: str,
+        source: str,
+        page_size: str,
+        orientation: str,
+        margin: str,
+        user_id: int,
+        db: Session | None = None,
+    ) -> Dict:
+        """Queue a URL or pasted HTML render as a PDF."""
+        from app.tasks.html_tasks import html_to_pdf_task
+
+        if mode == "url":
+            safe_source = validate_url_for_html_to_pdf(source)
+            input_name = safe_source
+            input_size = len(safe_source.encode("utf-8"))
+        elif mode == "html":
+            safe_source = validate_html_text(source)
+            input_name = "Pasted HTML"
+            input_size = len(safe_source.encode("utf-8"))
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="mode must be url or html",
+            )
+
+        output_dir = self.file_manager.create_temp_dir(prefix="html_to_pdf_")
+        output_path = output_dir / "html-to-pdf.pdf"
+        job_id = self._generate_job_id()
+
+        self._save_job_status(job_id, build_pending_job_status(job_id))
+        self._create_pending_processing_job(
+            job_id=job_id,
+            job_type="html_to_pdf",
+            file_metadata={
+                "filename": input_name,
+                "filepath": "",
+                "size": input_size,
+            },
+            user_id=user_id,
+            db=db,
+        )
+
+        html_to_pdf_task.apply_async(
+            args=[mode, safe_source, str(output_path), page_size, orientation, margin],
+            task_id=job_id,
+        )
+
+        logger.info("HTML to PDF job created: %s", job_id)
+
+        return {
+            "job_id": job_id,
+            "status": "pending",
+            "message": "HTML to PDF job queued",
         }
 
 

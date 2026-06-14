@@ -59,6 +59,15 @@ export interface JobHistoryParams {
   offset?: number
 }
 
+export interface HTMLToPDFRequest {
+  mode: 'url' | 'html'
+  url?: string
+  html?: string
+  page_size?: 'A4' | 'Letter' | 'Legal'
+  orientation?: 'portrait' | 'landscape'
+  margin?: 'none' | 'narrow' | 'normal' | 'wide'
+}
+
 export const fileAPI = {
   async uploadFile(file: File): Promise<FileUploadResponse> {
     const formData = new FormData()
@@ -142,6 +151,11 @@ export const fileAPI = {
         },
       },
     )
+    return response.data
+  },
+
+  async htmlToPDF(payload: HTMLToPDFRequest): Promise<ProcessingJobResponse> {
+    const response = await apiClient.post<ProcessingJobResponse>('/api/v1/files/html-to-pdf', payload)
     return response.data
   },
 

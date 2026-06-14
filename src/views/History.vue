@@ -48,6 +48,7 @@ const jobTypeOptions = [
   'rotate_pdf',
   'image_to_pdf',
   'pdf_to_image',
+  'html_to_pdf',
   'ocr_pdf',
   'office_to_pdf',
 ]

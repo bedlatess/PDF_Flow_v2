@@ -10,6 +10,7 @@ from app.tasks.pdf_tasks import (
     convert_pdf_to_images_task,
 )
 from app.tasks.ocr_tasks import extract_text_task
+from app.tasks.html_tasks import html_to_pdf_task
 
 __all__ = [
     "merge_pdfs_task",
@@ -19,4 +20,5 @@ __all__ = [
     "convert_images_to_pdf_task",
     "convert_pdf_to_images_task",
     "extract_text_task",
+    "html_to_pdf_task",
 ]

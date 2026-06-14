@@ -1903,6 +1903,36 @@ Product Phase P1 local checkpoint:
   - `npm run build`
   - Browser smoke for `/en/history` desktop and mobile unauthenticated states: no horizontal overflow and no console errors.
 
+Product Phase P2 local checkpoint:
+
+- Added the first MVP HTML to PDF tool without changing payment, AI, existing job polling response shape, or artifact storage.
+- New backend capability:
+  - `POST /api/v1/files/html-to-pdf`
+  - `job_type="html_to_pdf"`
+  - login-required feature gate `html_to_pdf`
+  - Redis pending status plus durable `ProcessingJob` creation for signed-in users.
+  - Celery task `html_to_pdf_task` updates durable lifecycle best-effort while preserving the existing Redis/Celery flow.
+- Supported inputs:
+  - public `http` / `https` URL.
+  - pasted HTML text up to 512 KB.
+- Supported page options:
+  - page size: `A4`, `Letter`, `Legal`.
+  - orientation: `portrait`, `landscape`.
+  - margins: `none`, `narrow`, `normal`, `wide`.
+- Security and limits:
+  - URL input rejects localhost, `.localhost`, private IPs, link-local, loopback, multicast, unspecified, reserved IPs, and metadata IP `169.254.169.254`.
+  - DNS-resolved private/internal addresses are rejected before queuing.
+  - Playwright render requests are guarded so nested resources pointing to private/internal addresses are aborted.
+  - Rendering uses a bounded timeout and no logged-in browser session/cookie support.
+- Frontend:
+  - Added `/tools/html-to-pdf` through the existing tool registry.
+  - Tool page uses the shared `ToolPageShell`, `ToolWorkspace`, `ToolActionPanel`, and `ToolAccessPanel` patterns.
+  - Tool Center/Pricing-style tool visibility can use the same `html_to_pdf` feature key.
+  - History/Results Center includes `html_to_pdf` job type and can re-download completed results through existing P1 history APIs.
+- Runtime dependency note:
+  - Backend Python dependency adds Playwright.
+  - Backend Docker image installs system Chromium and fonts for server-side PDF rendering.
+
 Admin bootstrap:
 
 ```bash

@@ -27,6 +27,7 @@ DEFAULT_FEATURE_FLAGS = [
     DefaultFeatureFlag("rotate_pdf", "旋转 PDF", "允许用户旋转 PDF 页面。"),
     DefaultFeatureFlag("image_to_pdf", "图片转 PDF", "允许用户将图片转换为 PDF。"),
     DefaultFeatureFlag("pdf_to_image", "PDF 转图片", "允许用户将 PDF 页面导出为图片。"),
+    DefaultFeatureFlag("html_to_pdf", "HTML 转 PDF", "允许登录用户将公开网页或 HTML 文本转换为 PDF。", requires_login=True),
     DefaultFeatureFlag("delete_pages_pdf", "删除 PDF 页面", "允许用户移除 PDF 中不需要的页面。"),
     DefaultFeatureFlag("organize_pdf", "整理 PDF 页面", "允许用户调整 PDF 页面顺序。"),
     DefaultFeatureFlag("page_numbers_pdf", "添加 PDF 页码", "允许用户为 PDF 添加页码。"),

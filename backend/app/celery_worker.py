@@ -12,6 +12,7 @@ celery_app = Celery(
         "app.tasks.pdf_tasks",
         "app.tasks.ocr_tasks",
         "app.tasks.office_tasks",
+        "app.tasks.html_tasks",
         "app.tasks.email_tasks",
     ],
 )
@@ -34,6 +35,7 @@ celery_app.conf.update(
         "app.tasks.pdf_tasks.*": {"queue": "pdf_processing"},
         "app.tasks.ocr_tasks.*": {"queue": "ocr_processing"},
         "app.tasks.office_tasks.*": {"queue": "office_processing"},
+        "app.tasks.html_tasks.*": {"queue": "pdf_processing"},
         "app.tasks.email_tasks.*": {"queue": "email"},
     },
     task_default_priority=5,

@@ -12,6 +12,9 @@ RUN apt-get update && apt-get install -y \
     tesseract-ocr-spa \
     poppler-utils \
     libreoffice \
+    chromium \
+    fonts-liberation \
+    fonts-noto-color-emoji \
     libmagic1 \
     libpq-dev \
     gcc \

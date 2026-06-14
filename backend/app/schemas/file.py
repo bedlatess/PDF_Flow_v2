@@ -193,6 +193,45 @@ class OCRRequest(BaseModel):
     )
 
 
+class HTMLToPDFRequest(BaseModel):
+    """HTML to PDF conversion request."""
+
+    mode: str = Field("url", description="Input mode: url or html")
+    url: Optional[str] = Field(None, max_length=2048, description="Public http/https URL")
+    html: Optional[str] = Field(None, description="Raw HTML content")
+    page_size: str = Field("A4", description="Page size: A4, Letter, or Legal")
+    orientation: str = Field("portrait", description="Page orientation: portrait or landscape")
+    margin: str = Field("normal", description="Margin preset: none, narrow, normal, or wide")
+
+    @field_validator("mode")
+    @classmethod
+    def validate_mode(cls, value):
+        if value not in {"url", "html"}:
+            raise ValueError("mode must be url or html")
+        return value
+
+    @field_validator("page_size")
+    @classmethod
+    def validate_page_size(cls, value):
+        if value not in {"A4", "Letter", "Legal"}:
+            raise ValueError("page_size must be A4, Letter, or Legal")
+        return value
+
+    @field_validator("orientation")
+    @classmethod
+    def validate_orientation(cls, value):
+        if value not in {"portrait", "landscape"}:
+            raise ValueError("orientation must be portrait or landscape")
+        return value
+
+    @field_validator("margin")
+    @classmethod
+    def validate_margin(cls, value):
+        if value not in {"none", "narrow", "normal", "wide"}:
+            raise ValueError("margin must be none, narrow, normal, or wide")
+        return value
+
+
 class ProcessingJobResponse(BaseModel):
     """处理任务响应"""
     job_id: str = Field(..., description="任务 ID")

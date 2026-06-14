@@ -22,6 +22,7 @@ from app.domains.files.service import (
 from app.models.user import User
 from app.schemas.file import (
     FileUploadResponse,
+    HTMLToPDFRequest,
     ImageToPDFRequest,
     OCRRequest,
     PDFCompressRequest,
@@ -327,4 +328,29 @@ async def office_to_pdf(
         lambda: file_processing_service.office_to_pdf(file, db=db),
         error_detail="Failed to convert Office file",
         log_message="Office to PDF conversion failed",
+    )
+
+
+@router.post("/html-to-pdf", response_model=ProcessingJobResponse)
+async def html_to_pdf(
+    request: Request,
+    payload: HTMLToPDFRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    _rate_limit: None = Depends(apply_processing_rate_limit),
+):
+    require_file_feature(db, "html_to_pdf", current_user)
+    source = payload.url if payload.mode == "url" else payload.html
+    return await run_file_operation(
+        lambda: file_processing_service.html_to_pdf(
+            mode=payload.mode,
+            source=source or "",
+            page_size=payload.page_size,
+            orientation=payload.orientation,
+            margin=payload.margin,
+            user_id=current_user.id,
+            db=db,
+        ),
+        error_detail="Failed to queue HTML to PDF conversion",
+        log_message="HTML to PDF queue failed",
     )

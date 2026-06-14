@@ -18,6 +18,38 @@ def _write_minimal_pdf(path: Path) -> None:
     )
 
 
+def _write_stream_pdf(path: Path) -> None:
+    from pypdf import PdfWriter
+    from pypdf.generic import DecodedStreamObject, NameObject
+
+    writer = PdfWriter()
+    page = writer.add_blank_page(width=200, height=200)
+    stream = DecodedStreamObject()
+    stream.set_data(b"q 1 0 0 1 10 10 cm Q")
+    page[NameObject("/Contents")] = stream
+
+    with path.open("wb") as output:
+        writer.write(output)
+
+
+def test_compress_pdf_compresses_writer_pages_without_pypdf_owner_error(tmp_path):
+    from app.tasks import pdf_tasks
+
+    input_path = tmp_path / "stream-input.pdf"
+    output_path = tmp_path / "stream-compressed.pdf"
+    _write_stream_pdf(input_path)
+
+    result = pdf_tasks._compress_pdf(
+        file_path=str(input_path),
+        output_path=str(output_path),
+        quality="medium",
+    )
+
+    assert result["success"] is True
+    assert output_path.exists()
+    assert output_path.stat().st_size > 0
+
+
 def test_compress_task_updates_durable_job_on_success(client, monkeypatch, tmp_path):
     from app.core.database import get_db
     from app.domains.jobs.repository import ProcessingJobRepository

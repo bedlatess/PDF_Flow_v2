@@ -25,9 +25,9 @@ from app.tasks.pdf_tasks import (
 )
 from app.domains.service_provider.config_store import get_service_provider_runtime_config
 from app.domains.jobs.service import (
-    best_effort_get_route_status,
     build_pending_job_status,
     job_lifecycle,
+    job_status_reader,
     merge_celery_state_into_status,
 )
 from app.domains.jobs.types import is_terminal_job_status
@@ -248,7 +248,7 @@ class FileProcessingService:
 
     def _get_durable_job_status(self, job_id: str) -> Optional[Dict]:
         """Fallback to DB durable status only when Redis active state is absent."""
-        return best_effort_get_route_status(
+        return job_status_reader.route_status(
             job_id,
             session_factory=self._db_session_factory,
         )

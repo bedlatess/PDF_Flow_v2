@@ -1,4 +1,4 @@
-"""Job lifecycle service and compatibility helpers."""
+"""Job lifecycle service and route/admin job helpers."""
 
 from __future__ import annotations
 
@@ -220,6 +220,30 @@ class JobLifecycleWriter:
 job_lifecycle = JobLifecycleWriter()
 
 
+class JobStatusReader:
+    """Best-effort durable status reader used behind Redis-first routes."""
+
+    def route_status(
+        self,
+        job_id: str,
+        *,
+        session_factory=None,
+    ) -> dict[str, Any] | None:
+        factory = session_factory or SessionLocal
+        try:
+            session = factory()
+            try:
+                return JobService(ProcessingJobRepository(session)).route_status_for_job_id(job_id)
+            finally:
+                session.close()
+        except Exception as exc:
+            logger.warning("Durable job status fallback failed for %s: %s", job_id, exc)
+            return None
+
+
+job_status_reader = JobStatusReader()
+
+
 def build_pending_job_status(job_id: str, *, now: float | None = None) -> dict[str, Any]:
     timestamp = time.time() if now is None else now
     return {
@@ -228,64 +252,6 @@ def build_pending_job_status(job_id: str, *, now: float | None = None) -> dict[s
         "created_at": timestamp,
         "updated_at": timestamp,
     }
-
-
-def best_effort_create_processing_job(
-    *,
-    job_id: str,
-    user_id: int | None,
-    job_type: str,
-    input_file_name: str,
-    input_file_size: int,
-    db: Session | None = None,
-) -> ProcessingJob | None:
-    return job_lifecycle.create_pending(
-        job_id=job_id,
-        user_id=user_id,
-        job_type=job_type,
-        input_file_name=input_file_name,
-        input_file_size=input_file_size,
-        db=db,
-    )
-
-
-def best_effort_mark_processing(job_id: str, *, progress: int | None = None) -> ProcessingJob | None:
-    return job_lifecycle.mark_processing(job_id, progress=progress)
-
-
-def best_effort_mark_completed(
-    job_id: str,
-    *,
-    result_data: Mapping[str, Any] | None = None,
-    output_file_url: str | None = None,
-) -> ProcessingJob | None:
-    return job_lifecycle.mark_completed(
-        job_id,
-        result_data=result_data,
-        output_file_url=output_file_url,
-    )
-
-
-def best_effort_mark_failed(job_id: str, *, error_message: str) -> ProcessingJob | None:
-    return job_lifecycle.mark_failed(job_id, error_message=error_message)
-
-
-def best_effort_get_route_status(
-    job_id: str,
-    *,
-    session_factory=None,
-) -> dict[str, Any] | None:
-    factory = session_factory or SessionLocal
-    try:
-        session = factory()
-        try:
-            return JobService(ProcessingJobRepository(session)).route_status_for_job_id(job_id)
-        finally:
-            session.close()
-    except Exception as exc:
-        logger.warning("Durable job status fallback failed for %s: %s", job_id, exc)
-        return None
-
 
 def _with_optional_session(
     db: Session | None,

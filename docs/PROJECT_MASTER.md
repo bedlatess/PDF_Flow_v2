@@ -9,7 +9,7 @@ This is the internal source of truth for development direction, current progress
 - Official repository: `https://github.com/bedlatess/PDF_Flow_v2.git`
 - Official remote name: `v2`
 - Branch: `main`
-- Last verified runtime commit: `72740393019227d7565461c687efacb0786f3ff7`
+- Last verified runtime commit: `84ae63008e28b692970690eafee6fea5e8966bc4`
 - The server also records the active runtime commit at `.deploy_state/main/current_deployed_commit`.
 - Server path: `/root/data/docker_data/PDF/pdf-flow`
 - Deployment model: single repository, single Docker Compose server
@@ -1778,7 +1778,38 @@ Backend refactor R8 local checkpoint:
 - Added `JobLifecycleWriter` and exported the singleton `job_lifecycle` from `domains/jobs`.
 - `job_lifecycle.create_pending()` is now the file-service entrypoint for best-effort durable job creation.
 - `job_lifecycle.mark_processing()`, `mark_completed()`, and `mark_failed()` are now the PDF/OCR/Office task entrypoints for best-effort durable lifecycle updates.
-- Backward-compatible `best_effort_*` wrappers remain in `domains/jobs.service` and delegate to `job_lifecycle`.
+- Backward-compatible `best_effort_*` wrappers remained in `domains/jobs.service` during R8 and delegated to `job_lifecycle`; they were only kept as a short rollback bridge before R9 cleanup.
+- Redis writes, Celery behavior, API response shape, downloads/artifacts, frontend behavior, payment, AI, and feature behavior were not changed.
+- Local verification:
+  - `python -m pytest backend/tests/test_jobs_domain.py backend/tests/test_pdf_tasks.py backend/tests/test_ocr_office_tasks.py backend/tests/test_files.py backend/tests/test_admin_operations_domain.py -q` (`47 passed, 1 warning`)
+  - `python -m compileall -q backend/app backend/tests`
+  - `python -m pytest backend/tests -q` (`182 passed, 1 warning`)
+
+Backend refactor R8 production result:
+
+- Committed and pushed R8 as `84ae63008e28b692970690eafee6fea5e8966bc4`.
+- Deployed R8 to production with the existing remote `scripts/deploy-main.sh` flow.
+- Production `.deploy_state/main/current_deployed_commit` records `84ae63008e28b692970690eafee6fea5e8966bc4`.
+- Deployment rebuilt backend, celery-worker, public frontend, and admin frontend images; migrations ran with no new R8 migration.
+- Production smoke verified:
+  - compress, merge, OCR, and Office representative tasks created, completed, and downloaded successfully.
+  - Redis `job:*` keys were written for each representative task.
+  - DB `ProcessingJob` rows reached `completed` with `progress=100`, `result_data`, and expected output paths where applicable.
+  - A synthetic durable lifecycle check verified `job_lifecycle.mark_failed()` updates DB failed state without forcing a real failed user task.
+  - `/api/v1/files/jobs/{job_id}` response keys stayed unchanged.
+  - Admin Job Center showed each smoke job once with DB durable source preferred.
+  - backend, celery-worker, frontend, postgres, and redis containers were healthy.
+  - Recent backend/celery logs showed no traceback, SQLAlchemy exception, or critical entries during the smoke window.
+- Cleanup:
+  - Removed R8 smoke DB jobs, Redis `job:*` and `file:*` keys, temporary smoke user, and generated sample files.
+
+Backend refactor R9 local checkpoint:
+
+- R9 keeps R8 runtime behavior unchanged while cleaning up the job domain API surface.
+- Removed the short-lived `best_effort_create_processing_job`, `best_effort_mark_processing`, `best_effort_mark_completed`, and `best_effort_mark_failed` wrappers because no app code still used them after R8.
+- Added `JobStatusReader` and exported the singleton `job_status_reader` so file status fallback reads now use an explicit jobs-domain read entrypoint.
+- `file_service.py` now calls `job_status_reader.route_status()` for Redis-miss DB fallback and continues to call `job_lifecycle.create_pending()` for durable writes.
+- PDF/OCR/Office tasks continue to call `job_lifecycle` directly.
 - Redis writes, Celery behavior, API response shape, downloads/artifacts, frontend behavior, payment, AI, and feature behavior were not changed.
 - Local verification:
   - `python -m pytest backend/tests/test_jobs_domain.py backend/tests/test_pdf_tasks.py backend/tests/test_ocr_office_tasks.py backend/tests/test_files.py backend/tests/test_admin_operations_domain.py -q` (`47 passed, 1 warning`)

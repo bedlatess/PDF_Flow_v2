@@ -1558,6 +1558,36 @@ Backend refactor R2 local checkpoint:
   - `python -m pytest backend/tests/test_jobs_domain.py backend/tests/test_files.py backend/tests/test_pdf_tasks.py backend/tests/test_admin_operations_domain.py -q`
   - `python -m pytest backend/tests -q`
 
+Backend refactor R2 production result:
+
+- Committed and pushed R2 as `be3f3d67e569abb94ca15b79cd2203fbdc6f2f13`.
+- Deployed R2 to production with `scripts/deploy-main.sh`.
+- Production `.deploy_state/main/current_deployed_commit` records `be3f3d67e569abb94ca15b79cd2203fbdc6f2f13`.
+- Migration ran successfully:
+  - Alembic head is `nullable_processing_job_user`.
+  - `processing_jobs.user_id` is nullable.
+  - Key columns checked: `job_id` remains non-null, `output_file_url` and `result_data` remain nullable.
+- Production health:
+  - backend, celery-worker, frontend, postgres, and redis containers are healthy.
+  - `http://localhost:8000/health` and `https://pdf.pawn.eu.org/health` return healthy.
+- Compress durable job smoke:
+  - Uploaded anonymous PDF through `/api/v1/files/upload`.
+  - Created compress task through `/api/v1/files/compress`.
+  - Redis `job:{job_id}` was still written with the legacy pending payload.
+  - DB `ProcessingJob` was created with the same `job_id`, `user_id=None`, `job_type=compress_pdf`, source filename and size.
+  - Celery completed the task and DB job was marked `completed` with `progress=100`, `result_data`, and `output_file_url`.
+  - `/api/v1/files/jobs/{job_id}` response shape remained `job_id`, `status`, `created_at`, `updated_at`, `progress`, `result`, `error`.
+  - `/api/v1/files/download/{job_id}` downloaded the compressed output successfully.
+- Admin operations smoke:
+  - Temporary admin smoke account was created and removed.
+  - `/api/v1/admin/jobs` showed the compress job once, using the DB durable row.
+  - Redis-only jobs remained visible.
+  - `/api/v1/admin/operations` reported database, redis, and celery_worker healthy.
+- Regression confirmations:
+  - A merge task still returned the legacy pending response and did not create a `ProcessingJob`.
+  - OCR, Office, compress, and merge Celery tasks remained registered.
+  - Recent backend/celery logs showed no traceback/error/exception entries during the smoke window.
+
 Admin bootstrap:
 
 ```bash

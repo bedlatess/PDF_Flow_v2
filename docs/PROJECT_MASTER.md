@@ -1228,6 +1228,36 @@ Admin Plans & Pricing Phase C local result:
 - Notes:
   - A full empty SQLite Alembic upgrade is still blocked by the pre-existing `001_initial` SQLite `now()` default syntax; the new migration itself was verified by upgrading from the current production base revision.
 
+Admin Plans & Pricing Phase C production result:
+
+- Deployment:
+  - Deployed commit `a61e3892161e0b07b7dab359fbb8e6276802cad0` on 2026-06-14 with `bash scripts/deploy-main.sh`.
+  - Production migration ran `ff_public_visibility -> add_pricing_plans`.
+  - Production Alembic head is `add_pricing_plans`.
+  - Server `.deploy_state/main/current_deployed_commit` records `a61e3892161e0b07b7dab359fbb8e6276802cad0`.
+- Production health:
+  - `https://pdf.pawn.eu.org/health` returns healthy.
+  - `https://pdf.pawn.eu.org/zh-cn/pricing` returns HTTP 200.
+  - `https://admin.pawn.eu.org/` returns HTTP 200.
+  - Compose services are healthy: `frontend`, `backend`, `celery-worker`, `postgres`, and `redis`.
+- Production validation:
+  - Admin `/api/v1/admin/pricing-plans` lists fixed plans: `free`, `pro_monthly`, `pro_yearly`, `enterprise`.
+  - Admin save/restore was verified for `pro_monthly` across display name, public status, display price, amount cents, currency, billing interval, description, sort order, highlight, and provider mappings.
+  - Admin audit logs recorded `target_type=pricing_plan` with `changed_fields=...`.
+  - Public `/api/v1/pricing/plans` returns `source=db` and restored public plans after verification.
+  - Temporarily setting `pro_yearly.is_public=false` hid it from the public DB plan response; it was restored after verification.
+  - Browser smoke confirmed Pricing renders DB-seeded plans (`Pro Monthly`, `$9.90`, `Pro Yearly`) without raw i18n keys.
+  - Browser smoke confirmed Admin `套餐与价格` module is visible and renders `套餐目录`, Stripe, PayPal, and GM Pay mapping controls.
+- Checkout parsing validation:
+  - Stripe checkout service path used DB `price_id` mapping and created a pending local order with `plan=pro_monthly`, `amount_cents=1234`, and `currency=USD` under a mocked provider adapter; no real Stripe request was made.
+  - PayPal checkout service path accepted legacy `monthly`, normalized to `pro_monthly`, and used DB plan amount under a mocked provider adapter; no real PayPal request was made.
+  - GM Pay checkout service path used DB amount/currency/token/network mapping under a mocked provider adapter; no real GM Pay payment request was made.
+  - Blank/incomplete DB mapping fallback was verified for Stripe: legacy `monthly` normalized to `pro_monthly`, amount/currency fell back to `PLAN_CATALOG`, and existing provider config was not overwritten.
+- Restore/cleanup:
+  - Temporary plan edits were restored.
+  - Temporary smoke user and local smoke `PaymentOrder` rows were deleted.
+  - No real payment, webhook paid transition, or automatic Pro entitlement validation was run.
+
 Admin bootstrap:
 
 ```bash

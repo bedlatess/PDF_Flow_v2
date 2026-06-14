@@ -9,7 +9,7 @@ from typing import Any, Mapping
 from sqlalchemy.orm import Session
 
 from app.domains.jobs.types import JobStatus, normalize_job_status
-from app.models.user import ProcessingJob
+from app.models.user import ProcessingJob, User
 
 
 class ProcessingJobRepository:
@@ -20,6 +20,21 @@ class ProcessingJobRepository:
 
     def get_by_job_id(self, job_id: str) -> ProcessingJob | None:
         return self.db.query(ProcessingJob).filter(ProcessingJob.job_id == job_id).first()
+
+    def list_recent_with_user_email(
+        self,
+        *,
+        limit: int,
+        status_filter: str | None = None,
+    ) -> list[tuple[ProcessingJob, str | None]]:
+        query = (
+            self.db.query(ProcessingJob, User.email)
+            .outerjoin(User, ProcessingJob.user_id == User.id)
+            .order_by(ProcessingJob.created_at.desc())
+        )
+        if status_filter:
+            query = query.filter(ProcessingJob.status == status_filter)
+        return query.limit(limit).all()
 
     def create(
         self,

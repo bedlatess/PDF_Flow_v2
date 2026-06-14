@@ -210,6 +210,60 @@ def test_job_repository_and_service_lifecycle(client):
         db.close()
 
 
+def test_job_service_admin_jobs_merges_durable_and_redis(client):
+    from app.core.database import get_db
+    from app.models.user import ProcessingJob, User
+
+    db = next(client.app.dependency_overrides[get_db]())
+    try:
+        user = User(
+            email="jobs-admin-facade@example.com",
+            hashed_password="hash",
+            is_active=True,
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+        db.add(ProcessingJob(
+            job_id="job_admin_facade_shared",
+            user_id=user.id,
+            job_type="compress_pdf",
+            status="completed",
+            progress=100,
+            input_file_name="durable.pdf",
+            input_file_size=100,
+        ))
+        db.commit()
+
+        service = JobService(ProcessingJobRepository(db))
+        jobs = service.admin_jobs(
+            redis_jobs=[
+                {
+                    "job_id": "job_admin_facade_shared",
+                    "status": "pending",
+                    "job_type": "processing_job",
+                    "created_at": datetime(2026, 1, 1),
+                },
+                {
+                    "job_id": "job_admin_facade_redis",
+                    "status": "processing",
+                    "job_type": "ocr_pdf",
+                    "created_at": datetime(2026, 1, 2),
+                },
+            ],
+            limit=10,
+        )
+
+        by_id = {job["job_id"]: job for job in jobs}
+        assert by_id["job_admin_facade_shared"]["source"] == "db"
+        assert by_id["job_admin_facade_shared"]["sources"] == ["db", "redis"]
+        assert by_id["job_admin_facade_shared"]["input_file_name"] == "durable.pdf"
+        assert by_id["job_admin_facade_redis"]["source"] == "redis"
+    finally:
+        db.close()
+
+
 def test_job_repository_allows_anonymous_processing_job(client):
     from app.core.database import get_db
 

@@ -26,8 +26,8 @@ from app.tasks.pdf_tasks import (
 from app.domains.service_provider.config_store import get_service_provider_runtime_config
 from app.domains.jobs.service import (
     best_effort_create_processing_job,
+    best_effort_get_route_status,
     build_pending_job_status,
-    db_job_to_route_status,
     merge_celery_state_into_status,
 )
 from app.domains.jobs.types import is_terminal_job_status
@@ -248,23 +248,10 @@ class FileProcessingService:
 
     def _get_durable_job_status(self, job_id: str) -> Optional[Dict]:
         """Fallback to DB durable status only when Redis active state is absent."""
-        try:
-            from app.core.database import SessionLocal
-            from app.domains.jobs.repository import ProcessingJobRepository
-            from app.domains.jobs.service import JobService
-
-            session_factory = self._db_session_factory or SessionLocal
-            db = session_factory()
-            try:
-                job = JobService(ProcessingJobRepository(db)).get(job_id)
-                if not job:
-                    return None
-                return db_job_to_route_status(job)
-            finally:
-                db.close()
-        except Exception as exc:
-            logger.warning("Durable job status fallback failed for %s: %s", job_id, exc)
-            return None
+        return best_effort_get_route_status(
+            job_id,
+            session_factory=self._db_session_factory,
+        )
 
     def cancel_job(self, job_id: str) -> Dict:
         """Cancel a queued or running processing job.

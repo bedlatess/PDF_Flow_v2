@@ -1715,6 +1715,43 @@ Backend refactor R5/R6 local checkpoint:
   - `python -m pytest backend/tests/test_jobs_domain.py backend/tests/test_admin_operations_domain.py backend/tests/test_files.py -q` (`38 passed, 1 warning`)
   - `python -m pytest backend/tests -q` (`181 passed, 1 warning`)
 
+
+Backend refactor R5/R6 production result:
+
+- Committed and pushed R5/R6 as `1c2c40937b2e38821134bf7fe99ad094bb8f76f0`.
+- Deployed R5/R6 to production with the existing remote `scripts/deploy-main.sh` flow.
+- Deployment rebuilt backend, celery-worker, public frontend, and admin frontend images; migrations ran with no new R5/R6 migration.
+- Production smoke verified:
+  - Admin Job Center prefers DB durable job data when DB and Redis have the same `job_id`.
+  - Redis-only jobs remain visible.
+  - DB-only durable history jobs remain visible.
+  - Duplicate `job_id` entries are de-duplicated.
+  - Internal `source`, `sources`, and `is_durable` fields are populated as expected.
+  - `/api/v1/files/jobs/{job_id}` remains Redis-first when Redis state exists.
+  - `/api/v1/files/jobs/{job_id}` falls back to DB durable status when Redis is missing and DB has a durable job.
+  - Status response keys remained unchanged.
+  - PDF task, OCR task, Office task, AI endpoint, and payment modules imported successfully.
+  - backend, celery-worker, frontend, postgres, and redis containers were healthy.
+  - Recent backend/celery logs showed no traceback, SQLAlchemy exception, or critical entries during the smoke window.
+- Cleanup:
+  - Removed smoke DB jobs, Redis `job:*` keys, and temporary smoke user.
+
+
+Backend refactor R7 local checkpoint:
+
+- R7 keeps the R5/R6 runtime behavior unchanged while tightening the internal jobs domain boundary.
+- Added durable job read methods to `ProcessingJobRepository`.
+- Added `JobService.route_status_for_job_id()` for route-compatible DB durable status fallback.
+- Added `JobService.admin_jobs()` so admin operations no longer owns DB durable job query/serialization/merge rules.
+- Added `best_effort_get_route_status()` as the single file-service entrypoint for Redis-miss DB fallback.
+- Admin operations now delegates durable/Redis admin merge to `JobService`.
+- `file_service.get_job_status()` still remains Redis-first and only calls the DB fallback helper on Redis miss.
+- API response shape, frontend behavior, Redis state, Celery tasks, downloads/artifacts, payment, AI, and PDF feature behavior were not changed.
+- Local verification:
+  - `python -m compileall -q backend/app backend/tests`
+  - `python -m pytest backend/tests/test_jobs_domain.py backend/tests/test_admin_operations_domain.py backend/tests/test_files.py -q` (`39 passed, 1 warning`)
+  - `python -m pytest backend/tests -q` (`182 passed, 1 warning`)
+
 Admin bootstrap:
 
 ```bash

@@ -18,11 +18,8 @@ from app.domains.admin.users import (
     serialize_admin_user,
     test_user_query,
 )
-from app.domains.jobs.service import (
-    db_job_to_admin_job,
-    merge_admin_jobs,
-    redis_status_to_admin_job,
-)
+from app.domains.jobs.repository import ProcessingJobRepository
+from app.domains.jobs.service import JobService, redis_status_to_admin_job
 from app.models.user import ApiErrorLog, FeedbackReport, ProcessingJob, User
 from app.services.file_retention_service import file_retention_service
 from app.services.file_service import file_processing_service
@@ -122,20 +119,11 @@ def list_all_jobs(
     if status_filter:
         redis_jobs = [job for job in redis_jobs if job["status"] == status_filter]
 
-    query = (
-        db.query(ProcessingJob, User.email)
-        .outerjoin(User, ProcessingJob.user_id == User.id)
-        .order_by(ProcessingJob.created_at.desc())
+    return JobService(ProcessingJobRepository(db)).admin_jobs(
+        redis_jobs=redis_jobs,
+        limit=safe_limit,
+        status_filter=status_filter,
     )
-    if status_filter:
-        query = query.filter(ProcessingJob.status == status_filter)
-
-    rows = query.limit(safe_limit).all()
-    db_jobs = [
-        db_job_to_admin_job(job, user_email=email)
-        for job, email in rows
-    ]
-    return merge_admin_jobs(db_jobs, redis_jobs, limit=safe_limit)
 
 
 def safe_diag(value: object | None, fallback: str = "none", max_length: int = 240) -> str:

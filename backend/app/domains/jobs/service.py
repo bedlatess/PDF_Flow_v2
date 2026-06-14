@@ -52,6 +52,28 @@ class JobService:
     def get(self, job_id: str) -> ProcessingJob | None:
         return self.repository.get_by_job_id(job_id)
 
+    def route_status_for_job_id(self, job_id: str) -> dict[str, Any] | None:
+        job = self.get(job_id)
+        if not job:
+            return None
+        return db_job_to_route_status(job)
+
+    def admin_jobs(
+        self,
+        *,
+        redis_jobs: list[dict[str, Any]],
+        limit: int,
+        status_filter: str | None = None,
+    ) -> list[dict[str, Any]]:
+        db_jobs = [
+            db_job_to_admin_job(job, user_email=email)
+            for job, email in self.repository.list_recent_with_user_email(
+                limit=limit,
+                status_filter=status_filter,
+            )
+        ]
+        return merge_admin_jobs(db_jobs, redis_jobs, limit=limit)
+
     def create_pending(
         self,
         *,
@@ -201,6 +223,23 @@ def best_effort_mark_failed(job_id: str, *, error_message: str) -> ProcessingJob
         "mark processing job failed",
         job_id,
     )
+
+
+def best_effort_get_route_status(
+    job_id: str,
+    *,
+    session_factory=None,
+) -> dict[str, Any] | None:
+    factory = session_factory or SessionLocal
+    try:
+        session = factory()
+        try:
+            return JobService(ProcessingJobRepository(session)).route_status_for_job_id(job_id)
+        finally:
+            session.close()
+    except Exception as exc:
+        logger.warning("Durable job status fallback failed for %s: %s", job_id, exc)
+        return None
 
 
 def _with_optional_session(

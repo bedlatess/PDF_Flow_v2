@@ -3,6 +3,7 @@
 from app.domains.jobs.repository import ProcessingJobRepository
 from app.domains.jobs.service import (
     JobService,
+    best_effort_get_route_status,
     build_pending_job_status,
     db_job_to_admin_job,
     db_job_to_route_status,
@@ -30,6 +31,7 @@ __all__ = [
     "JobService",
     "JobStatus",
     "ProcessingJobRepository",
+    "best_effort_get_route_status",
     "build_pending_job_status",
     "celery_state_to_job_status",
     "db_job_to_admin_job",

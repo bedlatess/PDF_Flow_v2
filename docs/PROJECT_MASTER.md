@@ -433,6 +433,15 @@ Deployment:
   - temporary real-config smoke users were removed
   - production is left safe: `gmpay_enabled=False`, `db_gmpay_enabled=False`, encrypted real GM Pay config retained for later retry
   - next required input before payment sampling: official GM Pay create-transaction signature documentation or a provider-side example of a successful signed request
+- Fixed and deployed real GM Pay create-transaction signing on 2026-06-14:
+  - direct gateway probe confirmed the real endpoint rejects JSON with `10009 failed to parse request params`
+  - direct gateway probe confirmed `application/x-www-form-urlencoded` succeeds when signature is MD5 over all non-empty fields except `signature`, sorted by ASCII key, with the secret appended directly
+  - updated the GM Pay adapter to use the real signing contract and form-urlencoded create-transaction requests
+  - verified locally with `pytest backend/tests/test_payment_config_gmpay.py backend/tests/test_payment_domain.py -q` and `npm run type-check`
+  - deployed commit `957ebf3909ce630211ba39588ab7df21b1e2d143` successfully with `bash scripts/deploy-main.sh`
+  - production business API smoke saved official GM Pay config, enabled GM Pay briefly, created a real GM Pay order, and received a real cashier URL from `https://pay.pawn.eu.org/pay/checkout-counter/...`
+  - after smoke, GM Pay was disabled again; final checks show `gmpay_enabled=False`, `db_gmpay_enabled=False`, no temporary adapter smoke users, and production `/health` healthy
+  - no real payment was made and webhook-based Pro activation remains disabled until a paid callback sample is captured and verified
 
 ## Known Code Issues
 

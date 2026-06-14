@@ -12,7 +12,10 @@ async function expectNoHorizontalOverflow(page: Page) {
   expect(metrics.docScrollWidth).toBeLessThanOrEqual(metrics.docClientWidth + 2)
 }
 
-async function mockAvailabilityShell(page: Page, options: { disabledMerge?: boolean } = {}) {
+async function mockAvailabilityShell(
+  page: Page,
+  options: { disabledMerge?: boolean; hiddenMerge?: boolean } = {},
+) {
   await page.addInitScript(() => {
     window.localStorage.setItem('pdf-flow-locale', 'en')
     window.localStorage.removeItem('access_token')
@@ -29,11 +32,24 @@ async function mockAvailabilityShell(page: Page, options: { disabledMerge?: bool
                 label: 'Merge PDF',
                 description: 'Combine PDFs',
                 enabled: false,
+                is_public: true,
                 requires_login: false,
                 requires_pro: false,
                 maintenance_message: 'Merge is paused for maintenance.',
               },
             }
+          : options.hiddenMerge
+            ? {
+                merge_pdf: {
+                  label: 'Merge PDF',
+                  description: 'Combine PDFs',
+                  enabled: true,
+                  is_public: false,
+                  requires_login: false,
+                  requires_pro: false,
+                  maintenance_message: null,
+                },
+              }
           : {},
         content_blocks: {},
       },
@@ -57,6 +73,21 @@ test.describe('Availability and route edge states', () => {
     await expect(page.getByText('Merge PDF')).toBeVisible()
     await expect(page.getByRole('button', { name: 'Back to tools' })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Try this tool again' })).toBeVisible()
+    await expectNoHorizontalOverflow(page)
+  })
+
+  test('hides a non-public tool from listings but keeps direct route gating separate', async ({ page }) => {
+    await mockAvailabilityShell(page, { hiddenMerge: true })
+
+    await page.goto('/tools')
+
+    await expect(page.getByRole('heading', { name: 'Every PDF tool in one place' })).toBeVisible()
+    await expect(page.locator('[data-testid="tool-card"]').filter({ hasText: 'Merge PDF' })).toHaveCount(0)
+
+    await page.goto('/tools/merge')
+
+    await expect(page).toHaveURL(/\/en\/tools\/merge/)
+    await expect(page.getByRole('heading', { name: 'Merge PDF' })).toBeVisible()
     await expectNoHorizontalOverflow(page)
   })
 

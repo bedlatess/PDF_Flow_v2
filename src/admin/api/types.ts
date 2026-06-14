@@ -42,6 +42,7 @@ export interface FeatureFlag {
   label: string
   description: string | null
   enabled: boolean
+  is_public: boolean
   requires_login: boolean
   requires_pro: boolean
   maintenance_message: string | null

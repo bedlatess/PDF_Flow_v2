@@ -146,16 +146,17 @@ def seed_defaults(db: Session) -> None:
     existing_flags = {
         item[0] for item in db.query(FeatureFlag.key).all()
     }
-    for key, label, description, enabled, requires_login, requires_pro in DEFAULT_FEATURE_FLAGS:
-        if key not in existing_flags:
+    for item in DEFAULT_FEATURE_FLAGS:
+        if item.key not in existing_flags:
             db.add(
                 FeatureFlag(
-                    key=key,
-                    label=label,
-                    description=description,
-                    enabled=enabled,
-                    requires_login=requires_login,
-                    requires_pro=requires_pro,
+                    key=item.key,
+                    label=item.label,
+                    description=item.description,
+                    enabled=item.enabled,
+                    is_public=item.is_public,
+                    requires_login=item.requires_login,
+                    requires_pro=item.requires_pro,
                 )
             )
 
@@ -194,6 +195,7 @@ def get_public_config(db: Session) -> dict:
                 "label": item.label,
                 "description": item.description,
                 "enabled": item.enabled,
+                "is_public": item.is_public,
                 "requires_login": item.requires_login,
                 "requires_pro": item.requires_pro,
                 "maintenance_message": item.maintenance_message,
@@ -283,10 +285,29 @@ def update_feature_flag(
         flag = FeatureFlag(key=key)
         db.add(flag)
 
+    previous = {
+        "label": flag.label,
+        "description": flag.description,
+        "enabled": flag.enabled,
+        "is_public": flag.is_public,
+        "requires_login": flag.requires_login,
+        "requires_pro": flag.requires_pro,
+        "maintenance_message": flag.maintenance_message,
+    }
     for field, value in payload.model_dump().items():
         setattr(flag, field, value)
     flag.updated_by_id = admin.id
-    write_admin_audit(db, request, admin, "update", "feature_flag", key)
+    changed_fields = [
+        field
+        for field, before in previous.items()
+        if getattr(flag, field) != before
+    ]
+    detail = (
+        "changed_fields=" + ",".join(changed_fields)
+        if changed_fields
+        else "changed_fields=none"
+    )
+    write_admin_audit(db, request, admin, "update", "feature_flag", key, detail)
     db.commit()
     db.refresh(flag)
     return flag

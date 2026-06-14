@@ -80,7 +80,7 @@ const toolsWithFlags = computed(() =>
       ...tool,
       flag: siteConfigStore.getFeatureFlag(tool.featureKey, t(tool.titleKey)),
     }))
-    .filter((tool) => tool.flag.enabled)
+    .filter((tool) => siteConfigStore.isFeatureVisible(tool.featureKey, t(tool.titleKey)))
 )
 
 const normalizedQuery = computed(() => query.value.trim().toLowerCase())
@@ -257,6 +257,7 @@ onMounted(() => {
             <article
               v-for="tool in group.tools"
               :key="tool.id"
+              data-testid="tool-card"
               class="group flex min-h-[144px] cursor-pointer flex-col rounded-lg border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/60 transition hover:-translate-y-0.5 hover:border-red-200 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/90 dark:shadow-none dark:hover:border-red-300/30"
               @click="openTool(tool)"
             >

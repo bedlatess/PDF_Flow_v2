@@ -1128,6 +1128,45 @@ Admin information architecture Phase A local result:
   - Payment Providers v2: `revenue` domain, replacing the current Payment Setup module internals later.
   - AI/OCR/Office providers: Product Config or Operations depending on whether the module controls configuration or runtime health.
 
+Admin Tools & Features Phase B local result:
+
+- Scope: product configuration module only. Payment Providers v2, Plans & Pricing, payment behavior, AI/OCR provider configuration, and new PDF features were not changed.
+- Data model:
+  - Reused existing `feature_flags`.
+  - Added `feature_flags.is_public` with migration `add_feature_flag_public_visibility`.
+  - `enabled` means the feature can be used and is enforced by frontend route guards plus backend API gates.
+  - `is_public` means the feature appears in public entry surfaces such as Home, Tools Center, and Footer.
+  - This keeps "hidden from public listings" separate from "disabled/unavailable".
+- Admin interaction structure:
+  - Product Config module label is now `工具与功能`.
+  - `FeatureFlagsTab` groups tools by PDF tool category, supports search, shows summary counts, and edits:
+    - public display
+    - allowed to use
+    - login required
+    - Pro required
+    - maintenance message
+  - Saving continues through existing `/api/v1/admin/feature-flags/{key}` and writes admin audit records with changed field names only.
+- Frontend gating points:
+  - Public config now returns `is_public`.
+  - `siteConfigStore.isFeatureVisible()` is the shared public-listing rule: `enabled && is_public`.
+  - Home, Tools Center, and Footer use the shared public-listing rule.
+  - Tool route guard still uses `enabled`, `requires_login`, and `requires_pro`; it does not block direct routes only because `is_public=false`.
+- Backend gating points:
+  - `require_feature_access()` remains the shared backend API gate for processing endpoints.
+  - Backend gates ignore `is_public` and enforce maintenance mode, enabled/disabled, login requirement, and Pro requirement.
+  - Hidden-but-enabled tools remain callable by direct route/API if other access rules allow it.
+- Remaining scattered judgments:
+  - Header still exposes top-level Tools/Features/Pricing navigation because these are site sections, not individual tool flags.
+  - Some tool components still contain local access messaging and upload-state copy; Phase B did not move those into a registry.
+  - Future cleanup should centralize per-tool access badges, Pro messaging, and route/list copy after this module has been production-proven.
+- Local checks:
+  - `pytest tests/test_admin.py tests/test_admin_content_domain.py -q`
+  - `npm run type-check`
+  - `npm run test:unit:ci`
+  - `npx playwright test tests/e2e-playwright/availability-state.spec.ts --project=chromium --reporter=line`
+  - `npm run build`
+  - `npm run test:e2e:admin`
+
 Admin bootstrap:
 
 ```bash

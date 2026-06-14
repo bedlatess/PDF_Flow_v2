@@ -80,8 +80,8 @@ export const adminModules: AdminModuleDescriptor[] = [
   {
     id: 'flags',
     group: '产品配置',
-    label: '功能开关',
-    description: '工具可用性、登录要求、Pro 门槛和维护提示。',
+    label: '工具与功能',
+    description: '工具入口展示、启停、登录要求、Pro 门槛和维护提示。',
     component: 'FeatureFlagsTab',
     requiredCapability: 'admin:product:configure',
     statusBadgeSource: 'lockedFlags',

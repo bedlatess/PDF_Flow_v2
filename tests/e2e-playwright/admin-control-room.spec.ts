@@ -611,6 +611,7 @@ const flags = [
     label: '压缩 PDF',
     description: '允许用户通过本地或云端流程压缩 PDF 文件。',
     enabled: true,
+    is_public: true,
     requires_login: false,
     requires_pro: false,
     maintenance_message: null,
@@ -622,6 +623,7 @@ const flags = [
     label: 'OCR 识别',
     description: '使用云端 OCR 队列识别扫描件文本。',
     enabled: true,
+    is_public: true,
     requires_login: true,
     requires_pro: true,
     maintenance_message: 'OCR 队列正在扩容，短时间内可能排队。',
@@ -829,7 +831,7 @@ test.describe('Admin Control Room visual QA', () => {
       await expectNoHorizontalOverflow(page)
 
       const tabs = [
-        { label: '功能开关', visibleText: 'OCR 识别' },
+        { label: '工具与功能', visibleText: '工具可见性与访问控制' },
         { label: '站点配置', visibleText: '全站公告' },
         { label: '内容块', visibleText: 'PDF 工作台' },
         { label: '用户与权限', visibleText: 'smoke-compress@example.com' },

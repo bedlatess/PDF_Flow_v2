@@ -53,7 +53,7 @@ const enabledTools = computed(() =>
       ...tool,
       flag: siteConfigStore.getFeatureFlag(tool.featureKey, t(tool.titleKey)),
     }))
-    .filter((tool) => tool.flag.enabled)
+    .filter((tool) => siteConfigStore.isFeatureVisible(tool.featureKey, t(tool.titleKey)))
 )
 
 const normalizedSearch = computed(() => searchQuery.value.trim().toLowerCase())

@@ -29,6 +29,7 @@ class FeatureFlagBase(BaseModel):
     label: str = Field(..., min_length=1, max_length=160)
     description: Optional[str] = None
     enabled: bool = True
+    is_public: bool = True
     requires_login: bool = False
     requires_pro: bool = False
     maintenance_message: Optional[str] = None

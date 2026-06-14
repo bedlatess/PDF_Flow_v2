@@ -377,6 +377,7 @@ class FeatureFlag(Base):
     label = Column(String, nullable=False)
     description = Column(Text, nullable=True)
     enabled = Column(Boolean, default=True, nullable=False)
+    is_public = Column(Boolean, default=True, nullable=False)
     requires_login = Column(Boolean, default=False, nullable=False)
     requires_pro = Column(Boolean, default=False, nullable=False)
     maintenance_message = Column(Text, nullable=True)

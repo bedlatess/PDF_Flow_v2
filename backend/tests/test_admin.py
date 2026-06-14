@@ -62,6 +62,7 @@ def test_admin_can_seed_and_update_feature_flag(client):
             "label": merge_flag["label"],
             "description": merge_flag["description"],
             "enabled": False,
+            "is_public": False,
             "requires_login": False,
             "requires_pro": False,
             "maintenance_message": "合并功能维护中",
@@ -70,6 +71,7 @@ def test_admin_can_seed_and_update_feature_flag(client):
 
     assert updated.status_code == 200
     assert updated.json()["enabled"] is False
+    assert updated.json()["is_public"] is False
     assert updated.json()["maintenance_message"] == "合并功能维护中"
 
     logs = client.get("/api/v1/admin/audit-logs", headers=headers)
@@ -86,6 +88,7 @@ def test_public_config_exposes_feature_flags(client):
     assert "feature_flags" in body
     assert body["settings"]["support_email"]["value"] == "support@pdf-flow.com"
     assert body["feature_flags"]["merge_pdf"]["enabled"] is True
+    assert body["feature_flags"]["merge_pdf"]["is_public"] is True
     assert body["feature_flags"]["delete_pages_pdf"]["enabled"] is True
     assert body["feature_flags"]["organize_pdf"]["enabled"] is True
     assert body["feature_flags"]["page_numbers_pdf"]["enabled"] is True
@@ -148,6 +151,7 @@ def test_disabled_feature_blocks_backend_endpoint(client):
             "label": "合并 PDF",
             "description": "允许用户合并多个 PDF 文件。",
             "enabled": False,
+            "is_public": True,
             "requires_login": False,
             "requires_pro": False,
             "maintenance_message": "合并功能维护中",
@@ -162,6 +166,36 @@ def test_disabled_feature_blocks_backend_endpoint(client):
 
     assert blocked.status_code == 503
     assert blocked.json()["detail"] == "合并功能维护中"
+
+
+def test_non_public_feature_does_not_block_backend_endpoint(client):
+    _register(client)
+    _promote_to_admin(client)
+    token = _login(client).json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    client.get("/api/v1/admin/overview", headers=headers)
+    response = client.put(
+        "/api/v1/admin/feature-flags/merge_pdf",
+        headers=headers,
+        json={
+            "label": "合并 PDF",
+            "description": "允许用户合并多个 PDF 文件。",
+            "enabled": True,
+            "is_public": False,
+            "requires_login": False,
+            "requires_pro": False,
+            "maintenance_message": None,
+        },
+    )
+    assert response.status_code == 200
+
+    result = client.post(
+        "/api/v1/files/merge",
+        json={"file_ids": ["file_a", "file_b"], "output_filename": "merged.pdf"},
+    )
+
+    assert result.status_code != 503
 
 
 def test_default_feature_gate_applies_before_admin_seed(client):

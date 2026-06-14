@@ -15,6 +15,7 @@ const defaultFlag = (label: string): PublicFeatureFlag => ({
   label,
   description: null,
   enabled: true,
+  is_public: true,
   requires_login: false,
   requires_pro: false,
   maintenance_message: null,
@@ -31,6 +32,7 @@ export const useSiteConfigStore = defineStore('site-config', () => {
   const settings = computed(() => config.value?.settings ?? {})
   const contentBlocks = computed(() => config.value?.content_blocks ?? {})
   const oauthProviders = computed(() => config.value?.oauth_providers ?? {})
+  const canRenderPublicFeatureLists = computed(() => loaded.value || Boolean(error.value))
 
   const fetchPublicConfig = async (force = false) => {
     if (pendingRequest) return pendingRequest
@@ -66,6 +68,12 @@ export const useSiteConfigStore = defineStore('site-config', () => {
     featureFlags.value[key] ?? defaultFlag(fallbackLabel)
 
   const isFeatureEnabled = (key: string) => getFeatureFlag(key).enabled
+  const isFeaturePublic = (key: string) => getFeatureFlag(key).is_public
+  const isFeatureVisible = (key: string, fallbackLabel = key) => {
+    if (!canRenderPublicFeatureLists.value) return false
+    const flag = getFeatureFlag(key, fallbackLabel)
+    return flag.enabled && flag.is_public
+  }
 
   const isOAuthProviderEnabled = (provider: PublicOAuthProviderKey) =>
     oauthProviders.value[provider]?.enabled === true
@@ -111,11 +119,14 @@ export const useSiteConfigStore = defineStore('site-config', () => {
     settings,
     contentBlocks,
     oauthProviders,
+    canRenderPublicFeatureLists,
     globalAnnouncement,
     maintenanceMode,
     fetchPublicConfig,
     getFeatureFlag,
     isFeatureEnabled,
+    isFeaturePublic,
+    isFeatureVisible,
     isOAuthProviderEnabled,
     getSettingValue,
     getBooleanSetting,

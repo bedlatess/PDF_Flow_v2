@@ -16,6 +16,7 @@ export const createControlRoomSettingsActions = (ctx: ControlRoomContext) => {
         label: flag.label,
         description: flag.description,
         enabled: flag.enabled,
+        is_public: flag.is_public,
         requires_login: flag.requires_login,
         requires_pro: flag.requires_pro,
         maintenance_message: flag.maintenance_message,
@@ -24,9 +25,9 @@ export const createControlRoomSettingsActions = (ctx: ControlRoomContext) => {
       if (index >= 0) ctx.flags.value[index] = updated
       ctx.auditLogs.value = await adminAPI.listAuditLogs()
       await ctx.siteConfigStore.fetchPublicConfig(true)
-      ctx.setMessage(`Saved flag: ${updated.label}`)
+      ctx.setMessage(`已保存工具配置：${updated.label}`)
     } catch {
-      ctx.error.value = 'Feature flag save failed. Please check the input and retry.'
+      ctx.error.value = '工具配置保存失败，请检查输入后重试。'
     } finally {
       ctx.savingKey.value = null
     }

@@ -36,7 +36,7 @@ const toolLinks = computed(() => [
 
 const visibleToolLinks = computed(() =>
   toolLinks.value.filter((link) =>
-    link.featureKey ? siteConfigStore.getFeatureFlag(link.featureKey, link.label).enabled : true
+    link.featureKey ? siteConfigStore.isFeatureVisible(link.featureKey, link.label) : true
   )
 )
 

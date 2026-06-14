@@ -1791,7 +1791,7 @@
       "paymentSubscriptionBadge": "Subscription",
       "paymentOneTimeBadge": "One-time entitlement",
       "paymentQrTitle": "Payment code ready",
-      "paymentQrMessage": "Open the payment page or copy the payment code. Pro will activate after payment is confirmed.",
+      "paymentQrMessage": "Open the payment page or copy the payment code. Pro access is handled only after server-side payment confirmation, not by this page.",
       "paymentQrCodeLabel": "Payment code",
       "paymentQrOpen": "Open payment page",
       "paymentQrCopy": "Copy code",

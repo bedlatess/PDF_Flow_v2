@@ -2057,7 +2057,7 @@
       "paymentSubscriptionBadge": "Suscripcion",
       "paymentOneTimeBadge": "Acceso por periodo",
       "paymentQrTitle": "Codigo de pago listo",
-      "paymentQrMessage": "Abre la pagina del proveedor o copia el codigo. El acceso Pro se actualiza solo despues de confirmar el pago.",
+      "paymentQrMessage": "Abre la pagina del proveedor o copia el codigo. El acceso Pro se procesa solo tras la confirmacion del pago en el servidor, no desde esta pagina.",
       "paymentQrCodeLabel": "Codigo de pago",
       "paymentQrOpen": "Abrir pago",
       "paymentQrCopy": "Copiar codigo",

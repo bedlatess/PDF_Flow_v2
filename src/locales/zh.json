@@ -1805,7 +1805,7 @@
       "paymentSubscriptionBadge": "订阅",
       "paymentOneTimeBadge": "在线支付",
       "paymentQrTitle": "支付码已生成",
-      "paymentQrMessage": "请打开支付页面或复制支付码完成付款。支付完成后，Pro 会自动开通。",
+      "paymentQrMessage": "请打开支付页面或复制支付码完成付款。Pro 权益只会在服务端确认支付后处理，不依赖前端页面开通。",
       "paymentQrCodeLabel": "支付码",
       "paymentQrOpen": "打开支付页面",
       "paymentQrCopy": "复制支付码",

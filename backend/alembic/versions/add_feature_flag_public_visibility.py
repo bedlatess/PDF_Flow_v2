@@ -4,7 +4,7 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision = "add_feature_flag_public_visibility"
+revision = "ff_public_visibility"
 down_revision = "add_payment_provider_configs"
 branch_labels = None
 depends_on = None

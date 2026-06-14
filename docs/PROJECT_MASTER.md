@@ -1369,6 +1369,45 @@ Admin Service Provider Phase E1 local result:
     - `npm run type-check`
     - `npm run build:admin`
 
+Admin Service Provider Phase E1 production result:
+
+- Deployed commit: `06596055f28e6e1f77bb720cc8042c3f3fde71ce`.
+- Production migration:
+  - Alembic head is `add_service_provider_configs`.
+  - Production services are healthy after deploy: backend, celery-worker, frontend, postgres, redis.
+- Public/admin health:
+  - `https://pdf.pawn.eu.org/health` returns healthy.
+  - `https://admin.pawn.eu.org/` returns HTTP 200.
+- Admin UI/API verification:
+  - Control Room -> Product Config shows the new Service Providers module.
+  - OCR lists only `local_tesseract`; Office lists only `local_libreoffice`.
+  - Provider cards render enabled state, priority, public fields, readiness, validation, and save actions.
+  - Saved production config:
+    - OCR: enabled, priority `31`, `tesseract_path=/usr/bin/tesseract`, `default_language=eng`, `languages=eng,chi_sim,spa`.
+    - Office: enabled, priority `32`, `binary_path=libreoffice`, `timeout_seconds=60`.
+- Secret behavior:
+  - E1 local providers currently have no secret fields.
+  - API responses do not include plaintext secrets or a `secrets` payload.
+  - `secret_fields` returns only safe configured-state metadata.
+- Validation/readiness:
+  - OCR validation passed with required field, Tesseract binary, and language-pack checks.
+  - Office validation passed with required field and LibreOffice binary checks.
+  - Disabled OCR returns disabled readiness and runtime config falls back to `None`.
+  - Incomplete Office config returns missing-config readiness, validation failure, and runtime config falls back to `None`.
+- Runtime smoke:
+  - OCR smoke passed after DB config restore; job `job_78df0cece79c`.
+  - Office conversion smoke passed after DB config restore; job `job_f1158b77940d`.
+- Audit/cleanup:
+  - `service_provider_config.update` audit entries were recorded.
+  - Audit details record changed fields without secret plaintext.
+  - Temporary production smoke accounts were removed after verification.
+- Phase E1 remains intentionally limited:
+  - No AI provider configuration.
+  - No multi-provider orchestration.
+  - No payment changes.
+  - No task-model refactor.
+  - No new PDF features.
+
 Admin bootstrap:
 
 ```bash

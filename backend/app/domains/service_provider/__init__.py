@@ -1,0 +1,2 @@
+"""Service provider configuration domain."""
+

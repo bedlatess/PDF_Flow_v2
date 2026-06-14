@@ -4,6 +4,7 @@ import { createControlRoomJobsActions } from './actions-jobs'
 import { createControlRoomMaintenanceActions } from './actions-maintenance'
 import { createControlRoomMetaActions } from './actions-meta'
 import { createControlRoomPaymentsActions } from './actions-payments'
+import { createControlRoomServiceProvidersActions } from './actions-serviceProviders'
 import { createControlRoomSettingsActions } from './actions-settings'
 import { createControlRoomUsersActions } from './actions-users'
 import type { ControlRoomContext } from './context'
@@ -16,6 +17,7 @@ export const createControlRoomActions = (ctx: ControlRoomContext) => {
   })
   const jobs = createControlRoomJobsActions(ctx)
   const payments = createControlRoomPaymentsActions(ctx)
+  const serviceProviders = createControlRoomServiceProvidersActions(ctx)
   const feedback = createControlRoomFeedbackActions(ctx)
   const maintenance = createControlRoomMaintenanceActions(ctx, {
     refreshAdminMeta: meta.refreshAdminMeta,
@@ -38,6 +40,9 @@ export const createControlRoomActions = (ctx: ControlRoomContext) => {
     loadJobs: jobs.loadJobs,
     loadPayments: payments.loadPayments,
     savePricingPlan: payments.savePricingPlan,
+    loadServiceProviders: serviceProviders.loadServiceProviders,
+    saveServiceProvider: serviceProviders.saveServiceProvider,
+    validateServiceProvider: serviceProviders.validateServiceProvider,
     loadFeedback: feedback.loadFeedback,
     saveFeedback: feedback.saveFeedback,
     cleanupLiveAcceptanceFeedback: feedback.cleanupLiveAcceptanceFeedback,

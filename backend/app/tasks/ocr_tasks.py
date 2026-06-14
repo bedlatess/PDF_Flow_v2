@@ -30,7 +30,8 @@ def extract_text_task(
     self,
     file_path: str,
     language: str = "eng",
-    pages: Optional[List[int]] = None
+    pages: Optional[List[int]] = None,
+    provider_config: Optional[dict] = None,
 ) -> dict:
     """
     从 PDF 或图片中提取文字（OCR）
@@ -44,6 +45,12 @@ def extract_text_task(
         dict: 包含 success, text, page_texts, confidence
     """
     try:
+        provider_config = provider_config or {}
+        tesseract_path = str(provider_config.get("tesseract_path") or settings.TESSERACT_PATH or "").strip()
+        if tesseract_path:
+            pytesseract.pytesseract.tesseract_cmd = tesseract_path
+        if not language:
+            language = str(provider_config.get("default_language") or "eng")
         logger.info(f"Starting OCR for: {file_path} (language: {language})")
 
         # 判断文件类型

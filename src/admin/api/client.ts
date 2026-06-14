@@ -19,6 +19,9 @@ import type {
   AdminPaymentProviderConfigValidation,
   AdminPaymentSummary,
   AdminPricingPlan,
+  AdminServiceProviderConfig,
+  AdminServiceProviderConfigUpdate,
+  AdminServiceProviderConfigValidation,
   AdminUser,
   AdminUserUpdate,
   ContentBlock,
@@ -197,6 +200,37 @@ export const adminAPI = {
   ): Promise<AdminPaymentProviderConfigValidation> {
     const response = await apiClient.post<AdminPaymentProviderConfigValidation>(
       `/api/v1/admin/payment-configs/${encodeURIComponent(providerKey)}/validate`,
+      data,
+    )
+    return response.data
+  },
+
+  async listServiceProviderConfigs(serviceKey: string): Promise<AdminServiceProviderConfig[]> {
+    const response = await apiClient.get<AdminServiceProviderConfig[]>(
+      `/api/v1/admin/service-provider-configs/${encodeURIComponent(serviceKey)}`,
+    )
+    return response.data
+  },
+
+  async updateServiceProviderConfig(
+    serviceKey: string,
+    providerKey: string,
+    data: AdminServiceProviderConfigUpdate,
+  ): Promise<AdminServiceProviderConfig> {
+    const response = await apiClient.put<AdminServiceProviderConfig>(
+      `/api/v1/admin/service-provider-configs/${encodeURIComponent(serviceKey)}/${encodeURIComponent(providerKey)}`,
+      data,
+    )
+    return response.data
+  },
+
+  async validateServiceProviderConfig(
+    serviceKey: string,
+    providerKey: string,
+    data: AdminServiceProviderConfigUpdate,
+  ): Promise<AdminServiceProviderConfigValidation> {
+    const response = await apiClient.post<AdminServiceProviderConfigValidation>(
+      `/api/v1/admin/service-provider-configs/${encodeURIComponent(serviceKey)}/${encodeURIComponent(providerKey)}/validate`,
       data,
     )
     return response.data

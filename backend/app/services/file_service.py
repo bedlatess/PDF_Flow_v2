@@ -22,6 +22,7 @@ from app.tasks.pdf_tasks import (
     convert_images_to_pdf_task,
     convert_pdf_to_images_task,
 )
+from app.domains.service_provider.config_store import get_service_provider_runtime_config
 from app.tasks.ocr_tasks import extract_text_task
 from app.services.file_retention_service import file_retention_service
 
@@ -43,6 +44,24 @@ class FileProcessingService:
     def _generate_job_id(self) -> str:
         """生成唯一的任务 ID"""
         return f"job_{uuid.uuid4().hex[:12]}"
+
+    def _service_provider_runtime_config(self, service_key: str, provider_key: str) -> dict | None:
+        try:
+            from app.core.database import SessionLocal
+
+            db = SessionLocal()
+            try:
+                return get_service_provider_runtime_config(db, service_key, provider_key)
+            finally:
+                db.close()
+        except Exception as exc:
+            logger.warning(
+                "Service provider config fallback for %s/%s: %s",
+                service_key,
+                provider_key,
+                exc,
+            )
+            return None
 
     async def upload_file(
         self,
@@ -492,6 +511,16 @@ class FileProcessingService:
     async def extract_text_ocr(self, file_id: str, language: str = "eng") -> Dict:
         """OCR 文本提取"""
         file_path = str(self._get_file_path(file_id))
+        runtime_config = self._service_provider_runtime_config("ocr", "local_tesseract")
+        public_config = runtime_config.get("public_config") if runtime_config else {}
+        requested_language = language or public_config.get("default_language") or "eng"
+        languages = [
+            item.strip()
+            for item in str(public_config.get("languages") or "").split(",")
+            if item.strip()
+        ]
+        if languages and requested_language not in languages:
+            requested_language = str(public_config.get("default_language") or languages[0])
 
         # 创建任务
         job_id = self._generate_job_id()
@@ -505,7 +534,7 @@ class FileProcessingService:
 
         # 提交任务
         task = extract_text_task.apply_async(
-            args=[file_path, language],
+            args=[file_path, requested_language, None, public_config or None],
             task_id=job_id
         )
 
@@ -525,6 +554,8 @@ class FileProcessingService:
         input_path = await save_upload_file(file)
         output_filename = os.path.splitext(file.filename)[0] + ".pdf"
         output_path = os.path.join(os.path.dirname(input_path), output_filename)
+        runtime_config = self._service_provider_runtime_config("office", "local_libreoffice")
+        public_config = runtime_config.get("public_config") if runtime_config else {}
 
         job_id = self._generate_job_id()
 
@@ -536,7 +567,7 @@ class FileProcessingService:
         })
 
         office_to_pdf_task.apply_async(
-            args=[input_path, output_path],
+            args=[input_path, output_path, public_config or None],
             task_id=job_id
         )
 

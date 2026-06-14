@@ -61,6 +61,9 @@ from app.schemas.admin import (
     AdminPaymentProviderConfigValidation,
     AdminOverviewResponse,
     AdminPasswordResetLinkResponse,
+    AdminServiceProviderConfigResponse,
+    AdminServiceProviderConfigUpdate,
+    AdminServiceProviderConfigValidation,
     AdminUserResponse,
     AdminUserUpdate,
     ContentBlockResponse,
@@ -77,6 +80,12 @@ from app.domains.payment.config_store import (
     list_safe_provider_configs,
     update_provider_config as update_payment_provider_config_service,
     validate_provider_config_payload,
+)
+from app.domains.service_provider.config_store import (
+    build_safe_service_provider_config,
+    list_safe_service_provider_configs,
+    update_service_provider_config as update_service_provider_config_service,
+    validate_service_provider_config_payload,
 )
 from app.schemas.feedback import AdminFeedbackResponse, AdminFeedbackUpdate
 
@@ -231,6 +240,85 @@ async def validate_payment_provider_config(
         existing_safe_config=build_safe_provider_config(db, provider_key),
     )
     return {"provider_key": provider_key, **result}
+
+
+@router.get("/service-provider-configs/{service_key}", response_model=list[AdminServiceProviderConfigResponse])
+async def list_service_provider_configs(
+    service_key: str,
+    _admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    """Return safe admin-managed OCR/Office provider config state."""
+    return list_safe_service_provider_configs(db, service_key)
+
+
+@router.get("/service-provider-configs/{service_key}/{provider_key}", response_model=AdminServiceProviderConfigResponse)
+async def get_service_provider_config(
+    service_key: str,
+    provider_key: str,
+    _admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    """Return one service provider config without secret plaintext."""
+    return build_safe_service_provider_config(db, service_key, provider_key)
+
+
+@router.put("/service-provider-configs/{service_key}/{provider_key}", response_model=AdminServiceProviderConfigResponse)
+async def update_service_provider_config(
+    service_key: str,
+    provider_key: str,
+    payload: AdminServiceProviderConfigUpdate,
+    request: Request,
+    admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    """Save admin-managed OCR/Office provider config. Secret fields are write-only."""
+    result, changed_fields = update_service_provider_config_service(
+        db,
+        service_key=service_key,
+        provider_key=provider_key,
+        enabled=payload.enabled,
+        priority=payload.priority,
+        public_config=payload.public_config,
+        secret_values=payload.secrets,
+        admin_user_id=admin.id,
+    )
+    write_admin_audit(
+        db,
+        request,
+        admin,
+        action="service_provider_config.update",
+        target_type="service_provider_config",
+        target_key=f"{service_key}:{provider_key}",
+        detail=(
+            f"service={service_key}; provider={provider_key}; enabled={payload.enabled}; "
+            f"changed_fields={','.join(changed_fields) or 'none'}"
+        ),
+    )
+    db.commit()
+    return result
+
+
+@router.post(
+    "/service-provider-configs/{service_key}/{provider_key}/validate",
+    response_model=AdminServiceProviderConfigValidation,
+)
+async def validate_service_provider_config(
+    service_key: str,
+    provider_key: str,
+    payload: AdminServiceProviderConfigUpdate,
+    _admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    """Validate OCR/Office provider config locally without creating a job."""
+    result = validate_service_provider_config_payload(
+        service_key=service_key,
+        provider_key=provider_key,
+        public_config=payload.public_config,
+        secret_values=payload.secrets,
+        existing_safe_config=build_safe_service_provider_config(db, service_key, provider_key),
+    )
+    return {"service_key": service_key, "provider_key": provider_key, **result}
 
 
 @router.get("/public-config")

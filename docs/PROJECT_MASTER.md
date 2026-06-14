@@ -1332,6 +1332,43 @@ Admin Payment Providers Phase D production result:
   - No automatic Pro entitlement activation.
   - No Payment Reconciliation expansion, AI/OCR/Office provider configuration, or backend task-model refactor.
 
+Admin Service Provider Phase E1 local result:
+
+- Scope:
+  - Added a new `service_provider_configs` table for admin-managed OCR/Office runtime configuration.
+  - Kept the first release narrow:
+    - OCR: `local_tesseract`
+    - Office: `local_libreoffice`
+  - No payment logic changed.
+  - No task-model refactor or new PDF feature was added.
+- Backend registry and storage:
+  - Added `ServiceProviderConfig` with `service_key`, `provider_key`, `display_name`, `enabled`, `priority`, `public_config_json`, encrypted secret storage, secret fingerprints, and admin ownership metadata.
+  - Added a new service-provider config store under `backend/app/domains/service_provider/config_store.py`.
+  - Database-first runtime lookup now reads OCR and Office provider settings from `service_provider_configs`.
+  - Runtime still falls back to existing settings/default command behavior when no enabled DB config is available.
+  - Secrets remain write-only. The API returns only configured/tail state and never returns plaintext.
+  - `PAYMENT_CONFIG_ENCRYPTION_KEY` remains env-only and is reused as the encryption master key for the new provider config store.
+- Admin UI:
+  - Added a new Control Room `serviceProviders` module under `productConfig`.
+  - The module renders OCR and Office provider cards with enabled toggle, priority, public config fields, local validation, and save actions.
+  - The module shows readiness state and keeps the form narrow for this first phase.
+- Runtime wiring:
+  - OCR jobs receive the configured Tesseract path and language list when an enabled DB provider exists.
+  - Office conversion jobs receive the configured LibreOffice binary path and timeout when an enabled DB provider exists.
+  - When the DB config is missing, disabled, or incomplete, the code falls back to the previous runtime defaults.
+- Validation and readiness:
+  - Validation is local-only and does not launch real OCR or Office work.
+  - Readiness checks include required field checks and lightweight local command availability checks.
+  - E1 is limited to a single provider per service and does not implement multi-provider orchestration.
+- Tests/checks:
+  - Added backend coverage for list/save/validate/runtime fallback behavior.
+  - Verified audit logs do not expose plaintext secret material.
+  - Local checks run:
+    - `python -m pytest backend/tests/test_service_provider_config.py -q`
+    - `python -m pytest backend/tests/test_admin.py backend/tests/test_service_provider_config.py -q`
+    - `npm run type-check`
+    - `npm run build:admin`
+
 Admin bootstrap:
 
 ```bash

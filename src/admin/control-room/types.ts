@@ -5,6 +5,7 @@ export type ControlRoomTabId =
   | 'paymentSetup'
   | 'payments'
   | 'flags'
+  | 'serviceProviders'
   | 'settings'
   | 'content'
   | 'jobs'
@@ -42,6 +43,7 @@ export type AdminModuleCapability =
 
 export type AdminModuleStatusSource =
   | 'serviceRisk'
+  | 'serviceProviderReadiness'
   | 'paymentReadiness'
   | 'paymentRisk'
   | 'lockedFlags'

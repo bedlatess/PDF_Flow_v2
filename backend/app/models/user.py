@@ -288,6 +288,37 @@ class PaymentProviderConfig(Base):
     )
 
 
+class ServiceProviderConfig(Base):
+    """Admin-managed OCR/Office/AI service provider configuration.
+
+    Secret fields are optional for local providers, but the storage shape keeps
+    the same write-only encrypted pattern used by payment provider configs.
+    """
+    __tablename__ = "service_provider_configs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    service_key = Column(String, nullable=False)
+    provider_key = Column(String, nullable=False)
+    display_name = Column(String, nullable=False)
+    enabled = Column(Boolean, default=False, nullable=False)
+    priority = Column(Integer, default=100, nullable=False)
+    public_config_json = Column(Text, nullable=False, default="{}")
+    encrypted_secret_json = Column(Text, nullable=True)
+    secret_fingerprint_json = Column(Text, nullable=True)
+    updated_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    updated_by = relationship("User")
+
+    __table_args__ = (
+        UniqueConstraint("service_key", "provider_key", name="uq_service_provider_config_service_provider"),
+        Index("idx_service_provider_config_service", "service_key"),
+        Index("idx_service_provider_config_provider", "provider_key"),
+        Index("idx_service_provider_config_enabled", "enabled"),
+    )
+
+
 class PaymentOrder(Base):
     """Trusted payment order state across all payment providers."""
     __tablename__ = "payment_orders"

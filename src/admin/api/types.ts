@@ -128,6 +128,79 @@ export interface AdminServiceStatus {
   detail: string | null
 }
 
+export interface AdminServiceProviderSecretFieldStatus {
+  configured: boolean
+  tail: string
+}
+
+export interface AdminServiceProviderFieldMetadata {
+  key: string
+  label: string
+  input_type: 'text' | 'url' | 'number' | 'password'
+  required: boolean
+  secret: boolean
+  placeholder: string
+  help_text: string
+  min_value: number | null
+  max_value: number | null
+}
+
+export interface AdminServiceProviderMetadata {
+  service_key: string
+  provider_key: string
+  display_name: string
+  description: string
+  validation_checks: string[]
+  setup_notes: string[]
+  runtime_fallback: string
+  fields: {
+    public: AdminServiceProviderFieldMetadata[]
+    secret: AdminServiceProviderFieldMetadata[]
+  }
+}
+
+export interface AdminServiceProviderReadiness {
+  status: string
+  label: string
+  detail: string
+  missing_config_keys: string[]
+  validation_checks: string[]
+}
+
+export interface AdminServiceProviderConfig {
+  service_key: string
+  provider_key: string
+  display_name: string
+  enabled: boolean
+  priority: number
+  configured: boolean
+  public_config: Record<string, string | number | boolean | undefined>
+  secret_fields: Record<string, AdminServiceProviderSecretFieldStatus>
+  required_public_fields: string[]
+  required_secret_fields: string[]
+  missing_config_keys: string[]
+  updated_at: string | null
+  encryption_available: boolean
+  metadata: AdminServiceProviderMetadata
+  readiness: AdminServiceProviderReadiness
+}
+
+export interface AdminServiceProviderConfigUpdate {
+  enabled: boolean
+  priority: number
+  public_config: Record<string, string | number | boolean | undefined>
+  secrets: Record<string, string>
+}
+
+export interface AdminServiceProviderConfigValidation {
+  service_key: string
+  provider_key: string
+  valid: boolean
+  errors: string[]
+  checks: string[]
+  signature_preview_tail: string | null
+}
+
 export interface AdminOperations {
   generated_at: string
   services: Record<string, AdminServiceStatus>

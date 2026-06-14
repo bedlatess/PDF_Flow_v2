@@ -12,6 +12,7 @@ import {
   type AdminOverview,
   type AdminPaymentSummary,
   type AdminPricingPlan,
+  type AdminServiceProviderConfig,
   type AdminUser,
   type ContentBlock,
   type FeatureFlag,
@@ -46,11 +47,13 @@ export const createControlRoomContext = () => {
   const maintenance = ref<AdminMaintenance | null>(null)
   const paymentSummary = ref<AdminPaymentSummary | null>(null)
   const pricingPlans = ref<AdminPricingPlan[]>([])
+  const serviceProviderConfigs = ref<AdminServiceProviderConfig[]>([])
   const userSearch = ref('')
   const jobStatusFilter = ref('')
   const jobSearch = ref('')
   const paymentProviderFilter = ref('')
   const paymentStatusFilter = ref('')
+  const serviceProviderServiceFilter = ref('all')
   const feedbackStatusFilter = ref('')
   const highlightedFeedbackId = ref<number | null>(null)
   const copiedFeedbackId = ref<number | null>(null)
@@ -136,11 +139,13 @@ export const createControlRoomContext = () => {
     maintenance,
     paymentSummary,
     pricingPlans,
+    serviceProviderConfigs,
     userSearch,
     jobStatusFilter,
     jobSearch,
     paymentProviderFilter,
     paymentStatusFilter,
+    serviceProviderServiceFilter,
     feedbackStatusFilter,
     highlightedFeedbackId,
     copiedFeedbackId,

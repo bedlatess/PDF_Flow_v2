@@ -22,6 +22,7 @@ import PlansPricingTab from '@/components/admin/PlansPricingTab.vue'
 import PaymentSetupTab from '@/components/admin/PaymentSetupTab.vue'
 import PaymentsTab from '@/components/admin/PaymentsTab.vue'
 import SecurityTab from '@/components/admin/SecurityTab.vue'
+import ServiceProvidersTab from '@/components/admin/ServiceProvidersTab.vue'
 import SiteSettingsTab from '@/components/admin/SiteSettingsTab.vue'
 import UsersTab from '@/components/admin/UsersTab.vue'
 import { useControlRoom } from '@/admin/control-room/useControlRoom'
@@ -49,11 +50,13 @@ const {
   maintenance,
   paymentSummary,
   pricingPlans,
+  serviceProviderConfigs,
   userSearch,
   jobStatusFilter,
   jobSearch,
   paymentProviderFilter,
   paymentStatusFilter,
+  serviceProviderServiceFilter,
   feedbackStatusFilter,
   highlightedFeedbackId,
   copiedFeedbackId,
@@ -88,6 +91,9 @@ const {
   loadJobs,
   loadPayments,
   savePricingPlan,
+  loadServiceProviders,
+  saveServiceProvider,
+  validateServiceProvider,
   loadFeedback,
   saveFeedback,
   cleanupLiveAcceptanceFeedback,
@@ -150,6 +156,12 @@ const maintenanceRiskCount = computed(
     (maintenance.value?.file_retention?.removable_count ?? 0),
 )
 const recentAuditCount = computed(() => auditLogs.value.length)
+const serviceProviderReadyCount = computed(
+  () =>
+    serviceProviderConfigs.value.filter(
+      (provider) => provider.enabled && provider.readiness.status === 'ready',
+    ).length,
+)
 
 const moduleStatusBadge = (module: AdminModuleDescriptor) => {
   switch (module.statusBadgeSource) {
@@ -170,6 +182,15 @@ const moduleStatusBadge = (module: AdminModuleDescriptor) => {
       return lockedFlagCount.value > 0
         ? { label: `${lockedFlagCount.value} 受控`, tone: 'neutral' }
         : null
+    case 'serviceProviderReadiness':
+      return {
+        label: `${serviceProviderReadyCount.value}/${serviceProviderConfigs.value.length}`,
+        tone:
+          serviceProviderConfigs.value.length > 0 &&
+          serviceProviderReadyCount.value === serviceProviderConfigs.value.length
+            ? 'success'
+            : 'neutral',
+      }
     case 'failedJobs':
       return failedJobCount.value > 0
         ? { label: `${failedJobCount.value} 失败`, tone: 'warning' }
@@ -451,6 +472,17 @@ onMounted(loadAdminData)
             :flags="flags"
             :saving-key="savingKey"
             @save="saveFlag"
+          />
+
+          <ServiceProvidersTab
+            v-else-if="activeTab === 'serviceProviders'"
+            :service-provider-configs="serviceProviderConfigs"
+            :service-filter="serviceProviderServiceFilter"
+            :saving-key="savingKey"
+            @update:service-filter="serviceProviderServiceFilter = $event"
+            @refresh="loadServiceProviders"
+            @save="saveServiceProvider"
+            @validate="validateServiceProvider"
           />
 
           <SiteSettingsTab

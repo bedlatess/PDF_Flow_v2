@@ -448,3 +448,73 @@ class AdminPaymentProviderConfigValidation(BaseModel):
     errors: list[str]
     checks: list[str]
     signature_preview_tail: Optional[str] = None
+
+
+class AdminServiceProviderFieldMetadata(BaseModel):
+    key: str
+    label: str
+    input_type: str = "text"
+    required: bool = False
+    secret: bool = False
+    placeholder: str = ""
+    help_text: str = ""
+    min_value: Optional[int] = None
+    max_value: Optional[int] = None
+
+
+class AdminServiceProviderMetadataFields(BaseModel):
+    public: list[AdminServiceProviderFieldMetadata]
+    secret: list[AdminServiceProviderFieldMetadata]
+
+
+class AdminServiceProviderMetadata(BaseModel):
+    service_key: str
+    provider_key: str
+    display_name: str
+    description: str
+    validation_checks: list[str]
+    setup_notes: list[str]
+    runtime_fallback: str
+    fields: AdminServiceProviderMetadataFields
+
+
+class AdminServiceProviderReadiness(BaseModel):
+    status: str
+    label: str
+    detail: str
+    missing_config_keys: list[str]
+    validation_checks: list[str]
+
+
+class AdminServiceProviderConfigResponse(BaseModel):
+    service_key: str
+    provider_key: str
+    display_name: str
+    enabled: bool
+    priority: int
+    configured: bool
+    public_config: dict
+    secret_fields: dict[str, AdminPaymentSecretFieldStatus]
+    required_public_fields: list[str]
+    required_secret_fields: list[str]
+    missing_config_keys: list[str]
+    updated_at: Optional[datetime] = None
+    encryption_available: bool
+    metadata: AdminServiceProviderMetadata
+    readiness: AdminServiceProviderReadiness
+
+
+class AdminServiceProviderConfigUpdate(BaseModel):
+    enabled: bool = False
+    priority: int = 100
+    public_config: dict = Field(default_factory=dict)
+    secrets: dict[str, str] = Field(default_factory=dict)
+
+
+class AdminServiceProviderConfigValidation(BaseModel):
+    service_key: str
+    provider_key: str
+    valid: bool
+    errors: list[str]
+    checks: list[str]
+    signature_preview_tail: Optional[str] = None

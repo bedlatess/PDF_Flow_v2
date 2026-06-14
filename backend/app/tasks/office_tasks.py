@@ -15,6 +15,17 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 
 
+def _office_binary(provider_config: Optional[dict] = None) -> str:
+    return str((provider_config or {}).get("binary_path") or "libreoffice").strip() or "libreoffice"
+
+
+def _office_timeout(provider_config: Optional[dict] = None) -> int:
+    try:
+        return max(1, int((provider_config or {}).get("timeout_seconds") or 60))
+    except (TypeError, ValueError):
+        return 60
+
+
 class OfficeTask(Task):
     """Office 转换任务基类"""
 
@@ -27,7 +38,8 @@ class OfficeTask(Task):
 def docx_to_pdf_task(
     self,
     input_path: str,
-    output_path: Optional[str] = None
+    output_path: Optional[str] = None,
+    provider_config: Optional[dict] = None,
 ) -> dict:
     """
     将 Word 文档转换为 PDF
@@ -63,7 +75,7 @@ def docx_to_pdf_task(
 
         # LibreOffice 命令
         cmd = [
-            "libreoffice",
+            _office_binary(provider_config),
             "--headless",
             "--convert-to", "pdf",
             "--outdir", output_dir,
@@ -74,7 +86,7 @@ def docx_to_pdf_task(
             cmd,
             capture_output=True,
             text=True,
-            timeout=60  # 60秒超时
+            timeout=_office_timeout(provider_config)
         )
 
         if result.returncode != 0:
@@ -120,7 +132,8 @@ def docx_to_pdf_task(
 def xlsx_to_pdf_task(
     self,
     input_path: str,
-    output_path: Optional[str] = None
+    output_path: Optional[str] = None,
+    provider_config: Optional[dict] = None,
 ) -> dict:
     """
     将 Excel 表格转换为 PDF
@@ -151,7 +164,7 @@ def xlsx_to_pdf_task(
         output_dir = os.path.dirname(output_path)
 
         cmd = [
-            "libreoffice",
+            _office_binary(provider_config),
             "--headless",
             "--convert-to", "pdf",
             "--outdir", output_dir,
@@ -162,7 +175,7 @@ def xlsx_to_pdf_task(
             cmd,
             capture_output=True,
             text=True,
-            timeout=60
+            timeout=_office_timeout(provider_config)
         )
 
         if result.returncode != 0:
@@ -207,7 +220,8 @@ def xlsx_to_pdf_task(
 def pptx_to_pdf_task(
     self,
     input_path: str,
-    output_path: Optional[str] = None
+    output_path: Optional[str] = None,
+    provider_config: Optional[dict] = None,
 ) -> dict:
     """
     将 PowerPoint 演示文稿转换为 PDF
@@ -238,7 +252,7 @@ def pptx_to_pdf_task(
         output_dir = os.path.dirname(output_path)
 
         cmd = [
-            "libreoffice",
+            _office_binary(provider_config),
             "--headless",
             "--convert-to", "pdf",
             "--outdir", output_dir,
@@ -249,7 +263,7 @@ def pptx_to_pdf_task(
             cmd,
             capture_output=True,
             text=True,
-            timeout=60
+            timeout=_office_timeout(provider_config)
         )
 
         if result.returncode != 0:
@@ -294,7 +308,8 @@ def pptx_to_pdf_task(
 def office_to_pdf_task(
     self,
     input_path: str,
-    output_path: Optional[str] = None
+    output_path: Optional[str] = None,
+    provider_config: Optional[dict] = None,
 ) -> dict:
     """
     通用 Office 文件转 PDF（自动检测文件类型）
@@ -311,11 +326,11 @@ def office_to_pdf_task(
         file_ext = os.path.splitext(input_path)[1].lower()
 
         if file_ext in ['.docx', '.doc']:
-            return docx_to_pdf_task(input_path, output_path)
+            return docx_to_pdf_task(input_path, output_path, provider_config)
         elif file_ext in ['.xlsx', '.xls']:
-            return xlsx_to_pdf_task(input_path, output_path)
+            return xlsx_to_pdf_task(input_path, output_path, provider_config)
         elif file_ext in ['.pptx', '.ppt']:
-            return pptx_to_pdf_task(input_path, output_path)
+            return pptx_to_pdf_task(input_path, output_path, provider_config)
         else:
             raise ValueError(f"Unsupported file type: {file_ext}")
 

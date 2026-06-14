@@ -372,6 +372,13 @@ Deployment:
   - profile updates now only apply supported profile fields; password rotation must go through `/api/v1/auth/change-password` or the reset-token flow
   - verified with `pytest backend/tests/test_account_domain.py backend/tests/test_auth.py -q`
   - verified with `npm run type-check`, `npm run build`, and `npm run test:e2e:admin`
+- Deployed and verified account password-mutation hardening on production:
+  - commit `77d7d8d8e4551fb3e3118a0bf16df20d89f73e69`
+  - server `.deploy_state/main/current_deployed_commit` records `77d7d8d8e4551fb3e3118a0bf16df20d89f73e69`
+  - production Compose services are healthy after deploy
+  - production `/health` returns `{"status":"healthy","version":"2.0.0","environment":"production"}`
+  - production `PATCH /api/v1/users/me` with a `password` field returns success for the profile update path but does not change the password
+  - verified the known admin password still logs in and the attempted profile-patch password is rejected with HTTP 401
 
 ## Known Code Issues
 

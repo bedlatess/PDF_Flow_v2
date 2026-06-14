@@ -1107,6 +1107,27 @@ Admin management design result:
 - Covers future admin-managed capabilities, menu structure, DB-managed vs env-only config, secret handling, validation/hot-update/audit rules, payment configuration center v2, feature flags/tool availability, plans/pricing, AI/OCR/Office provider configuration, site content, current admin code structure issues, extensibility model, and phased rollout.
 - Recommended next implementation batch after approval: admin information-architecture cleanup, then product configuration center / feature flags.
 
+Admin information architecture Phase A local result:
+
+- Scope: admin frontend structure cleanup only. Existing routes, backend APIs, payment behavior, pricing behavior, and public frontend behavior were not changed.
+- Introduced admin module descriptors in `src/admin/control-room/modules.ts` with module id, group, label, description, component name, required capability, domain, icon, and optional health/status badge source.
+- Kept `src/admin/control-room/tabs.ts` as a compatibility wrapper over the new module descriptors so existing Control Room rendering does not need a risky route/API rewrite.
+- Split Control Room wiring into domain files under `src/admin/control-room/domains/`:
+  - overview
+  - users
+  - revenue
+  - productConfig
+  - operations
+  - security
+- `useControlRoom()` now returns both the old flat shape and new domain/module objects, so existing tabs keep working while Phase B has clear mount points.
+- Cleaned visible mojibake in Control Room module labels/descriptions, destructive action confirmations, copy messages, and generated admin summaries.
+- Added lightweight menu status badges sourced from existing overview/operations/payment/diagnostic/maintenance/audit state; these are presentation-only and do not change backend behavior.
+- Phase B best mount points:
+  - Feature Flags / Tools & Features: `productConfig` domain and Product Config group.
+  - Plans & Pricing: `revenue` domain and Customers & Revenue group.
+  - Payment Providers v2: `revenue` domain, replacing the current Payment Setup module internals later.
+  - AI/OCR/Office providers: Product Config or Operations depending on whether the module controls configuration or runtime health.
+
 Admin bootstrap:
 
 ```bash

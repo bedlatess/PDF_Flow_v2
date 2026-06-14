@@ -20,6 +20,36 @@ export type ControlRoomTabGroup =
   | '运营支持'
   | '安全'
 
+export type AdminDomainKey =
+  | 'overview'
+  | 'users'
+  | 'revenue'
+  | 'productConfig'
+  | 'operations'
+  | 'security'
+
+export type AdminModuleCapability =
+  | 'admin:overview:read'
+  | 'admin:users:manage'
+  | 'admin:revenue:configure'
+  | 'admin:revenue:reconcile'
+  | 'admin:product:configure'
+  | 'admin:operations:observe'
+  | 'admin:operations:maintain'
+  | 'admin:security:manage'
+  | 'admin:audit:read'
+
+export type AdminModuleStatusSource =
+  | 'serviceRisk'
+  | 'paymentReadiness'
+  | 'paymentRisk'
+  | 'lockedFlags'
+  | 'failedJobs'
+  | 'openFeedback'
+  | 'apiErrors'
+  | 'maintenanceRisk'
+  | 'auditRecent'
+
 export type AdminConfirmation = {
   title: string
   summary: string

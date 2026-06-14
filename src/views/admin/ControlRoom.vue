@@ -7,6 +7,7 @@ import {
   Loader2,
   ShieldCheck,
 } from 'lucide-vue-next'
+import type { AdminModuleDescriptor } from '@/admin/control-room/modules'
 import type { ControlRoomTabGroup } from '@/admin/control-room/types'
 import ConfirmationDialog from '@/components/common/ConfirmationDialog.vue'
 import AuditLogsTab from '@/components/admin/AuditLogsTab.vue'
@@ -127,6 +128,85 @@ const serviceRiskCount = computed(
       (service) => service.status !== 'healthy',
     ).length,
 )
+const lockedFlagCount = computed(
+  () => flags.value.filter((flag) => flag.requires_login || flag.requires_pro).length,
+)
+const failedJobCount = computed(
+  () => overview.value?.failed_jobs_count ?? operations.value?.failed_jobs ?? 0,
+)
+const openFeedbackCount = computed(
+  () => overview.value?.open_feedback_count ?? diagnostics.value?.open_feedback_count ?? 0,
+)
+const apiErrorCount = computed(
+  () => overview.value?.api_error_count ?? diagnostics.value?.api_error_count ?? 0,
+)
+const maintenanceRiskCount = computed(
+  () =>
+    (maintenance.value?.test_users_count ?? 0) +
+    (maintenance.value?.live_acceptance_feedback_count ?? 0) +
+    (maintenance.value?.file_retention?.removable_count ?? 0),
+)
+const recentAuditCount = computed(() => auditLogs.value.length)
+
+const moduleStatusBadge = (module: AdminModuleDescriptor) => {
+  switch (module.statusBadgeSource) {
+    case 'serviceRisk':
+      return serviceRiskCount.value > 0
+        ? { label: `${serviceRiskCount.value} 服务`, tone: 'warning' }
+        : { label: '健康', tone: 'success' }
+    case 'paymentReadiness':
+      return {
+        label: `${paymentConfiguredCount.value}/${paymentProviders.value.length}`,
+        tone: 'neutral',
+      }
+    case 'paymentRisk':
+      return paymentRiskCount.value > 0
+        ? { label: `${paymentRiskCount.value} 待处理`, tone: 'warning' }
+        : { label: '正常', tone: 'success' }
+    case 'lockedFlags':
+      return lockedFlagCount.value > 0
+        ? { label: `${lockedFlagCount.value} 受控`, tone: 'neutral' }
+        : null
+    case 'failedJobs':
+      return failedJobCount.value > 0
+        ? { label: `${failedJobCount.value} 失败`, tone: 'warning' }
+        : null
+    case 'openFeedback':
+      return openFeedbackCount.value > 0
+        ? { label: `${openFeedbackCount.value} 待处理`, tone: 'warning' }
+        : null
+    case 'apiErrors':
+      return apiErrorCount.value > 0
+        ? { label: `${apiErrorCount.value} 错误`, tone: 'danger' }
+        : null
+    case 'maintenanceRisk':
+      return maintenanceRiskCount.value > 0
+        ? { label: `${maintenanceRiskCount.value} 项`, tone: 'warning' }
+        : null
+    case 'auditRecent':
+      return recentAuditCount.value > 0
+        ? { label: `${recentAuditCount.value} 条`, tone: 'neutral' }
+        : null
+    default:
+      return null
+  }
+}
+
+const moduleStatusClass = (tone: string, isActive: boolean) => {
+  if (isActive) {
+    return 'bg-white/15 text-white dark:bg-slate-950/15 dark:text-slate-950'
+  }
+  if (tone === 'success') {
+    return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-200'
+  }
+  if (tone === 'warning') {
+    return 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-200'
+  }
+  if (tone === 'danger') {
+    return 'bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-200'
+  }
+  return 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+}
 
 onMounted(loadAdminData)
 </script>
@@ -148,7 +228,7 @@ onMounted(loadAdminData)
               PDF-Flow Admin
             </h1>
             <p class="mt-3 max-w-3xl text-sm leading-6 text-slate-600 dark:text-slate-300">
-              面向日常运营的后台控制台：先看健康度和收入配置，再进入用户、产品、任务、支持和审计模块处理具体问题。
+              面向日常运营的后台控制台：先看健康度和收入配置，再进入用户、产品、任务、支持、安全和审计模块处理具体问题。
             </p>
           </div>
 
@@ -224,7 +304,16 @@ onMounted(loadAdminData)
               >
                 <component :is="tab.icon" class="mt-0.5 h-4 w-4 shrink-0" />
                 <span class="min-w-0 flex-1">
-                  <span class="block text-sm font-semibold">{{ tab.label }}</span>
+                  <span class="flex flex-wrap items-center gap-2">
+                    <span class="block text-sm font-semibold">{{ tab.label }}</span>
+                    <span
+                      v-if="moduleStatusBadge(tab)"
+                      class="rounded-full px-2 py-0.5 text-[11px] font-semibold leading-4"
+                      :class="moduleStatusClass(moduleStatusBadge(tab)!.tone, activeTab === tab.id)"
+                    >
+                      {{ moduleStatusBadge(tab)!.label }}
+                    </span>
+                  </span>
                   <span
                     class="mt-1 block text-xs leading-5"
                     :class="

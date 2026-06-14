@@ -6,15 +6,26 @@ import {
 import { createControlRoomActions } from './actions'
 import { createControlRoomClipboard } from './clipboard'
 import { createControlRoomContext } from './context'
+import { createControlRoomDomains } from './domains'
+import { adminModules } from './modules'
 import { controlRoomTabs } from './tabs'
 
 export const useControlRoom = () => {
   const ctx = createControlRoomContext()
   const clipboard = createControlRoomClipboard(ctx)
   const actions = createControlRoomActions(ctx)
+  const domains = createControlRoomDomains(ctx, actions, clipboard)
 
   return {
+    modules: adminModules,
     tabs: controlRoomTabs,
+    domains,
+    overviewModule: domains.overview,
+    usersModule: domains.users,
+    revenueModule: domains.revenue,
+    productConfigModule: domains.productConfig,
+    operationsModule: domains.operations,
+    securityModule: domains.security,
     loading: ctx.loading,
     savingKey: ctx.savingKey,
     activeTab: ctx.activeTab,

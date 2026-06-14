@@ -837,7 +837,7 @@ test.describe('Admin Control Room visual QA', () => {
         { label: '支付对账', visibleText: 'PDF-Flow payment reconciliation packet' },
         { label: '任务观察', visibleText: 'quarterly-board-pack-with-long-readable-name.pdf' },
         { label: '问题反馈', visibleText: '压缩完成后下载按钮没有响应' },
-        { label: '错误观察', visibleText: '/api/v1/files/compress' },
+        { label: '错误诊断', visibleText: '/api/v1/files/compress' },
         { label: '维护清理', visibleText: 'backend/uploads' },
         { label: 'Account Security', visibleText: 'Change and sign out' },
         { label: '审计日志', visibleText: 'feature_flag.update' },
@@ -980,7 +980,7 @@ test.describe('Admin Control Room visual QA', () => {
     await mockAdminControlRoom(page)
     await page.goto('/')
 
-    await page.getByRole('button', { name: '错误观察' }).click()
+    await page.getByRole('button', { name: '错误诊断' }).click()
     await expect(page.getByText('PDF-Flow diagnostic packet')).toBeVisible()
     await page.getByRole('button', { name: '复制排障包' }).click()
     await expect(page.getByText('已复制诊断排障包')).toBeVisible()
@@ -1026,7 +1026,7 @@ test.describe('Admin payment reconciliation QA', () => {
     await expect(page.getByText('evt_mismatch_admin_001', { exact: true })).toBeVisible()
     await expect(page.getByText('Payment amount mismatch')).toBeVisible()
     await page.getByRole('button', { name: '复制证据包' }).click()
-    await expect(page.getByText('已复制证据包')).toBeVisible()
+    await expect(page.getByText('已复制支付联调证据包')).toBeVisible()
     const evidenceCopied = await page.evaluate(() => navigator.clipboard.readText())
     expect(evidenceCopied).toContain('PDF-Flow payment integration evidence packet')
     expect(evidenceCopied).toContain('acceptance_status=missing_config')
@@ -1036,7 +1036,7 @@ test.describe('Admin payment reconciliation QA', () => {
     expect(evidenceCopied).not.toContain('tron:private-payment-address')
 
     await page.getByRole('button', { name: '复制对账包' }).click()
-    await expect(page.getByText('已复制对账包')).toBeVisible()
+    await expect(page.getByText('已复制支付对账包')).toBeVisible()
 
     const copied = await page.evaluate(() => navigator.clipboard.readText())
     expect(copied).toContain('pf_admin_mismatch')

@@ -84,8 +84,8 @@ export const createControlRoomMetaActions = (ctx: ControlRoomContext) => {
     } catch (err: any) {
       ctx.error.value =
         err?.response?.status === 403
-          ? '当前账号没有后台权限。'
-          : '后台数据加载失败，请稍后重试或检查服务端日志。'
+          ? 'Current account does not have admin access.'
+          : 'Admin data failed to load. Please retry later or check backend logs.'
     } finally {
       ctx.loading.value = false
     }

@@ -1,0 +1,180 @@
+import {
+  Activity,
+  ClipboardList,
+  CreditCard,
+  FileCog,
+  FileText,
+  Flag,
+  Flame,
+  GaugeCircle,
+  KeyRound,
+  Settings2,
+  Trash2,
+  UserCog,
+} from 'lucide-vue-next'
+import type { Component } from 'vue'
+import type {
+  AdminDomainKey,
+  AdminModuleCapability,
+  AdminModuleStatusSource,
+  ControlRoomTabGroup,
+  ControlRoomTabId,
+} from './types'
+
+export type AdminModuleDescriptor = {
+  id: ControlRoomTabId
+  group: ControlRoomTabGroup
+  label: string
+  description: string
+  component: string
+  requiredCapability: AdminModuleCapability
+  statusBadgeSource?: AdminModuleStatusSource
+  domain: AdminDomainKey
+  icon: Component
+}
+
+export const adminModules: AdminModuleDescriptor[] = [
+  {
+    id: 'overview',
+    group: '概览',
+    label: '运营总览',
+    description: '健康度、用户、任务、支持风险和近期运营信号。',
+    component: 'OverviewTab',
+    requiredCapability: 'admin:overview:read',
+    statusBadgeSource: 'serviceRisk',
+    domain: 'overview',
+    icon: GaugeCircle,
+  },
+  {
+    id: 'users',
+    group: '客户与收入',
+    label: '用户与权限',
+    description: '账号状态、手动权益调整、重置链接和封禁。',
+    component: 'UsersTab',
+    requiredCapability: 'admin:users:manage',
+    domain: 'users',
+    icon: UserCog,
+  },
+  {
+    id: 'paymentSetup',
+    group: '客户与收入',
+    label: '支付配置',
+    description: '商户就绪度、回调地址、必填密钥和上线证据。',
+    component: 'PaymentSetupTab',
+    requiredCapability: 'admin:revenue:configure',
+    statusBadgeSource: 'paymentReadiness',
+    domain: 'revenue',
+    icon: FileCog,
+  },
+  {
+    id: 'payments',
+    group: '客户与收入',
+    label: '支付对账',
+    description: '订单、回调事件、金额异常、支付商健康度和证据包。',
+    component: 'PaymentsTab',
+    requiredCapability: 'admin:revenue:reconcile',
+    statusBadgeSource: 'paymentRisk',
+    domain: 'revenue',
+    icon: CreditCard,
+  },
+  {
+    id: 'flags',
+    group: '产品配置',
+    label: '功能开关',
+    description: '工具可用性、登录要求、Pro 门槛和维护提示。',
+    component: 'FeatureFlagsTab',
+    requiredCapability: 'admin:product:configure',
+    statusBadgeSource: 'lockedFlags',
+    domain: 'productConfig',
+    icon: Flag,
+  },
+  {
+    id: 'settings',
+    group: '产品配置',
+    label: '站点配置',
+    description: '公开配置、站点文案和运营参数。',
+    component: 'SiteSettingsTab',
+    requiredCapability: 'admin:product:configure',
+    domain: 'productConfig',
+    icon: Settings2,
+  },
+  {
+    id: 'content',
+    group: '产品配置',
+    label: '内容块',
+    description: '首页、工具页和公共页面的可编辑内容。',
+    component: 'ContentBlocksTab',
+    requiredCapability: 'admin:product:configure',
+    domain: 'productConfig',
+    icon: FileText,
+  },
+  {
+    id: 'jobs',
+    group: '运营支持',
+    label: '任务观察',
+    description: 'PDF、OCR、Office 和 AI 后台任务状态。',
+    component: 'JobsTab',
+    requiredCapability: 'admin:operations:observe',
+    statusBadgeSource: 'failedJobs',
+    domain: 'operations',
+    icon: GaugeCircle,
+  },
+  {
+    id: 'feedback',
+    group: '运营支持',
+    label: '问题反馈',
+    description: '用户反馈、诊断码、处理状态和管理员备注。',
+    component: 'FeedbackTab',
+    requiredCapability: 'admin:operations:observe',
+    statusBadgeSource: 'openFeedback',
+    domain: 'operations',
+    icon: ClipboardList,
+  },
+  {
+    id: 'errors',
+    group: '运营支持',
+    label: '错误诊断',
+    description: 'API 错误、失败任务和诊断摘要。',
+    component: 'ErrorsTab',
+    requiredCapability: 'admin:operations:observe',
+    statusBadgeSource: 'apiErrors',
+    domain: 'operations',
+    icon: Flame,
+  },
+  {
+    id: 'maintenance',
+    group: '运营支持',
+    label: '维护清理',
+    description: '测试账号清理、过期临时文件和维护统计。',
+    component: 'MaintenanceTab',
+    requiredCapability: 'admin:operations:maintain',
+    statusBadgeSource: 'maintenanceRisk',
+    domain: 'operations',
+    icon: Trash2,
+  },
+  {
+    id: 'security',
+    group: '安全',
+    label: 'Account Security',
+    description: 'Admin password rotation and session handoff.',
+    component: 'SecurityTab',
+    requiredCapability: 'admin:security:manage',
+    domain: 'security',
+    icon: KeyRound,
+  },
+  {
+    id: 'audit',
+    group: '安全',
+    label: '审计日志',
+    description: '最近管理员操作和关键变更记录。',
+    component: 'AuditLogsTab',
+    requiredCapability: 'admin:audit:read',
+    statusBadgeSource: 'auditRecent',
+    domain: 'security',
+    icon: Activity,
+  },
+]
+
+export const adminModulesById = Object.fromEntries(
+  adminModules.map((module) => [module.id, module]),
+) as Record<ControlRoomTabId, AdminModuleDescriptor>

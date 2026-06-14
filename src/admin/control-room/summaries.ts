@@ -10,7 +10,7 @@ export const buildFeedbackSummary = (report: AdminFeedback) => {
     `标题：${report.title}`,
     `页面：${report.page_url || '未记录'}`,
     `诊断码：${report.diagnostic_code || '未记录'}`,
-    `联系：${report.email || '未提供'}`,
+    `联系方式：${report.email || '未提供'}`,
     `提交时间：${formatAdminDate(report.created_at)}`,
     '',
     '用户描述：',

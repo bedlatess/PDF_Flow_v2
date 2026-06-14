@@ -422,6 +422,17 @@ Deployment:
   - after smoke, GM Pay was disabled again so public Pricing does not show the temporary provider
   - temporary smoke container and temporary smoke users were removed
   - final production check: `gmpay_enabled=False`, `db_gmpay_enabled=False`, `alembic_version=add_payment_provider_configs`
+- Tested real GM Pay merchant config save path on production on 2026-06-14:
+  - official GM Pay `api_base_url`, merchant id, currency, token, and network were saved through the admin config API
+  - official GM Pay secret was accepted as write-only input and stored encrypted; plaintext was not returned by the API and was not present in `encrypted_secret_json`
+  - GM Pay was enabled only briefly during smoke and was disabled again immediately afterward
+  - public provider list reported GM Pay enabled while smoke config was enabled, then disabled after cleanup
+  - real GM Pay order creation did not pass yet: the gateway returned signature verification failure for the current create-transaction signing contract
+  - direct connectivity to `https://pay.pawn.eu.org/payments/gmpay/v1/order/create-transaction` from the backend container works, so the remaining blocker is the exact GM Pay request signature/field contract, not network reachability
+  - no real payment was made and no Pro entitlement was granted
+  - temporary real-config smoke users were removed
+  - production is left safe: `gmpay_enabled=False`, `db_gmpay_enabled=False`, encrypted real GM Pay config retained for later retry
+  - next required input before payment sampling: official GM Pay create-transaction signature documentation or a provider-side example of a successful signed request
 
 ## Known Code Issues
 

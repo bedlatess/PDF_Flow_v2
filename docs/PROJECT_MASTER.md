@@ -1133,7 +1133,7 @@ Admin Tools & Features Phase B local result:
 - Scope: product configuration module only. Payment Providers v2, Plans & Pricing, payment behavior, AI/OCR provider configuration, and new PDF features were not changed.
 - Data model:
   - Reused existing `feature_flags`.
-  - Added `feature_flags.is_public` with migration `add_feature_flag_public_visibility`.
+  - Added `feature_flags.is_public` with migration `ff_public_visibility`.
   - `enabled` means the feature can be used and is enforced by frontend route guards plus backend API gates.
   - `is_public` means the feature appears in public entry surfaces such as Home, Tools Center, and Footer.
   - This keeps "hidden from public listings" separate from "disabled/unavailable".
@@ -1166,6 +1166,31 @@ Admin Tools & Features Phase B local result:
   - `npx playwright test tests/e2e-playwright/availability-state.spec.ts --project=chromium --reporter=line`
   - `npm run build`
   - `npm run test:e2e:admin`
+
+Admin Tools & Features Phase B production result:
+
+- Deployment:
+  - Production deployed commit: `4d0588c1d91a635f563d8b11ea0151d471efa667`.
+  - Alembic version on production: `ff_public_visibility`.
+  - The initial long migration revision id was shortened because production `alembic_version.version_num` is `varchar(32)`.
+- Verification tool:
+  - Used `compress_pdf` because it appears in Home, Tools Center, Footer, has a direct route, and has a backend API gate at `/api/v1/files/compress`.
+- Production verification matrix:
+  - `enabled=true`, `is_public=true`: Home, Tools Center, Footer, and direct route show the tool; API reached business logic and returned `404 File not found` for the fake file id, proving the feature gate allowed the request.
+  - `enabled=true`, `is_public=false`: Home, Tools Center, and Footer hide the tool; direct route still opens; API still reached business logic and returned `404 File not found`. This confirms `is_public` only controls public entry visibility.
+  - `enabled=false`: public entries hide the tool; direct route redirects to the feature-disabled state with the maintenance message; API returns `503`.
+  - `requires_login=true`: public entries remain visible when public; anonymous direct route redirects to login; API returns `401`.
+  - `requires_pro=true`: public entries remain visible when public; anonymous/free direct route redirects to pricing; API returns `403`.
+- Audit:
+  - Feature flag saves wrote `admin_audit_logs` entries with `changed_fields=...`.
+  - Audit details recorded changed field names only.
+- Restore:
+  - `compress_pdf` was restored after verification to `enabled=true`, `is_public=true`, `requires_login=false`, `requires_pro=false`, `maintenance_message=null`.
+  - Production label/description for `compress_pdf` were restored to normal Chinese text after verification cleanup.
+- Scope guard:
+  - No Plans & Pricing work was started.
+  - No Payment Providers v2 work was started.
+  - Payment behavior was not changed.
 
 Admin bootstrap:
 

@@ -122,3 +122,105 @@ def test_compress_task_marks_durable_job_failed_before_retry(client, monkeypatch
         assert db_job.completed_at is not None
     finally:
         db.close()
+
+
+def test_pdf_task_lifecycle_helper_updates_durable_job_for_output_files(client, monkeypatch):
+    from app.core.database import get_db
+    from app.domains.jobs.repository import ProcessingJobRepository
+    from app.domains.jobs.service import JobService
+    from app.models.user import ProcessingJob
+    from app.tasks import pdf_tasks
+
+    db = next(client.app.dependency_overrides[get_db]())
+    try:
+        JobService(ProcessingJobRepository(db)).create_pending(
+            job_id="job_task_split_success",
+            user_id=None,
+            job_type="split_pdf",
+            input_file_name="input.pdf",
+            input_file_size=100,
+        )
+        service = JobService(ProcessingJobRepository(db))
+
+        monkeypatch.setattr(
+            pdf_tasks,
+            "best_effort_mark_processing",
+            lambda job_id, progress=None: service.mark_processing(job_id, progress=progress),
+        )
+        monkeypatch.setattr(
+            pdf_tasks,
+            "best_effort_mark_completed",
+            lambda job_id, result_data=None, output_file_url=None: service.mark_completed(
+                job_id,
+                result_data=result_data,
+                output_file_url=output_file_url,
+            ),
+        )
+
+        result = pdf_tasks._run_pdf_task_with_job_lifecycle(
+            job_id="job_task_split_success",
+            operation_label="PDF split",
+            operation=lambda: {
+                "success": True,
+                "output_files": ["/tmp/split_1.pdf", "/tmp/split_2.pdf"],
+                "count": 2,
+            },
+        )
+
+        db.expire_all()
+        db_job = db.query(ProcessingJob).filter(ProcessingJob.job_id == "job_task_split_success").first()
+        assert db_job.status == "completed"
+        assert db_job.progress == 100
+        assert db_job.output_file_url == "/tmp/split_1.pdf"
+        assert json.loads(db_job.result_data)["output_files"] == result["output_files"]
+    finally:
+        db.close()
+
+
+def test_pdf_task_lifecycle_helper_marks_failure_before_retry(client, monkeypatch):
+    from app.core.database import get_db
+    from app.domains.jobs.repository import ProcessingJobRepository
+    from app.domains.jobs.service import JobService
+    from app.models.user import ProcessingJob
+    from app.tasks import pdf_tasks
+
+    db = next(client.app.dependency_overrides[get_db]())
+    try:
+        JobService(ProcessingJobRepository(db)).create_pending(
+            job_id="job_task_rotate_failure",
+            user_id=None,
+            job_type="rotate_pdf",
+            input_file_name="input.pdf",
+            input_file_size=100,
+        )
+        service = JobService(ProcessingJobRepository(db))
+
+        monkeypatch.setattr(
+            pdf_tasks,
+            "best_effort_mark_processing",
+            lambda job_id, progress=None: service.mark_processing(job_id, progress=progress),
+        )
+        monkeypatch.setattr(
+            pdf_tasks,
+            "best_effort_mark_failed",
+            lambda job_id, error_message: service.mark_failed(job_id, error_message),
+        )
+
+        def raise_original(exc):
+            raise exc
+
+        with pytest.raises(ValueError):
+            pdf_tasks._run_pdf_task_with_job_lifecycle(
+                job_id="job_task_rotate_failure",
+                operation_label="PDF rotation",
+                operation=lambda: (_ for _ in ()).throw(ValueError("rotation failed")),
+                retry=raise_original,
+            )
+
+        db.expire_all()
+        db_job = db.query(ProcessingJob).filter(ProcessingJob.job_id == "job_task_rotate_failure").first()
+        assert db_job.status == "failed"
+        assert db_job.error_message == "rotation failed"
+        assert db_job.completed_at is not None
+    finally:
+        db.close()

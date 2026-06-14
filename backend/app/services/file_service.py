@@ -162,12 +162,50 @@ class FileProcessingService:
 
         return json.loads(file_data)
 
+    def _get_path_from_metadata(self, file_id: str, metadata: Dict) -> Path:
+        """Return a validated uploaded path from an already-loaded metadata record."""
+        file_path = Path(metadata["filepath"])
+        if not file_path.exists():
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"File no longer exists: {file_id}"
+            )
+        return file_path
+
     def _save_job_status(self, job_id: str, status_data: Dict):
         """保存任务状态到 Redis"""
         self.redis_client.setex(
             f"job:{job_id}",
             3600,  # 1 hour TTL
             json.dumps(status_data)
+        )
+
+    def _create_pending_processing_job(
+        self,
+        *,
+        job_id: str,
+        job_type: str,
+        file_metadata: Dict | List[Dict],
+        db: Session | None = None,
+    ) -> None:
+        """Best-effort durable job creation while Redis remains active state."""
+        metadata_items = file_metadata if isinstance(file_metadata, list) else [file_metadata]
+        names = [
+            str(item.get("filename") or Path(str(item.get("filepath") or "")).name or "input")
+            for item in metadata_items
+        ]
+        total_size = sum(int(item.get("size") or 0) for item in metadata_items)
+        input_file_name = names[0] if len(names) == 1 else ", ".join(names[:3])
+        if len(names) > 3:
+            input_file_name = f"{input_file_name}, +{len(names) - 3} more"
+
+        best_effort_create_processing_job(
+            job_id=job_id,
+            user_id=None,
+            job_type=job_type,
+            input_file_name=input_file_name,
+            input_file_size=total_size,
+            db=db,
         )
 
     def get_job_status(self, job_id: str) -> Optional[Dict]:
@@ -311,10 +349,19 @@ class FileProcessingService:
             detail="No downloadable output for this job"
         )
 
-    async def merge_pdfs(self, file_ids: List[str], output_filename: Optional[str] = None) -> Dict:
+    async def merge_pdfs(
+        self,
+        file_ids: List[str],
+        output_filename: Optional[str] = None,
+        db: Session | None = None,
+    ) -> Dict:
         """合并 PDF 文件"""
         # 获取所有文件路径
-        file_paths = [str(self._get_file_path(fid)) for fid in file_ids]
+        file_metadata = [self._get_file_metadata(fid) for fid in file_ids]
+        file_paths = [
+            str(self._get_path_from_metadata(file_id, metadata))
+            for file_id, metadata in zip(file_ids, file_metadata)
+        ]
 
         # 创建输出目录
         output_dir = self.file_manager.create_temp_dir(prefix="merge_")
@@ -325,6 +372,12 @@ class FileProcessingService:
 
         # 保存初始任务状态
         self._save_job_status(job_id, build_pending_job_status(job_id))
+        self._create_pending_processing_job(
+            job_id=job_id,
+            job_type="merge_pdf",
+            file_metadata=file_metadata,
+            db=db,
+        )
 
         # 提交 Celery 任务
         task = merge_pdfs_task.apply_async(
@@ -340,9 +393,15 @@ class FileProcessingService:
             "message": "PDF merge job queued"
         }
 
-    async def split_pdf(self, file_id: str, page_ranges: List[List[int]]) -> Dict:
+    async def split_pdf(
+        self,
+        file_id: str,
+        page_ranges: List[List[int]],
+        db: Session | None = None,
+    ) -> Dict:
         """拆分 PDF 文件"""
-        file_path = str(self._get_file_path(file_id))
+        file_metadata = self._get_file_metadata(file_id)
+        file_path = str(self._get_path_from_metadata(file_id, file_metadata))
 
         # 转换页面范围格式
         ranges_tuples = [(r[0], r[1]) for r in page_ranges]
@@ -354,6 +413,12 @@ class FileProcessingService:
         job_id = self._generate_job_id()
 
         self._save_job_status(job_id, build_pending_job_status(job_id))
+        self._create_pending_processing_job(
+            job_id=job_id,
+            job_type="split_pdf",
+            file_metadata=file_metadata,
+            db=db,
+        )
 
         # 提交任务
         task = split_pdf_task.apply_async(
@@ -388,12 +453,10 @@ class FileProcessingService:
         job_id = self._generate_job_id()
 
         self._save_job_status(job_id, build_pending_job_status(job_id))
-        best_effort_create_processing_job(
+        self._create_pending_processing_job(
             job_id=job_id,
-            user_id=None,
             job_type="compress_pdf",
-            input_file_name=str(file_metadata.get("filename") or file_path_obj.name),
-            input_file_size=int(file_metadata.get("size") or 0),
+            file_metadata=file_metadata,
             db=db,
         )
 
@@ -411,9 +474,15 @@ class FileProcessingService:
             "message": "PDF compression job queued"
         }
 
-    async def rotate_pdf(self, file_id: str, rotation: int) -> Dict:
+    async def rotate_pdf(
+        self,
+        file_id: str,
+        rotation: int,
+        db: Session | None = None,
+    ) -> Dict:
         """旋转 PDF 页面"""
-        file_path = str(self._get_file_path(file_id))
+        file_metadata = self._get_file_metadata(file_id)
+        file_path = str(self._get_path_from_metadata(file_id, file_metadata))
 
         # 创建输出路径
         output_dir = self.file_manager.create_temp_dir(prefix="rotate_")
@@ -423,6 +492,12 @@ class FileProcessingService:
         job_id = self._generate_job_id()
 
         self._save_job_status(job_id, build_pending_job_status(job_id))
+        self._create_pending_processing_job(
+            job_id=job_id,
+            job_type="rotate_pdf",
+            file_metadata=file_metadata,
+            db=db,
+        )
 
         # 提交任务
         task = rotate_pdf_task.apply_async(
@@ -438,9 +513,18 @@ class FileProcessingService:
             "message": "PDF rotation job queued"
         }
 
-    async def images_to_pdf(self, file_ids: List[str], output_filename: Optional[str] = None) -> Dict:
+    async def images_to_pdf(
+        self,
+        file_ids: List[str],
+        output_filename: Optional[str] = None,
+        db: Session | None = None,
+    ) -> Dict:
         """图片转 PDF"""
-        file_paths = [str(self._get_file_path(fid)) for fid in file_ids]
+        file_metadata = [self._get_file_metadata(fid) for fid in file_ids]
+        file_paths = [
+            str(self._get_path_from_metadata(file_id, metadata))
+            for file_id, metadata in zip(file_ids, file_metadata)
+        ]
 
         # 创建输出路径
         output_dir = self.file_manager.create_temp_dir(prefix="img2pdf_")
@@ -450,6 +534,12 @@ class FileProcessingService:
         job_id = self._generate_job_id()
 
         self._save_job_status(job_id, build_pending_job_status(job_id))
+        self._create_pending_processing_job(
+            job_id=job_id,
+            job_type="image_to_pdf",
+            file_metadata=file_metadata,
+            db=db,
+        )
 
         # 提交任务
         task = convert_images_to_pdf_task.apply_async(
@@ -465,9 +555,15 @@ class FileProcessingService:
             "message": "Image to PDF conversion job queued"
         }
 
-    async def pdf_to_images(self, file_id: str, format: str = "png") -> Dict:
+    async def pdf_to_images(
+        self,
+        file_id: str,
+        format: str = "png",
+        db: Session | None = None,
+    ) -> Dict:
         """PDF 转图片"""
-        file_path = str(self._get_file_path(file_id))
+        file_metadata = self._get_file_metadata(file_id)
+        file_path = str(self._get_path_from_metadata(file_id, file_metadata))
 
         # 创建输出目录
         output_dir = self.file_manager.create_temp_dir(prefix="pdf2img_")
@@ -476,6 +572,12 @@ class FileProcessingService:
         job_id = self._generate_job_id()
 
         self._save_job_status(job_id, build_pending_job_status(job_id))
+        self._create_pending_processing_job(
+            job_id=job_id,
+            job_type="pdf_to_image",
+            file_metadata=file_metadata,
+            db=db,
+        )
 
         # 提交任务
         task = convert_pdf_to_images_task.apply_async(

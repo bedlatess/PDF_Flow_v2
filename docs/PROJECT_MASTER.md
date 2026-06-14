@@ -1588,6 +1588,29 @@ Backend refactor R2 production result:
   - OCR, Office, compress, and merge Celery tasks remained registered.
   - Recent backend/celery logs showed no traceback/error/exception entries during the smoke window.
 
+
+Backend refactor R3 local checkpoint:
+
+- R3 keeps the R2 rollback posture: Redis `job:*` remains the active polling/download state source, Celery `task_id` remains equal to `job_id`, API response shape is unchanged, frontend is unchanged, and DB writes remain best-effort.
+- No payment, OCR, Office, AI, artifact storage, download routing, or DB-first polling changes were made.
+- Migrated the currently existing local PDF Celery task group to durable `ProcessingJob` lifecycle:
+  - `merge_pdfs_task`
+  - `split_pdf_task`
+  - `compress_pdf_task`
+  - `rotate_pdf_task`
+  - `convert_images_to_pdf_task` / image-to-PDF
+  - `convert_pdf_to_images_task` / PDF-to-images
+- File task creation now writes the legacy Redis pending job first, then best-effort creates a DB `ProcessingJob` with the same `job_id` for the local PDF Celery task group.
+- `pdf_tasks.py` now uses a shared lifecycle helper to best-effort mark DB jobs `processing`, `completed`, or `failed` without changing Celery return dicts or retry behavior.
+- Admin operations continue to merge Redis and DB jobs and de-duplicate by `job_id`, preferring DB durable rows when both exist.
+- Items from the broader desired local PDF list that are not migrated in this checkpoint because they are not current backend Celery tasks / would require API shape or frontend changes:
+  - Frontend-local tools: delete pages, organize, page numbers, crop, flatten, extract text, extract images.
+  - Synchronous advanced endpoints: watermark, protect, unlock, repair.
+- Local verification:
+  - `python -m compileall -q backend/app backend/tests/test_pdf_tasks.py backend/tests/test_files.py`
+  - `python -m pytest backend/tests/test_pdf_tasks.py backend/tests/test_files.py backend/tests/test_admin_operations_domain.py -q`
+  - `python -m pytest backend/tests -q` (`172 passed, 1 warning`)
+
 Admin bootstrap:
 
 ```bash

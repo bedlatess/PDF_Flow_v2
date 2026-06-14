@@ -82,6 +82,7 @@ async def merge_pdfs(
         lambda: file_processing_service.merge_pdfs(
             file_ids=payload.file_ids,
             output_filename=payload.output_filename,
+            db=db,
         ),
         error_detail="Failed to merge PDFs",
         log_message="Merge failed",
@@ -101,6 +102,7 @@ async def split_pdf(
         lambda: file_processing_service.split_pdf(
             file_id=payload.file_id,
             page_ranges=payload.page_ranges,
+            db=db,
         ),
         error_detail="Failed to split PDF",
         log_message="Split failed",
@@ -140,6 +142,7 @@ async def rotate_pdf(
         lambda: file_processing_service.rotate_pdf(
             file_id=payload.file_id,
             rotation=payload.rotation,
+            db=db,
         ),
         error_detail="Failed to rotate PDF",
         log_message="Rotate failed",
@@ -159,6 +162,7 @@ async def images_to_pdf(
         lambda: file_processing_service.images_to_pdf(
             file_ids=payload.file_ids,
             output_filename=payload.output_filename,
+            db=db,
         ),
         error_detail="Failed to convert images to PDF",
         log_message="Images to PDF failed",
@@ -178,6 +182,7 @@ async def pdf_to_images(
         lambda: file_processing_service.pdf_to_images(
             file_id=payload.file_id,
             format=payload.format.value,
+            db=db,
         ),
         error_detail="Failed to convert PDF to images",
         log_message="PDF to images failed",

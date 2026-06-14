@@ -372,40 +372,113 @@ class TestOfficeToPdfFlow:
         assert result["status"] == "pending"
         assert saved_jobs["job_compress_fallback"]["status"] == "pending"
 
-    def test_merge_service_keeps_redis_pending_job_contract(self, monkeypatch):
+    def test_local_pdf_services_create_durable_jobs_and_keep_redis_contract(
+        self,
+        monkeypatch,
+        tmp_path,
+        client,
+    ):
+        from app.core.database import get_db
+        from app.models.user import ProcessingJob
         from app.services import file_service as file_service_module
 
         saved_jobs = {}
+        created_tasks = {}
 
         class FakeTask:
+            def __init__(self, label):
+                self.label = label
+
             def apply_async(self, args, task_id):
+                created_tasks[self.label] = {"args": args, "task_id": task_id}
                 return MagicMock(id=task_id)
 
-        monkeypatch.setattr(file_service_module.file_processing_service, "_generate_job_id", lambda: "job_merge_test")
+        paths = {}
+        for file_id, filename, content in [
+            ("file_a", "a.pdf", b"%PDF-1.4 a"),
+            ("file_b", "b.pdf", b"%PDF-1.4 b"),
+            ("file_image", "image.png", b"png"),
+        ]:
+            path = tmp_path / filename
+            path.write_bytes(content)
+            paths[file_id] = path
+
+        metadata = {
+            file_id: {
+                "file_id": file_id,
+                "filename": path.name,
+                "filepath": str(path),
+                "size": path.stat().st_size,
+            }
+            for file_id, path in paths.items()
+        }
+        job_ids = iter([
+            "job_merge_test",
+            "job_split_test",
+            "job_rotate_test",
+            "job_img2pdf_test",
+            "job_pdf2img_test",
+        ])
+
+        monkeypatch.setattr(file_service_module.file_processing_service, "_generate_job_id", lambda: next(job_ids))
         monkeypatch.setattr(
             file_service_module.file_processing_service,
-            "_get_file_path",
-            lambda file_id: f"/tmp/pdf-flow/uploads/{file_id}.pdf",
+            "_get_file_metadata",
+            lambda file_id: metadata[file_id],
         )
         monkeypatch.setattr(
             file_service_module.file_processing_service,
             "_save_job_status",
             lambda job_id, status_data: saved_jobs.setdefault(job_id, status_data),
         )
-        monkeypatch.setattr(file_service_module, "merge_pdfs_task", FakeTask())
+        monkeypatch.setattr(file_service_module, "merge_pdfs_task", FakeTask("merge"))
+        monkeypatch.setattr(file_service_module, "split_pdf_task", FakeTask("split"))
+        monkeypatch.setattr(file_service_module, "rotate_pdf_task", FakeTask("rotate"))
+        monkeypatch.setattr(file_service_module, "convert_images_to_pdf_task", FakeTask("image_to_pdf"))
+        monkeypatch.setattr(file_service_module, "convert_pdf_to_images_task", FakeTask("pdf_to_image"))
 
-        result = asyncio.run(
-            file_service_module.file_processing_service.merge_pdfs(["file_a", "file_b"])
-        )
+        db = next(client.app.dependency_overrides[get_db]())
+        try:
+            results = [
+                asyncio.run(file_service_module.file_processing_service.merge_pdfs(["file_a", "file_b"], db=db)),
+                asyncio.run(file_service_module.file_processing_service.split_pdf("file_a", [[1, 1]], db=db)),
+                asyncio.run(file_service_module.file_processing_service.rotate_pdf("file_a", 90, db=db)),
+                asyncio.run(file_service_module.file_processing_service.images_to_pdf(["file_image"], db=db)),
+                asyncio.run(file_service_module.file_processing_service.pdf_to_images("file_a", db=db)),
+            ]
+            expected_types = {
+                "job_merge_test": "merge_pdf",
+                "job_split_test": "split_pdf",
+                "job_rotate_test": "rotate_pdf",
+                "job_img2pdf_test": "image_to_pdf",
+                "job_pdf2img_test": "pdf_to_image",
+            }
 
-        assert result == {
-            "job_id": "job_merge_test",
-            "status": "pending",
-            "message": "PDF merge job queued",
-        }
-        assert saved_jobs["job_merge_test"]["job_id"] == "job_merge_test"
-        assert saved_jobs["job_merge_test"]["status"] == "pending"
-        assert set(saved_jobs["job_merge_test"]) == {"job_id", "status", "created_at", "updated_at"}
+            for result in results:
+                assert result["status"] == "pending"
+                assert saved_jobs[result["job_id"]]["job_id"] == result["job_id"]
+                assert saved_jobs[result["job_id"]]["status"] == "pending"
+                assert set(saved_jobs[result["job_id"]]) == {
+                    "job_id",
+                    "status",
+                    "created_at",
+                    "updated_at",
+                }
+
+            for job_id, job_type in expected_types.items():
+                db_job = db.query(ProcessingJob).filter(ProcessingJob.job_id == job_id).first()
+                assert db_job is not None
+                assert db_job.user_id is None
+                assert db_job.job_type == job_type
+                assert db_job.status == "pending"
+
+            assert created_tasks["merge"]["task_id"] == "job_merge_test"
+            assert created_tasks["split"]["task_id"] == "job_split_test"
+            assert created_tasks["rotate"]["task_id"] == "job_rotate_test"
+            assert created_tasks["image_to_pdf"]["task_id"] == "job_img2pdf_test"
+            assert created_tasks["pdf_to_image"]["task_id"] == "job_pdf2img_test"
+        finally:
+            db.close()
 
     def test_office_service_saves_job_state(self, monkeypatch):
         from app.services import file_service as file_service_module

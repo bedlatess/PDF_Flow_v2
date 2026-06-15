@@ -17,7 +17,7 @@ from app.models.user import (
     UserRole,
 )
 from app.schemas.admin import ContentBlockUpdate, FeatureFlagUpdate, SiteSettingUpdate
-from app.services.feature_gate import DEFAULT_FEATURE_FLAGS
+from app.services.feature_gate import DEFAULT_FEATURE_FLAGS, _feature_flag_kwargs
 
 
 DEFAULT_SETTINGS = [
@@ -149,15 +149,7 @@ def seed_defaults(db: Session) -> None:
     for item in DEFAULT_FEATURE_FLAGS:
         if item.key not in existing_flags:
             db.add(
-                FeatureFlag(
-                    key=item.key,
-                    label=item.label,
-                    description=item.description,
-                    enabled=item.enabled,
-                    is_public=item.is_public,
-                    requires_login=item.requires_login,
-                    requires_pro=item.requires_pro,
-                )
+                FeatureFlag(**_feature_flag_kwargs(item))
             )
 
     existing_blocks = {
@@ -199,6 +191,13 @@ def get_public_config(db: Session) -> dict:
                 "requires_login": item.requires_login,
                 "requires_pro": item.requires_pro,
                 "maintenance_message": item.maintenance_message,
+                "free_daily_limit": item.free_daily_limit,
+                "free_max_file_size_mb": item.free_max_file_size_mb,
+                "free_batch_file_limit": item.free_batch_file_limit,
+                "pro_daily_limit": item.pro_daily_limit,
+                "pro_max_file_size_mb": item.pro_max_file_size_mb,
+                "pro_batch_file_limit": item.pro_batch_file_limit,
+                "pro_unlimited": item.pro_unlimited,
             }
             for item in feature_flags
         },
@@ -293,6 +292,13 @@ def update_feature_flag(
         "requires_login": flag.requires_login,
         "requires_pro": flag.requires_pro,
         "maintenance_message": flag.maintenance_message,
+        "free_daily_limit": flag.free_daily_limit,
+        "free_max_file_size_mb": flag.free_max_file_size_mb,
+        "free_batch_file_limit": flag.free_batch_file_limit,
+        "pro_daily_limit": flag.pro_daily_limit,
+        "pro_max_file_size_mb": flag.pro_max_file_size_mb,
+        "pro_batch_file_limit": flag.pro_batch_file_limit,
+        "pro_unlimited": flag.pro_unlimited,
     }
     for field, value in payload.model_dump().items():
         setattr(flag, field, value)

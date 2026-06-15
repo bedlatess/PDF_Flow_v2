@@ -12,6 +12,7 @@ import ToolNoticeBar from '@/components/tools/ToolNoticeBar.vue'
 import ToolPageShell from '@/components/tools/ToolPageShell.vue'
 import ToolWorkspace from '@/components/tools/ToolWorkspace.vue'
 import { fileAPI, type JobStatusResponse } from '@/services/api'
+import { useSiteConfigStore } from '@/stores/siteConfig'
 import { useUserStore } from '@/stores/user'
 import { formatUserFacingError, type FormattedUserError } from '@/utils/error-messages'
 import { redirectForFeatureAccess } from '@/utils/feature-access'
@@ -34,6 +35,7 @@ const { t, tm } = useI18n()
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
+const siteConfigStore = useSiteConfigStore()
 
 const mode = ref<BatchMode>('pdf_to_word')
 const items = ref<BatchItem[]>([])
@@ -71,6 +73,24 @@ const itemStateTone = (state: BatchState) => {
 }
 
 const resultExtension = () => mode.value === 'pdf_to_word' ? '.docx' : '.xlsx'
+const currentTier = computed(() =>
+  userStore.isProTier || userStore.isEnterpriseTier || userStore.isAdmin ? 'pro' : 'free',
+)
+const batchFlag = computed(() => siteConfigStore.getFeatureFlag('batch_convert', t('tools.batchConvert.title')))
+const targetFeatureKey = computed(() => mode.value === 'pdf_to_word' ? 'pdf_to_word' : 'pdf_to_excel')
+const targetFlag = computed(() => siteConfigStore.getFeatureFlag(targetFeatureKey.value, mode.value))
+const batchFileLimit = computed(() => {
+  const limit = currentTier.value === 'pro'
+    ? batchFlag.value.pro_batch_file_limit
+    : batchFlag.value.free_batch_file_limit
+  return limit && limit > 0 ? limit : 10
+})
+const maxFileSizeMb = computed(() => {
+  const limit = currentTier.value === 'pro'
+    ? targetFlag.value.pro_max_file_size_mb
+    : targetFlag.value.free_max_file_size_mb
+  return limit && limit > 0 ? limit : null
+})
 
 const ensureLogin = () => redirectForFeatureAccess({
   router,
@@ -92,6 +112,22 @@ const handleFilesSelected = (files: File[]) => {
 
   const existingKeys = new Set(items.value.map((item) => `${item.file.name}:${item.file.size}`))
   for (const file of pdfFiles) {
+    if (items.value.length >= batchFileLimit.value) {
+      errorState.value = formatUserFacingError(new Error('Batch file limit reached'), {
+        area: 'GENERAL',
+        fallbackTitle: copy.value.errorTitle,
+        fallbackMessage: `Your current plan allows up to ${batchFileLimit.value} files in one batch.`,
+      })
+      break
+    }
+    if (maxFileSizeMb.value && file.size > maxFileSizeMb.value * 1024 * 1024) {
+      errorState.value = formatUserFacingError(new Error('File size limit reached'), {
+        area: 'GENERAL',
+        fallbackTitle: copy.value.errorTitle,
+        fallbackMessage: `Your current plan allows files up to ${maxFileSizeMb.value} MB for this conversion.`,
+      })
+      continue
+    }
     const key = `${file.name}:${file.size}`
     if (existingKeys.has(key)) continue
     items.value.push({
@@ -120,6 +156,7 @@ const clearAll = () => {
 }
 
 onUnmounted(clearAll)
+siteConfigStore.fetchPublicConfig()
 
 const resetItemForRun = (item: BatchItem) => {
   if (item.resultUrl) URL.revokeObjectURL(item.resultUrl)

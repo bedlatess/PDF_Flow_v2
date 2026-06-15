@@ -7,6 +7,12 @@ import {
 import type { ControlRoomContext } from './context'
 
 export const createControlRoomSettingsActions = (ctx: ControlRoomContext) => {
+  const normalizeLimit = (value: number | string | null | undefined) => {
+    if (value === '' || value === null || typeof value === 'undefined') return null
+    const numberValue = Number(value)
+    return Number.isFinite(numberValue) && numberValue >= 0 ? Math.floor(numberValue) : null
+  }
+
   const saveFlag = async (flag: FeatureFlag) => {
     ctx.savingKey.value = `flag:${flag.key}`
     ctx.error.value = ''
@@ -20,6 +26,13 @@ export const createControlRoomSettingsActions = (ctx: ControlRoomContext) => {
         requires_login: flag.requires_login,
         requires_pro: flag.requires_pro,
         maintenance_message: flag.maintenance_message,
+        free_daily_limit: normalizeLimit(flag.free_daily_limit),
+        free_max_file_size_mb: normalizeLimit(flag.free_max_file_size_mb),
+        free_batch_file_limit: normalizeLimit(flag.free_batch_file_limit),
+        pro_daily_limit: normalizeLimit(flag.pro_daily_limit),
+        pro_max_file_size_mb: normalizeLimit(flag.pro_max_file_size_mb),
+        pro_batch_file_limit: normalizeLimit(flag.pro_batch_file_limit),
+        pro_unlimited: flag.pro_unlimited,
       })
       const index = ctx.flags.value.findIndex((item) => item.key === updated.key)
       if (index >= 0) ctx.flags.value[index] = updated

@@ -1,4 +1,5 @@
 """Feature flag access checks shared by public and admin-facing routes."""
+
 from dataclasses import dataclass
 
 from fastapi import HTTPException, status
@@ -18,36 +19,43 @@ class DefaultFeatureFlag:
     is_public: bool = True
     requires_login: bool = False
     requires_pro: bool = False
+    free_daily_limit: int | None = 10
+    free_max_file_size_mb: int | None = 25
+    free_batch_file_limit: int | None = 5
+    pro_daily_limit: int | None = 200
+    pro_max_file_size_mb: int | None = 200
+    pro_batch_file_limit: int | None = 25
+    pro_unlimited: bool = False
 
 
 DEFAULT_FEATURE_FLAGS = [
-    DefaultFeatureFlag("merge_pdf", "合并 PDF", "允许用户合并多个 PDF 文件。"),
-    DefaultFeatureFlag("split_pdf", "拆分 PDF", "允许用户按页码拆分 PDF。"),
-    DefaultFeatureFlag("compress_pdf", "压缩 PDF", "允许用户压缩 PDF 文件。"),
-    DefaultFeatureFlag("rotate_pdf", "旋转 PDF", "允许用户旋转 PDF 页面。"),
-    DefaultFeatureFlag("image_to_pdf", "图片转 PDF", "允许用户将图片转换为 PDF。"),
-    DefaultFeatureFlag("pdf_to_image", "PDF 转图片", "允许用户将 PDF 页面导出为图片。"),
-    DefaultFeatureFlag("pdf_to_word", "PDF 转 Word", "允许登录用户将文本型 PDF 转换为 DOCX Beta。", requires_login=True),
-    DefaultFeatureFlag("pdf_to_excel", "PDF 转 Excel", "允许登录用户将文本型 PDF 简单表格转换为 XLSX Beta。", requires_login=True),
-    DefaultFeatureFlag("batch_convert", "批量转换", "允许登录用户批量提交 Word/Excel 转换任务。", requires_login=True),
-    DefaultFeatureFlag("html_to_pdf", "HTML 转 PDF", "允许登录用户将公开网页或 HTML 文本转换为 PDF。", requires_login=True),
-    DefaultFeatureFlag("delete_pages_pdf", "删除 PDF 页面", "允许用户移除 PDF 中不需要的页面。"),
-    DefaultFeatureFlag("organize_pdf", "整理 PDF 页面", "允许用户调整 PDF 页面顺序。"),
-    DefaultFeatureFlag("page_numbers_pdf", "添加 PDF 页码", "允许用户为 PDF 添加页码。"),
-    DefaultFeatureFlag("crop_pdf", "裁剪 PDF", "允许用户在浏览器本地裁剪 PDF 可视区域。"),
-    DefaultFeatureFlag("flatten_pdf", "扁平化 PDF", "允许用户在浏览器本地将可填写表单固化为普通页面内容。"),
-    DefaultFeatureFlag("repair_pdf", "修复 PDF", "允许登录用户在服务器上重新整理可读取的 PDF 结构。", requires_login=True),
-    DefaultFeatureFlag("protect_pdf", "保护 PDF", "允许登录用户为 PDF 添加打开密码。", requires_login=True),
-    DefaultFeatureFlag("unlock_pdf", "解锁 PDF", "允许登录用户在知道密码的前提下移除 PDF 打开密码。", requires_login=True),
-    DefaultFeatureFlag("sign_pdf", "签署 PDF", "允许用户在浏览器本地为 PDF 添加可视签名图片。"),
-    DefaultFeatureFlag("extract_text_pdf", "提取 PDF 文字", "允许用户在浏览器本地从文本型 PDF 提取可复制文字。"),
-    DefaultFeatureFlag("extract_images_pdf", "提取 PDF 图片", "允许用户在浏览器本地从 PDF 提取内嵌图片资源。"),
-    DefaultFeatureFlag("watermark_pdf", "添加水印", "允许用户为 PDF 添加水印。"),
-    DefaultFeatureFlag("ocr_pdf", "OCR 文字识别", "允许登录用户提交 OCR 识别任务。", requires_login=True, requires_pro=True),
-    DefaultFeatureFlag("office_to_pdf", "Office 转 PDF", "允许登录用户将 Office 文件转换为 PDF。", requires_login=True),
-    DefaultFeatureFlag("ai_analyzer", "AI PDF 分析器", "允许 Pro 用户进行 PDF 智能分析。", requires_login=True, requires_pro=True),
-    DefaultFeatureFlag("fill_form", "PDF 表单填写", "允许 Pro 用户填写 PDF 表单。", requires_login=True, requires_pro=True),
-    DefaultFeatureFlag("annotate_pdf", "PDF 标注", "允许 Pro 用户添加 PDF 标注。", requires_login=True, requires_pro=True),
+    DefaultFeatureFlag("merge_pdf", "Merge PDF", "Merge multiple PDF files into one document."),
+    DefaultFeatureFlag("split_pdf", "Split PDF", "Split a PDF into selected page ranges."),
+    DefaultFeatureFlag("compress_pdf", "Compress PDF", "Reduce PDF file size."),
+    DefaultFeatureFlag("rotate_pdf", "Rotate PDF", "Rotate PDF pages."),
+    DefaultFeatureFlag("image_to_pdf", "Image to PDF", "Convert images into a PDF."),
+    DefaultFeatureFlag("pdf_to_image", "PDF to Image", "Export PDF pages as images."),
+    DefaultFeatureFlag("pdf_to_word", "PDF to Word", "Convert text-based PDFs to DOCX Beta.", requires_login=True),
+    DefaultFeatureFlag("pdf_to_excel", "PDF to Excel", "Convert simple text-based PDF tables to XLSX Beta.", requires_login=True),
+    DefaultFeatureFlag("batch_convert", "Batch Convert", "Submit multiple Word/Excel conversion tasks.", requires_login=True),
+    DefaultFeatureFlag("html_to_pdf", "HTML to PDF", "Convert a public URL or pasted HTML into a PDF.", requires_login=True),
+    DefaultFeatureFlag("delete_pages_pdf", "Delete PDF Pages", "Remove unwanted pages from a PDF."),
+    DefaultFeatureFlag("organize_pdf", "Organize PDF", "Reorder PDF pages."),
+    DefaultFeatureFlag("page_numbers_pdf", "Add Page Numbers", "Add page numbers to a PDF."),
+    DefaultFeatureFlag("crop_pdf", "Crop PDF", "Crop visible PDF page areas in the browser."),
+    DefaultFeatureFlag("flatten_pdf", "Flatten PDF", "Flatten fillable form content into regular PDF pages."),
+    DefaultFeatureFlag("repair_pdf", "Repair PDF", "Rebuild a readable PDF structure on the server.", requires_login=True),
+    DefaultFeatureFlag("protect_pdf", "Protect PDF", "Add an open password to a PDF.", requires_login=True),
+    DefaultFeatureFlag("unlock_pdf", "Unlock PDF", "Remove a known PDF open password.", requires_login=True),
+    DefaultFeatureFlag("sign_pdf", "Sign PDF", "Add a visual signature image in the browser."),
+    DefaultFeatureFlag("extract_text_pdf", "Extract PDF Text", "Extract copyable text from a text-based PDF in the browser."),
+    DefaultFeatureFlag("extract_images_pdf", "Extract PDF Images", "Extract embedded images from a PDF in the browser."),
+    DefaultFeatureFlag("watermark_pdf", "Watermark PDF", "Add a watermark to a PDF."),
+    DefaultFeatureFlag("ocr_pdf", "OCR PDF", "Submit an OCR text recognition task.", requires_login=True, requires_pro=True),
+    DefaultFeatureFlag("office_to_pdf", "Office to PDF", "Convert Office documents to PDF.", requires_login=True),
+    DefaultFeatureFlag("ai_analyzer", "AI PDF Analyzer", "Analyze PDFs with AI.", requires_login=True, requires_pro=True),
+    DefaultFeatureFlag("fill_form", "Fill PDF Form", "Fill PDF forms.", requires_login=True, requires_pro=True),
+    DefaultFeatureFlag("annotate_pdf", "Annotate PDF", "Add PDF annotations.", requires_login=True, requires_pro=True),
 ]
 
 DEFAULT_FEATURE_FLAGS_BY_KEY = {item.key: item for item in DEFAULT_FEATURE_FLAGS}
@@ -57,23 +65,66 @@ def can_use_pro_feature(user: User | None) -> bool:
     return has_active_subscription(user)
 
 
+def _feature_flag_kwargs(item: DefaultFeatureFlag) -> dict:
+    return {
+        "key": item.key,
+        "label": item.label,
+        "description": item.description,
+        "enabled": item.enabled,
+        "is_public": item.is_public,
+        "requires_login": item.requires_login,
+        "requires_pro": item.requires_pro,
+        "free_daily_limit": item.free_daily_limit,
+        "free_max_file_size_mb": item.free_max_file_size_mb,
+        "free_batch_file_limit": item.free_batch_file_limit,
+        "pro_daily_limit": item.pro_daily_limit,
+        "pro_max_file_size_mb": item.pro_max_file_size_mb,
+        "pro_batch_file_limit": item.pro_batch_file_limit,
+        "pro_unlimited": item.pro_unlimited,
+    }
+
+
+def _apply_missing_default_limits(flag: FeatureFlag, default: DefaultFeatureFlag) -> bool:
+    changed = False
+    for field in (
+        "free_daily_limit",
+        "free_max_file_size_mb",
+        "free_batch_file_limit",
+        "pro_daily_limit",
+        "pro_max_file_size_mb",
+        "pro_batch_file_limit",
+    ):
+        if getattr(flag, field, None) is None:
+            setattr(flag, field, getattr(default, field))
+            changed = True
+    if getattr(flag, "pro_unlimited", None) is None:
+        flag.pro_unlimited = default.pro_unlimited
+        changed = True
+    return changed
+
+
 def seed_default_feature_flags(db: Session) -> None:
-    if db.query(FeatureFlag).count() > 0:
+    existing_flags = {item.key: item for item in db.query(FeatureFlag).all()}
+    if not existing_flags:
+        db.add_all(FeatureFlag(**_feature_flag_kwargs(item)) for item in DEFAULT_FEATURE_FLAGS)
+        db.commit()
         return
 
-    db.add_all(
-        FeatureFlag(
-            key=item.key,
-            label=item.label,
-            description=item.description,
-            enabled=item.enabled,
-            is_public=item.is_public,
-            requires_login=item.requires_login,
-            requires_pro=item.requires_pro,
-        )
-        for item in DEFAULT_FEATURE_FLAGS
-    )
-    db.commit()
+    changed = False
+    for item in DEFAULT_FEATURE_FLAGS:
+        flag = existing_flags.get(item.key)
+        if flag is None:
+            db.add(FeatureFlag(**_feature_flag_kwargs(item)))
+            changed = True
+            continue
+        if flag.label.startswith(("鍚", "鎷", "PDF 杞")):
+            flag.label = item.label
+            flag.description = item.description
+            changed = True
+        changed = _apply_missing_default_limits(flag, item) or changed
+
+    if changed:
+        db.commit()
 
 
 def get_feature_flag(db: Session, key: str) -> FeatureFlag | None:
@@ -83,21 +134,17 @@ def get_feature_flag(db: Session, key: str) -> FeatureFlag | None:
 def get_or_create_feature_flag(db: Session, key: str) -> FeatureFlag | None:
     flag = get_feature_flag(db, key)
     if flag is not None:
+        default = DEFAULT_FEATURE_FLAGS_BY_KEY.get(key)
+        if default and _apply_missing_default_limits(flag, default):
+            db.commit()
+            db.refresh(flag)
         return flag
 
     default = DEFAULT_FEATURE_FLAGS_BY_KEY.get(key)
     if default is None:
         return None
 
-    flag = FeatureFlag(
-        key=default.key,
-        label=default.label,
-        description=default.description,
-        enabled=default.enabled,
-        is_public=default.is_public,
-        requires_login=default.requires_login,
-        requires_pro=default.requires_pro,
-    )
+    flag = FeatureFlag(**_feature_flag_kwargs(default))
     db.add(flag)
     db.commit()
     db.refresh(flag)

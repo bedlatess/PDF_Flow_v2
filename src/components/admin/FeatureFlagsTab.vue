@@ -94,6 +94,15 @@ const accessLabel = (flag: FeatureFlagWithMeta) => {
   if (flag.requires_login) return 'Login'
   return 'Public'
 }
+
+const limitFields = [
+  { key: 'free_daily_limit', label: 'Free daily', hint: 'Conversions per day' },
+  { key: 'free_max_file_size_mb', label: 'Free size', hint: 'MB per file' },
+  { key: 'free_batch_file_limit', label: 'Free batch', hint: 'Files per batch' },
+  { key: 'pro_daily_limit', label: 'Pro daily', hint: 'Conversions per day' },
+  { key: 'pro_max_file_size_mb', label: 'Pro size', hint: 'MB per file' },
+  { key: 'pro_batch_file_limit', label: 'Pro batch', hint: 'Files per batch' },
+] as const
 </script>
 
 <template>
@@ -196,6 +205,28 @@ const accessLabel = (flag: FeatureFlagWithMeta) => {
                   <span class="text-xs text-slate-500 dark:text-slate-400">Non-Pro users see Pricing</span>
                 </span>
                 <input v-model="flag.requires_pro" type="checkbox" class="rounded border-white/20 bg-white text-sky-600 dark:bg-slate-900 dark:text-sky-300">
+              </label>
+            </div>
+
+            <div class="grid gap-2 sm:grid-cols-2">
+              <label
+                v-for="field in limitFields"
+                :key="field.key"
+                class="rounded-md bg-slate-50 px-3 py-2 text-sm text-slate-700 dark:bg-slate-950/45 dark:text-slate-200"
+              >
+                <span class="block font-semibold">{{ field.label }}</span>
+                <span class="block text-xs text-slate-500 dark:text-slate-400">{{ field.hint }}</span>
+                <input
+                  v-model.number="(flag as any)[field.key]"
+                  type="number"
+                  min="0"
+                  class="mt-2 w-full rounded border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-sky-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                >
+              </label>
+              <label class="rounded-md bg-slate-50 px-3 py-2 text-sm text-slate-700 dark:bg-slate-950/45 dark:text-slate-200">
+                <span class="block font-semibold">Pro unlimited</span>
+                <span class="block text-xs text-slate-500 dark:text-slate-400">Ignore Pro quota caps</span>
+                <input v-model="flag.pro_unlimited" type="checkbox" class="mt-3 rounded border-white/20 bg-white text-sky-600 dark:bg-slate-900 dark:text-sky-300">
               </label>
             </div>
 

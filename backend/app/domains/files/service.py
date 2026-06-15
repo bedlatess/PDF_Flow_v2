@@ -11,7 +11,7 @@ from fastapi import HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.domains.account.entitlements import effective_role
-from app.models.user import ProcessingJob, User, UserRole
+from app.models.user import FeatureFlag, ProcessingJob, User, UserRole
 from app.services.feature_gate import require_feature_access
 
 ALLOWED_OFFICE_EXTENSIONS = {".docx", ".doc", ".xlsx", ".xls", ".pptx", ".ppt"}
@@ -44,8 +44,8 @@ def require_file_feature(
     db: Session,
     feature_key: str,
     user: User | None,
-) -> None:
-    require_feature_access(db, feature_key, user)
+) -> FeatureFlag | None:
+    return require_feature_access(db, feature_key, user)
 
 
 def require_job_status(job_id: str, status_data: dict | None) -> dict:
@@ -73,9 +73,13 @@ async def run_file_operation(
     *,
     error_detail: str,
     log_message: str,
+    on_success: Callable[[dict], None] | None = None,
 ) -> dict:
     try:
-        return await operation()
+        result = await operation()
+        if on_success:
+            on_success(result)
+        return result
     except HTTPException:
         raise
     except Exception as exc:

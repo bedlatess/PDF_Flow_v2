@@ -19,6 +19,7 @@ from app.domains.files.service import (
     user_upload_tier,
     validate_office_upload,
 )
+from app.domains.usage_limits import ToolUsageContext, enforce_tool_limits_for_flag, record_tool_usage
 from app.models.user import User
 from app.schemas.file import (
     FileUploadResponse,
@@ -40,6 +41,74 @@ from app.schemas.file import (
 from app.services.file_service import file_processing_service
 
 router = APIRouter(prefix="/files", tags=["files"])
+
+
+def _file_metadata_for_limits(file_id: str) -> dict:
+    return file_processing_service._get_file_metadata(file_id)
+
+
+def _metadata_sizes(items: list[dict]) -> list[int]:
+    return [int(item.get("size") or 0) for item in items]
+
+
+def _record_usage_callback(
+    *,
+    db: Session,
+    context: ToolUsageContext,
+    request: Request,
+    file_size: int,
+    file_count: int,
+):
+    return lambda result: record_tool_usage(
+        db,
+        context=context,
+        job_id=result.get("job_id"),
+        file_size=file_size,
+        file_count=file_count,
+        request=request,
+    )
+
+
+def _enforce_limits(
+    db: Session,
+    *,
+    feature_key: str,
+    current_user: User | None,
+    request: Request,
+    file_sizes: list[int] | None = None,
+    batch_count: int = 1,
+) -> ToolUsageContext:
+    flag = require_file_feature(db, feature_key, current_user)
+    return enforce_tool_limits_for_flag(
+        db,
+        feature_key=feature_key,
+        flag=flag,
+        current_user=current_user,
+        request=request,
+        file_sizes=file_sizes,
+        batch_count=batch_count,
+    )
+
+
+def _enforce_limits_for_flag(
+    db: Session,
+    *,
+    feature_key: str,
+    flag,
+    current_user: User | None,
+    request: Request,
+    file_sizes: list[int] | None = None,
+    batch_count: int = 1,
+) -> ToolUsageContext:
+    return enforce_tool_limits_for_flag(
+        db,
+        feature_key=feature_key,
+        flag=flag,
+        current_user=current_user,
+        request=request,
+        file_sizes=file_sizes,
+        batch_count=batch_count,
+    )
 
 
 async def apply_upload_rate_limit(request: Request):
@@ -84,7 +153,18 @@ async def merge_pdfs(
     db: Session = Depends(get_db),
     _rate_limit: None = Depends(apply_processing_rate_limit),
 ):
-    require_file_feature(db, "merge_pdf", current_user)
+    flag = require_file_feature(db, "merge_pdf", current_user)
+    metadata = [_file_metadata_for_limits(file_id) for file_id in payload.file_ids]
+    sizes = _metadata_sizes(metadata)
+    usage_context = _enforce_limits_for_flag(
+        db,
+        feature_key="merge_pdf",
+        flag=flag,
+        current_user=current_user,
+        request=request,
+        file_sizes=sizes,
+        batch_count=len(metadata),
+    )
     return await run_file_operation(
         lambda: file_processing_service.merge_pdfs(
             file_ids=payload.file_ids,
@@ -93,6 +173,13 @@ async def merge_pdfs(
         ),
         error_detail="Failed to merge PDFs",
         log_message="Merge failed",
+        on_success=_record_usage_callback(
+            db=db,
+            context=usage_context,
+            request=request,
+            file_size=sum(sizes),
+            file_count=len(metadata),
+        ),
     )
 
 
@@ -104,7 +191,16 @@ async def split_pdf(
     db: Session = Depends(get_db),
     _rate_limit: None = Depends(apply_processing_rate_limit),
 ):
-    require_file_feature(db, "split_pdf", current_user)
+    flag = require_file_feature(db, "split_pdf", current_user)
+    metadata = _file_metadata_for_limits(payload.file_id)
+    usage_context = _enforce_limits_for_flag(
+        db,
+        feature_key="split_pdf",
+        flag=flag,
+        current_user=current_user,
+        request=request,
+        file_sizes=[int(metadata.get("size") or 0)],
+    )
     return await run_file_operation(
         lambda: file_processing_service.split_pdf(
             file_id=payload.file_id,
@@ -113,6 +209,13 @@ async def split_pdf(
         ),
         error_detail="Failed to split PDF",
         log_message="Split failed",
+        on_success=_record_usage_callback(
+            db=db,
+            context=usage_context,
+            request=request,
+            file_size=int(metadata.get("size") or 0),
+            file_count=1,
+        ),
     )
 
 
@@ -124,7 +227,16 @@ async def compress_pdf(
     db: Session = Depends(get_db),
     _rate_limit: None = Depends(apply_processing_rate_limit),
 ):
-    require_file_feature(db, "compress_pdf", current_user)
+    flag = require_file_feature(db, "compress_pdf", current_user)
+    metadata = _file_metadata_for_limits(payload.file_id)
+    usage_context = _enforce_limits_for_flag(
+        db,
+        feature_key="compress_pdf",
+        flag=flag,
+        current_user=current_user,
+        request=request,
+        file_sizes=[int(metadata.get("size") or 0)],
+    )
     return await run_file_operation(
         lambda: file_processing_service.compress_pdf(
             file_id=payload.file_id,
@@ -133,6 +245,13 @@ async def compress_pdf(
         ),
         error_detail="Failed to compress PDF",
         log_message="Compress failed",
+        on_success=_record_usage_callback(
+            db=db,
+            context=usage_context,
+            request=request,
+            file_size=int(metadata.get("size") or 0),
+            file_count=1,
+        ),
     )
 
 
@@ -144,7 +263,16 @@ async def rotate_pdf(
     db: Session = Depends(get_db),
     _rate_limit: None = Depends(apply_processing_rate_limit),
 ):
-    require_file_feature(db, "rotate_pdf", current_user)
+    flag = require_file_feature(db, "rotate_pdf", current_user)
+    metadata = _file_metadata_for_limits(payload.file_id)
+    usage_context = _enforce_limits_for_flag(
+        db,
+        feature_key="rotate_pdf",
+        flag=flag,
+        current_user=current_user,
+        request=request,
+        file_sizes=[int(metadata.get("size") or 0)],
+    )
     return await run_file_operation(
         lambda: file_processing_service.rotate_pdf(
             file_id=payload.file_id,
@@ -153,6 +281,13 @@ async def rotate_pdf(
         ),
         error_detail="Failed to rotate PDF",
         log_message="Rotate failed",
+        on_success=_record_usage_callback(
+            db=db,
+            context=usage_context,
+            request=request,
+            file_size=int(metadata.get("size") or 0),
+            file_count=1,
+        ),
     )
 
 
@@ -164,7 +299,18 @@ async def images_to_pdf(
     db: Session = Depends(get_db),
     _rate_limit: None = Depends(apply_processing_rate_limit),
 ):
-    require_file_feature(db, "image_to_pdf", current_user)
+    flag = require_file_feature(db, "image_to_pdf", current_user)
+    metadata = [_file_metadata_for_limits(file_id) for file_id in payload.file_ids]
+    sizes = _metadata_sizes(metadata)
+    usage_context = _enforce_limits_for_flag(
+        db,
+        feature_key="image_to_pdf",
+        flag=flag,
+        current_user=current_user,
+        request=request,
+        file_sizes=sizes,
+        batch_count=len(metadata),
+    )
     return await run_file_operation(
         lambda: file_processing_service.images_to_pdf(
             file_ids=payload.file_ids,
@@ -173,6 +319,13 @@ async def images_to_pdf(
         ),
         error_detail="Failed to convert images to PDF",
         log_message="Images to PDF failed",
+        on_success=_record_usage_callback(
+            db=db,
+            context=usage_context,
+            request=request,
+            file_size=sum(sizes),
+            file_count=len(metadata),
+        ),
     )
 
 
@@ -184,7 +337,16 @@ async def pdf_to_images(
     db: Session = Depends(get_db),
     _rate_limit: None = Depends(apply_processing_rate_limit),
 ):
-    require_file_feature(db, "pdf_to_image", current_user)
+    flag = require_file_feature(db, "pdf_to_image", current_user)
+    metadata = _file_metadata_for_limits(payload.file_id)
+    usage_context = _enforce_limits_for_flag(
+        db,
+        feature_key="pdf_to_image",
+        flag=flag,
+        current_user=current_user,
+        request=request,
+        file_sizes=[int(metadata.get("size") or 0)],
+    )
     return await run_file_operation(
         lambda: file_processing_service.pdf_to_images(
             file_id=payload.file_id,
@@ -193,6 +355,13 @@ async def pdf_to_images(
         ),
         error_detail="Failed to convert PDF to images",
         log_message="PDF to images failed",
+        on_success=_record_usage_callback(
+            db=db,
+            context=usage_context,
+            request=request,
+            file_size=int(metadata.get("size") or 0),
+            file_count=1,
+        ),
     )
 
 
@@ -204,7 +373,16 @@ async def extract_text_ocr(
     db: Session = Depends(get_db),
     _rate_limit: None = Depends(apply_processing_rate_limit),
 ):
-    require_file_feature(db, "ocr_pdf", current_user)
+    flag = require_file_feature(db, "ocr_pdf", current_user)
+    metadata = _file_metadata_for_limits(payload.file_id)
+    usage_context = _enforce_limits_for_flag(
+        db,
+        feature_key="ocr_pdf",
+        flag=flag,
+        current_user=current_user,
+        request=request,
+        file_sizes=[int(metadata.get("size") or 0)],
+    )
     return await run_file_operation(
         lambda: file_processing_service.extract_text_ocr(
             file_id=payload.file_id,
@@ -213,6 +391,13 @@ async def extract_text_ocr(
         ),
         error_detail="Failed to extract text",
         log_message="OCR failed",
+        on_success=_record_usage_callback(
+            db=db,
+            context=usage_context,
+            request=request,
+            file_size=int(metadata.get("size") or 0),
+            file_count=1,
+        ),
     )
 
 
@@ -324,12 +509,28 @@ async def office_to_pdf(
     db: Session = Depends(get_db),
     _rate_limit: None = Depends(apply_processing_rate_limit),
 ):
-    require_file_feature(db, "office_to_pdf", current_user)
+    flag = require_file_feature(db, "office_to_pdf", current_user)
     validate_office_upload(file)
+    file_size = int(getattr(file, "size", None) or 0)
+    usage_context = _enforce_limits_for_flag(
+        db,
+        feature_key="office_to_pdf",
+        flag=flag,
+        current_user=current_user,
+        request=request,
+        file_sizes=[file_size] if file_size else [],
+    )
     return await run_file_operation(
         lambda: file_processing_service.office_to_pdf(file, db=db),
         error_detail="Failed to convert Office file",
         log_message="Office to PDF conversion failed",
+        on_success=_record_usage_callback(
+            db=db,
+            context=usage_context,
+            request=request,
+            file_size=file_size,
+            file_count=1,
+        ),
     )
 
 
@@ -341,8 +542,15 @@ async def html_to_pdf(
     db: Session = Depends(get_db),
     _rate_limit: None = Depends(apply_processing_rate_limit),
 ):
-    require_file_feature(db, "html_to_pdf", current_user)
     source = payload.url if payload.mode == "url" else payload.html
+    source_size = len((source or "").encode("utf-8"))
+    usage_context = _enforce_limits(
+        db,
+        feature_key="html_to_pdf",
+        current_user=current_user,
+        request=request,
+        file_sizes=[source_size],
+    )
     return await run_file_operation(
         lambda: file_processing_service.html_to_pdf(
             mode=payload.mode,
@@ -355,6 +563,13 @@ async def html_to_pdf(
         ),
         error_detail="Failed to queue HTML to PDF conversion",
         log_message="HTML to PDF queue failed",
+        on_success=_record_usage_callback(
+            db=db,
+            context=usage_context,
+            request=request,
+            file_size=source_size,
+            file_count=1,
+        ),
     )
 
 
@@ -366,7 +581,16 @@ async def pdf_to_word(
     db: Session = Depends(get_db),
     _rate_limit: None = Depends(apply_processing_rate_limit),
 ):
-    require_file_feature(db, "pdf_to_word", current_user)
+    flag = require_file_feature(db, "pdf_to_word", current_user)
+    metadata = _file_metadata_for_limits(payload.file_id)
+    usage_context = _enforce_limits_for_flag(
+        db,
+        feature_key="pdf_to_word",
+        flag=flag,
+        current_user=current_user,
+        request=request,
+        file_sizes=[int(metadata.get("size") or 0)],
+    )
     return await run_file_operation(
         lambda: file_processing_service.pdf_to_word(
             file_id=payload.file_id,
@@ -375,6 +599,13 @@ async def pdf_to_word(
         ),
         error_detail="Failed to queue PDF to Word conversion",
         log_message="PDF to Word queue failed",
+        on_success=_record_usage_callback(
+            db=db,
+            context=usage_context,
+            request=request,
+            file_size=int(metadata.get("size") or 0),
+            file_count=1,
+        ),
     )
 
 
@@ -386,7 +617,16 @@ async def pdf_to_excel(
     db: Session = Depends(get_db),
     _rate_limit: None = Depends(apply_processing_rate_limit),
 ):
-    require_file_feature(db, "pdf_to_excel", current_user)
+    flag = require_file_feature(db, "pdf_to_excel", current_user)
+    metadata = _file_metadata_for_limits(payload.file_id)
+    usage_context = _enforce_limits_for_flag(
+        db,
+        feature_key="pdf_to_excel",
+        flag=flag,
+        current_user=current_user,
+        request=request,
+        file_sizes=[int(metadata.get("size") or 0)],
+    )
     return await run_file_operation(
         lambda: file_processing_service.pdf_to_excel(
             file_id=payload.file_id,
@@ -395,4 +635,11 @@ async def pdf_to_excel(
         ),
         error_detail="Failed to queue PDF to Excel conversion",
         log_message="PDF to Excel queue failed",
+        on_success=_record_usage_callback(
+            db=db,
+            context=usage_context,
+            request=request,
+            file_size=int(metadata.get("size") or 0),
+            file_count=1,
+        ),
     )

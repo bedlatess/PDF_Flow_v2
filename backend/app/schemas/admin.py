@@ -33,6 +33,13 @@ class FeatureFlagBase(BaseModel):
     requires_login: bool = False
     requires_pro: bool = False
     maintenance_message: Optional[str] = None
+    free_daily_limit: Optional[int] = Field(default=None, ge=0)
+    free_max_file_size_mb: Optional[int] = Field(default=None, ge=0)
+    free_batch_file_limit: Optional[int] = Field(default=None, ge=0)
+    pro_daily_limit: Optional[int] = Field(default=None, ge=0)
+    pro_max_file_size_mb: Optional[int] = Field(default=None, ge=0)
+    pro_batch_file_limit: Optional[int] = Field(default=None, ge=0)
+    pro_unlimited: bool = False
 
 
 class FeatureFlagUpdate(FeatureFlagBase):

@@ -169,6 +169,32 @@ class UsageLog(Base):
     )
 
 
+class ToolUsageLog(Base):
+    """Conversion task creation usage used for product quotas."""
+    __tablename__ = "tool_usage_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    anonymous_key = Column(String, nullable=True)
+    tool_type = Column(String, nullable=False)
+    job_id = Column(String, nullable=True)
+    file_size = Column(Integer, default=0, nullable=False)
+    file_count = Column(Integer, default=1, nullable=False)
+    success = Column(Boolean, default=True, nullable=False)
+    error_message = Column(String, nullable=True)
+    ip_address = Column(String, nullable=True)
+    user_agent = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+
+    user = relationship("User")
+
+    __table_args__ = (
+        Index("idx_tool_usage_user_tool_created", "user_id", "tool_type", "created_at"),
+        Index("idx_tool_usage_anon_tool_created", "anonymous_key", "tool_type", "created_at"),
+        Index("idx_tool_usage_job", "job_id"),
+    )
+
+
 class ProcessingJob(Base):
     """
     Async processing job tracking
@@ -412,6 +438,13 @@ class FeatureFlag(Base):
     requires_login = Column(Boolean, default=False, nullable=False)
     requires_pro = Column(Boolean, default=False, nullable=False)
     maintenance_message = Column(Text, nullable=True)
+    free_daily_limit = Column(Integer, nullable=True)
+    free_max_file_size_mb = Column(Integer, nullable=True)
+    free_batch_file_limit = Column(Integer, nullable=True)
+    pro_daily_limit = Column(Integer, nullable=True)
+    pro_max_file_size_mb = Column(Integer, nullable=True)
+    pro_batch_file_limit = Column(Integer, nullable=True)
+    pro_unlimited = Column(Boolean, default=False, nullable=False)
     updated_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)

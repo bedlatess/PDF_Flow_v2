@@ -46,6 +46,13 @@ export interface FeatureFlag {
   requires_login: boolean
   requires_pro: boolean
   maintenance_message: string | null
+  free_daily_limit: number | null
+  free_max_file_size_mb: number | null
+  free_batch_file_limit: number | null
+  pro_daily_limit: number | null
+  pro_max_file_size_mb: number | null
+  pro_batch_file_limit: number | null
+  pro_unlimited: boolean
   updated_at: string
 }
 

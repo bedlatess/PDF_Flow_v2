@@ -19,6 +19,13 @@ const defaultFlag = (label: string): PublicFeatureFlag => ({
   requires_login: false,
   requires_pro: false,
   maintenance_message: null,
+  free_daily_limit: null,
+  free_max_file_size_mb: null,
+  free_batch_file_limit: null,
+  pro_daily_limit: null,
+  pro_max_file_size_mb: null,
+  pro_batch_file_limit: null,
+  pro_unlimited: false,
 })
 
 export const useSiteConfigStore = defineStore('site-config', () => {

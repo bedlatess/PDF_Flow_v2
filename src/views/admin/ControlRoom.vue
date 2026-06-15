@@ -97,7 +97,6 @@ const {
   savePricingPlan,
   loadServiceProviders,
   saveServiceProvider,
-  validateServiceProvider,
   loadFeedback,
   saveFeedback,
   cleanupLiveAcceptanceFeedback,
@@ -573,7 +572,6 @@ onMounted(loadAdminData)
             @update:service-filter="serviceProviderServiceFilter = $event"
             @refresh="loadServiceProviders"
             @save="saveServiceProvider"
-            @validate="validateServiceProvider"
           />
 
           <SiteSettingsTab

@@ -1966,6 +1966,21 @@ Admin UX-A/B local checkpoint:
   - `npm run test:e2e:admin` (`7 passed`)
   - Admin E2E covers desktop `1440x1100` and mobile `390x900` module traversal with no document-level horizontal overflow, plus existing password rotation, maintenance confirmation, user deletion confirmation, diagnostics packet copy, and payment evidence copy flows.
 
+Admin UX-C local checkpoint:
+
+- Scope: configuration page productization only. Payment logic, provider runtime, secret storage, task system, PDF tools, and AI/payment real-call behavior were not changed.
+- Payment Providers:
+  - Reworked Stripe, PayPal, and GM Pay into configuration-object cards with header status, enabled state, readiness, critical risk indicator, impact copy, fallback explanation, public config, write-only secret config, actions, save feedback, validation feedback, and webhook/notify URL copy.
+  - Kept the managed provider surface limited to Stripe, PayPal, and GM Pay; deprecated EPUSDT compatibility remains outside the visible admin configuration center.
+  - Secret fields still show only configured/tail status, and blank secret inputs mean unchanged.
+- Service Providers:
+  - Reworked OCR, Office, and Google Gemini into the same configuration-object pattern with service copy, readiness, fallback source, public config, write-only secret config, save feedback, and validation feedback.
+  - Local OCR/Office providers explicitly show that secrets are not required in the current phase.
+- Local verification target:
+  - `npm run type-check`
+  - `npm run build:admin`
+  - `npm run test:e2e:admin`
+
 Admin bootstrap:
 
 ```bash

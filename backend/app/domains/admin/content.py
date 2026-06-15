@@ -17,7 +17,11 @@ from app.models.user import (
     UserRole,
 )
 from app.schemas.admin import ContentBlockUpdate, FeatureFlagUpdate, SiteSettingUpdate
-from app.services.feature_gate import DEFAULT_FEATURE_FLAGS, _feature_flag_kwargs
+from app.services.feature_gate import (
+    DEFAULT_FEATURE_FLAGS,
+    apply_missing_feature_flag_defaults,
+    _feature_flag_kwargs,
+)
 
 
 DEFAULT_SETTINGS = [
@@ -144,13 +148,16 @@ def seed_defaults(db: Session) -> None:
             db.add(SiteSetting(**item))
 
     existing_flags = {
-        item[0] for item in db.query(FeatureFlag.key).all()
+        item.key: item for item in db.query(FeatureFlag).all()
     }
     for item in DEFAULT_FEATURE_FLAGS:
-        if item.key not in existing_flags:
+        flag = existing_flags.get(item.key)
+        if flag is None:
             db.add(
                 FeatureFlag(**_feature_flag_kwargs(item))
             )
+        else:
+            apply_missing_feature_flag_defaults(flag, item)
 
     existing_blocks = {
         (item.key, item.locale): item for item in db.query(ContentBlock).all()

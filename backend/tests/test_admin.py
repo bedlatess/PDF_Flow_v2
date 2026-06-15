@@ -89,6 +89,12 @@ def test_public_config_exposes_feature_flags(client):
     assert body["settings"]["support_email"]["value"] == "support@pdf-flow.com"
     assert body["feature_flags"]["merge_pdf"]["enabled"] is True
     assert body["feature_flags"]["merge_pdf"]["is_public"] is True
+    assert body["feature_flags"]["merge_pdf"]["free_daily_limit"] == 10
+    assert body["feature_flags"]["merge_pdf"]["free_max_file_size_mb"] == 25
+    assert body["feature_flags"]["merge_pdf"]["free_batch_file_limit"] == 5
+    assert body["feature_flags"]["merge_pdf"]["pro_daily_limit"] == 200
+    assert body["feature_flags"]["merge_pdf"]["pro_max_file_size_mb"] == 200
+    assert body["feature_flags"]["merge_pdf"]["pro_batch_file_limit"] == 25
     assert body["feature_flags"]["delete_pages_pdf"]["enabled"] is True
     assert body["feature_flags"]["organize_pdf"]["enabled"] is True
     assert body["feature_flags"]["page_numbers_pdf"]["enabled"] is True
@@ -119,6 +125,39 @@ def test_public_config_exposes_feature_flags(client):
     assert body["content_blocks"]["home_hero:zh"]["content"].startswith("隐私优先")
     assert body["oauth_providers"]["google"]["enabled"] is False
     assert body["oauth_providers"]["github"]["enabled"] is False
+
+
+def test_public_config_backfills_missing_feature_quota_defaults(client):
+    from app.core.database import get_db
+    from app.models.user import FeatureFlag
+
+    db = next(client.app.dependency_overrides[get_db]())
+    try:
+        db.add(
+            FeatureFlag(
+                key="merge_pdf",
+                label="Merge PDF",
+                description="Existing row without quota fields.",
+                enabled=True,
+                is_public=True,
+                requires_login=False,
+                requires_pro=False,
+            )
+        )
+        db.commit()
+    finally:
+        db.close()
+
+    response = client.get("/api/v1/admin/public-config")
+
+    assert response.status_code == 200
+    flag = response.json()["feature_flags"]["merge_pdf"]
+    assert flag["free_daily_limit"] == 10
+    assert flag["free_max_file_size_mb"] == 25
+    assert flag["free_batch_file_limit"] == 5
+    assert flag["pro_daily_limit"] == 200
+    assert flag["pro_max_file_size_mb"] == 200
+    assert flag["pro_batch_file_limit"] == 25
 
 
 def test_public_config_marks_only_configured_oauth_providers(client, monkeypatch):

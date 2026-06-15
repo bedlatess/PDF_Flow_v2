@@ -84,7 +84,7 @@ def _feature_flag_kwargs(item: DefaultFeatureFlag) -> dict:
     }
 
 
-def _apply_missing_default_limits(flag: FeatureFlag, default: DefaultFeatureFlag) -> bool:
+def apply_missing_feature_flag_defaults(flag: FeatureFlag, default: DefaultFeatureFlag) -> bool:
     changed = False
     for field in (
         "free_daily_limit",
@@ -121,7 +121,7 @@ def seed_default_feature_flags(db: Session) -> None:
             flag.label = item.label
             flag.description = item.description
             changed = True
-        changed = _apply_missing_default_limits(flag, item) or changed
+        changed = apply_missing_feature_flag_defaults(flag, item) or changed
 
     if changed:
         db.commit()
@@ -135,7 +135,7 @@ def get_or_create_feature_flag(db: Session, key: str) -> FeatureFlag | None:
     flag = get_feature_flag(db, key)
     if flag is not None:
         default = DEFAULT_FEATURE_FLAGS_BY_KEY.get(key)
-        if default and _apply_missing_default_limits(flag, default):
+        if default and apply_missing_feature_flag_defaults(flag, default):
             db.commit()
             db.refresh(flag)
         return flag

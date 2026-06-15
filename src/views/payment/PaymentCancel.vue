@@ -6,26 +6,26 @@
           <div>
             <div class="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
               <XCircle class="h-4 w-4" />
-              {{ t('payment.cancel.badge') }}
+              {{ tr('payment.cancel.badge', 'Payment not completed') }}
             </div>
             <h1 class="mt-5 text-3xl font-semibold tracking-tight text-slate-950 dark:text-white sm:text-4xl">
-              {{ t('payment.cancel.title') }}
+              {{ tr('payment.cancel.title', 'Payment was not completed') }}
             </h1>
             <p class="mt-4 max-w-2xl text-base leading-7 text-slate-600 dark:text-slate-300">
-              {{ t('payment.cancel.message') }}
+              {{ tr('payment.cancel.message', 'Payment was closed before it finished. Your current plan stays unchanged, and you can restart whenever you are ready.') }}
             </p>
 
             <div class="mt-8 flex flex-col gap-3 sm:flex-row">
               <Button variant="primary" size="lg" @click="tryAgain">
                 <RefreshCw class="mr-2 h-5 w-5" />
-                {{ t('payment.cancel.tryAgain') }}
+                {{ tr('payment.cancel.tryAgain', 'Try again') }}
               </Button>
               <Button variant="outline" size="lg" @click="goBack">
                 <ReceiptText class="mr-2 h-5 w-5" />
-                {{ t('payment.cancel.goBack') }}
+                {{ tr('payment.cancel.goBack', 'Back to pricing') }}
               </Button>
               <Button variant="ghost" size="lg" @click="continueFree">
-                {{ t('payment.cancel.continueFree') }}
+                {{ tr('payment.cancel.continueFree', 'Continue with free tools') }}
               </Button>
             </div>
           </div>
@@ -35,10 +35,10 @@
               <ShieldCheck class="mt-1 h-5 w-5 shrink-0 text-sky-600 dark:text-sky-300" />
               <div>
                 <p class="text-sm font-semibold text-slate-950 dark:text-white">
-                  {{ t('payment.cancel.noChargeTitle') }}
+                  {{ tr('payment.cancel.noChargeTitle', 'No plan change') }}
                 </p>
                 <p class="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                  {{ t('payment.cancel.noChargeDescription') }}
+                  {{ tr('payment.cancel.noChargeDescription', 'No Pro subscription was activated.') }}
                 </p>
               </div>
             </div>
@@ -60,7 +60,7 @@
       <div class="mt-6 grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
         <section class="rounded-lg border border-white/70 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <h2 class="text-lg font-semibold text-slate-950 dark:text-white">
-            {{ t('payment.cancel.whyPro') }}
+            {{ tr('payment.cancel.whyPro', 'Why upgrade to Pro') }}
           </h2>
           <div class="mt-5 grid gap-3 sm:grid-cols-2">
             <div
@@ -76,7 +76,7 @@
 
         <section class="rounded-lg border border-white/70 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <h2 class="text-lg font-semibold text-slate-950 dark:text-white">
-            {{ t('payment.cancel.faqTitle') }}
+            {{ tr('payment.cancel.faqTitle', 'Payment questions') }}
           </h2>
           <div class="mt-5 space-y-4">
             <div
@@ -105,20 +105,24 @@ import { useLocalePath } from '@/composables/useLocalePath'
 const router = useRouter()
 const { t } = useI18n()
 const { localePath } = useLocalePath()
+const tr = (key: string, fallback: string) => {
+  const value = t(key)
+  return value === key ? fallback : value
+}
 const benefits = computed(() => [
-  t('payment.cancel.benefit1'),
-  t('payment.cancel.benefit2'),
-  t('payment.cancel.benefit3'),
-  t('payment.cancel.benefit4'),
+  tr('payment.cancel.benefit1', 'Higher quotas for document conversion.'),
+  tr('payment.cancel.benefit2', 'Access to OCR, Office conversion, and AI tools.'),
+  tr('payment.cancel.benefit3', 'Account history for completed results.'),
+  tr('payment.cancel.benefit4', 'Priority processing, email support, and account-level subscription controls.'),
 ])
 const faqItems = computed(() => [
-  { question: t('payment.cancel.faq1Q'), answer: t('payment.cancel.faq1A') },
-  { question: t('payment.cancel.faq2Q'), answer: t('payment.cancel.faq2A') },
-  { question: t('payment.cancel.faq3Q'), answer: t('payment.cancel.faq3A') },
+  { question: tr('payment.cancel.faq1Q', 'Was I charged?'), answer: tr('payment.cancel.faq1A', 'No. A cancelled checkout does not activate Pro or change your plan.') },
+  { question: tr('payment.cancel.faq2Q', 'Can I try again?'), answer: tr('payment.cancel.faq2A', 'Yes. Return to Pricing and choose a payment method when you are ready.') },
+  { question: tr('payment.cancel.faq3Q', 'Why did checkout close?'), answer: tr('payment.cancel.faq3A', 'It may have been cancelled manually, timed out, or interrupted by the provider. Your account remains unchanged.') },
 ])
 const statusItems = computed(() => [
-  { label: t('payment.cancel.checkoutStatus'), value: t('payment.cancel.checkoutCanceled') },
-  { label: t('payment.cancel.currentPlan'), value: t('payment.cancel.freePlan') },
+  { label: tr('payment.cancel.checkoutStatus', 'Payment'), value: tr('payment.cancel.checkoutCanceled', 'Cancelled') },
+  { label: tr('payment.cancel.currentPlan', 'Current plan'), value: tr('payment.cancel.freePlan', 'Free / unchanged') },
 ])
 
 const tryAgain = () => {

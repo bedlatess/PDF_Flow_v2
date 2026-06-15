@@ -6,23 +6,23 @@
           <div>
             <div class="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200">
               <CheckCircle2 class="h-4 w-4" />
-              {{ t('payment.success.badge') }}
+              {{ tr('payment.success.badge', 'Payment complete') }}
             </div>
             <h1 class="mt-5 text-3xl font-semibold tracking-tight text-slate-950 dark:text-white sm:text-4xl">
-              {{ t('payment.success.title') }}
+              {{ tr('payment.success.title', 'Payment complete') }}
             </h1>
             <p class="mt-4 max-w-2xl text-base leading-7 text-slate-600 dark:text-slate-300">
-              {{ t('payment.success.message') }}
+              {{ tr('payment.success.message', 'Thanks for upgrading. PDF-Flow is refreshing your account state.') }}
             </p>
 
             <div class="mt-8 flex flex-col gap-3 sm:flex-row">
               <Button variant="primary" size="lg" @click="startUsing">
                 <Sparkles class="mr-2 h-5 w-5" />
-                {{ t('payment.success.startUsing') }}
+                {{ tr('payment.success.startUsing', 'Start using PDF-Flow') }}
               </Button>
               <Button variant="outline" size="lg" @click="goToProfile">
                 <BadgeCheck class="mr-2 h-5 w-5" />
-                {{ t('payment.success.viewAccount') }}
+                {{ tr('payment.success.viewAccount', 'View account') }}
               </Button>
             </div>
           </div>
@@ -32,7 +32,7 @@
               <CreditCard class="mt-1 h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-300" />
               <div>
                 <p class="text-sm font-semibold text-slate-950 dark:text-white">
-                  {{ t('payment.success.checkoutState') }}
+                  {{ tr('payment.success.checkoutState', 'Payment status') }}
                 </p>
                 <p class="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300">
                   {{ checkoutStateText }}
@@ -42,18 +42,18 @@
 
             <div class="mt-5 grid gap-3 border-t border-slate-200 pt-5 dark:border-slate-800">
               <div class="flex items-center justify-between gap-4">
-                <span class="text-sm font-medium text-slate-600 dark:text-slate-300">{{ t('payment.success.plan') }}</span>
+                <span class="text-sm font-medium text-slate-600 dark:text-slate-300">{{ tr('payment.success.plan', 'Plan') }}</span>
                 <span class="text-lg font-semibold text-slate-950 dark:text-white">Pro</span>
               </div>
               <div class="flex items-center justify-between gap-4">
-                <span class="text-sm font-medium text-slate-600 dark:text-slate-300">{{ t('payment.success.status') }}</span>
+                <span class="text-sm font-medium text-slate-600 dark:text-slate-300">{{ tr('payment.success.status', 'Status') }}</span>
                 <span class="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-200">
-                  {{ t('payment.success.active') }}
+                  {{ tr('payment.success.active', 'Active') }}
                 </span>
               </div>
               <div v-if="checkoutReference" class="flex items-center justify-between gap-4">
-                <span class="text-sm font-medium text-slate-600 dark:text-slate-300">{{ t('payment.success.referenceLabel') }}</span>
-                <code class="rounded bg-white px-2 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                <span class="text-sm font-medium text-slate-600 dark:text-slate-300">{{ tr('payment.success.referenceLabel', 'Reference') }}</span>
+                <code class="max-w-full break-all rounded bg-white px-2 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-900 dark:text-slate-200">
                   {{ checkoutReference }}
                 </code>
               </div>
@@ -65,7 +65,7 @@
       <div class="mt-6 grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
         <section class="rounded-lg border border-white/70 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <h2 class="text-lg font-semibold text-slate-950 dark:text-white">
-            {{ t('payment.success.unlocked') }}
+            {{ tr('payment.success.unlocked', 'What Pro unlocks') }}
           </h2>
           <div class="mt-5 grid gap-3 sm:grid-cols-2">
             <div
@@ -84,7 +84,7 @@
             <Clock3 class="mt-1 h-5 w-5 shrink-0 text-sky-600 dark:text-sky-300" />
             <div>
               <h2 class="text-lg font-semibold text-slate-950 dark:text-white">
-                {{ t('payment.success.nextSteps') }}
+                {{ tr('payment.success.nextSteps', 'Next steps') }}
               </h2>
               <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
                 {{ accountRefreshText }}
@@ -107,9 +107,9 @@
 
           <p class="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm leading-6 text-slate-500 dark:text-slate-400">
             <Mail class="h-4 w-4" />
-            <span>{{ t('payment.success.needHelp') }}</span>
+            <span>{{ tr('payment.success.needHelp', 'Need help?') }}</span>
             <a :href="`mailto:${supportEmail}`" class="inline-flex min-h-8 items-center px-1 font-semibold text-emerald-700 hover:text-emerald-800 dark:text-emerald-300">
-              {{ t('payment.success.contactSupport') }}
+              {{ tr('payment.success.contactSupport', 'Contact support') }}
             </a>
           </p>
         </section>
@@ -137,30 +137,36 @@ const { localePath } = useLocalePath()
 const refreshState = ref<'idle' | 'refreshing' | 'synced' | 'guest'>('idle')
 
 const supportEmail = computed(() => siteConfigStore.getSettingValue('support_email', 'support@pdf-flow.com'))
+const tr = (key: string, fallback: string) => {
+  const value = t(key)
+  return value === key ? fallback : value
+}
 const checkoutReference = computed(() => {
   const raw = Array.isArray(route.query.session_id) ? route.query.session_id[0] : route.query.session_id
   if (!raw) return ''
   return raw.length > 12 ? `...${raw.slice(-8)}` : raw
 })
 const checkoutStateText = computed(() =>
-  checkoutReference.value ? t('payment.success.checkoutReturnedWithReference') : t('payment.success.checkoutReturned')
+  checkoutReference.value
+    ? tr('payment.success.checkoutReturnedWithReference', 'Payment finished with a reference number. Keep it handy if support needs it.')
+    : tr('payment.success.checkoutReturned', 'Payment finished successfully. Your account will update shortly.')
 )
 const accountRefreshText = computed(() => {
-  if (refreshState.value === 'refreshing') return t('payment.success.accountSyncing')
-  if (refreshState.value === 'synced') return t('payment.success.accountSynced')
-  if (refreshState.value === 'guest') return t('payment.success.accountGuest')
-  return t('payment.success.accountPending')
+  if (refreshState.value === 'refreshing') return tr('payment.success.accountSyncing', 'Refreshing your account so the latest subscription state is visible.')
+  if (refreshState.value === 'synced') return tr('payment.success.accountSynced', 'Your account details were refreshed. If Pro access does not appear immediately, wait a moment and refresh again.')
+  if (refreshState.value === 'guest') return tr('payment.success.accountGuest', 'You are not signed in on this browser. Sign in with the account used at checkout to see subscription status.')
+  return tr('payment.success.accountPending', 'We will refresh your account once the page is ready.')
 })
 const unlockedFeatures = computed(() => [
-  t('payment.success.feature1'),
-  t('payment.success.feature2'),
-  t('payment.success.feature3'),
-  t('payment.success.feature4'),
+  tr('payment.success.feature1', 'Higher conversion quotas for cloud tools and document workflows.'),
+  tr('payment.success.feature2', 'Access to OCR, Office conversion, AI analysis, and Pro-only tools.'),
+  tr('payment.success.feature3', 'Account-level history so successful results can be downloaded again while available.'),
+  tr('payment.success.feature4', 'Priority processing and clearer support handoff for payment questions.'),
 ])
 const nextSteps = computed(() => [
-  t('payment.success.step1'),
-  t('payment.success.step2'),
-  t('payment.success.step3'),
+  tr('payment.success.step1', 'Open your account to confirm the current plan and billing status.'),
+  tr('payment.success.step2', 'Try cloud OCR, Office conversion, or AI workflows when Pro access is visible.'),
+  tr('payment.success.step3', 'Contact support with the payment reference if access does not update after a few minutes.'),
 ])
 
 onMounted(async () => {

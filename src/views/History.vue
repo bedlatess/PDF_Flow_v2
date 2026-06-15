@@ -19,6 +19,7 @@ import { useLocalePath } from '@/composables/useLocalePath'
 import { fileAPI, type JobHistoryItem, type JobHistoryStatus } from '@/services/api/files'
 import { useUserStore } from '@/stores/user'
 import { formatUserFacingError, type FormattedUserError } from '@/utils/error-messages'
+import { shortFailureMessage } from '@/utils/release-polish'
 
 const router = useRouter()
 const { t } = useI18n()
@@ -150,11 +151,11 @@ const copyJobId = async (jobId: string) => {
 
 const jobErrorSummary = (job: JobHistoryItem) => {
   if (!job.error_message) return ''
-  return formatUserFacingError(job.error_message, {
+  return shortFailureMessage(formatUserFacingError(job.error_message, {
     area: 'GENERAL',
     fallbackTitle: t('history.errors.jobFailedTitle'),
     fallbackMessage: t('history.errors.jobFailedMessage'),
-  }).message
+  }).message)
 }
 
 const resultFileName = (job: JobHistoryItem) => {
@@ -232,7 +233,7 @@ onMounted(() => {
         </Button>
       </div>
 
-      <div class="mt-8 grid gap-6 lg:grid-cols-[1fr_360px] lg:items-end">
+      <div class="mt-8 grid min-w-0 gap-6 lg:grid-cols-[1fr_360px] lg:items-end">
         <div>
           <div class="inline-flex items-center gap-2 rounded-md border border-sky-200 bg-white px-4 py-2 text-sm font-semibold text-sky-700 shadow-sm dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-200">
             <Clock3 class="h-4 w-4" />
@@ -246,7 +247,7 @@ onMounted(() => {
           </p>
         </div>
 
-        <div class="grid grid-cols-3 gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div class="grid min-w-0 grid-cols-3 gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <div>
             <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('history.stats.total') }}</p>
             <p class="mt-2 text-2xl font-semibold text-slate-950 dark:text-white">{{ total }}</p>
@@ -328,7 +329,7 @@ onMounted(() => {
           </p>
         </div>
 
-        <div v-else class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div v-else class="min-w-0 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <div class="hidden grid-cols-[1.2fr_140px_140px_150px_170px] gap-4 border-b border-slate-200 px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:text-slate-400 lg:grid">
             <span>{{ t('history.table.task') }}</span>
             <span>{{ t('history.table.status') }}</span>
@@ -340,9 +341,9 @@ onMounted(() => {
           <div
             v-for="job in jobs"
             :key="job.job_id"
-            class="border-b border-slate-100 px-4 py-4 last:border-b-0 dark:border-slate-800 lg:px-5"
+            class="min-w-0 border-b border-slate-100 px-4 py-4 last:border-b-0 dark:border-slate-800 lg:px-5"
           >
-            <div class="grid gap-4 lg:grid-cols-[1.2fr_140px_140px_150px_170px] lg:items-center">
+            <div class="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1.2fr)_140px_140px_150px_170px] lg:items-center">
               <button class="min-w-0 text-left" @click="toggleDetails(job.job_id)">
                 <p class="truncate text-sm font-semibold text-slate-950 dark:text-white">{{ job.input_file_name }}</p>
                 <p
@@ -374,7 +375,7 @@ onMounted(() => {
                 </p>
               </div>
 
-              <div class="flex justify-start gap-2 lg:justify-end">
+              <div class="flex flex-wrap justify-start gap-2 lg:justify-end">
                 <Button
                   v-if="job.download_available"
                   size="sm"

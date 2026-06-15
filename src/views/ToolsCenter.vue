@@ -16,6 +16,13 @@ import ProBadge from '@/components/common/ProBadge.vue'
 import { useSiteConfigStore } from '@/stores/siteConfig'
 import { pdfTools, toolCategories, type PdfToolMeta, type ToolCategory, type ToolMode } from '@/data/pdfTools'
 import { useLocalePath } from '@/composables/useLocalePath'
+import {
+  betaToolIds,
+  featureAccessSummary,
+  quotaSummary,
+  scanFirstToolIds,
+  toneClass,
+} from '@/utils/release-polish'
 
 type ModeFilter = ToolMode | 'all'
 type SpotlightGroup = 'convert' | 'scan' | 'daily'
@@ -151,8 +158,6 @@ const groupedTools = computed(() =>
     .filter((group) => group.tools.length > 0)
 )
 
-const betaToolIds = new Set(['pdfToWord', 'pdfToExcel', 'batchConvert'])
-const scanFirstToolIds = new Set(['pdfToWord', 'pdfToExcel'])
 const spotlightToolIds: Record<SpotlightGroup, string[]> = {
   convert: ['pdfToWord', 'pdfToExcel', 'htmlToPdf', 'officeToPdf'],
   scan: ['ocr', 'pdfToWord', 'pdfToExcel'],
@@ -198,6 +203,14 @@ const toolBadges = (tool: PdfToolMeta) => {
     })
   }
   return badges
+}
+
+const releaseSummary = (tool: PdfToolMeta & { flag: ReturnType<typeof siteConfigStore.getFeatureFlag> }) => {
+  const access = featureAccessSummary(tool.flag)
+  return {
+    access,
+    quota: quotaSummary(tool.flag, false),
+  }
 }
 
 const accentClassMap: Record<string, string> = {
@@ -379,7 +392,7 @@ onMounted(() => {
               v-for="tool in group.tools"
               :key="tool.id"
               data-testid="tool-card"
-              class="group flex min-h-[144px] cursor-pointer flex-col rounded-lg border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/60 transition hover:-translate-y-0.5 hover:border-red-200 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/90 dark:shadow-none dark:hover:border-red-300/30"
+            class="group flex min-h-[184px] cursor-pointer flex-col rounded-lg border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/60 transition hover:-translate-y-0.5 hover:border-red-200 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/90 dark:shadow-none dark:hover:border-red-300/30"
               @click="openTool(tool)"
             >
               <div class="flex items-start justify-between gap-3">
@@ -419,6 +432,19 @@ onMounted(() => {
                 >
                   {{ badge.label }}
                 </span>
+              </div>
+
+              <div class="mt-3 rounded-md border px-3 py-2 text-xs leading-5" :class="toneClass(releaseSummary(tool).access.tone)">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <span class="font-semibold">{{ releaseSummary(tool).access.label }}</span>
+                  <span class="text-[11px] opacity-80">{{ releaseSummary(tool).quota }}</span>
+                </div>
+                <p
+                  v-if="!tool.flag.enabled || scanFirstToolIds.has(tool.id)"
+                  class="mt-1"
+                >
+                  {{ !tool.flag.enabled ? releaseSummary(tool).access.detail : copy.scanFirst }}
+                </p>
               </div>
 
               <div class="mt-4 flex items-center justify-between border-t border-slate-200 pt-3 dark:border-slate-800">

@@ -177,6 +177,30 @@ function resolveReason(area: ErrorArea, status?: number, detail = '') {
     }
   }
 
+  if (lower.includes('daily conversion limit') || lower.includes('quota') || lower.includes('limit reached')) {
+    return {
+      code: `${area}-${status || 403}-QUOTA`,
+      title: 'Usage limit reached',
+      message: 'You have reached the current limit for this tool. Check your account usage or upgrade before creating more tasks.',
+    }
+  }
+
+  if (lower.includes('temporarily unavailable') || lower.includes('maintenance')) {
+    return {
+      code: `${area}-${status || 503}-MAINTENANCE`,
+      title: 'Tool is temporarily unavailable',
+      message: 'This tool is currently disabled or under maintenance. Please try another tool or come back later.',
+    }
+  }
+
+  if (lower.includes('payment') && (lower.includes('not configured') || lower.includes('not ready') || lower.includes('disabled'))) {
+    return {
+      code: `${area}-${status || 503}-PAYMENT`,
+      title: 'Payment is not ready',
+      message: 'Checkout is not available right now because the payment provider is not ready.',
+    }
+  }
+
   if (
     status === 415
     || lower.includes('unsupported')
@@ -245,7 +269,7 @@ function resolveReason(area: ErrorArea, status?: number, detail = '') {
     return {
       code: `${area}-${status || 403}-ACCESS`,
       title: 'Access is limited for this account',
-      message: 'This feature needs a signed-in account with the required access level.',
+      message: 'This feature needs a signed-in account with the required access level. Check your plan and try again.',
     }
   }
 

@@ -18,6 +18,7 @@ import type {
   AdminMaintenance,
   AdminOperations,
   AdminOverview,
+  FeatureFlag,
   AdminPaymentSummary,
   AdminServiceProviderConfig,
 } from '@/admin/api'
@@ -32,6 +33,7 @@ const props = defineProps<{
   overview: AdminOverview | null
   operations: AdminOperations | null
   jobs: AdminJob[]
+  flags: FeatureFlag[]
   healthReport: AdminHealthReport | null
   healthReportSummary: string
   healthReportCopied: boolean
@@ -83,6 +85,9 @@ const enabledServiceProviders = computed(() =>
 const serviceProviderReview = computed(
   () => enabledServiceProviders.value.filter((provider) => provider.readiness.status !== 'ready'),
 )
+const serviceProviderReadyCount = computed(
+  () => props.serviceProviderConfigs.filter((provider) => provider.enabled && provider.readiness.status === 'ready').length,
+)
 const failedJobCount = computed(
   () => props.operations?.failed_jobs ?? props.overview?.failed_jobs_count ?? 0,
 )
@@ -98,6 +103,15 @@ const cleanupCount = computed(
     (props.maintenance?.test_users_count ?? 0) +
     (props.maintenance?.live_acceptance_feedback_count ?? 0) +
     (props.maintenance?.file_retention?.removable_count ?? 0),
+)
+const enabledToolCount = computed(() => props.flags.filter((flag) => flag.enabled).length)
+const hiddenToolCount = computed(() => props.flags.filter((flag) => !flag.is_public).length)
+const gatedToolCount = computed(() => props.flags.filter((flag) => flag.requires_login || flag.requires_pro).length)
+const maintenanceToolCount = computed(() => props.flags.filter((flag) => !flag.enabled).length)
+const toolAttention = computed(() =>
+  props.flags
+    .filter((flag) => !flag.enabled || !flag.is_public || flag.requires_pro)
+    .slice(0, 6)
 )
 
 const attentionItems = computed<AttentionItem[]>(() => {
@@ -163,6 +177,15 @@ const attentionItems = computed<AttentionItem[]>(() => {
       detail: 'Review cleanup counts before running any destructive maintenance action.',
       tone: 'warning',
       target: 'maintenance',
+    })
+  }
+  if (maintenanceToolCount.value) {
+    items.push({
+      key: 'tool-maintenance',
+      title: `${maintenanceToolCount.value} tool${maintenanceToolCount.value > 1 ? 's' : ''} disabled`,
+      detail: 'Review Tools & Features before launch or customer-facing announcements.',
+      tone: 'warning',
+      target: 'flags',
     })
   }
   return items
@@ -271,8 +294,8 @@ const recentFeedback = computed(() => props.diagnostics?.recent_feedback ?? [])
           <AdminStateBlock
             tone="neutral"
             compact
-            title="Jobs"
-            :description="`${runningJobCount} running, ${failedJobCount} failed recently`"
+            title="Tools"
+            :description="`${enabledToolCount}/${flags.length} enabled, ${gatedToolCount} gated`"
           />
         </div>
       </AdminPanel>
@@ -400,6 +423,61 @@ const recentFeedback = computed(() => props.diagnostics?.recent_feedback ?? [])
             </div>
             <p class="mt-2 text-xs leading-5 text-slate-500 dark:text-slate-400">{{ provider.readiness.detail }}</p>
           </div>
+        </div>
+      </AdminPanel>
+    </section>
+
+    <section class="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
+      <AdminPanel as="article">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <h3 class="font-semibold text-slate-950 dark:text-white">Tool Availability</h3>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+              Launch-facing tool state from Tools & Features. Save changes there; no restart required.
+            </p>
+          </div>
+          <AdminActionButton tone="neutral" @click="emit('navigate', 'flags')">Open tools</AdminActionButton>
+        </div>
+        <div class="mt-4 grid gap-3 sm:grid-cols-4">
+          <AdminStateBlock tone="success" compact title="Enabled" :description="`${enabledToolCount}`" />
+          <AdminStateBlock tone="neutral" compact title="Hidden" :description="`${hiddenToolCount}`" />
+          <AdminStateBlock tone="warning" compact title="Login or Pro" :description="`${gatedToolCount}`" />
+          <AdminStateBlock tone="danger" compact title="Disabled" :description="`${maintenanceToolCount}`" />
+        </div>
+      </AdminPanel>
+
+      <AdminPanel as="article">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <h3 class="font-semibold text-slate-950 dark:text-white">Launch Checklist</h3>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+              Quick scan before publishing traffic-facing changes.
+            </p>
+          </div>
+          <StatusPill :tone="systemTone">{{ systemLabel }}</StatusPill>
+        </div>
+        <div class="mt-4 grid gap-3 sm:grid-cols-2">
+          <div class="rounded-md border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950/45">
+            <p class="font-semibold text-slate-950 dark:text-white">Configuration</p>
+            <p class="mt-1 text-sm leading-6 text-slate-500 dark:text-slate-400">
+              Payment {{ readyPaymentCount }}/{{ paymentProviders.length }} configured · Providers {{ serviceProviderReadyCount }}/{{ serviceProviderConfigs.length }} ready
+            </p>
+          </div>
+          <div class="rounded-md border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950/45">
+            <p class="font-semibold text-slate-950 dark:text-white">Tasks</p>
+            <p class="mt-1 text-sm leading-6 text-slate-500 dark:text-slate-400">
+              {{ runningJobCount }} running · {{ failedJobCount }} failed recently · {{ apiErrorCount }} API errors
+            </p>
+          </div>
+        </div>
+        <div v-if="toolAttention.length" class="mt-4 flex flex-wrap gap-2">
+          <span
+            v-for="flag in toolAttention"
+            :key="flag.key"
+            class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200"
+          >
+            {{ flag.label }}: {{ !flag.enabled ? 'disabled' : !flag.is_public ? 'hidden' : 'gated' }}
+          </span>
         </div>
       </AdminPanel>
     </section>

@@ -469,6 +469,7 @@ onMounted(loadAdminData)
             :overview="overview"
             :operations="operations"
             :jobs="jobs"
+            :flags="flags"
             :health-report="healthReport"
             :health-report-summary="buildHealthReportSummary()"
             :health-report-copied="healthReportCopied"

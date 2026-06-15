@@ -1134,6 +1134,60 @@
       "preparingResult": "Preparing result",
       "ready": "Ready to download"
     },
+    "pdfToWord": {
+      "title": "PDF to Word",
+      "desc": "Convert text-based PDFs into editable DOCX Beta files",
+      "badge": "Beta",
+      "notice": "PDF to Word Beta works best with selectable text PDFs. Scanned or image-only PDFs are not converted yet; run OCR PDF first.",
+      "accessLabel": "Access",
+      "accessGuestTitle": "Sign in to convert PDF to Word",
+      "accessGuestDescription": "PDF to Word runs as a server job so the DOCX can be tracked in your Results Center.",
+      "goToSignIn": "Sign in",
+      "accessStep1": "Upload a text-based PDF",
+      "accessStep2": "Extract readable text",
+      "accessStep3": "Download DOCX",
+      "uploadLabel": "Upload",
+      "uploadTitle": "Upload a text-based PDF",
+      "uploadDescription": "Choose a PDF with selectable text. Scanned image PDFs should go through OCR first.",
+      "dropTitle": "Drop your PDF here",
+      "dropSubtitle": "Text-based PDF files are supported in this Beta.",
+      "betaLabel": "Conversion scope",
+      "betaTitle": "Beta output, optimized for readable text",
+      "betaDescription": "This first version preserves paragraph flow, line breaks, simple headings, and page breaks. It does not promise perfect layout reconstruction.",
+      "expectations": [
+        {
+          "title": "Best fit",
+          "body": "Reports, contracts, letters, and other PDFs with selectable text."
+        },
+        {
+          "title": "Not yet",
+          "body": "Scanned pages, image-only PDFs, and OCR-based reconstruction."
+        },
+        {
+          "title": "Quality note",
+          "body": "Complex tables, columns, footnotes, and exact image placement may not match the source."
+        }
+      ],
+      "actionLabel": "DOCX output",
+      "actionTitle": "Convert into a Word document",
+      "actionDescription": "Start a server job. The result will appear here and in your Results Center.",
+      "limit1": "Text-based PDFs work best.",
+      "limit2": "Scanned PDFs are rejected with a clear OCR hint.",
+      "limit3": "Complex layout, tables, images, and footnotes are not guaranteed.",
+      "convert": "Convert to Word",
+      "converting": "Converting...",
+      "statusUploading": "Uploading PDF...",
+      "statusQueueing": "Submitting conversion job...",
+      "statusQueued": "Queued...",
+      "statusConverting": "Extracting text and building DOCX...",
+      "statusPreparing": "Preparing download...",
+      "statusReady": "DOCX ready",
+      "resultTitle": "Word document is ready",
+      "resultDescription": "Download the DOCX now or find it later in Results Center.",
+      "errorTitle": "PDF to Word failed",
+      "errorPdfOnly": "Choose a PDF file.",
+      "errorFailed": "PDF to Word Beta could not convert this file. Use a text-based PDF, or run OCR first for scanned files."
+    },
     "htmlToPdf": {
       "title": "HTML to PDF",
       "desc": "Convert public webpages or HTML text to PDF",
@@ -1403,6 +1457,7 @@
       "rotate_pdf": "Rotate PDF",
       "image_to_pdf": "Image to PDF",
       "pdf_to_image": "PDF to Image",
+      "pdf_to_word": "PDF to Word",
       "ocr_pdf": "OCR PDF",
       "office_to_pdf": "Office to PDF",
       "html_to_pdf": "HTML to PDF"

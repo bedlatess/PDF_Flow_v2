@@ -1134,6 +1134,60 @@
       "preparingResult": "正在准备结果",
       "ready": "可以下载"
     },
+    "pdfToWord": {
+      "title": "PDF 转 Word",
+      "desc": "将文本型 PDF 转换为可编辑 DOCX Beta",
+      "badge": "Beta",
+      "notice": "PDF 转 Word Beta 最适合带可选中文字的 PDF。扫描件或纯图片 PDF 暂不直接转换，请先使用 OCR PDF。",
+      "accessLabel": "访问权限",
+      "accessGuestTitle": "登录后转换 PDF 到 Word",
+      "accessGuestDescription": "PDF 转 Word 会作为服务端任务运行，结果会进入你的结果中心。",
+      "goToSignIn": "去登录",
+      "accessStep1": "上传文本型 PDF",
+      "accessStep2": "提取可读文本",
+      "accessStep3": "下载 DOCX",
+      "uploadLabel": "上传",
+      "uploadTitle": "上传文本型 PDF",
+      "uploadDescription": "请选择带可选中文字的 PDF。扫描图片型 PDF 建议先进行 OCR。",
+      "dropTitle": "将 PDF 拖到这里",
+      "dropSubtitle": "Beta 版支持文本型 PDF 文件。",
+      "betaLabel": "转换范围",
+      "betaTitle": "Beta 输出，优先保证文字可编辑",
+      "betaDescription": "第一版会尽量保留段落、换行、简单标题和分页，但不承诺复杂版式完全还原。",
+      "expectations": [
+        {
+          "title": "适合",
+          "body": "报告、合同、信件等带可选中文字的 PDF。"
+        },
+        {
+          "title": "暂不支持",
+          "body": "扫描件、纯图片 PDF，以及基于 OCR 的版式重建。"
+        },
+        {
+          "title": "质量说明",
+          "body": "复杂表格、分栏、脚注和图片位置可能与原文件不完全一致。"
+        }
+      ],
+      "actionLabel": "DOCX 输出",
+      "actionTitle": "转换为 Word 文档",
+      "actionDescription": "启动服务端任务，完成后可在这里和结果中心下载。",
+      "limit1": "文本型 PDF 效果最好。",
+      "limit2": "扫描件会被拒绝，并提示先使用 OCR。",
+      "limit3": "复杂版式、表格、图片和脚注不保证完全还原。",
+      "convert": "转换为 Word",
+      "converting": "转换中...",
+      "statusUploading": "正在上传 PDF...",
+      "statusQueueing": "正在提交转换任务...",
+      "statusQueued": "已排队...",
+      "statusConverting": "正在提取文字并生成 DOCX...",
+      "statusPreparing": "正在准备下载...",
+      "statusReady": "DOCX 已就绪",
+      "resultTitle": "Word 文档已就绪",
+      "resultDescription": "可以立即下载，也可以稍后在结果中心找到。",
+      "errorTitle": "PDF 转 Word 失败",
+      "errorPdfOnly": "请选择 PDF 文件。",
+      "errorFailed": "PDF 转 Word Beta 暂时无法转换这个文件。请使用文本型 PDF；扫描件请先使用 OCR。"
+    },
     "htmlToPdf": {
       "title": "HTML 转 PDF",
       "desc": "将公开网页或 HTML 文本转换为 PDF",
@@ -1403,6 +1457,7 @@
       "rotate_pdf": "?? PDF",
       "image_to_pdf": "??? PDF",
       "pdf_to_image": "PDF ???",
+      "pdf_to_word": "PDF 转 Word",
       "ocr_pdf": "OCR ??",
       "office_to_pdf": "Office ? PDF",
       "html_to_pdf": "HTML 转 PDF"

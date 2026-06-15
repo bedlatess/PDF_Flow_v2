@@ -30,6 +30,7 @@ from app.schemas.file import (
     PDFRotateRequest,
     PDFSplitRequest,
     PDFToImageRequest,
+    PDFToWordRequest,
     ProcessingJobHistoryItem,
     ProcessingJobHistoryListResponse,
     ProcessingJobResponse,
@@ -353,4 +354,24 @@ async def html_to_pdf(
         ),
         error_detail="Failed to queue HTML to PDF conversion",
         log_message="HTML to PDF queue failed",
+    )
+
+
+@router.post("/pdf-to-word", response_model=ProcessingJobResponse)
+async def pdf_to_word(
+    request: Request,
+    payload: PDFToWordRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    _rate_limit: None = Depends(apply_processing_rate_limit),
+):
+    require_file_feature(db, "pdf_to_word", current_user)
+    return await run_file_operation(
+        lambda: file_processing_service.pdf_to_word(
+            file_id=payload.file_id,
+            user_id=current_user.id,
+            db=db,
+        ),
+        error_detail="Failed to queue PDF to Word conversion",
+        log_message="PDF to Word queue failed",
     )

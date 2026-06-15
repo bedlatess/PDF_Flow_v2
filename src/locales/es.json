@@ -1187,6 +1187,60 @@
       "highlightAdded": "Resaltado agregado correctamente",
       "annotateError": "No se pudo agregar la anotacion"
     },
+    "pdfToWord": {
+      "title": "PDF a Word",
+      "desc": "Convierte PDFs con texto seleccionable en archivos DOCX Beta",
+      "badge": "Beta",
+      "notice": "PDF a Word Beta funciona mejor con PDFs de texto seleccionable. Los PDFs escaneados o solo imagen aun no se convierten; usa OCR PDF primero.",
+      "accessLabel": "Acceso",
+      "accessGuestTitle": "Inicia sesion para convertir PDF a Word",
+      "accessGuestDescription": "PDF a Word se ejecuta como trabajo del servidor para que el DOCX quede en tu centro de resultados.",
+      "goToSignIn": "Iniciar sesion",
+      "accessStep1": "Sube un PDF de texto",
+      "accessStep2": "Extrae texto legible",
+      "accessStep3": "Descarga DOCX",
+      "uploadLabel": "Subida",
+      "uploadTitle": "Sube un PDF de texto",
+      "uploadDescription": "Elige un PDF con texto seleccionable. Los PDFs escaneados deben pasar por OCR primero.",
+      "dropTitle": "Suelta tu PDF aqui",
+      "dropSubtitle": "Esta Beta admite archivos PDF de texto.",
+      "betaLabel": "Alcance",
+      "betaTitle": "Salida Beta, optimizada para texto editable",
+      "betaDescription": "Esta primera version conserva flujo de parrafos, saltos de linea, titulos simples y saltos de pagina. No promete reconstruccion perfecta del diseno.",
+      "expectations": [
+        {
+          "title": "Mejor caso",
+          "body": "Informes, contratos, cartas y otros PDFs con texto seleccionable."
+        },
+        {
+          "title": "Aun no",
+          "body": "Paginas escaneadas, PDFs solo imagen y reconstruccion basada en OCR."
+        },
+        {
+          "title": "Nota de calidad",
+          "body": "Tablas complejas, columnas, notas al pie e imagenes pueden no coincidir con el original."
+        }
+      ],
+      "actionLabel": "Salida DOCX",
+      "actionTitle": "Convertir en documento Word",
+      "actionDescription": "Inicia un trabajo del servidor. El resultado aparecera aqui y en tu centro de resultados.",
+      "limit1": "Los PDFs de texto funcionan mejor.",
+      "limit2": "Los PDFs escaneados se rechazan con una indicacion de OCR.",
+      "limit3": "No se garantizan disenos complejos, tablas, imagenes ni notas al pie.",
+      "convert": "Convertir a Word",
+      "converting": "Convirtiendo...",
+      "statusUploading": "Subiendo PDF...",
+      "statusQueueing": "Enviando trabajo...",
+      "statusQueued": "En cola...",
+      "statusConverting": "Extrayendo texto y creando DOCX...",
+      "statusPreparing": "Preparando descarga...",
+      "statusReady": "DOCX listo",
+      "resultTitle": "Documento Word listo",
+      "resultDescription": "Descarga el DOCX ahora o buscalo despues en el centro de resultados.",
+      "errorTitle": "Fallo PDF a Word",
+      "errorPdfOnly": "Elige un archivo PDF.",
+      "errorFailed": "PDF a Word Beta no pudo convertir este archivo. Usa un PDF de texto o ejecuta OCR primero para escaneos."
+    },
     "htmlToPdf": {
       "title": "HTML a PDF",
       "desc": "Convierte paginas publicas o texto HTML a PDF",
@@ -1669,6 +1723,7 @@
       "rotate_pdf": "Rotar PDF",
       "image_to_pdf": "Imagen a PDF",
       "pdf_to_image": "PDF a imagen",
+      "pdf_to_word": "PDF a Word",
       "ocr_pdf": "OCR PDF",
       "office_to_pdf": "Office a PDF",
       "html_to_pdf": "HTML a PDF"

@@ -159,6 +159,13 @@ export const fileAPI = {
     return response.data
   },
 
+  async pdfToWord(fileId: string): Promise<ProcessingJobResponse> {
+    const response = await apiClient.post<ProcessingJobResponse>('/api/v1/files/pdf-to-word', {
+      file_id: fileId,
+    })
+    return response.data
+  },
+
   async getJobStatus(jobId: string): Promise<JobStatusResponse> {
     const response = await apiClient.get<JobStatusResponse>(`/api/v1/files/jobs/${jobId}`)
     return response.data

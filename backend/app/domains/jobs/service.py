@@ -37,6 +37,8 @@ JOB_TYPE_MESSAGE_PATTERNS: tuple[tuple[str, str], ...] = (
     ("rotate", "rotate_pdf"),
     ("image to pdf", "image_to_pdf"),
     ("pdf to images", "pdf_to_image"),
+    ("word", "pdf_to_word"),
+    ("docx", "pdf_to_word"),
 )
 
 

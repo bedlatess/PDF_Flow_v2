@@ -69,4 +69,18 @@ describe('pdf tools registry', () => {
       expect(getToolById(toolId)).toBeTruthy()
     }
   })
+
+  it('registers PDF to Word as a signed-in convert tool', () => {
+    const tool = getToolByFeatureKey('pdf_to_word')
+
+    expect(tool).toMatchObject({
+      id: 'pdfToWord',
+      slug: 'pdf-to-word',
+      routeName: 'pdf-to-word',
+      category: 'convert',
+      mode: 'cloud',
+      access: 'login',
+      smokeTag: 'access-panel',
+    })
+  })
 })

@@ -2,13 +2,17 @@
 import { computed, onMounted } from 'vue'
 import {
   AlertTriangle,
+  CheckCircle,
   CheckCircle2,
   ChevronRight,
   Loader2,
   ShieldCheck,
 } from 'lucide-vue-next'
-import type { AdminModuleDescriptor } from '@/admin/control-room/modules'
-import type { ControlRoomTabGroup } from '@/admin/control-room/types'
+import {
+  riskLevelLabels,
+  type AdminModuleDescriptor,
+} from '@/admin/control-room/modules'
+import type { ControlRoomTabGroup, ControlRoomTabId } from '@/admin/control-room/types'
 import ConfirmationDialog from '@/components/common/ConfirmationDialog.vue'
 import AuditLogsTab from '@/components/admin/AuditLogsTab.vue'
 import ContentBlocksTab from '@/components/admin/ContentBlocksTab.vue'
@@ -105,13 +109,16 @@ const {
 } = useControlRoom()
 
 const tabGroups = computed(() => {
+  const order: ControlRoomTabGroup[] = ['Command', 'Operate', 'Product', 'Revenue', 'System']
   const groups = new Map<ControlRoomTabGroup, typeof tabs>()
   for (const tab of tabs) {
     const groupTabs = groups.get(tab.group) ?? []
     groupTabs.push(tab)
     groups.set(tab.group, groupTabs)
   }
-  return Array.from(groups.entries()).map(([label, items]) => ({ label, items }))
+  return order
+    .filter((group) => groups.has(group))
+    .map((label) => ({ label, items: groups.get(label) ?? [] }))
 })
 
 const currentTab = computed(() => tabs.find((tab) => tab.id === activeTab.value) ?? tabs[0])
@@ -162,25 +169,50 @@ const serviceProviderReadyCount = computed(
       (provider) => provider.enabled && provider.readiness.status === 'ready',
     ).length,
 )
+const serviceProviderRiskCount = computed(
+  () =>
+    serviceProviderConfigs.value.filter(
+      (provider) => provider.enabled && provider.readiness.status !== 'ready',
+    ).length,
+)
+
+const systemStatus = computed(() => {
+  const hardRisk = serviceRiskCount.value + apiErrorCount.value
+  const attention =
+    hardRisk +
+    paymentRiskCount.value +
+    serviceProviderRiskCount.value +
+    failedJobCount.value +
+    openFeedbackCount.value
+  if (hardRisk > 0) return { label: 'Needs attention', tone: 'danger' }
+  if (attention > 0) return { label: 'Review recommended', tone: 'warning' }
+  return { label: 'Healthy', tone: 'success' }
+})
 
 const moduleStatusBadge = (module: AdminModuleDescriptor) => {
   switch (module.statusBadgeSource) {
+    case 'systemHealth':
+      return systemStatus.value
     case 'serviceRisk':
       return serviceRiskCount.value > 0
-        ? { label: `${serviceRiskCount.value} 服务`, tone: 'warning' }
-        : { label: '健康', tone: 'success' }
+        ? { label: `${serviceRiskCount.value} service issue`, tone: 'warning' }
+        : { label: 'Healthy', tone: 'success' }
     case 'paymentReadiness':
       return {
         label: `${paymentConfiguredCount.value}/${paymentProviders.value.length}`,
-        tone: 'neutral',
+        tone:
+          paymentProviders.value.length > 0 &&
+          paymentConfiguredCount.value === paymentProviders.value.length
+            ? 'success'
+            : 'neutral',
       }
     case 'paymentRisk':
       return paymentRiskCount.value > 0
-        ? { label: `${paymentRiskCount.value} 待处理`, tone: 'warning' }
-        : { label: '正常', tone: 'success' }
+        ? { label: `${paymentRiskCount.value} review`, tone: 'warning' }
+        : { label: 'Normal', tone: 'success' }
     case 'lockedFlags':
       return lockedFlagCount.value > 0
-        ? { label: `${lockedFlagCount.value} 受控`, tone: 'neutral' }
+        ? { label: `${lockedFlagCount.value} gated`, tone: 'neutral' }
         : null
     case 'serviceProviderReadiness':
       return {
@@ -193,23 +225,23 @@ const moduleStatusBadge = (module: AdminModuleDescriptor) => {
       }
     case 'failedJobs':
       return failedJobCount.value > 0
-        ? { label: `${failedJobCount.value} 失败`, tone: 'warning' }
+        ? { label: `${failedJobCount.value} failed`, tone: 'warning' }
         : null
     case 'openFeedback':
       return openFeedbackCount.value > 0
-        ? { label: `${openFeedbackCount.value} 待处理`, tone: 'warning' }
+        ? { label: `${openFeedbackCount.value} open`, tone: 'warning' }
         : null
     case 'apiErrors':
       return apiErrorCount.value > 0
-        ? { label: `${apiErrorCount.value} 错误`, tone: 'danger' }
+        ? { label: `${apiErrorCount.value} errors`, tone: 'danger' }
         : null
     case 'maintenanceRisk':
       return maintenanceRiskCount.value > 0
-        ? { label: `${maintenanceRiskCount.value} 项`, tone: 'warning' }
+        ? { label: `${maintenanceRiskCount.value} cleanup`, tone: 'warning' }
         : null
     case 'auditRecent':
       return recentAuditCount.value > 0
-        ? { label: `${recentAuditCount.value} 条`, tone: 'neutral' }
+        ? { label: `${recentAuditCount.value} recent`, tone: 'neutral' }
         : null
     default:
       return null
@@ -217,9 +249,7 @@ const moduleStatusBadge = (module: AdminModuleDescriptor) => {
 }
 
 const moduleStatusClass = (tone: string, isActive: boolean) => {
-  if (isActive) {
-    return 'bg-white/15 text-white dark:bg-slate-950/15 dark:text-slate-950'
-  }
+  if (isActive) return 'bg-white/15 text-white dark:bg-slate-950/15 dark:text-slate-950'
   if (tone === 'success') {
     return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-200'
   }
@@ -230,6 +260,25 @@ const moduleStatusClass = (tone: string, isActive: boolean) => {
     return 'bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-200'
   }
   return 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+}
+
+const riskPillClass = (module: AdminModuleDescriptor, isActive: boolean) => {
+  if (isActive) return 'border-white/20 bg-white/15 text-white dark:border-slate-950/20 dark:bg-slate-950/10 dark:text-slate-950'
+  if (module.riskLevel === 'critical') return 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200'
+  if (module.riskLevel === 'high') return 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200'
+  if (module.riskLevel === 'medium') return 'border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-200'
+  return 'border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-300'
+}
+
+const riskPanelClass = (module: AdminModuleDescriptor) => {
+  if (module.riskLevel === 'critical') return 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200'
+  if (module.riskLevel === 'high') return 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200'
+  if (module.riskLevel === 'medium') return 'border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-200'
+  return 'border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-800 dark:bg-slate-950/45 dark:text-slate-300'
+}
+
+const navigateTo = (tabId: ControlRoomTabId) => {
+  activeTab.value = tabId
 }
 
 onMounted(loadAdminData)
@@ -247,12 +296,18 @@ onMounted(loadAdminData)
               <span class="rounded-full bg-slate-100 px-2.5 py-1 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                 admin.pawn.eu.org
               </span>
+              <span
+                class="rounded-full px-2.5 py-1"
+                :class="moduleStatusClass(systemStatus.tone, false)"
+              >
+                {{ systemStatus.label }}
+              </span>
             </div>
             <h1 class="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
               PDF-Flow Admin
             </h1>
             <p class="mt-3 max-w-3xl text-sm leading-6 text-slate-600 dark:text-slate-300">
-              面向日常运营的后台控制台：先看健康度和收入配置，再进入用户、产品、任务、支持、安全和审计模块处理具体问题。
+              Start with health and attention signals, then move into users, product configuration, revenue, diagnostics, or system controls.
             </p>
           </div>
 
@@ -265,7 +320,7 @@ onMounted(loadAdminData)
                 {{ overview?.active_users_count ?? operations?.active_users ?? 0 }}
               </p>
               <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                总用户 {{ overview?.users_count ?? operations?.total_users ?? 0 }}
+                Total users {{ overview?.users_count ?? operations?.total_users ?? 0 }}
               </p>
             </div>
             <div class="rounded-md border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/45">
@@ -276,7 +331,7 @@ onMounted(loadAdminData)
                 {{ paymentConfiguredCount }}/{{ paymentProviders.length }}
               </p>
               <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                启用 {{ paymentEnabledCount }}，待处理 {{ paymentRiskCount }}
+                Enabled {{ paymentEnabledCount }}, review {{ paymentRiskCount }}
               </p>
             </div>
             <div class="rounded-md border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/45">
@@ -287,7 +342,7 @@ onMounted(loadAdminData)
                 {{ operations?.running_jobs ?? 0 }}
               </p>
               <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                失败 {{ overview?.failed_jobs_count ?? operations?.failed_jobs ?? 0 }}
+                Failed {{ failedJobCount }}
               </p>
             </div>
             <div class="rounded-md border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/45">
@@ -295,10 +350,10 @@ onMounted(loadAdminData)
                 Support Risk
               </p>
               <p class="mt-2 text-2xl font-semibold">
-                {{ overview?.open_feedback_count ?? diagnostics?.open_feedback_count ?? 0 }}
+                {{ openFeedbackCount }}
               </p>
               <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                服务异常 {{ serviceRiskCount }}
+                Service issues {{ serviceRiskCount }}
               </p>
             </div>
           </div>
@@ -306,7 +361,7 @@ onMounted(loadAdminData)
       </div>
     </header>
 
-    <main class="mx-auto grid max-w-[1500px] gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[284px_minmax(0,1fr)] lg:px-8">
+    <main class="mx-auto grid max-w-[1500px] gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[320px_minmax(0,1fr)] lg:px-8">
       <aside class="h-fit rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:sticky lg:top-6">
         <nav class="space-y-5" aria-label="Admin modules">
           <section v-for="group in tabGroups" :key="group.label">
@@ -331,6 +386,12 @@ onMounted(loadAdminData)
                   <span class="flex flex-wrap items-center gap-2">
                     <span class="block text-sm font-semibold">{{ tab.label }}</span>
                     <span
+                      class="rounded-full border px-2 py-0.5 text-[11px] font-semibold leading-4"
+                      :class="riskPillClass(tab, activeTab === tab.id)"
+                    >
+                      {{ riskLevelLabels[tab.riskLevel] }}
+                    </span>
+                    <span
                       v-if="moduleStatusBadge(tab)"
                       class="rounded-full px-2 py-0.5 text-[11px] font-semibold leading-4"
                       :class="moduleStatusClass(moduleStatusBadge(tab)!.tone, activeTab === tab.id)"
@@ -346,7 +407,7 @@ onMounted(loadAdminData)
                         : 'text-slate-500 dark:text-slate-400'
                     "
                   >
-                    {{ tab.description }}
+                    {{ tab.whenToUse }}
                   </span>
                 </span>
                 <ChevronRight
@@ -368,6 +429,31 @@ onMounted(loadAdminData)
           <p class="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
             {{ currentTab.description }}
           </p>
+          <div class="mt-4 grid gap-3 xl:grid-cols-2">
+            <div class="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-950/45 dark:text-slate-300">
+              <p class="font-semibold text-slate-950 dark:text-white">When to use</p>
+              <p class="mt-1 leading-6">{{ currentTab.whenToUse }}</p>
+            </div>
+            <div
+              class="rounded-md border p-3 text-sm"
+              :class="riskPanelClass(currentTab)"
+            >
+              <div class="flex items-start gap-2">
+                <AlertTriangle v-if="currentTab.riskLevel === 'high' || currentTab.riskLevel === 'critical'" class="mt-0.5 h-4 w-4 shrink-0" />
+                <CheckCircle v-else class="mt-0.5 h-4 w-4 shrink-0" />
+                <div>
+                  <p class="font-semibold">{{ riskLevelLabels[currentTab.riskLevel] }}</p>
+                  <p class="mt-1 leading-6">{{ currentTab.riskNote }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            v-if="currentTab.riskLevel === 'high' || currentTab.riskLevel === 'critical'"
+            class="mt-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100"
+          >
+            High-impact area: review current state, validation messages, and changed fields before saving.
+          </div>
         </div>
 
         <div
@@ -407,10 +493,15 @@ onMounted(loadAdminData)
             :health-report-summary="buildHealthReportSummary()"
             :health-report-copied="healthReportCopied"
             :saving-key="savingKey"
+            :payment-summary="paymentSummary"
+            :service-provider-configs="serviceProviderConfigs"
+            :diagnostics="diagnostics"
+            :maintenance="maintenance"
             :format-date="formatDate"
             @refresh-all="loadAdminData"
             @refresh-health-report="loadHealthReport"
             @copy-health-report="copyHealthReport"
+            @navigate="navigateTo"
           />
 
           <UsersTab
@@ -567,7 +658,7 @@ onMounted(loadAdminData)
         :summary="pendingConfirmation?.summary || ''"
         :details="pendingConfirmation?.details || []"
         :confirm-label="pendingConfirmation?.confirmLabel || ''"
-        cancel-label="取消"
+        cancel-label="Cancel"
         :tone="pendingConfirmation?.tone || 'danger'"
         :loading="!!pendingConfirmation && savingKey === pendingConfirmation.savingKey"
         @update:model-value="(value) => { if (!value) closeAdminConfirmation() }"

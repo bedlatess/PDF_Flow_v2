@@ -1950,6 +1950,22 @@ Product Phase P2 production result:
 - Cleanup:
   - Removed temporary P2 smoke users, DB `ProcessingJob` rows, Redis `job:*` keys, and generated HTML to PDF output directories.
 
+Admin UX-A/B local checkpoint:
+
+- Scope: admin UX productization only. Payment logic, task system, backend APIs, permissions, PDF tools, and provider runtime behavior were not changed.
+- UX-A navigation and copy cleanup:
+  - Reworked Control Room module groups to `Command`, `Operate`, `Product`, `Revenue`, and `System`.
+  - Renamed visible module entries to clear operator-facing labels such as `Command Center`, `Users & Access`, `Tools & Features`, `Payment Providers`, `Service Providers`, `Job Center`, `Maintenance`, and `Audit Logs`.
+  - Added module-level purpose, when-to-use guidance, risk level, risk note, and status badge metadata.
+  - High-risk and critical modules now show clearer warning copy in the module header; low-frequency dangerous modules are grouped under `System`.
+- UX-B Dashboard / Command Center:
+  - Replaced the old overview with a read-only operating dashboard that summarizes system health, provider readiness, payment readiness, recent failed jobs, recent API errors, recent feedback, and maintenance attention.
+  - Added an attention queue that points operators to the right module without running destructive actions.
+  - Dashboard provider/payment readiness is informational only and does not perform real-payment validation, webhook entitlement changes, or provider runtime switching.
+- Local verification:
+  - `npm run test:e2e:admin` (`7 passed`)
+  - Admin E2E covers desktop `1440x1100` and mobile `390x900` module traversal with no document-level horizontal overflow, plus existing password rotation, maintenance confirmation, user deletion confirmation, diagnostics packet copy, and payment evidence copy flows.
+
 Admin bootstrap:
 
 ```bash

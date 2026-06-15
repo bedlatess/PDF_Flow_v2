@@ -1132,6 +1132,15 @@ async function expectNoHorizontalOverflow(page: Page) {
   )
 }
 
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+async function clickAdminModule(page: Page, label: string) {
+  await page
+    .getByLabel('Admin modules')
+    .getByRole('button', { name: new RegExp(`^${escapeRegExp(label)}\\b`) })
+    .click()
+}
+
 test.describe('Admin Control Room visual QA', () => {
   for (const viewport of [
     { label: 'desktop', width: 1440, height: 1100 },
@@ -1143,28 +1152,32 @@ test.describe('Admin Control Room visual QA', () => {
       await page.goto('/')
 
       await expect(page.getByRole('heading', { name: 'PDF-Flow Admin' })).toBeVisible()
-      await expect(page.getByText('客户与收入')).toBeVisible()
+      await expect(page.getByLabel('Admin modules').getByText('Command', { exact: true })).toBeVisible()
+      await expect(page.getByLabel('Admin modules').getByText('Revenue', { exact: true })).toBeVisible()
       await expectNoHorizontalOverflow(page)
 
       const tabs = [
-        { label: '工具与功能', visibleText: '工具可见性与访问控制' },
-        { label: '站点配置', visibleText: '全站公告' },
-        { label: '内容块', visibleText: 'PDF 工作台' },
-        { label: '用户与权限', visibleText: 'smoke-compress@example.com' },
-        { label: '支付配置', visibleText: 'Webhook / Notify URL' },
-        { label: '支付对账', visibleText: 'PDF-Flow payment reconciliation packet' },
-        { label: '任务观察', visibleText: '任务中心' },
-        { label: '问题反馈', visibleText: '压缩完成后下载按钮没有响应' },
-        { label: '错误诊断', visibleText: '/api/v1/files/compress' },
-        { label: '维护清理', visibleText: 'backend/uploads' },
-        { label: 'Account Security', visibleText: 'Change and sign out' },
-        { label: '审计日志', visibleText: 'feature_flag.update' },
-        { label: '运营总览', visibleText: 'PDF-Flow 上线健康报告' },
+        { label: 'Command Center', visibleText: 'Attention Queue' },
+        { label: 'Users & Access', visibleText: 'smoke-compress@example.com' },
+        { label: 'Job Center', visibleText: 'Worker timed out while optimizing embedded images.' },
+        { label: 'Feedback Inbox', visibleText: 'tester@example.com' },
+        { label: 'Tools & Features', visibleText: 'Tools & Features' },
+        { label: 'Service Providers', visibleText: 'Local Tesseract' },
+        { label: 'Site Settings', visibleText: 'site_name' },
+        { label: 'Content Blocks', visibleText: 'homepage.hero' },
+        { label: 'Plans & Pricing', visibleText: 'pro_monthly' },
+        { label: 'Payment Providers', visibleText: 'Webhook / Notify URL' },
+        { label: 'Payments & Evidence', visibleText: 'PDF-Flow payment reconciliation packet' },
+        { label: 'Errors & Diagnostics', visibleText: '/api/v1/files/compress' },
+        { label: 'Maintenance', visibleText: 'backend/uploads' },
+        { label: 'Security', visibleText: 'Change and sign out' },
+        { label: 'Audit Logs', visibleText: 'feature_flag.update' },
       ]
 
       for (const tab of tabs) {
-        await page.getByRole('button', { name: tab.label }).click()
-        await expect(page.getByText(tab.visibleText).first()).toBeVisible()
+        await clickAdminModule(page, tab.label)
+        await expect(page.locator('h2').filter({ hasText: tab.label }).first()).toBeVisible()
+        await expect(page.getByText(tab.visibleText).filter({ visible: true }).first()).toBeVisible()
         await expectNoHorizontalOverflow(page)
       }
     })
@@ -1182,7 +1195,7 @@ test.describe('Admin Control Room visual QA', () => {
     await mockAdminControlRoom(page, calls)
     await page.goto('/')
 
-    await page.getByRole('button', { name: 'Account Security' }).click()
+    await clickAdminModule(page, 'Security')
     await expect(page.getByRole('heading', { name: 'Change password' })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Change and sign out' })).toBeDisabled()
 
@@ -1216,7 +1229,7 @@ test.describe('Admin Control Room visual QA', () => {
     await mockAdminControlRoom(page, calls)
 
     await page.goto('/')
-    await page.getByRole('button', { name: '维护清理' }).click()
+    await clickAdminModule(page, 'Maintenance')
     await expect(page.getByRole('button', { name: '重新统计数量' })).toBeVisible()
 
     const maintenanceGetsAfterLoad = calls.maintenanceGets
@@ -1235,7 +1248,7 @@ test.describe('Admin Control Room visual QA', () => {
     await expect(page.getByRole('dialog', { name: '确认删除测试账号' })).toBeVisible()
     await expect(page.getByText('仅匹配 smoke-、ocr-、office- 和 @example.com 测试账号。')).toBeVisible()
     expect(calls.cleanupUsers).toBe(0)
-    await page.getByRole('button', { name: '取消' }).click()
+    await page.getByRole('button', { name: 'Cancel' }).click()
     await expect(page.getByRole('dialog', { name: '确认删除测试账号' })).toBeHidden()
     expect(calls.cleanupUsers).toBe(0)
 
@@ -1263,7 +1276,7 @@ test.describe('Admin Control Room visual QA', () => {
     await mockAdminControlRoom(page, calls)
     await page.goto('/')
 
-    await page.getByRole('button', { name: '用户与权限' }).click()
+    await clickAdminModule(page, 'Users & Access')
     const smokeUserRow = page
       .getByText('smoke-compress@example.com', { exact: true })
       .locator('xpath=ancestor::div[contains(@class, "border-t")][1]')
@@ -1272,7 +1285,7 @@ test.describe('Admin Control Room visual QA', () => {
     await expect(page.getByText('将删除 smoke-compress@example.com 及其关联数据。')).toBeVisible()
     expect(calls.deleteUsers).toBe(0)
 
-    await page.getByRole('button', { name: '取消' }).click()
+    await page.getByRole('button', { name: 'Cancel' }).click()
     await expect(page.getByRole('dialog', { name: '确认删除用户' })).toBeHidden()
     expect(calls.deleteUsers).toBe(0)
 
@@ -1298,7 +1311,7 @@ test.describe('Admin Control Room visual QA', () => {
     await mockAdminControlRoom(page)
     await page.goto('/')
 
-    await page.getByRole('button', { name: '错误诊断' }).click()
+    await clickAdminModule(page, 'Errors & Diagnostics')
     await expect(page.getByText('PDF-Flow diagnostic packet')).toBeVisible()
     await page.getByRole('button', { name: '复制排障包' }).click()
     await expect(page.getByText('已复制诊断排障包')).toBeVisible()
@@ -1327,7 +1340,7 @@ test.describe('Admin payment reconciliation QA', () => {
     await mockAdminControlRoom(page)
     await page.goto('/')
 
-    await page.getByRole('button', { name: '支付配置' }).click()
+    await clickAdminModule(page, 'Payment Providers')
     await expect(page.getByText('Smoke passed').first()).toBeVisible()
     await expect(page.getByText('Missing config').first()).toBeVisible()
     await expect(page.getByText('Needs review').first()).toBeVisible()
@@ -1339,7 +1352,7 @@ test.describe('Admin payment reconciliation QA', () => {
     await expect(page.getByText('Sandbox smoke test').first()).toBeVisible()
     await expect(page.getByText('Use a low-value USDT test order and verify the gateway callback amount/currency mapping.')).toBeVisible()
 
-    await page.getByRole('button', { name: '支付对账' }).click()
+    await clickAdminModule(page, 'Payments & Evidence')
     await expect(page.getByText('PDF-Flow payment reconciliation packet')).toBeVisible()
     await expect(page.getByText('evt_mismatch_admin_001', { exact: true })).toBeVisible()
     await expect(page.getByText('Payment amount mismatch')).toBeVisible()

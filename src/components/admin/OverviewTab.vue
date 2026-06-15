@@ -1,11 +1,32 @@
 <script setup lang="ts">
-import { CircleDot, ClipboardCopy } from 'lucide-vue-next'
-import type { AdminHealthReport, AdminJob, AdminOperations, AdminOverview } from '@/admin/api'
+import { computed } from 'vue'
+import {
+  AlertCircle,
+  ArrowRight,
+  CheckCircle2,
+  ClipboardCopy,
+  CreditCard,
+  Network,
+  RefreshCw,
+  Server,
+  AlertTriangle,
+} from 'lucide-vue-next'
+import type {
+  AdminDiagnostics,
+  AdminHealthReport,
+  AdminJob,
+  AdminMaintenance,
+  AdminOperations,
+  AdminOverview,
+  AdminPaymentSummary,
+  AdminServiceProviderConfig,
+} from '@/admin/api'
+import type { ControlRoomTabId } from '@/admin/control-room/types'
 import AdminActionButton from './AdminActionButton.vue'
 import AdminPanel from './AdminPanel.vue'
 import StatusPill from './StatusPill.vue'
 
-defineProps<{
+const props = defineProps<{
   overview: AdminOverview | null
   operations: AdminOperations | null
   jobs: AdminJob[]
@@ -13,6 +34,10 @@ defineProps<{
   healthReportSummary: string
   healthReportCopied: boolean
   savingKey: string | null
+  paymentSummary: AdminPaymentSummary | null
+  serviceProviderConfigs: AdminServiceProviderConfig[]
+  diagnostics: AdminDiagnostics | null
+  maintenance: AdminMaintenance | null
   formatDate: (value: string) => string
 }>()
 
@@ -20,237 +45,433 @@ const emit = defineEmits<{
   refreshAll: []
   refreshHealthReport: []
   copyHealthReport: []
+  navigate: [tabId: ControlRoomTabId]
 }>()
 
-const serviceTone = (status?: string) => {
-  if (status === 'healthy')
-    return 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200'
-  if (status === 'unhealthy')
-    return 'border-rose-200 bg-rose-500/10 text-rose-700 dark:border-rose-500/30 dark:text-rose-200'
-  if (status === 'degraded')
-    return 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200'
-  return 'border-slate-300/20 bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200'
+type AttentionItem = {
+  key: string
+  title: string
+  detail: string
+  tone: 'warning' | 'danger' | 'info'
+  target: ControlRoomTabId
 }
+
+const services = computed(() => props.operations?.services ?? {})
+const unhealthyServices = computed(() =>
+  Object.entries(services.value).filter(([, service]) => service.status !== 'healthy'),
+)
+const paymentProviders = computed(() => props.paymentSummary?.providers ?? [])
+const paymentReviewProviders = computed(() =>
+  paymentProviders.value.filter(
+    (provider) =>
+      provider.missing_config_keys.length > 0 ||
+      provider.acceptance_status === 'needs_review' ||
+      provider.acceptance_status === 'missing_config',
+  ),
+)
+const readyPaymentCount = computed(
+  () => paymentProviders.value.filter((provider) => provider.configured).length,
+)
+const enabledPaymentCount = computed(
+  () => paymentProviders.value.filter((provider) => provider.enabled).length,
+)
+const enabledServiceProviders = computed(() =>
+  props.serviceProviderConfigs.filter((provider) => provider.enabled),
+)
+const serviceProviderReview = computed(
+  () => enabledServiceProviders.value.filter((provider) => provider.readiness.status !== 'ready'),
+)
+const failedJobCount = computed(
+  () => props.operations?.failed_jobs ?? props.overview?.failed_jobs_count ?? 0,
+)
+const runningJobCount = computed(() => props.operations?.running_jobs ?? 0)
+const openFeedbackCount = computed(
+  () => props.diagnostics?.open_feedback_count ?? props.overview?.open_feedback_count ?? 0,
+)
+const apiErrorCount = computed(
+  () => props.diagnostics?.api_error_count ?? props.overview?.api_error_count ?? 0,
+)
+const cleanupCount = computed(
+  () =>
+    (props.maintenance?.test_users_count ?? 0) +
+    (props.maintenance?.live_acceptance_feedback_count ?? 0) +
+    (props.maintenance?.file_retention?.removable_count ?? 0),
+)
+
+const attentionItems = computed<AttentionItem[]>(() => {
+  const items: AttentionItem[] = []
+  if (unhealthyServices.value.length) {
+    items.push({
+      key: 'services',
+      title: `${unhealthyServices.value.length} service issue${unhealthyServices.value.length > 1 ? 's' : ''}`,
+      detail: unhealthyServices.value.map(([name]) => name).join(', '),
+      tone: 'danger',
+      target: 'errors',
+    })
+  }
+  if (paymentReviewProviders.value.length) {
+    items.push({
+      key: 'payments',
+      title: `${paymentReviewProviders.value.length} payment provider${paymentReviewProviders.value.length > 1 ? 's' : ''} need review`,
+      detail: paymentReviewProviders.value.map((provider) => provider.display_name).join(', '),
+      tone: 'warning',
+      target: 'paymentSetup',
+    })
+  }
+  if (serviceProviderReview.value.length) {
+    items.push({
+      key: 'providers',
+      title: `${serviceProviderReview.value.length} service provider${serviceProviderReview.value.length > 1 ? 's' : ''} not ready`,
+      detail: serviceProviderReview.value.map((provider) => provider.display_name).join(', '),
+      tone: 'warning',
+      target: 'serviceProviders',
+    })
+  }
+  if (failedJobCount.value) {
+    items.push({
+      key: 'failed-jobs',
+      title: `${failedJobCount.value} failed job${failedJobCount.value > 1 ? 's' : ''}`,
+      detail: 'Review recent failures and customer-facing conversion impact.',
+      tone: 'warning',
+      target: 'jobs',
+    })
+  }
+  if (apiErrorCount.value) {
+    items.push({
+      key: 'api-errors',
+      title: `${apiErrorCount.value} recent API error${apiErrorCount.value > 1 ? 's' : ''}`,
+      detail: props.diagnostics?.recent_errors?.[0]?.path || 'Open diagnostics for the latest error paths.',
+      tone: 'danger',
+      target: 'errors',
+    })
+  }
+  if (openFeedbackCount.value) {
+    items.push({
+      key: 'feedback',
+      title: `${openFeedbackCount.value} open feedback report${openFeedbackCount.value > 1 ? 's' : ''}`,
+      detail: props.diagnostics?.recent_feedback?.[0]?.title || 'Triage new user feedback.',
+      tone: 'info',
+      target: 'feedback',
+    })
+  }
+  if (cleanupCount.value) {
+    items.push({
+      key: 'maintenance',
+      title: `${cleanupCount.value} maintenance item${cleanupCount.value > 1 ? 's' : ''}`,
+      detail: 'Review cleanup counts before running any destructive maintenance action.',
+      tone: 'warning',
+      target: 'maintenance',
+    })
+  }
+  return items
+})
+
+const systemTone = computed(() => {
+  if (unhealthyServices.value.length || apiErrorCount.value) return 'danger'
+  if (attentionItems.value.length) return 'warning'
+  return 'success'
+})
+const systemLabel = computed(() => {
+  if (systemTone.value === 'danger') return 'Needs attention'
+  if (systemTone.value === 'warning') return 'Review recommended'
+  return 'Healthy'
+})
+const systemDetail = computed(() => {
+  if (systemTone.value === 'danger') return 'Service health or API errors need investigation.'
+  if (systemTone.value === 'warning') return 'Core services are online, but some operational items need review.'
+  return 'Core services and readiness checks look clean.'
+})
+
+const serviceTone = (status?: string) => {
+  if (status === 'healthy') return 'success'
+  if (status === 'unhealthy') return 'danger'
+  if (status === 'degraded') return 'warning'
+  return 'neutral'
+}
+
+const attentionPanelClass = (tone: AttentionItem['tone']) => {
+  if (tone === 'danger') return 'border-rose-200 bg-rose-50 dark:border-rose-500/30 dark:bg-rose-500/10'
+  if (tone === 'warning') return 'border-amber-200 bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/10'
+  return 'border-sky-200 bg-sky-50 dark:border-sky-500/30 dark:bg-sky-500/10'
+}
+
+const attentionTextClass = (tone: AttentionItem['tone']) => {
+  if (tone === 'danger') return 'text-rose-700 dark:text-rose-200'
+  if (tone === 'warning') return 'text-amber-800 dark:text-amber-100'
+  return 'text-sky-800 dark:text-sky-100'
+}
+
+const recentFailedJobs = computed(() => props.operations?.recent_failed_jobs ?? [])
+const recentErrors = computed(() => props.diagnostics?.recent_errors ?? [])
+const recentFeedback = computed(() => props.diagnostics?.recent_feedback ?? [])
 </script>
 
 <template>
   <div class="space-y-5">
-    <section class="grid gap-4 xl:grid-cols-4">
-      <AdminPanel as="article">
-        <p class="text-sm text-slate-500 dark:text-slate-400">全部用户</p>
-        <p class="mt-3 text-3xl font-semibold">
-          {{ operations?.total_users ?? overview?.users_count ?? 0 }}
-        </p>
-        <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">
-          测试账号 {{ operations?.test_users ?? 0 }} 个
-        </p>
-      </AdminPanel>
-
-      <AdminPanel as="article">
-        <p class="text-sm text-slate-500 dark:text-slate-400">可登录用户</p>
-        <p class="mt-3 text-3xl font-semibold">
-          {{ operations?.active_users ?? overview?.active_users_count ?? 0 }}
-        </p>
-        <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">
-          封禁 {{ operations?.banned_users ?? 0 }} 个
-        </p>
-      </AdminPanel>
-
-      <AdminPanel as="article">
-        <p class="text-sm text-slate-500 dark:text-slate-400">近期可见任务</p>
-        <p class="mt-3 text-3xl font-semibold">
-          {{ operations?.visible_jobs ?? jobs.length }}
-        </p>
-        <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">
-          处理中 {{ operations?.running_jobs ?? 0 }} 个
-        </p>
-      </AdminPanel>
-
-      <AdminPanel as="article">
-        <p class="text-sm text-slate-500 dark:text-slate-400">失败任务</p>
-        <p class="mt-3 text-3xl font-semibold text-rose-700 dark:text-rose-200">
-          {{ operations?.failed_jobs ?? overview?.failed_jobs_count ?? 0 }}
-        </p>
-        <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">优先排查最近错误</p>
-      </AdminPanel>
-    </section>
-
-    <section class="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
-      <AdminPanel as="article">
-        <div class="mb-4 flex items-center justify-between gap-3">
+    <section class="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+      <AdminPanel as="article" :tone="systemTone" padding="lg">
+        <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p class="text-lg font-semibold">服务状态</p>
-            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              数据库、Redis 和任务队列线索。
-            </p>
-          </div>
-          <AdminActionButton @click="emit('refreshAll')">刷新</AdminActionButton>
-        </div>
-
-        <div class="space-y-3">
-          <div
-            v-for="(service, name) in operations?.services"
-            :key="name"
-            class="rounded-md border p-4"
-            :class="serviceTone(service.status)"
-          >
-            <div class="flex items-center justify-between gap-3">
-              <div class="flex items-center gap-2">
-                <CircleDot class="h-4 w-4" />
-                <span class="font-semibold">{{ name }}</span>
-              </div>
-              <span class="text-xs uppercase tracking-[0.18em]">{{ service.status }}</span>
+            <div class="flex flex-wrap items-center gap-3">
+              <CheckCircle2 v-if="systemTone === 'success'" class="h-6 w-6 text-emerald-600 dark:text-emerald-200" />
+              <AlertTriangle v-else-if="systemTone === 'warning'" class="h-6 w-6 text-amber-600 dark:text-amber-200" />
+              <AlertCircle v-else class="h-6 w-6 text-rose-600 dark:text-rose-200" />
+              <StatusPill :tone="systemTone">{{ systemLabel }}</StatusPill>
             </div>
-            <p class="mt-2 text-sm opacity-80">{{ service.detail }}</p>
-          </div>
-        </div>
-      </AdminPanel>
-
-      <AdminPanel as="article" tone="info">
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <p class="text-lg font-semibold">上线健康报告</p>
-            <p class="mt-1 text-sm leading-6 text-sky-700 dark:text-sky-200/75">
-              一键复制当前线上状态，方便截图或发给管理员排查。
+            <h3 class="mt-4 text-2xl font-semibold text-slate-950 dark:text-white">
+              Command Center
+            </h3>
+            <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300">
+              {{ systemDetail }} This dashboard only points you to the right module; it does not run destructive actions.
             </p>
           </div>
-          <div class="flex gap-2">
+          <div class="flex flex-col gap-2 sm:flex-row">
             <AdminActionButton
               tone="neutral"
               :disabled="savingKey === 'health-report:refresh'"
               :loading="savingKey === 'health-report:refresh'"
               @click="emit('refreshHealthReport')"
             >
-              刷新
+              <template #icon>
+                <RefreshCw class="h-4 w-4" />
+              </template>
+              Refresh health
             </AdminActionButton>
-            <AdminActionButton tone="neutral" @click="emit('copyHealthReport')">
+            <AdminActionButton
+              tone="neutral"
+              @click="emit('copyHealthReport')"
+            >
               <template #icon>
                 <ClipboardCopy class="h-4 w-4" />
               </template>
-              {{ healthReportCopied ? '已复制' : '复制报告' }}
+              {{ healthReportCopied ? 'Copied' : 'Copy report' }}
             </AdminActionButton>
           </div>
         </div>
 
-        <div class="mt-5 grid gap-3 sm:grid-cols-3">
-          <AdminPanel as="div" tone="subtle" padding="sm">
-            <p class="text-xs text-sky-700 dark:text-sky-200/70">后端版本</p>
-            <p class="mt-2 break-all font-semibold text-slate-950 dark:text-white">
-              {{ healthReport?.app_version || '未加载' }}
-            </p>
-          </AdminPanel>
-          <AdminPanel as="div" tone="subtle" padding="sm">
-            <p class="text-xs text-sky-700 dark:text-sky-200/70">迁移版本</p>
-            <p class="mt-2 break-all font-semibold text-slate-950 dark:text-white">
-              {{ healthReport?.migration_version || '未读取到' }}
-            </p>
-          </AdminPanel>
-          <AdminPanel as="div" tone="subtle" padding="sm">
-            <p class="text-xs text-sky-700 dark:text-sky-200/70">环境</p>
+        <div class="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div class="rounded-md border border-white/70 bg-white/70 p-4 dark:border-white/10 dark:bg-slate-950/25">
+            <p class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">Environment</p>
+            <p class="mt-2 font-semibold text-slate-950 dark:text-white">{{ healthReport?.environment || 'unknown' }}</p>
+            <p class="mt-1 break-all text-xs text-slate-500 dark:text-slate-400">{{ healthReport?.app_version || 'version pending' }}</p>
+          </div>
+          <div class="rounded-md border border-white/70 bg-white/70 p-4 dark:border-white/10 dark:bg-slate-950/25">
+            <p class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">Services</p>
             <p class="mt-2 font-semibold text-slate-950 dark:text-white">
-              {{ healthReport?.environment || 'unknown' }}
+              {{ Object.keys(services).length - unhealthyServices.length }}/{{ Object.keys(services).length }}
             </p>
-          </AdminPanel>
+            <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">healthy</p>
+          </div>
+          <div class="rounded-md border border-white/70 bg-white/70 p-4 dark:border-white/10 dark:bg-slate-950/25">
+            <p class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">Payment</p>
+            <p class="mt-2 font-semibold text-slate-950 dark:text-white">{{ readyPaymentCount }}/{{ paymentProviders.length }}</p>
+            <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">configured, {{ enabledPaymentCount }} enabled</p>
+          </div>
+          <div class="rounded-md border border-white/70 bg-white/70 p-4 dark:border-white/10 dark:bg-slate-950/25">
+            <p class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">Jobs</p>
+            <p class="mt-2 font-semibold text-slate-950 dark:text-white">{{ runningJobCount }} running</p>
+            <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ failedJobCount }} failed recently</p>
+          </div>
+        </div>
+      </AdminPanel>
+
+      <AdminPanel as="article" padding="lg">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <h3 class="text-lg font-semibold text-slate-950 dark:text-white">Attention Queue</h3>
+            <p class="mt-1 text-sm leading-6 text-slate-500 dark:text-slate-400">
+              Prioritized signals from health, providers, payments, jobs, errors, feedback, and maintenance.
+            </p>
+          </div>
+          <StatusPill :tone="attentionItems.length ? 'warning' : 'success'">
+            {{ attentionItems.length ? `${attentionItems.length} items` : 'Clear' }}
+          </StatusPill>
         </div>
 
-        <pre
-          class="mt-4 max-h-72 overflow-y-auto whitespace-pre-wrap rounded-lg border border-slate-200 bg-white p-4 text-xs leading-6 text-sky-800 dark:border-slate-800 dark:bg-slate-950 dark:text-sky-100/85"
-          >{{ healthReportSummary || '健康报告加载中...' }}</pre
-        >
+        <div class="mt-5 space-y-3">
+          <button
+            v-for="item in attentionItems"
+            :key="item.key"
+            type="button"
+            class="w-full rounded-md border p-4 text-left transition hover:-translate-y-0.5 hover:shadow-sm"
+            :class="attentionPanelClass(item.tone)"
+            @click="emit('navigate', item.target)"
+          >
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <p class="font-semibold" :class="attentionTextClass(item.tone)">{{ item.title }}</p>
+                <p class="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300">{{ item.detail }}</p>
+              </div>
+              <ArrowRight class="mt-1 h-4 w-4 shrink-0 text-slate-500 dark:text-slate-300" />
+            </div>
+          </button>
+
+          <div
+            v-if="!attentionItems.length"
+            class="rounded-md border border-emerald-200 bg-emerald-50 p-6 text-sm text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-100"
+          >
+            No immediate operational attention items. Keep an eye on jobs, payments, and feedback after traffic changes.
+          </div>
+        </div>
       </AdminPanel>
     </section>
 
-    <section class="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
+    <section class="grid gap-5 xl:grid-cols-3">
       <AdminPanel as="article">
-        <div class="mb-4">
-          <p class="text-lg font-semibold">最近失败任务</p>
-          <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            这里有内容时，优先看错误摘要和 job_id。
-          </p>
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <div class="flex items-center gap-2">
+              <Server class="h-5 w-5 text-slate-600 dark:text-slate-300" />
+              <h3 class="font-semibold text-slate-950 dark:text-white">System Health</h3>
+            </div>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Backend, queue, database, and cache.</p>
+          </div>
+          <AdminActionButton tone="neutral" @click="emit('refreshAll')">Refresh</AdminActionButton>
         </div>
-        <div class="space-y-3">
+        <div class="mt-4 space-y-3">
           <div
-            v-for="job in operations?.recent_failed_jobs"
+            v-for="(service, name) in services"
+            :key="name"
+            class="flex items-start justify-between gap-3 rounded-md border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950/45"
+          >
+            <div class="min-w-0">
+              <p class="font-semibold text-slate-950 dark:text-white">{{ name }}</p>
+              <p class="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">{{ service.detail || 'No detail' }}</p>
+            </div>
+            <StatusPill :tone="serviceTone(service.status)">{{ service.status }}</StatusPill>
+          </div>
+        </div>
+      </AdminPanel>
+
+      <AdminPanel as="article">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <div class="flex items-center gap-2">
+              <CreditCard class="h-5 w-5 text-slate-600 dark:text-slate-300" />
+              <h3 class="font-semibold text-slate-950 dark:text-white">Payment Readiness</h3>
+            </div>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Configuration readiness, not real-payment validation.</p>
+          </div>
+          <AdminActionButton tone="neutral" @click="emit('navigate', 'paymentSetup')">Open</AdminActionButton>
+        </div>
+        <div class="mt-4 space-y-3">
+          <div
+            v-for="provider in paymentProviders"
+            :key="provider.key"
+            class="rounded-md border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950/45"
+          >
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <p class="font-semibold text-slate-950 dark:text-white">{{ provider.display_name }}</p>
+              <div class="flex flex-wrap gap-2">
+                <StatusPill :tone="provider.enabled ? 'success' : 'neutral'">{{ provider.enabled ? 'enabled' : 'disabled' }}</StatusPill>
+                <StatusPill :tone="provider.configured ? 'success' : 'warning'">{{ provider.configured ? 'configured' : 'missing config' }}</StatusPill>
+              </div>
+            </div>
+            <p class="mt-2 text-xs leading-5 text-slate-500 dark:text-slate-400">{{ provider.acceptance_detail }}</p>
+          </div>
+        </div>
+      </AdminPanel>
+
+      <AdminPanel as="article">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <div class="flex items-center gap-2">
+              <Network class="h-5 w-5 text-slate-600 dark:text-slate-300" />
+              <h3 class="font-semibold text-slate-950 dark:text-white">Provider Readiness</h3>
+            </div>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">OCR, Office, and AI runtime provider status.</p>
+          </div>
+          <AdminActionButton tone="neutral" @click="emit('navigate', 'serviceProviders')">Open</AdminActionButton>
+        </div>
+        <div class="mt-4 space-y-3">
+          <div
+            v-for="provider in serviceProviderConfigs"
+            :key="`${provider.service_key}:${provider.provider_key}`"
+            class="rounded-md border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950/45"
+          >
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <p class="font-semibold text-slate-950 dark:text-white">{{ provider.display_name }}</p>
+              <div class="flex flex-wrap gap-2">
+                <StatusPill :tone="provider.enabled ? 'success' : 'neutral'">{{ provider.enabled ? 'enabled' : 'disabled' }}</StatusPill>
+                <StatusPill :tone="provider.readiness.status === 'ready' ? 'success' : 'warning'">{{ provider.readiness.label }}</StatusPill>
+              </div>
+            </div>
+            <p class="mt-2 text-xs leading-5 text-slate-500 dark:text-slate-400">{{ provider.readiness.detail }}</p>
+          </div>
+        </div>
+      </AdminPanel>
+    </section>
+
+    <section class="grid gap-5 xl:grid-cols-3">
+      <AdminPanel as="article">
+        <div class="flex items-center justify-between gap-3">
+          <h3 class="font-semibold text-slate-950 dark:text-white">Recent Failed Jobs</h3>
+          <AdminActionButton tone="neutral" @click="emit('navigate', 'jobs')">Open jobs</AdminActionButton>
+        </div>
+        <div class="mt-4 space-y-3">
+          <div
+            v-for="job in recentFailedJobs.slice(0, 4)"
             :key="job.job_id"
-            class="rounded-md border border-rose-200 bg-rose-500/10 p-4 dark:border-rose-500/30"
+            class="rounded-md border border-rose-200 bg-rose-50 p-3 dark:border-rose-500/30 dark:bg-rose-500/10"
           >
             <div class="flex flex-wrap items-center gap-2">
               <StatusPill tone="danger">{{ job.job_type }}</StatusPill>
-              <span class="text-xs text-rose-700 dark:text-rose-200/70">
-                {{ formatDate(job.created_at) }}
-              </span>
+              <span class="text-xs text-rose-700 dark:text-rose-200/70">{{ formatDate(job.created_at) }}</span>
             </div>
-            <p class="mt-2 break-all font-semibold text-slate-950 dark:text-white">
-              {{ job.job_id }}
-            </p>
-            <p class="mt-2 text-sm text-rose-700 dark:text-rose-200">
-              {{ job.error_message || '暂无错误摘要' }}
-            </p>
+            <p class="mt-2 break-all font-mono text-xs text-slate-600 dark:text-slate-300">{{ job.job_id }}</p>
+            <p class="mt-2 text-sm leading-6 text-rose-700 dark:text-rose-200">{{ job.error_message || 'No error summary' }}</p>
           </div>
-          <div
-            v-if="!operations?.recent_failed_jobs?.length"
-            class="rounded-md border border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-950/45 dark:text-slate-400"
-          >
-            最近没有失败任务，状态不错。
-          </div>
-        </div>
-      </AdminPanel>
-    </section>
-
-    <section class="grid gap-5 xl:grid-cols-2">
-      <AdminPanel as="article">
-        <p class="text-lg font-semibold">最近注册用户</p>
-        <div class="mt-4 space-y-3">
-          <div
-            v-for="user in operations?.recent_users"
-            :key="user.id"
-            class="flex items-center justify-between gap-3 rounded-md bg-slate-50 p-3 dark:bg-slate-950/45"
-          >
-            <div>
-              <p class="font-semibold text-slate-950 dark:text-white">{{ user.email }}</p>
-              <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                {{ user.role }} · {{ user.is_test_account ? '测试账号' : '真实用户' }}
-              </p>
-            </div>
-            <StatusPill :tone="user.is_active ? 'success' : 'danger'">
-              {{ user.is_active ? '正常' : '已封禁' }}
-            </StatusPill>
-          </div>
+          <p v-if="!recentFailedJobs.length" class="rounded-md border border-slate-200 bg-slate-50 p-5 text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-950/45 dark:text-slate-400">
+            No recent failed jobs.
+          </p>
         </div>
       </AdminPanel>
 
       <AdminPanel as="article">
-        <p class="text-lg font-semibold">最近任务</p>
+        <div class="flex items-center justify-between gap-3">
+          <h3 class="font-semibold text-slate-950 dark:text-white">Recent Errors</h3>
+          <AdminActionButton tone="neutral" @click="emit('navigate', 'errors')">Open diagnostics</AdminActionButton>
+        </div>
         <div class="mt-4 space-y-3">
           <div
-            v-for="job in operations?.recent_jobs"
-            :key="job.job_id"
-            class="rounded-md bg-slate-50 p-3 dark:bg-slate-950/45"
+            v-for="apiError in recentErrors.slice(0, 4)"
+            :key="apiError.id"
+            class="rounded-md border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950/45"
           >
-            <div class="flex flex-wrap items-center justify-between gap-2">
-              <span class="font-semibold text-slate-950 dark:text-white">{{ job.job_type }}</span>
-              <StatusPill
-                :tone="
-                  job.status === 'failed'
-                    ? 'danger'
-                    : job.status === 'completed'
-                      ? 'success'
-                      : 'warning'
-                "
-              >
-                {{ job.status }}
-              </StatusPill>
+            <div class="flex flex-wrap items-center gap-2">
+              <StatusPill tone="danger">{{ apiError.status_code }}</StatusPill>
+              <span class="text-xs text-slate-500 dark:text-slate-400">{{ formatDate(apiError.created_at) }}</span>
             </div>
-            <p class="mt-2 break-all text-xs text-slate-500 dark:text-slate-400">
-              {{ job.job_id }}
-            </p>
+            <p class="mt-2 break-all text-sm font-semibold text-slate-950 dark:text-white">{{ apiError.method }} {{ apiError.path }}</p>
+            <p class="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">{{ apiError.error_message || apiError.error_type || 'No summary' }}</p>
           </div>
+          <p v-if="!recentErrors.length" class="rounded-md border border-slate-200 bg-slate-50 p-5 text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-950/45 dark:text-slate-400">
+            No recent API errors.
+          </p>
+        </div>
+      </AdminPanel>
+
+      <AdminPanel as="article">
+        <div class="flex items-center justify-between gap-3">
+          <h3 class="font-semibold text-slate-950 dark:text-white">Recent Feedback</h3>
+          <AdminActionButton tone="neutral" @click="emit('navigate', 'feedback')">Open inbox</AdminActionButton>
+        </div>
+        <div class="mt-4 space-y-3">
           <div
-            v-if="!operations?.recent_jobs?.length"
-            class="rounded-md border border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-950/45 dark:text-slate-400"
+            v-for="feedback in recentFeedback.slice(0, 4)"
+            :key="feedback.id"
+            class="rounded-md border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950/45"
           >
-            暂无近期任务。
+            <div class="flex flex-wrap items-center gap-2">
+              <StatusPill tone="info">{{ feedback.severity }}</StatusPill>
+              <StatusPill tone="neutral">{{ feedback.status }}</StatusPill>
+            </div>
+            <p class="mt-2 text-sm font-semibold text-slate-950 dark:text-white">{{ feedback.title }}</p>
+            <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ formatDate(feedback.created_at) }}</p>
           </div>
+          <p v-if="!recentFeedback.length" class="rounded-md border border-slate-200 bg-slate-50 p-5 text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-950/45 dark:text-slate-400">
+            No recent feedback.
+          </p>
         </div>
       </AdminPanel>
     </section>

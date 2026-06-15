@@ -16,11 +16,11 @@ export type ControlRoomTabId =
   | 'audit'
 
 export type ControlRoomTabGroup =
-  | '概览'
-  | '客户与收入'
-  | '产品配置'
-  | '运营支持'
-  | '安全'
+  | 'Command'
+  | 'Operate'
+  | 'Product'
+  | 'Revenue'
+  | 'System'
 
 export type AdminDomainKey =
   | 'overview'
@@ -42,6 +42,7 @@ export type AdminModuleCapability =
   | 'admin:audit:read'
 
 export type AdminModuleStatusSource =
+  | 'systemHealth'
   | 'serviceRisk'
   | 'serviceProviderReadiness'
   | 'paymentReadiness'
@@ -52,6 +53,8 @@ export type AdminModuleStatusSource =
   | 'apiErrors'
   | 'maintenanceRisk'
   | 'auditRecent'
+
+export type AdminModuleRiskLevel = 'low' | 'medium' | 'high' | 'critical'
 
 export type AdminConfirmation = {
   title: string

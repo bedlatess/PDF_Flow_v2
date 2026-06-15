@@ -24,6 +24,8 @@ import type {
 import type { ControlRoomTabId } from '@/admin/control-room/types'
 import AdminActionButton from './AdminActionButton.vue'
 import AdminPanel from './AdminPanel.vue'
+import AdminSectionHeader from './AdminSectionHeader.vue'
+import AdminStateBlock from './AdminStateBlock.vue'
 import StatusPill from './StatusPill.vue'
 
 const props = defineProps<{
@@ -211,20 +213,16 @@ const recentFeedback = computed(() => props.diagnostics?.recent_feedback ?? [])
     <section class="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
       <AdminPanel as="article" :tone="systemTone" padding="lg">
         <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <div class="flex flex-wrap items-center gap-3">
-              <CheckCircle2 v-if="systemTone === 'success'" class="h-6 w-6 text-emerald-600 dark:text-emerald-200" />
-              <AlertTriangle v-else-if="systemTone === 'warning'" class="h-6 w-6 text-amber-600 dark:text-amber-200" />
-              <AlertCircle v-else class="h-6 w-6 text-rose-600 dark:text-rose-200" />
+          <AdminSectionHeader
+            eyebrow="Command Center"
+            title="Overview"
+            :description="`${systemDetail} This dashboard only points you to the right module; it does not run destructive actions.`"
+            :icon="systemTone === 'success' ? CheckCircle2 : systemTone === 'warning' ? AlertTriangle : AlertCircle"
+          >
+            <template #badges>
               <StatusPill :tone="systemTone">{{ systemLabel }}</StatusPill>
-            </div>
-            <h3 class="mt-4 text-2xl font-semibold text-slate-950 dark:text-white">
-              Command Center
-            </h3>
-            <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300">
-              {{ systemDetail }} This dashboard only points you to the right module; it does not run destructive actions.
-            </p>
-          </div>
+            </template>
+          </AdminSectionHeader>
           <div class="flex flex-col gap-2 sm:flex-row">
             <AdminActionButton
               tone="neutral"
@@ -250,28 +248,32 @@ const recentFeedback = computed(() => props.diagnostics?.recent_feedback ?? [])
         </div>
 
         <div class="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <div class="rounded-md border border-white/70 bg-white/70 p-4 dark:border-white/10 dark:bg-slate-950/25">
-            <p class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">Environment</p>
-            <p class="mt-2 font-semibold text-slate-950 dark:text-white">{{ healthReport?.environment || 'unknown' }}</p>
-            <p class="mt-1 break-all text-xs text-slate-500 dark:text-slate-400">{{ healthReport?.app_version || 'version pending' }}</p>
-          </div>
-          <div class="rounded-md border border-white/70 bg-white/70 p-4 dark:border-white/10 dark:bg-slate-950/25">
-            <p class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">Services</p>
-            <p class="mt-2 font-semibold text-slate-950 dark:text-white">
-              {{ Object.keys(services).length - unhealthyServices.length }}/{{ Object.keys(services).length }}
-            </p>
-            <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">healthy</p>
-          </div>
-          <div class="rounded-md border border-white/70 bg-white/70 p-4 dark:border-white/10 dark:bg-slate-950/25">
-            <p class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">Payment</p>
-            <p class="mt-2 font-semibold text-slate-950 dark:text-white">{{ readyPaymentCount }}/{{ paymentProviders.length }}</p>
-            <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">configured, {{ enabledPaymentCount }} enabled</p>
-          </div>
-          <div class="rounded-md border border-white/70 bg-white/70 p-4 dark:border-white/10 dark:bg-slate-950/25">
-            <p class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">Jobs</p>
-            <p class="mt-2 font-semibold text-slate-950 dark:text-white">{{ runningJobCount }} running</p>
-            <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ failedJobCount }} failed recently</p>
-          </div>
+          <AdminStateBlock
+            tone="neutral"
+            compact
+            title="Environment"
+            :description="healthReport?.environment || 'unknown'"
+          >
+            <span class="break-all text-xs">{{ healthReport?.app_version || 'version pending' }}</span>
+          </AdminStateBlock>
+          <AdminStateBlock
+            tone="neutral"
+            compact
+            title="Services"
+            :description="`${Object.keys(services).length - unhealthyServices.length}/${Object.keys(services).length} healthy`"
+          />
+          <AdminStateBlock
+            tone="neutral"
+            compact
+            title="Payment"
+            :description="`${readyPaymentCount}/${paymentProviders.length} configured, ${enabledPaymentCount} enabled`"
+          />
+          <AdminStateBlock
+            tone="neutral"
+            compact
+            title="Jobs"
+            :description="`${runningJobCount} running, ${failedJobCount} failed recently`"
+          />
         </div>
       </AdminPanel>
 

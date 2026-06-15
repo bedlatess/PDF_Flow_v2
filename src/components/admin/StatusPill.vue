@@ -11,7 +11,7 @@ withDefaults(
 
 <template>
   <span
-    class="inline-block max-w-full whitespace-normal break-all rounded-full px-3 py-1 text-left align-middle text-xs font-semibold"
+    class="inline-flex max-w-full items-center whitespace-normal break-words rounded-full px-3 py-1 text-left align-middle text-xs font-semibold"
     :class="
       tone === 'info'
         ? 'bg-sky-50 text-sky-700 dark:bg-sky-500/15 dark:text-sky-200'

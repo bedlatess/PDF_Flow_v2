@@ -77,7 +77,7 @@ export const createControlRoomFeedbackActions = (ctx: ControlRoomContext) => {
       ctx.maintenance.value = maintenanceData
       ctx.auditLogs.value = auditData
       ctx.setMessage(
-        `已关闭 ${result.closed_count} 条验收反馈，剩余待处理 ${result.remaining_open_count} 条`,
+        `Closed ${result.closed_count} acceptance feedback report${result.closed_count === 1 ? '' : 's'}; ${result.remaining_open_count} remain open.`,
       )
     } catch {
       ctx.error.value = 'Acceptance feedback cleanup failed. Please try again later.'

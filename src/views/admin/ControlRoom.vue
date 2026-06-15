@@ -3,9 +3,7 @@ import { computed, onMounted } from 'vue'
 import {
   AlertTriangle,
   CheckCircle,
-  CheckCircle2,
   ChevronRight,
-  Loader2,
   ShieldCheck,
 } from 'lucide-vue-next'
 import {
@@ -29,6 +27,8 @@ import SecurityTab from '@/components/admin/SecurityTab.vue'
 import ServiceProvidersTab from '@/components/admin/ServiceProvidersTab.vue'
 import SiteSettingsTab from '@/components/admin/SiteSettingsTab.vue'
 import UsersTab from '@/components/admin/UsersTab.vue'
+import AdminStateBlock from '@/components/admin/AdminStateBlock.vue'
+import RiskBadge from '@/components/admin/RiskBadge.vue'
 import { useControlRoom } from '@/admin/control-room/useControlRoom'
 
 const {
@@ -261,14 +261,6 @@ const moduleStatusClass = (tone: string, isActive: boolean) => {
   return 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
 }
 
-const riskPillClass = (module: AdminModuleDescriptor, isActive: boolean) => {
-  if (isActive) return 'border-white/20 bg-white/15 text-white dark:border-slate-950/20 dark:bg-slate-950/10 dark:text-slate-950'
-  if (module.riskLevel === 'critical') return 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200'
-  if (module.riskLevel === 'high') return 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200'
-  if (module.riskLevel === 'medium') return 'border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-200'
-  return 'border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-300'
-}
-
 const riskPanelClass = (module: AdminModuleDescriptor) => {
   if (module.riskLevel === 'critical') return 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200'
   if (module.riskLevel === 'high') return 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200'
@@ -384,12 +376,7 @@ onMounted(loadAdminData)
                 <span class="min-w-0 flex-1">
                   <span class="flex flex-wrap items-center gap-2">
                     <span class="block text-sm font-semibold">{{ tab.label }}</span>
-                    <span
-                      class="rounded-full border px-2 py-0.5 text-[11px] font-semibold leading-4"
-                      :class="riskPillClass(tab, activeTab === tab.id)"
-                    >
-                      {{ riskLevelLabels[tab.riskLevel] }}
-                    </span>
+                    <RiskBadge :level="tab.riskLevel" compact />
                     <span
                       v-if="moduleStatusBadge(tab)"
                       class="rounded-full px-2 py-0.5 text-[11px] font-semibold leading-4"
@@ -457,29 +444,23 @@ onMounted(loadAdminData)
 
         <div
           v-if="error"
-          class="mb-5 rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200"
+          class="mb-5"
         >
-          <div class="flex items-start gap-3">
-            <AlertTriangle class="mt-0.5 h-5 w-5 shrink-0" />
-            <span>{{ error }}</span>
-          </div>
+          <AdminStateBlock tone="danger" title="Action failed" :description="error" />
         </div>
 
         <div
           v-if="success"
-          class="mb-5 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200"
+          class="mb-5"
         >
-          <div class="flex items-start gap-3">
-            <CheckCircle2 class="mt-0.5 h-5 w-5 shrink-0" />
-            <span>{{ success }}</span>
-          </div>
+          <AdminStateBlock tone="success" title="Saved" :description="success" />
         </div>
 
         <div
           v-if="loading"
-          class="flex min-h-[420px] items-center justify-center rounded-lg border border-slate-200 bg-white p-16 dark:border-slate-800 dark:bg-slate-900"
+          class="min-h-[420px]"
         >
-          <Loader2 class="h-8 w-8 animate-spin text-sky-600 dark:text-sky-300" />
+          <AdminStateBlock tone="loading" title="Loading admin console" description="Fetching the latest health, configuration, jobs, users, and diagnostics." />
         </div>
 
         <div v-else>

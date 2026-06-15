@@ -25,9 +25,9 @@ export const createControlRoomSettingsActions = (ctx: ControlRoomContext) => {
       if (index >= 0) ctx.flags.value[index] = updated
       ctx.auditLogs.value = await adminAPI.listAuditLogs()
       await ctx.siteConfigStore.fetchPublicConfig(true)
-      ctx.setMessage(`已保存工具配置：${updated.label}`)
+      ctx.setMessage(`Saved tool config: ${updated.label}`)
     } catch {
-      ctx.error.value = '工具配置保存失败，请检查输入后重试。'
+      ctx.error.value = 'Tool config save failed. Check the input and retry.'
     } finally {
       ctx.savingKey.value = null
     }

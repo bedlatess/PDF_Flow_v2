@@ -54,9 +54,9 @@ export const createControlRoomPaymentsActions = (ctx: ControlRoomContext) => {
       const index = ctx.pricingPlans.value.findIndex((item) => item.plan_key === updated.plan_key)
       if (index >= 0) ctx.pricingPlans.value[index] = updated
       ctx.auditLogs.value = await adminAPI.listAuditLogs()
-      ctx.setMessage(`已保存套餐：${updated.display_name}`)
+      ctx.setMessage(`Saved pricing plan: ${updated.display_name}`)
     } catch {
-      ctx.error.value = '套餐配置保存失败，请检查价格、币种和 provider mapping 后重试。'
+      ctx.error.value = 'Pricing plan save failed. Check price, currency, and provider mapping before retrying.'
     } finally {
       ctx.savingKey.value = null
     }

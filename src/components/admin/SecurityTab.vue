@@ -5,6 +5,8 @@ import { authAPI } from '@/services/api'
 import { formatUserFacingError } from '@/utils/error-messages'
 import AdminActionButton from './AdminActionButton.vue'
 import AdminPanel from './AdminPanel.vue'
+import AdminSectionHeader from './AdminSectionHeader.vue'
+import AdminStateBlock from './AdminStateBlock.vue'
 
 const form = reactive({
   currentPassword: '',
@@ -74,36 +76,30 @@ const submitPasswordChange = async () => {
 
 <template>
   <div class="grid gap-5 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-    <AdminPanel as="section">
-      <div class="flex items-start gap-4">
-        <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-slate-950 text-white dark:bg-sky-400 dark:text-slate-950">
-          <ShieldCheck class="h-5 w-5" />
-        </div>
-        <div class="min-w-0">
-          <h3 class="text-lg font-semibold">Account security</h3>
-          <p class="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
-            Change the active administrator password from the console. The session is closed after a successful change so the next request starts with fresh credentials.
-          </p>
-        </div>
-      </div>
+    <AdminPanel as="section" padding="lg">
+      <AdminSectionHeader
+        eyebrow="System"
+        title="Security"
+        description="Rotate the active administrator password here. A successful change clears the current session and requires a fresh sign-in."
+        :icon="ShieldCheck"
+      />
 
-      <dl class="mt-6 divide-y divide-slate-200 border-y border-slate-200 text-sm dark:divide-slate-800 dark:border-slate-800">
-        <div class="py-4">
-          <dt class="font-semibold text-slate-700 dark:text-slate-200">Current session</dt>
-          <dd class="mt-1 text-slate-500 dark:text-slate-400">
-            Requires a valid administrator token before any password update is accepted.
-          </dd>
-        </div>
-        <div class="py-4">
-          <dt class="font-semibold text-slate-700 dark:text-slate-200">Password rule</dt>
-          <dd class="mt-1 text-slate-500 dark:text-slate-400">
-            Use at least 8 characters with both letters and numbers. Avoid reusing the current password.
-          </dd>
-        </div>
-      </dl>
+      <AdminStateBlock
+        class="mt-5"
+        tone="warning"
+        title="Session handling"
+        description="The current browser session is cleared after a successful password change. The next request must authenticate again."
+      />
+
+      <AdminStateBlock
+        class="mt-4"
+        tone="info"
+        title="Password rules"
+        description="Use at least 8 characters with both letters and numbers."
+      />
     </AdminPanel>
 
-    <AdminPanel as="section">
+    <AdminPanel as="section" padding="lg">
       <div class="flex items-start gap-4">
         <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-sky-600 text-white dark:bg-sky-400 dark:text-slate-950">
           <KeyRound class="h-5 w-5" />
@@ -166,15 +162,9 @@ const submitPasswordChange = async () => {
         </div>
 
         <div class="grid gap-2 text-xs text-slate-500 dark:text-slate-400 sm:grid-cols-3">
-          <span :class="passwordLengthOk ? 'text-emerald-600 dark:text-emerald-300' : ''">
-            8+ characters
-          </span>
-          <span :class="passwordHasLetter ? 'text-emerald-600 dark:text-emerald-300' : ''">
-            Letter included
-          </span>
-          <span :class="passwordHasNumber ? 'text-emerald-600 dark:text-emerald-300' : ''">
-            Number included
-          </span>
+          <span :class="passwordLengthOk ? 'text-emerald-600 dark:text-emerald-300' : ''">8+ characters</span>
+          <span :class="passwordHasLetter ? 'text-emerald-600 dark:text-emerald-300' : ''">Letter included</span>
+          <span :class="passwordHasNumber ? 'text-emerald-600 dark:text-emerald-300' : ''">Number included</span>
         </div>
 
         <p

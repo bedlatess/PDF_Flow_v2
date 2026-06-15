@@ -22,7 +22,7 @@ withDefaults(
 <template>
   <button
     :type="type"
-    class="inline-flex min-h-10 items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
+    class="inline-flex min-h-10 items-center justify-center gap-2 rounded-md px-4 py-2 text-center text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
     :class="[
       full ? 'w-full' : '',
       tone === 'primary'
@@ -37,8 +37,10 @@ withDefaults(
     ]"
     :disabled="loading || disabled"
   >
-    <Loader2 v-if="loading" class="h-4 w-4 animate-spin" />
+    <Loader2 v-if="loading" class="h-4 w-4 shrink-0 animate-spin" />
     <slot v-else name="icon" />
-    <slot />
+    <span class="min-w-0 break-words">
+      <slot />
+    </span>
   </button>
 </template>

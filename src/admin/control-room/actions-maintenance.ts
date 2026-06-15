@@ -18,7 +18,7 @@ export const createControlRoomMaintenanceActions = (
       await refreshAdminMeta()
       ctx.diagnostics.value = await adminAPI.getDiagnostics()
       ctx.apiErrors.value = ctx.diagnostics.value.recent_errors
-      ctx.setMessage('已重新统计维护数据，未执行任何删除操作')
+      ctx.setMessage('Maintenance counts refreshed. No cleanup action was executed.')
     } catch {
       ctx.error.value = 'Maintenance data refresh failed. Please try again later.'
     } finally {
@@ -29,14 +29,14 @@ export const createControlRoomMaintenanceActions = (
   const cleanupTestUsers = async () => {
     const count = ctx.maintenance.value?.test_users_count ?? 0
     ctx.openAdminConfirmation({
-      title: '确认删除测试账号',
-      summary: `将删除 ${count} 个测试账号。`,
+      title: 'Confirm test account deletion',
+      summary: `This will delete ${count} test account${count === 1 ? '' : 's'}.`,
       details: [
-        '这会真正删除数据；重新统计数量不会删除任何内容。',
-        '仅匹配 smoke-、ocr-、office- 和 @example.com 测试账号。',
-        '不会删除管理员或真实用户，后端会按同一规则再次校验。',
+        'This deletes data. Refreshing counts does not delete anything.',
+        'Only smoke-, ocr-, office-, and @example.com test accounts are matched.',
+        'Admins and real users are protected by backend checks.',
       ],
-      confirmLabel: '确认删除测试账号',
+      confirmLabel: 'Delete test accounts',
       savingKey: 'maintenance:cleanup-users',
       tone: 'danger',
       run: async () => {
@@ -64,7 +64,7 @@ export const createControlRoomMaintenanceActions = (
           ctx.apiErrors.value = diagnosticsData.recent_errors
           await refreshAdminMeta()
           ctx.setMessage(
-            `已删除 ${result.deleted_count} 个测试账号，剩余 ${result.remaining_test_users_count} 个`,
+            `Deleted ${result.deleted_count} test account${result.deleted_count === 1 ? '' : 's'}; ${result.remaining_test_users_count} remain.`,
           )
         } catch (err: any) {
           ctx.error.value =
@@ -80,16 +80,16 @@ export const createControlRoomMaintenanceActions = (
   const cleanupExpiredFiles = async () => {
     const count = ctx.maintenance.value?.file_retention?.removable_count ?? 0
     ctx.openAdminConfirmation({
-      title: '确认清理过期临时文件',
-      summary: `将清理 ${count} 个过期临时文件目录。`,
+      title: 'Confirm expired temporary file cleanup',
+      summary: `This will clean ${count} expired temporary path${count === 1 ? '' : 's'}.`,
       details: [
-        `扫描目录：${
-          ctx.maintenance.value?.file_retention?.upload_dir || '未读取到上传目录'
+        `Scanned directory: ${
+          ctx.maintenance.value?.file_retention?.upload_dir || 'upload directory unavailable'
         }`,
-        '只会删除 PDF-Flow 生成的过期临时上传、转换结果和下载包。',
-        '不会删除用户账号、反馈、审计日志或数据库记录。',
+        'Only expired PDF-Flow uploads, conversion results, and download packages are removed.',
+        'User accounts, feedback, audit logs, and database records are not deleted.',
       ],
-      confirmLabel: '确认清理临时文件',
+      confirmLabel: 'Clean temporary files',
       savingKey: 'maintenance:cleanup-files',
       tone: 'warning',
       run: async () => {
@@ -100,7 +100,7 @@ export const createControlRoomMaintenanceActions = (
           const result = await adminAPI.cleanupExpiredFiles()
           await refreshAdminMeta()
           ctx.setMessage(
-            `已清理 ${result.removed_count} 个过期临时目录，释放 ${formatAdminBytes(result.removed_bytes)}`,
+            `Cleaned ${result.removed_count} expired temporary path${result.removed_count === 1 ? '' : 's'} and freed ${formatAdminBytes(result.removed_bytes)}.`,
           )
         } catch (err: any) {
           ctx.error.value =

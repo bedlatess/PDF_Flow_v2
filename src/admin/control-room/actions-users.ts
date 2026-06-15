@@ -99,14 +99,14 @@ export const createControlRoomUsersActions = (
 
   const deleteUser = async (user: AdminUser) => {
     ctx.openAdminConfirmation({
-      title: '确认删除用户',
-      summary: `将删除 ${user.email} 及其关联数据。`,
+      title: 'Confirm user deletion',
+      summary: `This will delete ${user.email} and related account data.`,
       details: [
-        '此操作不能直接撤销。',
-        '当前管理员账号不能删除自己，后端仍会再次校验权限。',
-        '执行结果会写入审计日志。',
+        'This action cannot be directly undone.',
+        'The current admin account cannot delete itself; backend permissions are checked again.',
+        'The result is recorded in the audit log.',
       ],
-      confirmLabel: '确认删除用户',
+      confirmLabel: 'Delete user',
       savingKey: `delete:${user.id}`,
       tone: 'danger',
       run: async () => {
@@ -117,7 +117,7 @@ export const createControlRoomUsersActions = (
           await adminAPI.deleteUser(user.id)
           ctx.users.value = ctx.users.value.filter((item) => item.id !== user.id)
           await refreshAdminMeta()
-          ctx.setMessage(`已删除用户：${user.email}`)
+          ctx.setMessage(`Deleted user: ${user.email}`)
         } catch (err: any) {
           ctx.error.value =
             err?.response?.data?.detail ||

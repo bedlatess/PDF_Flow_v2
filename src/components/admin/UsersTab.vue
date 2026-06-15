@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { KeyRound, Save, Trash2 } from 'lucide-vue-next'
+import { KeyRound, Save, Search, Trash2 } from 'lucide-vue-next'
 import type { AdminPasswordResetLink, AdminUser } from '@/admin/api'
 import AdminActionButton from './AdminActionButton.vue'
 import AdminPanel from './AdminPanel.vue'
+import AdminSectionHeader from './AdminSectionHeader.vue'
+import AdminStateBlock from './AdminStateBlock.vue'
 import StatusPill from './StatusPill.vue'
 import { getEntitlementSummary } from '@/utils/entitlements'
 
@@ -74,44 +76,44 @@ const entitlementSummary = (user: AdminUser) => getEntitlementSummary(user)
 </script>
 
 <template>
-  <div class="contents">
-    <AdminPanel as="section">
-      <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <p class="text-xl font-semibold">用户管理</p>
-          <p class="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
-            Smoke 测试会自动创建 `smoke-*`、`ocr-*`、`office-*`
-            账号，这些会标记为测试账号。封禁会阻止登录，删除会移除账号数据；当前管理员不能封禁、降级或删除自己。
-          </p>
-        </div>
-        <div class="flex flex-col gap-2 sm:flex-row">
-          <input
-            :value="userSearch"
-            type="search"
-            placeholder="搜索邮箱或姓名"
-            class="rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-950 outline-none placeholder:text-slate-500 focus:border-sky-500 dark:border-slate-800 dark:bg-slate-950/45 dark:text-slate-400 dark:text-white dark:focus:border-sky-400"
-            @input="updateUserSearch"
-            @keyup.enter="emit('search')"
-          />
+  <div class="space-y-5">
+    <AdminPanel as="section" padding="lg">
+      <AdminSectionHeader
+        eyebrow="Operate"
+        title="Users & Access"
+        description="Manage roles, account status, verification, manual entitlements, bans, and one-time reset links. Changes can affect real customer access."
+      >
+        <template #actions>
+          <label class="relative block min-w-0 sm:min-w-[280px]">
+            <Search class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              :value="userSearch"
+              type="search"
+              placeholder="Search by email or name"
+              class="min-h-11 w-full rounded-md border border-slate-200 bg-slate-50 py-3 pl-10 pr-4 text-sm text-slate-950 outline-none placeholder:text-slate-500 focus:border-sky-500 dark:border-slate-800 dark:bg-slate-950/45 dark:text-white dark:focus:border-sky-400"
+              @input="updateUserSearch"
+              @keyup.enter="emit('search')"
+            />
+          </label>
           <AdminActionButton
             class="min-h-11 py-3"
             :disabled="savingKey === 'users:search'"
             :loading="savingKey === 'users:search'"
             @click="emit('search')"
           >
-            搜索
+            Search
           </AdminActionButton>
-        </div>
-      </div>
+        </template>
+      </AdminSectionHeader>
 
       <div class="mt-5 overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800">
         <div
-          class="hidden grid-cols-[1.35fr_0.7fr_0.85fr_1.45fr] gap-3 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:bg-slate-800 dark:text-slate-400 lg:grid"
+          class="hidden grid-cols-[1.35fr_0.7fr_0.85fr_1.45fr] gap-3 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-800 dark:text-slate-400 lg:grid"
         >
-          <span>用户</span>
-          <span>角色</span>
-          <span>状态</span>
-          <span>操作</span>
+          <span>User</span>
+          <span>Role</span>
+          <span>Status</span>
+          <span>Actions</span>
         </div>
 
         <div
@@ -121,22 +123,20 @@ const entitlementSummary = (user: AdminUser) => getEntitlementSummary(user)
         >
           <div>
             <div class="flex flex-wrap items-center gap-2">
-              <p class="font-semibold text-slate-950 dark:text-white">{{ user.email }}</p>
-              <StatusPill v-if="user.is_test_account" tone="warning">测试账号</StatusPill>
+              <p class="break-all font-semibold text-slate-950 dark:text-white">{{ user.email }}</p>
+              <StatusPill v-if="user.is_test_account" tone="warning">Test account</StatusPill>
             </div>
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              {{ user.full_name || '未填写姓名' }}
+              {{ user.full_name || 'No profile name' }}
             </p>
             <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
-              注册：{{ formatDate(user.created_at) }} · 邮箱状态：{{
-                user.is_verified ? '已验证' : '未验证'
-              }}
+              Joined {{ formatDate(user.created_at) }} · Email {{ user.is_verified ? 'verified' : 'unverified' }}
             </p>
           </div>
 
           <select
             v-model="user.role"
-            class="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-950 outline-none focus:border-sky-500 dark:border-slate-800 dark:text-white dark:focus:border-sky-400"
+            class="min-h-11 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-950 outline-none focus:border-sky-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:focus:border-sky-400"
           >
             <option value="free">Free</option>
             <option value="pro">Pro</option>
@@ -146,12 +146,10 @@ const entitlementSummary = (user: AdminUser) => getEntitlementSummary(user)
 
           <div>
             <StatusPill :tone="user.is_active ? 'success' : 'danger'">
-              {{ user.is_active ? '正常' : '已封禁' }}
+              {{ user.is_active ? 'Active' : 'Blocked' }}
             </StatusPill>
             <p class="mt-2 text-xs leading-5 text-slate-500 dark:text-slate-400">
-              {{
-                user.last_login_at ? `最后登录：${formatDate(user.last_login_at)}` : '尚无登录记录'
-              }}
+              {{ user.last_login_at ? `Last login ${formatDate(user.last_login_at)}` : 'No login recorded' }}
             </p>
           </div>
 
@@ -165,7 +163,7 @@ const entitlementSummary = (user: AdminUser) => getEntitlementSummary(user)
               <template #icon>
                 <Save class="h-4 w-4" />
               </template>
-              保存角色
+              Save user
             </AdminActionButton>
             <AdminActionButton
               :tone="user.is_active ? 'warning' : 'success'"
@@ -173,7 +171,7 @@ const entitlementSummary = (user: AdminUser) => getEntitlementSummary(user)
               :loading="savingKey === `ban:${user.id}`"
               @click="emit('toggleBan', user)"
             >
-              {{ user.is_active ? '封禁' : '解封' }}
+              {{ user.is_active ? 'Block' : 'Unblock' }}
             </AdminActionButton>
             <AdminActionButton
               tone="success"
@@ -184,7 +182,7 @@ const entitlementSummary = (user: AdminUser) => getEntitlementSummary(user)
               <template #icon>
                 <KeyRound class="h-4 w-4" />
               </template>
-              生成一次性重置链接
+              Reset link
             </AdminActionButton>
             <AdminActionButton
               tone="danger"
@@ -195,7 +193,7 @@ const entitlementSummary = (user: AdminUser) => getEntitlementSummary(user)
               <template #icon>
                 <Trash2 class="h-4 w-4" />
               </template>
-              删除
+              Delete
             </AdminActionButton>
           </div>
 
@@ -210,11 +208,11 @@ const entitlementSummary = (user: AdminUser) => getEntitlementSummary(user)
                 {{ entitlementSummary(user).detail }}
               </span>
             </div>
-            <label class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
+            <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
               Entitlement
               <select
                 v-model="user.subscription_status"
-                class="mt-2 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm normal-case tracking-normal text-slate-950 outline-none focus:border-sky-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:focus:border-sky-400"
+                class="mt-2 min-h-11 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm normal-case tracking-normal text-slate-950 outline-none focus:border-sky-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:focus:border-sky-400"
               >
                 <option
                   v-for="status in subscriptionStatuses"
@@ -225,33 +223,33 @@ const entitlementSummary = (user: AdminUser) => getEntitlementSummary(user)
                 </option>
               </select>
             </label>
-            <label class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
-              Ends At
+            <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Ends at
               <input
                 :value="toDateTimeLocal(user.subscription_end_date)"
                 type="datetime-local"
-                class="mt-2 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm normal-case tracking-normal text-slate-950 outline-none focus:border-sky-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:focus:border-sky-400"
+                class="mt-2 min-h-11 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm normal-case tracking-normal text-slate-950 outline-none focus:border-sky-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:focus:border-sky-400"
                 @input="updateSubscriptionEndDate(user, $event)"
               />
             </label>
             <div class="flex flex-wrap items-end gap-2">
               <button
                 type="button"
-                class="rounded-md border border-sky-200 bg-white px-3 py-2 text-xs font-semibold text-sky-700 hover:border-sky-300 hover:bg-sky-50 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-100"
+                class="min-h-10 rounded-md border border-sky-200 bg-white px-3 py-2 text-xs font-semibold text-sky-700 hover:border-sky-300 hover:bg-sky-50 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-100"
                 @click="grantManualPro(user, 30)"
               >
                 Pro +30d
               </button>
               <button
                 type="button"
-                class="rounded-md border border-sky-200 bg-white px-3 py-2 text-xs font-semibold text-sky-700 hover:border-sky-300 hover:bg-sky-50 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-100"
+                class="min-h-10 rounded-md border border-sky-200 bg-white px-3 py-2 text-xs font-semibold text-sky-700 hover:border-sky-300 hover:bg-sky-50 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-100"
                 @click="grantManualPro(user, 365)"
               >
                 Pro +365d
               </button>
               <button
                 type="button"
-                class="rounded-md border border-amber-200 bg-white px-3 py-2 text-xs font-semibold text-amber-700 hover:border-amber-300 hover:bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100"
+                class="min-h-10 rounded-md border border-amber-200 bg-white px-3 py-2 text-xs font-semibold text-amber-700 hover:border-amber-300 hover:bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100"
                 @click="expireSubscription(user)"
               >
                 Expire
@@ -259,25 +257,24 @@ const entitlementSummary = (user: AdminUser) => getEntitlementSummary(user)
             </div>
           </div>
 
-          <div
+          <AdminStateBlock
             v-if="passwordResetLinks[user.id]"
-            class="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-xs leading-5 text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-100 lg:col-span-4"
+            class="lg:col-span-4"
+            tone="success"
+            title="One-time reset link generated"
+            :description="`Expires ${formatDate(passwordResetLinks[user.id].expires_at)}`"
           >
-            <p class="font-semibold">
-              已生成一次性重置链接，过期时间：{{ formatDate(passwordResetLinks[user.id].expires_at) }}
-            </p>
-            <p class="mt-2 break-all font-mono text-[11px]">
-              {{ passwordResetLinks[user.id].reset_url }}
-            </p>
-          </div>
+            <p class="break-all font-mono text-[11px]">{{ passwordResetLinks[user.id].reset_url }}</p>
+          </AdminStateBlock>
         </div>
 
-        <div
+        <AdminStateBlock
           v-if="users.length === 0"
-          class="border-t border-slate-200 px-4 py-10 text-center text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400"
-        >
-          没有找到匹配用户。
-        </div>
+          class="border-t border-slate-200 dark:border-slate-800"
+          tone="neutral"
+          title="No matching users"
+          description="Try a different email/name search or refresh the user list."
+        />
       </div>
     </AdminPanel>
   </div>

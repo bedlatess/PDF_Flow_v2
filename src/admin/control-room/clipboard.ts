@@ -39,14 +39,14 @@ export const createControlRoomClipboard = (ctx: ControlRoomContext) => {
     try {
       await navigator.clipboard?.writeText(buildFeedbackSummary(report))
       ctx.copiedFeedbackId.value = report.id
-      ctx.setMessage(`已复制反馈 #${report.id} 摘要`)
+      ctx.setMessage(`Copied feedback #${report.id} summary`)
       window.setTimeout(() => {
         if (ctx.copiedFeedbackId.value === report.id) {
           ctx.copiedFeedbackId.value = null
         }
       }, copiedDelayMs)
     } catch {
-      ctx.error.value = '复制失败，请手动选中反馈内容复制。'
+      ctx.error.value = 'Copy failed. Select the feedback content manually and copy it.'
     }
   }
 
@@ -54,36 +54,36 @@ export const createControlRoomClipboard = (ctx: ControlRoomContext) => {
     copyWithState(
       buildHealthReportSummary(),
       ctx.healthReportCopied,
-      '已复制上线健康报告',
-      '健康报告还没有加载完成，请先刷新。',
-      '复制健康报告失败，请手动选中报告内容复制。',
+      'Copied health report',
+      'Health report has not loaded yet. Refresh first.',
+      'Health report copy failed. Select the report content manually and copy it.',
     )
 
   const copyDiagnosticSummary = () =>
     copyWithState(
       ctx.diagnostics.value?.diagnostic_summary,
       ctx.diagnosticSummaryCopied,
-      '已复制诊断排障包',
-      '诊断摘要还没有加载完成，请先刷新。',
-      '复制诊断排障包失败，请手动选中摘要内容复制。',
+      'Copied diagnostic packet',
+      'Diagnostic summary has not loaded yet. Refresh first.',
+      'Diagnostic packet copy failed. Select the summary content manually and copy it.',
     )
 
   const copyReconciliationSummary = () =>
     copyWithState(
       ctx.paymentSummary.value?.reconciliation_summary,
       ctx.reconciliationCopied,
-      '已复制支付对账包',
-      '支付对账摘要还没有加载完成，请先刷新。',
-      '复制支付对账包失败，请手动选中摘要内容复制。',
+      'Copied reconciliation packet',
+      'Payment reconciliation summary has not loaded yet. Refresh first.',
+      'Reconciliation packet copy failed. Select the summary content manually and copy it.',
     )
 
   const copyPaymentEvidencePacket = () =>
     copyWithState(
       ctx.paymentSummary.value?.integration_evidence_packet,
       ctx.evidenceCopied,
-      '已复制支付联调证据包',
-      '支付联调证据包还没有加载完成，请先刷新。',
-      '复制支付联调证据包失败，请手动选中摘要内容复制。',
+      'Copied payment evidence packet',
+      'Payment evidence packet has not loaded yet. Refresh first.',
+      'Payment evidence packet copy failed. Select the summary content manually and copy it.',
     )
 
   return {

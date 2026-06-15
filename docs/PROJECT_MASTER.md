@@ -1981,6 +1981,23 @@ Admin UX-C local checkpoint:
   - `npm run build:admin`
   - `npm run test:e2e:admin`
 
+Admin UX-D local checkpoint:
+
+- Scope: Admin Job Center readability only. Task system, admin API response shape, Redis/Celery/DB lifecycle, user-facing frontend, payment, and PDF tool behavior were not changed.
+- Reworked Job Center from a technical field list into readable task operation cards:
+  - default view highlights task type, user, file name, status, progress, timing, result availability, source mode, and a short failure summary.
+  - technical fields are folded behind a per-job details action: `job_id`, `source`, `sources`, `is_durable`, DB/Redis mode, `output_file_url`, raw error, user id, input size, started time, and completed time.
+  - copy job id remains available from the default row action.
+- Added operator summaries for running jobs, failed in the last 24h, completed in the last 24h, durable jobs, Redis-only jobs, and most failing job type.
+- Added local task type and source filters while preserving the existing status/search/refresh flow and backend list endpoint.
+- Replaced remaining Job Center mojibake with clear English status and source labels:
+  - queued, processing, completed, failed.
+  - Redis active, DB history, and mixed active + durable source.
+- Local verification:
+  - `npm run type-check`
+  - `npm run build`
+  - `npm run test:e2e:admin` (`8 passed`, including folded technical details coverage)
+
 Admin bootstrap:
 
 ```bash

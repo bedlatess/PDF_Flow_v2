@@ -1159,7 +1159,7 @@ test.describe('Admin Control Room visual QA', () => {
       const tabs = [
         { label: 'Command Center', visibleText: 'Attention Queue' },
         { label: 'Users & Access', visibleText: 'smoke-compress@example.com' },
-        { label: 'Job Center', visibleText: 'Worker timed out while optimizing embedded images.' },
+        { label: 'Job Center', visibleText: 'Readable task operations' },
         { label: 'Feedback Inbox', visibleText: 'tester@example.com' },
         { label: 'Tools & Features', visibleText: 'Tools & Features' },
         { label: 'Service Providers', visibleText: 'Local Tesseract' },
@@ -1182,6 +1182,31 @@ test.describe('Admin Control Room visual QA', () => {
       }
     })
   }
+
+  test('presents the job center as readable operations with folded technical details', async ({ page }) => {
+    await mockAdminControlRoom(page)
+    await page.setViewportSize({ width: 1440, height: 1100 })
+    await page.goto('/')
+
+    await clickAdminModule(page, 'Job Center')
+    await expect(page.getByText('Readable task operations')).toBeVisible()
+    await expect(page.getByText('Running now')).toBeVisible()
+    await expect(page.getByText('Failed 24h')).toBeVisible()
+    await expect(page.getByText('Most failing')).toBeVisible()
+    await expect(page.getByText('Compress PDF').first()).toBeVisible()
+    await expect(page.getByText('Failed').first()).toBeVisible()
+    await expect(page.getByText('Mixed').filter({ visible: true }).first()).toBeVisible()
+    const failedJob = page.locator('article').filter({ hasText: 'quarterly-board-pack-with-long-readable-name.pdf' })
+    await expect(failedJob.getByText('Failure summary')).toBeVisible()
+    await expect(failedJob.getByText('Worker timed out while optimizing embedded images.').first()).toBeVisible()
+    await expect(page.getByTestId('job-technical-details')).toHaveCount(0)
+
+    await failedJob.getByRole('button', { name: 'Details' }).click()
+    await expect(failedJob.getByTestId('job-technical-details')).toBeVisible()
+    await expect(failedJob.getByText('job_20260611_compress_failed_001')).toBeVisible()
+    await expect(failedJob.getByText('source / sources / durable')).toBeVisible()
+    await expectNoHorizontalOverflow(page)
+  })
 
   test('changes the admin password from the account security tab and signs out', async ({ page }) => {
     const calls = {

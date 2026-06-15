@@ -238,6 +238,12 @@ class PDFToWordRequest(BaseModel):
     file_id: str = Field(..., description="Uploaded PDF file ID")
 
 
+class PDFToExcelRequest(BaseModel):
+    """PDF to Excel Beta conversion request."""
+
+    file_id: str = Field(..., description="Uploaded PDF file ID")
+
+
 class ProcessingJobResponse(BaseModel):
     """处理任务响应"""
     job_id: str = Field(..., description="任务 ID")

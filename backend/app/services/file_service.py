@@ -25,6 +25,7 @@ from app.tasks.pdf_tasks import (
 )
 from app.domains.service_provider.config_store import get_service_provider_runtime_config
 from app.domains.files.html_to_pdf import validate_html_text, validate_url_for_html_to_pdf
+from app.domains.files.pdf_to_excel import validate_pdf_to_excel_upload
 from app.domains.files.pdf_to_word import validate_pdf_to_word_upload
 from app.domains.jobs.service import (
     build_pending_job_status,
@@ -785,6 +786,47 @@ class FileProcessingService:
             "job_id": job_id,
             "status": "pending",
             "message": "PDF to Word job queued",
+        }
+
+    async def pdf_to_excel(
+        self,
+        *,
+        file_id: str,
+        user_id: int,
+        db: Session | None = None,
+    ) -> Dict:
+        """Queue a text-based PDF to XLSX Beta conversion."""
+        from app.tasks.excel_tasks import pdf_to_excel_task
+
+        file_metadata = self._get_file_metadata(file_id)
+        validate_pdf_to_excel_upload(file_id, file_metadata.get("filename"))
+        file_path = str(self._get_path_from_metadata(file_id, file_metadata))
+
+        output_dir = self.file_manager.create_temp_dir(prefix="pdf_to_excel_")
+        output_filename = f"{Path(str(file_metadata.get('filename') or 'converted.pdf')).stem}.xlsx"
+        output_path = output_dir / output_filename
+        job_id = self._generate_job_id()
+
+        self._save_job_status(job_id, build_pending_job_status(job_id))
+        self._create_pending_processing_job(
+            job_id=job_id,
+            job_type="pdf_to_excel",
+            file_metadata=file_metadata,
+            user_id=user_id,
+            db=db,
+        )
+
+        pdf_to_excel_task.apply_async(
+            args=[file_path, str(output_path)],
+            task_id=job_id,
+        )
+
+        logger.info("PDF to Excel job created: %s", job_id)
+
+        return {
+            "job_id": job_id,
+            "status": "pending",
+            "message": "PDF to Excel job queued",
         }
 
 

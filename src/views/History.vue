@@ -49,6 +49,7 @@ const jobTypeOptions = [
   'image_to_pdf',
   'pdf_to_image',
   'pdf_to_word',
+  'pdf_to_excel',
   'html_to_pdf',
   'ocr_pdf',
   'office_to_pdf',
@@ -138,6 +139,7 @@ const resultFileName = (job: JobHistoryItem) => {
   if (job.job_type === 'pdf_to_image' || job.job_type === 'split_pdf') return `${base}-results.zip`
   if (job.job_type === 'office_to_pdf') return `${base}.pdf`
   if (job.job_type === 'pdf_to_word') return `${base}.docx`
+  if (job.job_type === 'pdf_to_excel') return `${base}.xlsx`
   return `${base}-result.pdf`
 }
 

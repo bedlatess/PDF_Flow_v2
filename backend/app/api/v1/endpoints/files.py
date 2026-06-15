@@ -30,6 +30,7 @@ from app.schemas.file import (
     PDFRotateRequest,
     PDFSplitRequest,
     PDFToImageRequest,
+    PDFToExcelRequest,
     PDFToWordRequest,
     ProcessingJobHistoryItem,
     ProcessingJobHistoryListResponse,
@@ -374,4 +375,24 @@ async def pdf_to_word(
         ),
         error_detail="Failed to queue PDF to Word conversion",
         log_message="PDF to Word queue failed",
+    )
+
+
+@router.post("/pdf-to-excel", response_model=ProcessingJobResponse)
+async def pdf_to_excel(
+    request: Request,
+    payload: PDFToExcelRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    _rate_limit: None = Depends(apply_processing_rate_limit),
+):
+    require_file_feature(db, "pdf_to_excel", current_user)
+    return await run_file_operation(
+        lambda: file_processing_service.pdf_to_excel(
+            file_id=payload.file_id,
+            user_id=current_user.id,
+            db=db,
+        ),
+        error_detail="Failed to queue PDF to Excel conversion",
+        log_message="PDF to Excel queue failed",
     )

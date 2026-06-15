@@ -9,14 +9,15 @@ from pathlib import Path
 from docx import Document
 from docx.enum.text import WD_BREAK
 from fastapi import HTTPException, status
-from pypdf import PdfReader
+
+from app.domains.files.pdf_text import TextPDFError, extract_text_pdf_pages
 
 
 PDF_TO_WORD_MIN_TEXT_CHARS = 40
 PDF_TO_WORD_MAX_PAGES = 80
 
 
-class PDFToWordError(ValueError):
+class PDFToWordError(TextPDFError):
     """User-facing conversion error for PDF to Word Beta."""
 
 
@@ -28,39 +29,19 @@ def convert_text_pdf_to_docx(
 ) -> dict:
     """Extract readable text from a text-based PDF and write a simple DOCX."""
 
-    source = Path(input_path)
     output = Path(output_path)
     output.parent.mkdir(parents=True, exist_ok=True)
-
     try:
-        reader = PdfReader(str(source))
-    except Exception as exc:
-        raise PDFToWordError("This PDF could not be opened. Try a readable text-based PDF.") from exc
-
-    if reader.is_encrypted:
-        raise PDFToWordError("Encrypted PDFs are not supported in PDF to Word Beta.")
-
-    page_count = len(reader.pages)
-    if page_count == 0:
-        raise PDFToWordError("This PDF has no pages to convert.")
-    if page_count > PDF_TO_WORD_MAX_PAGES:
-        raise PDFToWordError(f"PDF to Word Beta supports up to {PDF_TO_WORD_MAX_PAGES} pages.")
-
-    page_texts: list[str] = []
-    total_chars = 0
-    for page in reader.pages:
-        try:
-            text = page.extract_text() or ""
-        except Exception:
-            text = ""
-        normalized = _normalize_page_text(text)
-        page_texts.append(normalized)
-        total_chars += len(normalized.strip())
-
-    if total_chars < PDF_TO_WORD_MIN_TEXT_CHARS:
-        raise PDFToWordError(
-            "This looks like a scanned or image-based PDF. Use OCR PDF first, then convert the recognized text."
+        source, page_texts, total_chars = extract_text_pdf_pages(
+            input_path=input_path,
+            min_text_chars=PDF_TO_WORD_MIN_TEXT_CHARS,
+            max_pages=PDF_TO_WORD_MAX_PAGES,
+            product_label="PDF to Word Beta",
         )
+    except TextPDFError as exc:
+        raise PDFToWordError(str(exc)) from exc
+
+    page_count = len(page_texts)
 
     document = Document()
     document.core_properties.title = source.stem
@@ -110,13 +91,6 @@ def user_facing_pdf_to_word_error(exc: Exception) -> str:
         return str(exc)
     message = str(exc).splitlines()[0].strip()
     return message[:240] if message else "PDF to Word conversion failed."
-
-
-def _normalize_page_text(text: str) -> str:
-    text = text.replace("\r\n", "\n").replace("\r", "\n")
-    text = re.sub(r"[ \t]+\n", "\n", text)
-    text = re.sub(r"\n{3,}", "\n\n", text)
-    return text.strip()
 
 
 def _split_blocks(text: str) -> list[str]:

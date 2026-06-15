@@ -12,6 +12,7 @@ from app.tasks.pdf_tasks import (
 from app.tasks.ocr_tasks import extract_text_task
 from app.tasks.html_tasks import html_to_pdf_task
 from app.tasks.word_tasks import pdf_to_word_task
+from app.tasks.excel_tasks import pdf_to_excel_task
 
 __all__ = [
     "merge_pdfs_task",
@@ -23,4 +24,5 @@ __all__ = [
     "extract_text_task",
     "html_to_pdf_task",
     "pdf_to_word_task",
+    "pdf_to_excel_task",
 ]

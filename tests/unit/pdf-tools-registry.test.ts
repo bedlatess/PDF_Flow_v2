@@ -83,4 +83,32 @@ describe('pdf tools registry', () => {
       smokeTag: 'access-panel',
     })
   })
+
+  it('registers PDF to Excel as a signed-in convert tool', () => {
+    const tool = getToolByFeatureKey('pdf_to_excel')
+
+    expect(tool).toMatchObject({
+      id: 'pdfToExcel',
+      slug: 'pdf-to-excel',
+      routeName: 'pdf-to-excel',
+      category: 'convert',
+      mode: 'cloud',
+      access: 'login',
+      smokeTag: 'access-panel',
+    })
+  })
+
+  it('registers Batch Convert as a signed-in convert tool', () => {
+    const tool = getToolByFeatureKey('batch_convert')
+
+    expect(tool).toMatchObject({
+      id: 'batchConvert',
+      slug: 'batch-convert',
+      routeName: 'batch-convert',
+      category: 'convert',
+      mode: 'cloud',
+      access: 'login',
+      smokeTag: 'access-panel',
+    })
+  })
 })

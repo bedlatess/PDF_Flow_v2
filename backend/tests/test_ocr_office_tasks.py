@@ -106,6 +106,49 @@ def test_ocr_lifecycle_helper_marks_failed_before_retry(client, monkeypatch):
         db.close()
 
 
+def test_ocr_lifecycle_helper_sanitizes_common_engine_errors(client, monkeypatch):
+    from app.core.database import get_db
+    from app.domains.jobs.repository import ProcessingJobRepository
+    from app.domains.jobs.service import JobService
+    from app.models.user import ProcessingJob
+    from app.tasks import ocr_tasks
+
+    db = next(client.app.dependency_overrides[get_db]())
+    try:
+        JobService(ProcessingJobRepository(db)).create_pending(
+            job_id="job_ocr_engine_failure",
+            user_id=None,
+            job_type="ocr_pdf",
+            input_file_name="input.pdf",
+            input_file_size=100,
+        )
+        service = JobService(ProcessingJobRepository(db))
+        monkeypatch.setattr(
+            ocr_tasks.job_lifecycle,
+            "mark_processing",
+            lambda job_id, progress=None: service.mark_processing(job_id, progress=progress),
+        )
+        monkeypatch.setattr(
+            ocr_tasks.job_lifecycle,
+            "mark_failed",
+            lambda job_id, error_message: service.mark_failed(job_id, error_message),
+        )
+
+        with pytest.raises(RuntimeError):
+            ocr_tasks._run_ocr_task_with_job_lifecycle(
+                job_id="job_ocr_engine_failure",
+                operation_label="OCR extraction",
+                operation=lambda: (_ for _ in ()).throw(RuntimeError("tesseract not found at /usr/bin/tesseract")),
+            )
+
+        db.expire_all()
+        db_job = db.query(ProcessingJob).filter(ProcessingJob.job_id == "job_ocr_engine_failure").first()
+        assert db_job.status == "failed"
+        assert db_job.error_message == "OCR engine is not available. Check OCR provider configuration."
+    finally:
+        db.close()
+
+
 def test_office_lifecycle_helper_updates_durable_job_on_success(client, monkeypatch):
     from app.core.database import get_db
     from app.domains.jobs.repository import ProcessingJobRepository

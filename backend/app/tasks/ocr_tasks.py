@@ -18,6 +18,22 @@ from app.domains.jobs.service import job_lifecycle
 logger = logging.getLogger(__name__)
 
 
+def user_facing_ocr_error(exc: Exception) -> str:
+    """Return a short OCR error suitable for task status and history."""
+
+    message = str(exc).splitlines()[0].strip()
+    lowered = message.lower()
+    if "tesseract" in lowered and ("not installed" in lowered or "not found" in lowered or "no such file" in lowered):
+        return "OCR engine is not available. Check OCR provider configuration."
+    if "unable to get page count" in lowered or "pdfinfo" in lowered or "poppler" in lowered:
+        return "OCR could not read this PDF. Check whether the PDF is valid or try another file."
+    if "language" in lowered or "traineddata" in lowered:
+        return "OCR language data is not available. Choose another language or update OCR configuration."
+    if message:
+        return message[:240]
+    return "OCR failed. Try another file or language."
+
+
 class OCRTask(Task):
     """OCR 任务基类"""
 
@@ -192,9 +208,10 @@ def _run_ocr_task_with_job_lifecycle(
             )
         return result
     except Exception as exc:
-        logger.error("%s failed: %s", operation_label, exc)
+        error_message = user_facing_ocr_error(exc)
+        logger.error("%s failed: %s", operation_label, error_message)
         if job_id:
-            job_lifecycle.mark_failed(job_id, error_message=str(exc))
+            job_lifecycle.mark_failed(job_id, error_message=error_message)
         if retry is not None:
             raise retry(exc)
         raise

@@ -185,3 +185,35 @@ class TestPDFToExcelTask:
             assert job.output_file_url == str(output)
         finally:
             db.close()
+
+    def test_task_marks_user_facing_failure_without_raising(self, monkeypatch, client):
+        from app.core.database import get_db
+        from app.domains.files.pdf_to_excel import PDFToExcelError
+        from app.domains.jobs.repository import ProcessingJobRepository
+        from app.domains.jobs.service import JobService
+        from app.models.user import ProcessingJob
+        import app.tasks.excel_tasks as excel_tasks_module
+
+        db = next(client.app.dependency_overrides[get_db]())
+        try:
+            JobService(ProcessingJobRepository(db)).create_pending(
+                job_id="job_excel_failure",
+                user_id=1,
+                job_type="pdf_to_excel",
+                input_file_name="scan.pdf",
+                input_file_size=100,
+            )
+            service = JobService(ProcessingJobRepository(db))
+            monkeypatch.setattr(excel_tasks_module, "job_lifecycle", service)
+
+            result = excel_tasks_module._run_pdf_to_excel_with_job_lifecycle(
+                job_id="job_excel_failure",
+                operation=lambda: (_ for _ in ()).throw(PDFToExcelError("This looks like a scanned PDF.")),
+            )
+
+            job = db.query(ProcessingJob).filter(ProcessingJob.job_id == "job_excel_failure").first()
+            assert result == {"success": False, "error": "This looks like a scanned PDF."}
+            assert job.status == "failed"
+            assert job.error_message == "This looks like a scanned PDF."
+        finally:
+            db.close()

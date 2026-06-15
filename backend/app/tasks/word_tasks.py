@@ -59,6 +59,11 @@ def _run_pdf_to_word_with_job_lifecycle(
         logger.error("PDF to Word conversion failed: %s", error_message)
         if job_id:
             job_lifecycle.mark_failed(job_id, error_message=error_message)
+        if isinstance(exc, PDFToWordError):
+            return {
+                "success": False,
+                "error": error_message,
+            }
         if retry is not None and not isinstance(exc, PDFToWordError):
             raise retry(exc)
         raise

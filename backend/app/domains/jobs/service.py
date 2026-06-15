@@ -329,7 +329,15 @@ def merge_celery_state_into_status(
         merged["status"] = mapped
         merged["updated_at"] = time.time() if now is None else now
 
-    if mapped == JobStatus.COMPLETED.value:
+    if (
+        mapped == JobStatus.COMPLETED.value
+        and isinstance(celery_result, Mapping)
+        and celery_result.get("success") is False
+    ):
+        merged["status"] = JobStatus.FAILED.value
+        merged["progress"] = 100
+        merged["error"] = str(celery_result.get("error") or "Job failed")
+    elif mapped == JobStatus.COMPLETED.value:
         merged["progress"] = 100
         merged["result"] = celery_result
     elif mapped == JobStatus.FAILED.value:

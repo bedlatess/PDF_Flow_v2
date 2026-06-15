@@ -59,6 +59,11 @@ def _run_pdf_to_excel_with_job_lifecycle(
         logger.error("PDF to Excel conversion failed: %s", error_message)
         if job_id:
             job_lifecycle.mark_failed(job_id, error_message=error_message)
+        if isinstance(exc, PDFToExcelError):
+            return {
+                "success": False,
+                "error": error_message,
+            }
         if retry is not None and not isinstance(exc, PDFToExcelError):
             raise retry(exc)
         raise

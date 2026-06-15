@@ -203,13 +203,13 @@ class TestPDFToWordTask:
             service = JobService(ProcessingJobRepository(db))
             monkeypatch.setattr(word_tasks_module, "job_lifecycle", service)
 
-            with pytest.raises(PDFToWordError):
-                word_tasks_module._run_pdf_to_word_with_job_lifecycle(
-                    job_id="job_word_failure",
-                    operation=lambda: (_ for _ in ()).throw(PDFToWordError("This looks like a scanned PDF.")),
-                )
+            result = word_tasks_module._run_pdf_to_word_with_job_lifecycle(
+                job_id="job_word_failure",
+                operation=lambda: (_ for _ in ()).throw(PDFToWordError("This looks like a scanned PDF.")),
+            )
 
             job = db.query(ProcessingJob).filter(ProcessingJob.job_id == "job_word_failure").first()
+            assert result == {"success": False, "error": "This looks like a scanned PDF."}
             assert job.status == "failed"
             assert job.error_message == "This looks like a scanned PDF."
         finally:

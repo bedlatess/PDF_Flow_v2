@@ -67,6 +67,31 @@ def test_terminal_redis_status_wins_over_expired_celery_result():
     assert merged is not original
 
 
+def test_successful_celery_result_can_carry_user_facing_failure():
+    original = {
+        "job_id": "job_scan",
+        "status": "processing",
+        "created_at": 100.0,
+        "updated_at": 100.0,
+    }
+
+    merged = merge_celery_state_into_status(
+        original,
+        celery_state="SUCCESS",
+        celery_result={"success": False, "error": "Use OCR PDF first."},
+        now=140.0,
+    )
+
+    assert merged == {
+        "job_id": "job_scan",
+        "status": "failed",
+        "created_at": 100.0,
+        "updated_at": 140.0,
+        "progress": 100,
+        "error": "Use OCR PDF first.",
+    }
+
+
 def test_build_pending_job_status_keeps_existing_response_shape():
     status = build_pending_job_status("job_pending", now=200.5)
 

@@ -2,7 +2,9 @@
 import {
   ArrowDownToLine,
   ArrowLeft,
+  Check,
   Clock3,
+  Copy,
   FileClock,
   FileWarning,
   Loader2,
@@ -31,6 +33,7 @@ const error = ref<FormattedUserError | null>(null)
 const selectedStatus = ref<JobHistoryStatus | ''>('')
 const selectedJobType = ref('')
 const expandedJobId = ref<string | null>(null)
+const copiedJobId = ref<string | null>(null)
 
 const statusOptions: Array<{ value: JobHistoryStatus | ''; labelKey: string }> = [
   { value: '', labelKey: 'history.filters.allStatuses' },
@@ -131,6 +134,27 @@ const downloadJob = async (job: JobHistoryItem) => {
   } finally {
     downloadingJobId.value = null
   }
+}
+
+const copyJobId = async (jobId: string) => {
+  try {
+    await navigator.clipboard.writeText(jobId)
+    copiedJobId.value = jobId
+    window.setTimeout(() => {
+      if (copiedJobId.value === jobId) copiedJobId.value = null
+    }, 1800)
+  } catch {
+    copiedJobId.value = null
+  }
+}
+
+const jobErrorSummary = (job: JobHistoryItem) => {
+  if (!job.error_message) return ''
+  return formatUserFacingError(job.error_message, {
+    area: 'GENERAL',
+    fallbackTitle: t('history.errors.jobFailedTitle'),
+    fallbackMessage: t('history.errors.jobFailedMessage'),
+  }).message
 }
 
 const resultFileName = (job: JobHistoryItem) => {
@@ -305,7 +329,7 @@ onMounted(() => {
         </div>
 
         <div v-else class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <div class="hidden grid-cols-[1.2fr_140px_140px_150px_120px] gap-4 border-b border-slate-200 px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:text-slate-400 lg:grid">
+          <div class="hidden grid-cols-[1.2fr_140px_140px_150px_170px] gap-4 border-b border-slate-200 px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:text-slate-400 lg:grid">
             <span>{{ t('history.table.task') }}</span>
             <span>{{ t('history.table.status') }}</span>
             <span>{{ t('history.table.download') }}</span>
@@ -318,9 +342,15 @@ onMounted(() => {
             :key="job.job_id"
             class="border-b border-slate-100 px-4 py-4 last:border-b-0 dark:border-slate-800 lg:px-5"
           >
-            <div class="grid gap-4 lg:grid-cols-[1.2fr_140px_140px_150px_120px] lg:items-center">
+            <div class="grid gap-4 lg:grid-cols-[1.2fr_140px_140px_150px_170px] lg:items-center">
               <button class="min-w-0 text-left" @click="toggleDetails(job.job_id)">
                 <p class="truncate text-sm font-semibold text-slate-950 dark:text-white">{{ job.input_file_name }}</p>
+                <p
+                  v-if="job.status === 'failed' && jobErrorSummary(job)"
+                  class="mt-2 line-clamp-2 text-xs leading-5 text-rose-600 dark:text-rose-300"
+                >
+                  {{ jobErrorSummary(job) }}
+                </p>
                 <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ jobLabel(job.job_type) }} · {{ formatFileSize(job.input_file_size) }}</p>
               </button>
 
@@ -359,14 +389,31 @@ onMounted(() => {
                 <Button variant="outline" size="sm" class="rounded-md" @click="toggleDetails(job.job_id)">
                   {{ expandedJobId === job.job_id ? t('history.actions.hideDetails') : t('history.actions.details') }}
                 </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  class="rounded-md"
+                  :title="t('history.actions.copyJobId')"
+                  @click="copyJobId(job.job_id)"
+                >
+                  <Check v-if="copiedJobId === job.job_id" class="h-4 w-4 text-emerald-600 dark:text-emerald-300" />
+                  <Copy v-else class="h-4 w-4" />
+                </Button>
               </div>
             </div>
 
             <div v-if="expandedJobId === job.job_id" class="mt-4 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm dark:border-slate-800 dark:bg-slate-950">
               <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <div>
-                  <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('history.details.jobId') }}</p>
-                  <p class="mt-1 break-all text-slate-800 dark:text-slate-200">{{ job.job_id }}</p>
+                  <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('history.details.referenceId') }}</p>
+                  <button
+                    class="mt-1 inline-flex max-w-full items-center gap-2 rounded-md border border-slate-200 bg-white px-2 py-1 text-left text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                    @click="copyJobId(job.job_id)"
+                  >
+                    <span class="truncate">{{ job.job_id }}</span>
+                    <Check v-if="copiedJobId === job.job_id" class="h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-300" />
+                    <Copy v-else class="h-3.5 w-3.5 shrink-0" />
+                  </button>
                 </div>
                 <div>
                   <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('history.details.started') }}</p>
@@ -382,7 +429,7 @@ onMounted(() => {
                 </div>
               </div>
               <p v-if="job.error_message" class="mt-4 rounded-md border border-rose-200 bg-rose-50 p-3 text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200">
-                {{ job.error_message }}
+                {{ jobErrorSummary(job) }}
               </p>
             </div>
           </div>

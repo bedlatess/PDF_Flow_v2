@@ -45,11 +45,32 @@ const copy = computed<ToolPageCopy>(() => tm('tools.batchConvert') as ToolPageCo
 const canStart = computed(() => userStore.isAuthenticated && items.value.length > 0 && !running.value)
 const completedCount = computed(() => items.value.filter((item) => item.state === 'completed').length)
 const failedCount = computed(() => items.value.filter((item) => item.state === 'failed').length)
+const activeCount = computed(() => items.value.filter((item) => item.state === 'uploading' || item.state === 'processing').length)
 const overallProgress = computed(() => {
   if (items.value.length === 0) return 0
   const total = items.value.reduce((sum, item) => sum + item.progress, 0)
   return Math.round(total / items.value.length)
 })
+
+const formatFileSize = (bytes: number) => {
+  const units = ['B', 'KB', 'MB', 'GB']
+  let size = bytes
+  let unit = 0
+  while (size >= 1024 && unit < units.length - 1) {
+    size /= 1024
+    unit += 1
+  }
+  return `${size.toFixed(size >= 10 || unit === 0 ? 0 : 1)} ${units[unit]}`
+}
+
+const itemStateTone = (state: BatchState) => {
+  if (state === 'completed') return 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200'
+  if (state === 'failed') return 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200'
+  if (state === 'uploading' || state === 'processing') return 'border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-200'
+  return 'border-slate-200 bg-slate-100 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300'
+}
+
+const resultExtension = () => mode.value === 'pdf_to_word' ? '.docx' : '.xlsx'
 
 const ensureLogin = () => redirectForFeatureAccess({
   router,
@@ -165,10 +186,9 @@ const startBatch = async () => {
 
 const downloadItem = (item: BatchItem) => {
   if (!item.resultUrl) return
-  const extension = mode.value === 'pdf_to_word' ? '.docx' : '.xlsx'
   const link = document.createElement('a')
   link.href = item.resultUrl
-  link.download = item.file.name.replace(/\.pdf$/i, extension)
+  link.download = item.file.name.replace(/\.pdf$/i, resultExtension())
   link.click()
 }
 
@@ -297,6 +317,15 @@ const modeOptions = computed(() => [
               class="grid gap-3 px-4 py-4 sm:grid-cols-[1fr_auto] sm:items-center sm:px-5"
             >
               <div class="min-w-0">
+                <div class="mb-2 flex flex-wrap items-center gap-2">
+                  <span
+                    class="inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold"
+                    :class="itemStateTone(item.state)"
+                  >
+                    {{ t(`tools.batchConvert.states.${item.state}`) }}
+                  </span>
+                  <span class="text-xs text-slate-500 dark:text-slate-400">{{ formatFileSize(item.file.size) }}</span>
+                </div>
                 <p class="truncate text-sm font-semibold text-slate-950 dark:text-white">{{ item.file.name }}</p>
                 <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
                   {{ t(`tools.batchConvert.states.${item.state}`) }}
@@ -382,6 +411,10 @@ const modeOptions = computed(() => [
                 <p class="mt-1">{{ t('tools.batchConvert.stats.failed') }}</p>
               </div>
             </div>
+
+            <p class="text-xs leading-5 text-slate-500 dark:text-slate-400">
+              {{ activeCount ? t('tools.batchConvert.activeHint') : t('tools.batchConvert.finishedHint') }}
+            </p>
 
             <Button
               v-if="completedCount || failedCount"

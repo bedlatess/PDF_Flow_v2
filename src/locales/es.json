@@ -1342,7 +1342,10 @@
         "total": "Total",
         "completed": "Listos",
         "failed": "Fallidos"
-      }
+      },
+      "referenceId": "Ref",
+      "activeHint": "Cada archivo se ejecuta de forma independiente. Un fallo no detiene el resto del lote.",
+      "finishedHint": "Los archivos completados se descargan uno por uno; los fallidos conservan el motivo."
     },
     "htmlToPdf": {
       "title": "HTML a PDF",
@@ -1786,7 +1789,8 @@
       "apply": "Aplicar",
       "download": "Descargar",
       "details": "Detalles",
-      "hideDetails": "Ocultar"
+      "hideDetails": "Ocultar",
+      "copyJobId": "Copiar referencia"
     },
     "loading": "Cargando trabajos recientes...",
     "empty": {
@@ -1805,7 +1809,8 @@
       "jobId": "ID de trabajo",
       "started": "Inicio",
       "completed": "Completado",
-      "progress": "Progreso"
+      "progress": "Progreso",
+      "referenceId": "ID de referencia"
     },
     "status": {
       "pending": "Pendiente",
@@ -1841,7 +1846,9 @@
       "loadTitle": "No se pudo cargar el historial",
       "loadMessage": "No pudimos cargar tu historial de resultados. Intentalo de nuevo en un momento.",
       "downloadTitle": "Fallo la descarga",
-      "downloadMessage": "Este resultado puede haber expirado o no estar disponible ahora."
+      "downloadMessage": "Este resultado puede haber expirado o no estar disponible ahora.",
+      "jobFailedTitle": "La tarea fallo",
+      "jobFailedMessage": "La tarea no pudo terminar. Revisa el tipo de archivo, si tiene contrase?a o si necesita OCR primero."
     },
     "failedHint": "{count} trabajos fallidos muestran detalles breves del error.",
     "panel": {
@@ -2442,6 +2449,26 @@
       "local": "Local primero",
       "cloud": "Nube",
       "ai": "IA"
+    },
+    "spotlightTitle": "Empieza con el flujo correcto",
+    "spotlightDescription": "Las tareas comunes se agrupan segun lo que necesita el archivo antes de abrir una herramienta.",
+    "beta": "Beta",
+    "scanFirst": "Escaneos: OCR primero",
+    "signInRequired": "Iniciar sesion",
+    "proRequired": "Pro",
+    "spotlightGroups": {
+      "convert": {
+        "label": "Convertir y exportar",
+        "description": "Usa estas opciones cuando el PDF o documento fuente ya es legible."
+      },
+      "scan": {
+        "label": "Documentos escaneados",
+        "description": "Ejecuta OCR primero para PDFs de imagen y luego convierte o descarga el resultado."
+      },
+      "daily": {
+        "label": "Trabajo PDF frecuente",
+        "description": "Une, comprime o encola varias conversiones sin cambiar los originales."
+      }
     }
   }
 }

@@ -131,15 +131,65 @@ function looksInternal(detail: string) {
     'invalid input value for enum',
     'stack',
     'exception',
+    'celery',
     'internal server error',
     'importerror',
     'nameerror',
     'syntaxerror',
+    '/tmp/',
+    '\\app\\',
+    'c:\\',
   ].some((token) => lower.includes(token))
 }
 
 function resolveReason(area: ErrorArea, status?: number, detail = '') {
   const lower = detail.toLowerCase()
+
+  if (lower.includes('scanned') || lower.includes('image-based') || lower.includes('image only')) {
+    return {
+      code: `${area}-PDF-SCAN`,
+      title: 'This PDF needs OCR first',
+      message: 'This looks like a scanned or image-only PDF. Run OCR PDF first, then use the converted text with this tool.',
+    }
+  }
+
+  if (lower.includes('encrypted') || lower.includes('password')) {
+    return {
+      code: `${area}-PDF-PASSWORD`,
+      title: 'Password-protected PDF',
+      message: 'This PDF appears to be encrypted or password-protected. Unlock it first, then try again.',
+    }
+  }
+
+  if (lower.includes('no pages') || lower.includes('empty') || lower.includes('0 bytes')) {
+    return {
+      code: `${area}-FILE-EMPTY`,
+      title: 'File looks empty',
+      message: 'The file does not appear to contain readable content. Please choose another file.',
+    }
+  }
+
+  if (status === 413 || lower.includes('too large') || lower.includes('exceed')) {
+    return {
+      code: `${area}-${status || 413}-SIZE`,
+      title: 'File is too large',
+      message: 'This file appears to exceed the current limit. Try a smaller file or split it before processing.',
+    }
+  }
+
+  if (
+    status === 415
+    || lower.includes('unsupported')
+    || lower.includes('only accepts')
+    || lower.includes('choose a pdf')
+    || lower.includes('file type')
+  ) {
+    return {
+      code: `${area}-${status || 415}-TYPE`,
+      title: 'Unsupported file type',
+      message: 'This file type is not supported for the current tool. Choose a supported file and try again.',
+    }
+  }
 
   if (area === 'AUTH') {
     if (status === 401 || lower.includes('incorrect') || lower.includes('invalid credentials')) {
@@ -207,22 +257,6 @@ function resolveReason(area: ErrorArea, status?: number, detail = '') {
     }
   }
 
-  if (status === 413 || lower.includes('too large')) {
-    return {
-      code: `${area}-${status || 413}-SIZE`,
-      title: 'File is too large',
-      message: 'This file appears to exceed the current upload limit. Please reduce the file size and try again.',
-    }
-  }
-
-  if (status === 415 || lower.includes('unsupported')) {
-    return {
-      code: `${area}-${status || 415}-TYPE`,
-      title: 'Unsupported file type',
-      message: 'This file type is not supported for the current action. Please choose a supported file and retry.',
-    }
-  }
-
   if (status === 429) {
     return {
       code: `${area}-429-BUSY`,
@@ -270,6 +304,7 @@ export function formatUserFacingError(
 
   const title = resolved?.title || options.fallbackTitle || fallback.title
   const message = resolved?.message
+    || (!looksInternal(detail) && detail ? detail : '')
     || options.fallbackMessage
     || fallback.message
 

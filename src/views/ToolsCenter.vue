@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import {
   ArrowRight,
+  BadgeCheck,
   Cloud,
   FileStack,
   Layers3,
@@ -17,6 +18,7 @@ import { pdfTools, toolCategories, type PdfToolMeta, type ToolCategory, type Too
 import { useLocalePath } from '@/composables/useLocalePath'
 
 type ModeFilter = ToolMode | 'all'
+type SpotlightGroup = 'convert' | 'scan' | 'daily'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -46,6 +48,26 @@ const copy = computed(() => {
     localDescription: t('toolsCenter.localDescription'),
     cloudDescription: t('toolsCenter.cloudDescription'),
     aiDescription: t('toolsCenter.aiDescription'),
+    spotlightTitle: t('toolsCenter.spotlightTitle'),
+    spotlightDescription: t('toolsCenter.spotlightDescription'),
+    beta: t('toolsCenter.beta'),
+    scanFirst: t('toolsCenter.scanFirst'),
+    signInRequired: t('toolsCenter.signInRequired'),
+    proRequired: t('toolsCenter.proRequired'),
+    spotlightGroups: {
+      convert: {
+        label: t('toolsCenter.spotlightGroups.convert.label'),
+        description: t('toolsCenter.spotlightGroups.convert.description'),
+      },
+      scan: {
+        label: t('toolsCenter.spotlightGroups.scan.label'),
+        description: t('toolsCenter.spotlightGroups.scan.description'),
+      },
+      daily: {
+        label: t('toolsCenter.spotlightGroups.daily.label'),
+        description: t('toolsCenter.spotlightGroups.daily.description'),
+      },
+    },
     categories: {
       organize: t('toolsCenter.categories.organize'),
       convert: t('toolsCenter.categories.convert'),
@@ -129,6 +151,55 @@ const groupedTools = computed(() =>
     .filter((group) => group.tools.length > 0)
 )
 
+const betaToolIds = new Set(['pdfToWord', 'pdfToExcel', 'batchConvert'])
+const scanFirstToolIds = new Set(['pdfToWord', 'pdfToExcel'])
+const spotlightToolIds: Record<SpotlightGroup, string[]> = {
+  convert: ['pdfToWord', 'pdfToExcel', 'htmlToPdf', 'officeToPdf'],
+  scan: ['ocr', 'pdfToWord', 'pdfToExcel'],
+  daily: ['merge', 'batchConvert', 'compress'],
+}
+
+const spotlightGroups = computed(() =>
+  (Object.entries(spotlightToolIds) as Array<[SpotlightGroup, string[]]>)
+    .map(([id, toolIds]) => ({
+      id,
+      ...copy.value.spotlightGroups[id],
+      tools: toolIds
+        .map((toolId) => toolsWithFlags.value.find((tool) => tool.id === toolId))
+        .filter((tool): tool is PdfToolMeta & { flag: ReturnType<typeof siteConfigStore.getFeatureFlag> } => Boolean(tool)),
+    }))
+    .filter((group) => group.tools.length > 0)
+)
+
+const toolBadges = (tool: PdfToolMeta) => {
+  const badges: Array<{ label: string; tone: string }> = []
+  if (betaToolIds.has(tool.id)) {
+    badges.push({
+      label: copy.value.beta,
+      tone: 'bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-200 dark:ring-amber-300/20',
+    })
+  }
+  if (scanFirstToolIds.has(tool.id)) {
+    badges.push({
+      label: copy.value.scanFirst,
+      tone: 'bg-sky-50 text-sky-700 ring-sky-200 dark:bg-sky-500/10 dark:text-sky-200 dark:ring-sky-300/20',
+    })
+  }
+  if (tool.access === 'login') {
+    badges.push({
+      label: copy.value.signInRequired,
+      tone: 'bg-slate-100 text-slate-700 ring-slate-200 dark:bg-slate-700/40 dark:text-slate-100 dark:ring-slate-500/30',
+    })
+  }
+  if (tool.access === 'pro' || tool.requiresPro) {
+    badges.push({
+      label: copy.value.proRequired,
+      tone: 'bg-violet-50 text-violet-700 ring-violet-200 dark:bg-violet-500/10 dark:text-violet-200 dark:ring-violet-300/20',
+    })
+  }
+  return badges
+}
+
 const accentClassMap: Record<string, string> = {
   pdf: 'bg-red-50 text-red-700 ring-red-200 dark:bg-red-500/10 dark:text-red-200 dark:ring-red-300/20',
   emerald: 'bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-200 dark:ring-emerald-300/20',
@@ -194,6 +265,56 @@ onMounted(() => {
     </section>
 
     <section class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <section
+        v-if="spotlightGroups.length"
+        class="mb-5"
+      >
+        <div class="mb-3 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 class="text-xl font-semibold text-slate-950 dark:text-white">
+              {{ copy.spotlightTitle }}
+            </h2>
+            <p class="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300">
+              {{ copy.spotlightDescription }}
+            </p>
+          </div>
+        </div>
+
+        <div class="grid gap-3 lg:grid-cols-3">
+          <article
+            v-for="group in spotlightGroups"
+            :key="group.id"
+            class="pf-panel p-4"
+          >
+            <div class="flex items-start gap-3">
+              <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                <BadgeCheck class="h-5 w-5" />
+              </span>
+              <div class="min-w-0">
+                <h3 class="text-sm font-semibold text-slate-950 dark:text-white">
+                  {{ group.label }}
+                </h3>
+                <p class="mt-1 text-xs leading-5 text-slate-600 dark:text-slate-300">
+                  {{ group.description }}
+                </p>
+              </div>
+            </div>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <button
+                v-for="tool in group.tools"
+                :key="tool.id"
+                type="button"
+                class="inline-flex min-h-9 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-red-200 hover:text-red-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:border-red-300/30 dark:hover:text-red-200"
+                @click="openTool(tool)"
+              >
+                <component :is="tool.icon" class="h-4 w-4" />
+                {{ t(tool.titleKey) }}
+              </button>
+            </div>
+          </article>
+        </div>
+      </section>
+
       <div class="pf-panel p-4">
         <div class="grid gap-3 lg:grid-cols-[1fr_auto_auto] lg:items-center">
           <label class="relative block">
@@ -283,6 +404,22 @@ onMounted(() => {
               <p class="mt-2 line-clamp-2 flex-1 text-sm leading-6 text-slate-600 dark:text-slate-300">
                 {{ t(tool.descriptionKey) }}
               </p>
+
+              <div
+                v-if="toolBadges(tool).length"
+                class="mt-3 flex flex-wrap gap-1.5"
+              >
+                <span
+                  v-for="badge in toolBadges(tool)"
+                  :key="badge.label"
+                  :class="[
+                    'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 ring-inset',
+                    badge.tone,
+                  ]"
+                >
+                  {{ badge.label }}
+                </span>
+              </div>
 
               <div class="mt-4 flex items-center justify-between border-t border-slate-200 pt-3 dark:border-slate-800">
                 <span

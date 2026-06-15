@@ -1275,6 +1275,9 @@
       "statusStarting": "Starting batch...",
       "statusUploadingFile": "Uploading {file}...",
       "statusDone": "Batch finished",
+      "referenceId": "Ref",
+      "activeHint": "Each file runs independently. Failed files do not stop the rest of the batch.",
+      "finishedHint": "Completed files can be downloaded one by one; failed files keep their reason here.",
       "errorTitle": "Batch conversion failed",
       "errorPdfOnly": "Only PDF files can be added to this batch.",
       "errorItemFailed": "This file could not be converted. Check whether it is text-based or try OCR first.",
@@ -1520,7 +1523,8 @@
       "apply": "Apply",
       "download": "Download",
       "details": "Details",
-      "hideDetails": "Hide"
+      "hideDetails": "Hide",
+      "copyJobId": "Copy reference ID"
     },
     "loading": "Loading your recent jobs...",
     "empty": {
@@ -1537,6 +1541,7 @@
     },
     "details": {
       "jobId": "Job ID",
+      "referenceId": "Reference ID",
       "started": "Started",
       "completed": "Completed",
       "progress": "Progress"
@@ -1575,7 +1580,9 @@
       "loadTitle": "History could not be loaded",
       "loadMessage": "We could not load your result history. Please retry in a moment.",
       "downloadTitle": "Download failed",
-      "downloadMessage": "This result may have expired or is not available right now."
+      "downloadMessage": "This result may have expired or is not available right now.",
+      "jobFailedTitle": "Task failed",
+      "jobFailedMessage": "This task could not finish. Review the file type, password status, and whether it needs OCR first."
     },
     "failedHint": "{count} failed jobs are visible with short error details.",
     "panel": {
@@ -2164,6 +2171,26 @@
     "localDescription": "Best for everyday files and core PDF operations.",
     "cloudDescription": "Best for OCR, Office conversion, larger files, and longer jobs.",
     "aiDescription": "Best for summaries, Q&A, and structured information extraction.",
+    "spotlightTitle": "Start with the right workflow",
+    "spotlightDescription": "Common document jobs are grouped by what the source file needs before you open a tool.",
+    "beta": "Beta",
+    "scanFirst": "Scans: OCR first",
+    "signInRequired": "Sign in",
+    "proRequired": "Pro",
+    "spotlightGroups": {
+      "convert": {
+        "label": "Convert and export",
+        "description": "Use these when the PDF or source document is already readable."
+      },
+      "scan": {
+        "label": "Scanned documents",
+        "description": "Run OCR first for image-only PDFs, then convert or download the recognized result."
+      },
+      "daily": {
+        "label": "Frequent PDF work",
+        "description": "Merge, compress, or queue several conversion jobs without changing the original files."
+      }
+    },
     "categories": {
       "organize": "Organize PDFs",
       "convert": "Convert formats",
